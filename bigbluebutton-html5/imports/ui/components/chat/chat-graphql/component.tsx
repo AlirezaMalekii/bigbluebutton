@@ -69,7 +69,7 @@ const Chat: React.FC<ChatProps> = ({ isRTL }) => {
   }, []);
 
   return (
-    <Styled.Chat isRTL={isRTL} isChrome={isChrome}>
+    <Styled.Chat isRTL={isRTL} isChrome={isChrome} data-test="publicChatPanel">
       <ChatHeader />
       <ChatMessageListContainer />
       <ChatMessageFormContainer />
@@ -80,7 +80,7 @@ const Chat: React.FC<ChatProps> = ({ isRTL }) => {
 export const ChatLoading: React.FC<ChatProps> = ({ isRTL }) => {
   const { isChrome } = browserInfo;
   return (
-    <Styled.Chat isRTL={isRTL} isChrome={isChrome}>
+    <Styled.Chat isRTL={isRTL} isChrome={isChrome} data-test="publicChatPanel">
       <CircularProgress style={{ alignSelf: 'center' }} />
     </Styled.Chat>
   );

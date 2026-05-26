@@ -4,7 +4,7 @@ import {
   colorGrayLightest, colorOffWhite,
   colorPrimary,
   colorText,
-  colorWhite,
+  userListBg,
 } from '/imports/ui/stylesheets/styled-components/palette';
 import {
   mdPadding, smPadding, smPaddingX, xlPadding,
@@ -13,7 +13,7 @@ import EmojiButton from '../chat-message-list/page/chat-message/message-toolbar/
 
 const Container = styled.div<{ $hidden: boolean; $animations: boolean }>`
   border-radius: 0.375rem;
-  background-color: ${colorWhite};
+  background-color: ${userListBg};
   box-shadow: inset 0 0 0 1px ${colorGrayLightest};
   display: flex;
   align-items: center;

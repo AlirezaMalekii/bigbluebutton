@@ -29,7 +29,7 @@ const EchoTestButton = styled(Button)`
   }
 
   span:last-child {
-    color: black;
+    color: var(--skyroom-text-primary, #eef4fb);
     font-size: 1rem;
     font-weight: 600;
   }

@@ -115,6 +115,10 @@ const intlMessages = defineMessages({
     id: 'app.audioModal.audioChoiceLabel',
     description: 'Join audio modal title',
   },
+  audioChoiceDesc: {
+    id: 'app.audioModal.audioChoiceDesc',
+    description: 'Join audio modal subtitle',
+  },
   iOSError: {
     id: 'app.audioModal.iOSBrowser',
     description: 'Audio/Video Not supported warning',
@@ -444,9 +448,12 @@ const AudioModal = ({
 
     return (
       <div>
+        <Styled.AudioChoiceIntro data-test="audioModalChoiceDesc">
+          {intl.formatMessage(intlMessages.audioChoiceDesc)}
+        </Styled.AudioChoiceIntro>
         <Styled.AudioOptions data-test="audioModalOptions">
           {!hideMicrophone && !isMobileNative && (
-            <>
+            <Styled.AudioOption>
               <Styled.AudioModalButton
                 label={intl.formatMessage(intlMessages.microphoneLabel)}
                 data-test="microphoneBtn"
@@ -461,13 +468,13 @@ const AudioModal = ({
                     : handleGoToEchoTest
                 }
               />
-              <span className="sr-only" id="mic-description">
+              <Styled.AudioOptionDesc id="mic-description">
                 {intl.formatMessage(intlMessages.microphoneDesc)}
-              </span>
-            </>
+              </Styled.AudioOptionDesc>
+            </Styled.AudioOption>
           )}
           {listenOnlyMode && (
-            <>
+            <Styled.AudioOption>
               <Styled.AudioModalButton
                 label={intl.formatMessage(intlMessages.listenOnlyLabel)}
                 data-test="listenOnlyBtn"
@@ -477,10 +484,10 @@ const AudioModal = ({
                 size="jumbo"
                 onClick={handleJoinListenOnly}
               />
-              <span className="sr-only" id="listenOnly-description">
+              <Styled.AudioOptionDesc id="listenOnly-description">
                 {intl.formatMessage(intlMessages.listenOnlyDesc)}
-              </span>
-            </>
+              </Styled.AudioOptionDesc>
+            </Styled.AudioOption>
           )}
         </Styled.AudioOptions>
         {formattedDialNum ? (

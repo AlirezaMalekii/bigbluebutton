@@ -2,14 +2,14 @@ import styled from 'styled-components';
 import {
   colorDangerDark,
   colorGrayLight,
-  colorGrayLightest, colorOffWhite, colorPrimary, colorText, colorWhite,
+  colorGrayLightest, colorOffWhite, colorPrimary, colorText, userListBg,
 } from '/imports/ui/stylesheets/styled-components/palette';
 import { $3xlPadding, smPadding } from '/imports/ui/stylesheets/styled-components/general';
 
 const Container = styled.div`
   border-top-left-radius: 0.5rem;
   border-top-right-radius: 0.5rem;
-  background-color: ${colorWhite};
+  background-color: ${userListBg};
   box-shadow: inset 0 0 0 1px ${colorGrayLightest};
   padding: ${smPadding} ${$3xlPadding};
   position: relative;

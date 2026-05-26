@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import Auth from '/imports/ui/services/auth';
 import getFromUserSettings from '/imports/ui/services/users-settings';
+import { useReactiveVar } from '@apollo/client';
 import NavBar from './component';
 import { layoutSelectInput, layoutDispatch, layoutSelectOutput } from '../layout/context';
 import { PluginsContext } from '/imports/ui/components/components-data/plugin-context/context';
@@ -12,7 +13,6 @@ import useHasUnreadNotes from '../notes/hooks/useHasUnreadNotes';
 import { useShortcut } from '../../core/hooks/useShortcut';
 import useMeeting from '../../core/hooks/useMeeting';
 import { registerTitleView } from '/imports/utils/dom-utils';
-import { useReactiveVar } from '@apollo/client';
 import connectionStatus from '../../core/graphql/singletons/connectionStatus';
 
 const intlMessages = defineMessages({
@@ -38,6 +38,7 @@ const NavBarContainer = ({ children, ...props }) => {
   const { sidebarNavPanel } = sidebarNavigation;
 
   const toggleUserList = useShortcut('toggleUserList');
+  const togglePublicChat = useShortcut('togglePublicChat');
 
   const hasUnreadNotes = sidebarContentPanel !== PANELS.SHARED_NOTES && unread && !notesIsPinned;
 
@@ -120,6 +121,7 @@ const NavBarContainer = ({ children, ...props }) => {
         currentUserId: Auth.userID,
         pluginNavBarItems,
         shortcuts: toggleUserList,
+        togglePublicChatShortcut: togglePublicChat,
         meetingId: meeting?.meetingId,
         presentationTitle: meetingTitle,
         breakoutNum,

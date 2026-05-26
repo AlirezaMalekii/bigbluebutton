@@ -5,7 +5,6 @@ import {
   colorGray,
   colorSuccess,
   colorGrayLightest,
-  colorOffWhite,
 } from '/imports/ui/stylesheets/styled-components/palette';
 import {
   statusIconSize,
@@ -14,52 +13,52 @@ import {
 } from '/imports/ui/stylesheets/styled-components/general';
 import ToastStyles from '/imports/ui/components/common/toast/styles';
 
-const DropdownButton = styled.button`
-  background-color: ${colorOffWhite};
-  border: none;
-  border-radius: 13px;
-  box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.16),
-    0px 2px 3px rgba(0, 0, 0, 0.24),
-    0px 2px 6px rgba(0, 0, 0, 0.1);
-  color: #2d2d2d;
-  cursor: pointer;
-  padding: .3rem .5rem;
+const ToolbarDock = styled.div`
+  cursor: default;
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  z-index: 1001;
   display: flex;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  tab-index: 0;
+  gap: 8px;
 
-  &:hover {
-    background-color: ${colorGrayLightest};
+  [dir="rtl"] & {
+    left: auto;
+    right: 14px;
   }
 `;
 
-const Right = styled.div`
+const ActionButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 12px;
   cursor: pointer;
-  position: absolute;
-  right: 3px;
-  top: 2px;
-  z-index: 999;
+  color: #e8edf4;
+  background: linear-gradient(165deg, rgba(28, 40, 62, 0.95) 0%, rgba(16, 24, 40, 0.92) 100%);
+  border: 1px solid rgba(20, 169, 158, 0.32);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
 
-  > div {
-    width: 35px;
-    height: 35px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  &:hover {
+    border-color: rgba(32, 199, 187, 0.55);
+    background: linear-gradient(165deg, rgba(32, 199, 187, 0.22) 0%, rgba(16, 24, 40, 0.95) 100%);
+    transform: translateY(-1px);
   }
 
-  button {
-    height: 100%;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  &.danger:hover {
+    border-color: rgba(255, 106, 102, 0.55);
+    background: linear-gradient(165deg, rgba(223, 39, 33, 0.28) 0%, rgba(16, 24, 40, 0.95) 100%);
   }
 
-  [dir="rtl"] & {
-    left: 3px;
-    right: auto;
+  i, [class^="icon-bbb-"] {
+    font-size: 1.05rem;
+    color: inherit;
   }
 `;
 
@@ -129,8 +128,8 @@ const ButtonIcon = styled(Icon)`
 `;
 
 export default {
-  DropdownButton,
-  Right,
+  ToolbarDock,
+  ActionButton,
   ToastText,
   StatusIcon,
   ToastIcon,

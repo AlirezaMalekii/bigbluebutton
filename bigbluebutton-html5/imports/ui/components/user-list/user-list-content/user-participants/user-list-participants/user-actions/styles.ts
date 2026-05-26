@@ -50,7 +50,63 @@ const NoPointerEvents = styled.div`
   pointer-events: none;
 `;
 
+const UserRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+`;
+
+const UserRowMain = styled.div`
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: visible;
+`;
+
+const ActionIconBar = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 2px 4px;
+  margin-inline-start: 4px;
+`;
+
+const ActionIconButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--skyroom-panel-text-muted, #aab6c7);
+  background: rgba(255, 255, 255, 0.06);
+  transition: background 140ms ease, color 140ms ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--skyroom-panel-accent, #20c7bb);
+    background: rgba(20, 169, 158, 0.18);
+    outline: none;
+  }
+
+  i,
+  [class^="icon-bbb-"] {
+    font-size: 0.75rem;
+    line-height: 1;
+  }
+`;
+
 export default {
   UserActionsTrigger,
   NoPointerEvents,
+  UserRow,
+  UserRowMain,
+  ActionIconBar,
+  ActionIconButton,
 };

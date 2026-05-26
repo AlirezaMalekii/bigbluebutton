@@ -15,6 +15,7 @@ import {
   useScreenshareStreamId,
   useBroadcastContentType,
   setBridge,
+  setViewerScreenshareReconnectAllowed,
 } from './service';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import { PluginsContext } from '/imports/ui/components/components-data/plugin-context/context';
@@ -159,6 +160,13 @@ const ScreenshareContainer = (props) => {
   const isCameraAsContentBroadcasting = useIsCameraAsContentBroadcasting();
   const hasAudio = useScreenshareHasAudio();
   const streamId = useScreenshareStreamId();
+
+  const isGloballyReceivingScreenshare = isScreenBroadcasting
+    || isCameraAsContentBroadcasting;
+
+  useEffect(() => {
+    setViewerScreenshareReconnectAllowed(isGloballyReceivingScreenshare);
+  }, [isGloballyReceivingScreenshare]);
 
   let pluginScreenshareHelperItems = [];
   if (pluginsExtensibleAreasAggregatedState.screenshareHelperItems) {

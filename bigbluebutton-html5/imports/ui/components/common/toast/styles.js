@@ -122,7 +122,7 @@ const ToastMessage = styled.div`
   overflow-x: hidden;
   overflow-wrap: break-word;
   word-break: break-word;
-  color: black !important;
+  color: inherit;
   font-family: Arial, sans-serif;
 
   ${({ small }) => small && `

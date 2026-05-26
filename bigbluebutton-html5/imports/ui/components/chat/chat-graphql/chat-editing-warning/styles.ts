@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { colorGrayLight, colorWhite } from '/imports/ui/stylesheets/styled-components/palette';
+import { colorGrayLight, userListBg } from '/imports/ui/stylesheets/styled-components/palette';
 import { xlPadding, xsPadding } from '/imports/ui/stylesheets/styled-components/general';
 
 export const Root = styled.div`
@@ -13,7 +13,7 @@ export const Container = styled.div`
   flex-wrap: nowrap;
   color: ${colorGrayLight};
   z-index: 10;
-  background-color: ${colorWhite};
+  background-color: ${userListBg};
 
   [dir='ltr'] & {
     margin-right: ${xlPadding};

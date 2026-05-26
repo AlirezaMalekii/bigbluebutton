@@ -6,6 +6,7 @@ import {
   colorDanger,
   colorGrayDark,
   colorGrayLightest,
+  colorContentBackground,
 } from '/imports/ui/stylesheets/styled-components/palette';
 import {
   smPaddingX,
@@ -47,7 +48,7 @@ const Wrapper = styled.div`
 
 const Input = styled(TextareaAutosize)`
   flex: 1;
-  background: #fff;
+  background: ${colorContentBackground};
   background-clip: padding-box;
   color: ${colorText};
   -webkit-appearance: none;

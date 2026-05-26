@@ -11,13 +11,11 @@ import {
 } from 'bigbluebutton-html-plugin-sdk/dist/cjs/extensible-areas/presentation-dropdown-item/enums';
 import ConfirmationModal from '/imports/ui/components/common/modal/confirmation/component';
 import Styled from './styles';
-import BBBMenu from '/imports/ui/components/common/menu/component';
+import Icon from '/imports/ui/components/common/icon/component';
 import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import { ACTIONS } from '/imports/ui/components/layout/enums';
 import deviceInfo from '/imports/utils/deviceInfo';
 import browserInfo from '/imports/utils/browserInfo';
-import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
-import SvgIcon from '/imports/ui/components/common/icon-svg/component';
 import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
 
 const intlMessages = defineMessages({
@@ -112,7 +110,6 @@ const propTypes = {
   currentElement: PropTypes.string,
   currentGroup: PropTypes.string,
   layoutContextDispatch: PropTypes.func.isRequired,
-  isRTL: PropTypes.bool,
   tldrawAPI: PropTypes.shape({
     getSvg: PropTypes.func.isRequired,
     getCurrentPageShapes: PropTypes.func.isRequired,
@@ -124,7 +121,6 @@ const propTypes = {
 };
 
 const PresentationMenu = (props) => {
-  const Settings = getSettingsSingletonInstance();
   const {
     intl,
     isFullscreen = false,
@@ -139,7 +135,6 @@ const PresentationMenu = (props) => {
     layoutContextDispatch,
     meetingName = '',
     isIphone = false,
-    isRTL = Settings.application.isRTL,
     isToolbarVisible,
     setIsToolbarVisible,
     allowSnapshotOfCurrentSlide = false,
@@ -232,9 +227,7 @@ const PresentationMenu = (props) => {
       );
     };
   }, [tldrawAPI, slideNum]);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const toastId = useRef('presentation-menu-toast');
-  const dropdownRef = useRef(null);
 
   const {
     isOpen: isClearModalOpen,
@@ -517,11 +510,6 @@ const PresentationMenu = (props) => {
         closeOnClick: true,
       });
     }
-
-    if (dropdownRef.current) {
-      document.activeElement.blur();
-      dropdownRef.current.focus();
-    }
   });
 
   const options = getAvailableOptions();
@@ -540,43 +528,34 @@ const PresentationMenu = (props) => {
 
   return (
     <>
-      <Styled.Right id="WhiteboardOptionButton">
-        <BBBMenu
-          trigger={(
-            <TooltipContainer title={intl.formatMessage(intlMessages.optionsLabel)}>
-              <Styled.DropdownButton
-                state={isDropdownOpen ? 'open' : 'closed'}
-                aria-label={`${intl.formatMessage(intlMessages.whiteboardLabel)} ${intl.formatMessage(intlMessages.optionsLabel)}`}
-                data-test="whiteboardOptionsButton"
-                data-state={isDropdownOpen ? 'open' : 'closed'}
-                onClick={() => {
-                  setIsDropdownOpen((isOpen) => !isOpen);
-                }}
+      <Styled.ToolbarDock
+        id="WhiteboardOptionButton"
+        data-skyroom-wb-toolbar="true"
+      >
+        {options.map((item) => {
+          if (item.isSeparator) return null;
+          const isDanger = item.dataTest === 'clearAnnotations';
+          return (
+            <TooltipContainer key={item.key} title={item.label}>
+              <Styled.ActionButton
+                type="button"
+                className={isDanger ? 'danger' : undefined}
+                aria-label={item.label}
+                data-test={item.dataTest}
+                onClick={item.onClick}
               >
-                <SvgIcon iconName="whiteboardOptions" />
-              </Styled.DropdownButton>
+                <Icon iconName={item.icon} />
+              </Styled.ActionButton>
             </TooltipContainer>
-          )}
-          opts={{
-            id: 'presentation-dropdown-menu',
-            keepMounted: true,
-            transitionDuration: 0,
-            elevation: 3,
-            getcontentanchorel: null,
-            fullwidth: 'true',
-            anchorOrigin: { vertical: 'bottom', horizontal: isRTL ? 'right' : 'left' },
-            transformOrigin: { vertical: 'top', horizontal: isRTL ? 'right' : 'left' },
-            container: fullscreenRef,
-          }}
-          actions={options}
-        />
+          );
+        })}
         <input
           type="file"
           id="hiddenFileInput"
           style={{ display: 'none' }}
           onChange={handleFileInput}
         />
-      </Styled.Right>
+      </Styled.ToolbarDock>
 
       <ConfirmationModal
         intl={intl}

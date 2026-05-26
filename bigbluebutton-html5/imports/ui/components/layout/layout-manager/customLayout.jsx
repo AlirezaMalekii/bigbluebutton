@@ -3,10 +3,24 @@ import { throttle } from '/imports/utils/throttle';
 import { layoutSelect, layoutSelectInput, layoutDispatch } from '/imports/ui/components/layout/context';
 import DEFAULT_VALUES from '/imports/ui/components/layout/defaultValues';
 import { INITIAL_INPUT_STATE } from '/imports/ui/components/layout/initState';
-import { ACTIONS, CAMERADOCK_POSITION, LAYOUT_TYPE, PANELS } from '../enums';
+import {
+  ACTIONS, CAMERADOCK_POSITION, LAYOUT_TYPE, PANELS,
+} from '../enums';
 import Storage from '/imports/ui/services/storage/session';
 import { defaultsDeep } from '/imports/utils/array-utils';
 import Session from '/imports/ui/services/storage/in-memory';
+import adjustSkyroomColumnLayout, {
+  SKYROOM_FOOTER_H,
+  SKYROOM_NAVBAR_H,
+  SKYROOM_STAGE_Z_INDEX,
+} from '/imports/ui/components/skyroom-layout/column-layout';
+import {
+  setSkyroomWebcamLayout,
+  clearSkyroomWebcamLayout,
+} from '/imports/ui/components/skyroom-layout/webcam-bounds-store';
+import { useVideoStreams } from '/imports/ui/components/video-provider/hooks';
+import useMeeting from '/imports/ui/core/hooks/useMeeting';
+import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 
 const windowWidth = () => window.document.documentElement.clientWidth;
 const windowHeight = () => window.document.documentElement.clientHeight;
@@ -14,6 +28,7 @@ const min = (value1, value2) => (value1 <= value2 ? value1 : value2);
 const max = (value1, value2) => (value1 >= value2 ? value1 : value2);
 
 const CustomLayout = (props) => {
+  /* eslint-disable no-use-before-define -- layout helpers are defined below in BBB style */
   const {
     bannerAreaHeight, calculatesActionbarHeight, calculatesNavbarHeight, isMobile,
     prevLayout,
@@ -46,8 +61,22 @@ const CustomLayout = (props) => {
   const actionbarInput = layoutSelectInput((i) => i.actionBar);
   const navbarInput = layoutSelectInput((i) => i.navBar);
   const layoutContextDispatch = layoutDispatch();
+  const { streams: videoStreams = [] } = useVideoStreams();
+  const videoStreamLayoutKey = videoStreams
+    .map((s) => `${s.type}:${s.stream ?? s.userId ?? ''}`)
+    .join('|');
+  const { data: meetingData } = useMeeting((m) => ({
+    hasScreenshare: m.componentsFlags?.hasScreenshare,
+  }));
+  const { data: currentUser } = useCurrentUser((u) => ({
+    presenter: u.presenter,
+    isModerator: u.isModerator,
+  }));
+  const localUserIsPrivileged = Boolean(currentUser?.presenter || currentUser?.isModerator);
 
   const { isResizing } = cameraDockInput;
+  const hasActiveScreenShare = screenShareInput.hasScreenShare
+    || Boolean(meetingData?.hasScreenshare);
 
   const prevDeviceType = usePrevious(deviceType);
   const prevIsResizing = usePrevious(isResizing);
@@ -69,7 +98,7 @@ const CustomLayout = (props) => {
   }, []);
 
   useEffect(() => {
-    if (deviceType === null) return () => null;
+    if (deviceType === null) return undefined;
 
     if (deviceType !== prevDeviceType) {
       // reset layout if deviceType changed
@@ -78,7 +107,27 @@ const CustomLayout = (props) => {
     } else {
       throttledCalculatesLayout();
     }
-  }, [input, deviceType, isRTL, fontSize, fullscreen, isPresentationEnabled]);
+    return undefined;
+  }, [input, deviceType, isRTL, fontSize, fullscreen, isPresentationEnabled, videoStreams.length]);
+
+  // Screenshare + new webcams: run layout immediately (throttle alone leaves full-height share)
+  useEffect(() => {
+    if (deviceType === null) return undefined;
+    const layoutEl = document.getElementById('layout');
+    if (!layoutEl?.hasAttribute('data-skyroom-column')) return undefined;
+    if (!hasActiveScreenShare && cameraDockInput.numCameras === 0) return undefined;
+
+    calculatesLayout();
+    const raf = window.requestAnimationFrame(() => calculatesLayout());
+    return () => window.cancelAnimationFrame(raf);
+  }, [
+    hasActiveScreenShare,
+    videoStreams.length,
+    videoStreamLayoutKey,
+    cameraDockInput.numCameras,
+    presentationInput.isOpen,
+    deviceType,
+  ]);
 
   const calculatesDropAreas = (sidebarNavWidth, sidebarContentWidth, cameraDockBounds) => {
     const { height: actionBarHeight } = calculatesActionbarHeight();
@@ -267,10 +316,10 @@ const CustomLayout = (props) => {
       if (isMobile) {
         sidebarContentHeight = windowHeight() - DEFAULT_VALUES.navBarHeight;
       } else if (
-        cameraDockInput.numCameras > 0 &&
-        cameraDockInput.position === CAMERADOCK_POSITION.SIDEBAR_CONTENT_BOTTOM &&
-        isOpen &&
-        !isGeneralMediaOff
+        cameraDockInput.numCameras > 0
+        && cameraDockInput.position === CAMERADOCK_POSITION.SIDEBAR_CONTENT_BOTTOM
+        && isOpen
+        && !isGeneralMediaOff
       ) {
         sidebarContentHeight = windowHeight() - cameraDockHeight;
       } else {
@@ -320,9 +369,8 @@ const CustomLayout = (props) => {
 
     const stoppedResizing = prevIsResizing && !isResizing;
     if (stoppedResizing) {
-      const isCameraTopOrBottom =
-        cameraDockInput.position === CAMERADOCK_POSITION.CONTENT_TOP ||
-        cameraDockInput.position === CAMERADOCK_POSITION.CONTENT_BOTTOM;
+      const isCameraTopOrBottom = cameraDockInput.position === CAMERADOCK_POSITION.CONTENT_TOP
+        || cameraDockInput.position === CAMERADOCK_POSITION.CONTENT_BOTTOM;
 
       Storage.setItem('webcamSize', {
         width: isCameraTopOrBottom || isCameraSidebar ? lastWidth : cameraDockInput.width,
@@ -338,13 +386,13 @@ const CustomLayout = (props) => {
       if ((lastHeight === 0 && !isResizing) || (isCameraTop && isMobile)) {
         cameraDockHeight = min(
           max(mediaAreaBounds.height * 0.2, cameraDockMinHeight),
-          mediaAreaBounds.height - cameraDockMinHeight
+          mediaAreaBounds.height - cameraDockMinHeight,
         );
       } else {
         const height = isResizing ? cameraDockInput.height : lastHeight;
         cameraDockHeight = min(
           max(height, cameraDockMinHeight),
-          mediaAreaBounds.height - cameraDockMinHeight
+          mediaAreaBounds.height - cameraDockMinHeight,
         );
       }
 
@@ -369,13 +417,13 @@ const CustomLayout = (props) => {
       if (lastWidth === 0 && !isResizing) {
         cameraDockWidth = min(
           max(mediaAreaBounds.width * 0.2, cameraDockMinWidth),
-          mediaAreaBounds.width - cameraDockMinWidth
+          mediaAreaBounds.width - cameraDockMinWidth,
         );
       } else {
         const width = isResizing ? cameraDockInput.width : lastWidth;
         cameraDockWidth = min(
           max(width, cameraDockMinWidth),
-          mediaAreaBounds.width - cameraDockMinWidth
+          mediaAreaBounds.width - cameraDockMinWidth,
         );
       }
 
@@ -383,8 +431,8 @@ const CustomLayout = (props) => {
       cameraDockBounds.minWidth = cameraDockMinWidth;
       cameraDockBounds.width = cameraDockWidth;
       cameraDockBounds.maxWidth = mediaAreaBounds.width * 0.8;
-      cameraDockBounds.presenterMaxWidth =
-        mediaAreaBounds.width - presentationToolbarMinWidth - camerasMargin;
+      cameraDockBounds.presenterMaxWidth = mediaAreaBounds.width
+        - presentationToolbarMinWidth - camerasMargin;
       cameraDockBounds.minHeight = cameraDockMinHeight;
       cameraDockBounds.height = mediaAreaBounds.height;
       cameraDockBounds.maxHeight = mediaAreaBounds.height;
@@ -407,13 +455,13 @@ const CustomLayout = (props) => {
       if (lastHeight === 0 && !isResizing) {
         cameraDockHeight = min(
           max(windowHeight() * 0.2, cameraDockMinHeight),
-          windowHeight() - cameraDockMinHeight
+          windowHeight() - cameraDockMinHeight,
         );
       } else {
         const height = isResizing ? cameraDockInput.height : lastHeight;
         cameraDockHeight = min(
           max(height, cameraDockMinHeight),
-          windowHeight() - cameraDockMinHeight
+          windowHeight() - cameraDockMinHeight,
         );
       }
 
@@ -439,8 +487,8 @@ const CustomLayout = (props) => {
 
     const { height: actionBarHeight } = calculatesActionbarHeight();
     const navBarHeight = calculatesNavbarHeight();
-    const mediaAreaHeight =
-      windowHeight() - (DEFAULT_VALUES.navBarHeight + actionBarHeight + bannerAreaHeight());
+    const mediaAreaHeight = windowHeight()
+      - (DEFAULT_VALUES.navBarHeight + actionBarHeight + bannerAreaHeight());
     const mediaAreaWidth = windowWidth() - (sidebarNavWidth + sidebarContentWidth);
     const mediaBounds = {};
     const { element: fullscreenElement } = fullscreen;
@@ -450,7 +498,10 @@ const CustomLayout = (props) => {
     const isGeneralMediaOff = !hasPresentation && !hasExternalVideo
       && !hasScreenShare && !isSharedNotesPinned && !genericContentId;
 
-    if (!isOpen || isGeneralMediaOff) {
+    const hasAlternateStageMedia = hasScreenShare || hasExternalVideo
+      || isSharedNotesPinned || genericContentId;
+
+    if ((!isOpen && !hasAlternateStageMedia) || isGeneralMediaOff) {
       mediaBounds.width = 0;
       mediaBounds.height = 0;
       mediaBounds.top = 0;
@@ -461,10 +512,10 @@ const CustomLayout = (props) => {
     }
 
     if (
-      fullscreenElement === 'Presentation' ||
-      fullscreenElement === 'Screenshare' ||
-      fullscreenElement === 'ExternalVideo' ||
-      fullscreenElement === 'GenericContent'
+      fullscreenElement === 'Presentation'
+      || fullscreenElement === 'Screenshare'
+      || fullscreenElement === 'ExternalVideo'
+      || fullscreenElement === 'GenericContent'
     ) {
       mediaBounds.width = windowWidth();
       mediaBounds.height = windowHeight();
@@ -482,8 +533,8 @@ const CustomLayout = (props) => {
         case CAMERADOCK_POSITION.CONTENT_TOP: {
           mediaBounds.width = mediaAreaWidth;
           mediaBounds.height = mediaAreaHeight - cameraDockBounds.height - camerasMargin;
-          mediaBounds.top =
-            navBarHeight + cameraDockBounds.height + camerasMargin + bannerAreaHeight();
+          mediaBounds.top = navBarHeight + cameraDockBounds.height
+            + camerasMargin + bannerAreaHeight();
           mediaBounds.left = !isRTL ? sidebarSize : null;
           mediaBounds.right = isRTL ? sidebarSize : null;
           break;
@@ -508,8 +559,8 @@ const CustomLayout = (props) => {
           mediaBounds.width = mediaAreaWidth - cameraDockBounds.width - camerasMargin * 2;
           mediaBounds.height = mediaAreaHeight;
           mediaBounds.top = navBarHeight + bannerAreaHeight();
-          const sizeValue =
-            sidebarNavWidth + sidebarContentWidth + mediaAreaWidth - mediaBounds.width;
+          const sizeValue = sidebarNavWidth + sidebarContentWidth
+            + mediaAreaWidth - mediaBounds.width;
           mediaBounds.left = !isRTL ? sizeValue : null;
           mediaBounds.right = isRTL ? sidebarSize : null;
           break;
@@ -560,25 +611,25 @@ const CustomLayout = (props) => {
     const sidebarContentBounds = calculatesSidebarContentBounds(sidebarNavWidth.width);
     const mediaAreaBounds = calculatesMediaAreaBounds(
       sidebarNavWidth.width,
-      sidebarContentWidth.width
+      sidebarContentWidth.width,
     );
     const navbarBounds = calculatesNavbarBounds(mediaAreaBounds);
     const actionbarBounds = calculatesActionbarBounds(mediaAreaBounds);
     const cameraDockBounds = calculatesCameraDockBounds(
       sidebarNavWidth.width,
       sidebarContentWidth.width,
-      mediaAreaBounds
+      mediaAreaBounds,
     );
     const dropZoneAreas = calculatesDropAreas(
       sidebarNavWidth.width,
       sidebarContentWidth.width,
-      cameraDockBounds
+      cameraDockBounds,
     );
     const sidebarContentHeight = calculatesSidebarContentHeight(cameraDockBounds.height);
     const mediaBounds = calculatesMediaBounds(
       sidebarNavWidth.width,
       sidebarContentWidth.width,
-      cameraDockBounds
+      cameraDockBounds,
     );
     const sidebarSize = sidebarContentWidth.width + sidebarNavWidth.width;
     const { height: actionBarHeight } = calculatesActionbarHeight();
@@ -593,16 +644,171 @@ const CustomLayout = (props) => {
       horizontalCameraDiff = camerasMargin * 2;
     }
 
+    let layoutSidebarNavHeight = sidebarNavHeight;
+    let layoutSidebarContentHeight = sidebarContentHeight;
+    let layoutSidebarSize = sidebarSize;
+    let layoutNavbarBounds = navbarBounds;
+    let layoutActionbarBounds = actionbarBounds;
+    let layoutMediaAreaBounds = mediaAreaBounds;
+    let layoutMediaBounds = mediaBounds;
+    let layoutCameraDockBounds = cameraDockBounds;
+    let skyroomColumnActive = false;
+
+    const skyroomLayout = adjustSkyroomColumnLayout({
+      isMobile,
+      isRTL,
+      bannerAreaHeight,
+      windowWidth,
+      windowHeight,
+      sidebarNavigationInput,
+      sidebarContentInput,
+      cameraDockInput,
+      sidebarNavWidth,
+      sidebarNavHeight,
+      sidebarNavBounds,
+      sidebarContentWidth,
+      sidebarContentBounds,
+      sidebarContentHeight,
+      mediaAreaBounds,
+      cameraDockBounds,
+      videoStreams,
+      presentationIsOpen: presentationInput.isOpen,
+      hasScreenShare: hasActiveScreenShare,
+      numCameras: cameraDockInput.numCameras,
+      localUserIsPrivileged,
+    });
+
+    if (skyroomLayout) {
+      skyroomColumnActive = true;
+      layoutSidebarNavHeight = skyroomLayout.sidebarNavHeight;
+      layoutSidebarContentHeight = skyroomLayout.sidebarContentHeight;
+      layoutSidebarSize = skyroomLayout.sidebarSize;
+      layoutNavbarBounds = {
+        ...navbarBounds,
+        ...skyroomLayout.navbarFullWidth,
+      };
+      layoutActionbarBounds = {
+        ...actionbarBounds,
+        width: skyroomLayout.actionbarFullWidth.width,
+        left: skyroomLayout.actionbarFullWidth.left,
+        height: skyroomLayout.actionbarFullWidth.height ?? actionbarBounds.height,
+      };
+      layoutMediaAreaBounds = skyroomLayout.mediaAreaBounds;
+      if (skyroomLayout.cameraDockPosition) {
+        layoutContextDispatch({
+          type: ACTIONS.SET_CAMERA_DOCK_POSITION,
+          value: skyroomLayout.cameraDockPosition,
+        });
+      }
+      if (skyroomLayout.cameraDockBounds) {
+        layoutCameraDockBounds = skyroomLayout.cameraDockBounds;
+      }
+      if (skyroomLayout.screenshareMinimized) {
+        layoutMediaBounds = {
+          width: 0,
+          height: 0,
+          top: skyroomLayout.mediaAreaBounds.top,
+          left: !isRTL ? skyroomLayout.mediaAreaBounds.left : null,
+          right: isRTL ? skyroomLayout.mediaAreaBounds.right : null,
+          zIndex: 0,
+        };
+      } else {
+        layoutMediaBounds = {
+          width: skyroomLayout.mediaAreaBounds.width,
+          height: skyroomLayout.mediaAreaBounds.height,
+          top: skyroomLayout.mediaAreaBounds.top,
+          left: !isRTL ? skyroomLayout.mediaAreaBounds.left : null,
+          right: isRTL ? skyroomLayout.mediaAreaBounds.right : null,
+          zIndex: SKYROOM_STAGE_Z_INDEX,
+        };
+      }
+
+      const layoutEl = document.getElementById('layout');
+      const hasStageWebcamStrip = (skyroomLayout.stageWebcamStripHeight ?? 0) > 0
+        || (skyroomLayout.useSplitCameras && skyroomLayout.cameraDockBounds);
+      if (layoutEl && (hasActiveScreenShare || hasStageWebcamStrip)) {
+        const shareTop = layoutMediaBounds.top ?? 0;
+        const shareHeight = layoutMediaBounds.height ?? 0;
+        layoutEl.style.setProperty('--skyroom-screenshare-top', `${shareTop}px`);
+        layoutEl.style.setProperty('--skyroom-screenshare-height', `${shareHeight}px`);
+        layoutEl.style.setProperty(
+          '--skyroom-stage-webcam-height',
+          `${skyroomLayout.stageWebcamStripHeight ?? 0}px`,
+        );
+        const stageDock = skyroomLayout.cameraDockBounds;
+        if (stageDock && hasStageWebcamStrip) {
+          layoutEl.style.setProperty('--skyroom-stage-webcam-top', `${stageDock.top}px`);
+          if (stageDock.left != null) {
+            layoutEl.style.setProperty('--skyroom-stage-webcam-left', `${stageDock.left}px`);
+            layoutEl.style.removeProperty('--skyroom-stage-webcam-right');
+          } else if (stageDock.right != null) {
+            layoutEl.style.setProperty('--skyroom-stage-webcam-right', `${stageDock.right}px`);
+            layoutEl.style.removeProperty('--skyroom-stage-webcam-left');
+          }
+          layoutEl.style.setProperty('--skyroom-stage-webcam-width', `${stageDock.width}px`);
+          layoutEl.setAttribute('data-skyroom-stage-webcams', 'true');
+        } else {
+          layoutEl.style.removeProperty('--skyroom-stage-webcam-top');
+          layoutEl.style.removeProperty('--skyroom-stage-webcam-left');
+          layoutEl.style.removeProperty('--skyroom-stage-webcam-right');
+          layoutEl.style.removeProperty('--skyroom-stage-webcam-width');
+          layoutEl.removeAttribute('data-skyroom-stage-webcams');
+        }
+      } else if (layoutEl) {
+        layoutEl.style.removeProperty('--skyroom-screenshare-top');
+        layoutEl.style.removeProperty('--skyroom-screenshare-height');
+        layoutEl.style.removeProperty('--skyroom-stage-webcam-height');
+        layoutEl.style.removeProperty('--skyroom-stage-webcam-top');
+        layoutEl.style.removeProperty('--skyroom-stage-webcam-left');
+        layoutEl.style.removeProperty('--skyroom-stage-webcam-right');
+        layoutEl.style.removeProperty('--skyroom-stage-webcam-width');
+        layoutEl.removeAttribute('data-skyroom-stage-webcams');
+      }
+
+      if (skyroomLayout.useSplitCameras) {
+        layoutEl?.setAttribute('data-skyroom-split-cameras', 'true');
+        const sidebarDock = skyroomLayout.sidebarCameraDockBounds;
+        if (layoutEl && sidebarDock) {
+          layoutEl.style.setProperty('--skyroom-sidebar-webcam-top', `${sidebarDock.top}px`);
+          if (sidebarDock.left != null) {
+            layoutEl.style.setProperty('--skyroom-sidebar-webcam-left', `${sidebarDock.left}px`);
+            layoutEl.style.removeProperty('--skyroom-sidebar-webcam-right');
+          } else if (sidebarDock.right != null) {
+            layoutEl.style.setProperty('--skyroom-sidebar-webcam-right', `${sidebarDock.right}px`);
+            layoutEl.style.removeProperty('--skyroom-sidebar-webcam-left');
+          }
+          layoutEl.style.setProperty('--skyroom-sidebar-webcam-width', `${sidebarDock.width}px`);
+          layoutEl.style.setProperty('--skyroom-sidebar-webcam-height', `${sidebarDock.height}px`);
+        }
+        setSkyroomWebcamLayout({
+          split: true,
+          sidebar: skyroomLayout.sidebarCameraDockBounds,
+          stage: skyroomLayout.cameraDockBounds,
+        });
+      } else {
+        layoutEl?.removeAttribute('data-skyroom-split-cameras');
+        layoutEl?.style.removeProperty('--skyroom-sidebar-webcam-top');
+        layoutEl?.style.removeProperty('--skyroom-sidebar-webcam-left');
+        layoutEl?.style.removeProperty('--skyroom-sidebar-webcam-right');
+        layoutEl?.style.removeProperty('--skyroom-sidebar-webcam-width');
+        layoutEl?.style.removeProperty('--skyroom-sidebar-webcam-height');
+        clearSkyroomWebcamLayout();
+      }
+    } else {
+      document.getElementById('layout')?.removeAttribute('data-skyroom-split-cameras');
+      clearSkyroomWebcamLayout();
+    }
+
     layoutContextDispatch({
       type: ACTIONS.SET_NAVBAR_OUTPUT,
       value: {
         display: navbarInput.hasNavBar,
-        width: navbarBounds.width,
-        height: navbarBounds.height,
-        top: navbarBounds.top,
-        left: navbarBounds.left,
+        width: layoutNavbarBounds.width,
+        height: layoutNavbarBounds.height,
+        top: layoutNavbarBounds.top,
+        left: layoutNavbarBounds.left,
         tabOrder: DEFAULT_VALUES.navBarTabOrder,
-        zIndex: navbarBounds.zIndex,
+        zIndex: layoutNavbarBounds.zIndex,
       },
     });
 
@@ -610,23 +816,23 @@ const CustomLayout = (props) => {
       type: ACTIONS.SET_ACTIONBAR_OUTPUT,
       value: {
         display: actionbarInput.hasActionBar,
-        width: actionbarBounds.width,
-        height: actionbarBounds.height,
-        innerHeight: actionbarBounds.innerHeight,
-        top: actionbarBounds.top,
-        left: actionbarBounds.left,
-        padding: actionbarBounds.padding,
+        width: layoutActionbarBounds.width,
+        height: layoutActionbarBounds.height,
+        innerHeight: layoutActionbarBounds.innerHeight,
+        top: layoutActionbarBounds.top,
+        left: layoutActionbarBounds.left,
+        padding: layoutActionbarBounds.padding,
         tabOrder: DEFAULT_VALUES.actionBarTabOrder,
-        zIndex: actionbarBounds.zIndex,
+        zIndex: layoutActionbarBounds.zIndex,
       },
     });
 
     layoutContextDispatch({
       type: ACTIONS.SET_CAPTIONS_OUTPUT,
       value: {
-        left: !isRTL ? sidebarSize + captionsMargin : null,
-        right: isRTL ? sidebarSize + captionsMargin : null,
-        maxWidth: mediaAreaBounds.width - captionsMargin * 2,
+        left: !isRTL ? layoutSidebarSize + captionsMargin : null,
+        right: isRTL ? layoutSidebarSize + captionsMargin : null,
+        maxWidth: layoutMediaAreaBounds.width - captionsMargin * 2,
       },
     });
 
@@ -637,12 +843,12 @@ const CustomLayout = (props) => {
         minWidth: sidebarNavWidth.minWidth,
         width: sidebarNavWidth.width,
         maxWidth: sidebarNavWidth.maxWidth,
-        height: sidebarNavHeight,
+        height: layoutSidebarNavHeight,
         top: sidebarNavBounds.top,
         left: sidebarNavBounds.left,
         right: sidebarNavBounds.right,
         tabOrder: DEFAULT_VALUES.sidebarNavTabOrder,
-        isResizable: !isMobile && !isTablet,
+        isResizable: !skyroomColumnActive && !isMobile && !isTablet,
         zIndex: sidebarNavBounds.zIndex,
       },
     });
@@ -651,9 +857,9 @@ const CustomLayout = (props) => {
       type: ACTIONS.SET_SIDEBAR_NAVIGATION_RESIZABLE_EDGE,
       value: {
         top: false,
-        right: !isRTL,
+        right: !skyroomColumnActive && !isRTL,
         bottom: false,
-        left: isRTL,
+        left: skyroomColumnActive ? false : isRTL,
       },
     });
 
@@ -664,13 +870,13 @@ const CustomLayout = (props) => {
         minWidth: sidebarContentWidth.minWidth,
         width: sidebarContentWidth.width,
         maxWidth: sidebarContentWidth.maxWidth,
-        height: sidebarContentHeight,
+        height: layoutSidebarContentHeight,
         top: sidebarContentBounds.top,
         left: sidebarContentBounds.left,
         right: sidebarContentBounds.right,
         currentPanelType,
         tabOrder: DEFAULT_VALUES.sidebarContentTabOrder,
-        isResizable: !isMobile && !isTablet,
+        isResizable: !skyroomColumnActive && !isMobile && !isTablet,
         zIndex: sidebarContentBounds.zIndex,
       },
     });
@@ -679,56 +885,88 @@ const CustomLayout = (props) => {
       type: ACTIONS.SET_SIDEBAR_CONTENT_RESIZABLE_EDGE,
       value: {
         top: false,
-        right: !isRTL,
+        right: !skyroomColumnActive && !isRTL,
         bottom: false,
-        left: isRTL,
+        left: skyroomColumnActive ? false : isRTL,
       },
     });
 
     layoutContextDispatch({
       type: ACTIONS.SET_MEDIA_AREA_SIZE,
       value: {
-        width: windowWidth() - sidebarNavWidth.width - sidebarContentWidth.width,
-        height: windowHeight() - DEFAULT_VALUES.navBarHeight - actionBarHeight,
+        width: skyroomColumnActive
+          ? windowWidth() - layoutSidebarSize
+          : windowWidth() - sidebarNavWidth.width - sidebarContentWidth.width,
+        height: windowHeight() - (skyroomColumnActive
+          ? SKYROOM_NAVBAR_H + SKYROOM_FOOTER_H
+          : DEFAULT_VALUES.navBarHeight + actionBarHeight),
       },
     });
 
-    const isMediaOpen = mediaBounds?.width > 0 && mediaBounds?.height > 0;
+    const isMediaOpen = layoutMediaBounds?.width > 0 && layoutMediaBounds?.height > 0;
+    const skyroomCameraPosition = skyroomColumnActive
+      ? skyroomLayout?.cameraDockPosition
+      : null;
+    const effectiveCameraPosition = skyroomCameraPosition || cameraDockInput.position;
+    const dockBoundsSource = (skyroomColumnActive && skyroomLayout?.cameraDockBounds)
+      ? skyroomLayout.cameraDockBounds
+      : layoutCameraDockBounds;
+    const safeCameraDockBounds = {
+      minWidth: 0,
+      width: 0,
+      maxWidth: 0,
+      presenterMaxWidth: 0,
+      minHeight: 0,
+      height: 0,
+      maxHeight: 0,
+      top: 0,
+      left: 0,
+      right: null,
+      zIndex: 1,
+      ...cameraDockBounds,
+      ...dockBoundsSource,
+    };
 
     layoutContextDispatch({
       type: ACTIONS.SET_CAMERA_DOCK_OUTPUT,
       value: {
         display: cameraDockInput.numCameras > 0,
-        position: cameraDockInput.position,
-        minWidth: cameraDockBounds.minWidth,
-        width: cameraDockBounds.width,
-        maxWidth: cameraDockBounds.maxWidth,
-        presenterMaxWidth: cameraDockBounds.presenterMaxWidth,
-        minHeight: cameraDockBounds.minHeight,
-        height: cameraDockBounds.height,
-        maxHeight: cameraDockBounds.maxHeight,
-        top: cameraDockBounds.top,
-        left: cameraDockBounds.left,
-        right: cameraDockBounds.right,
+        position: effectiveCameraPosition,
+        minWidth: safeCameraDockBounds.minWidth,
+        width: safeCameraDockBounds.width,
+        maxWidth: safeCameraDockBounds.maxWidth,
+        presenterMaxWidth: safeCameraDockBounds.presenterMaxWidth,
+        minHeight: safeCameraDockBounds.minHeight,
+        height: safeCameraDockBounds.height,
+        maxHeight: safeCameraDockBounds.maxHeight,
+        top: safeCameraDockBounds.top,
+        left: safeCameraDockBounds.left,
+        right: safeCameraDockBounds.right,
         tabOrder: 4,
-        isDraggable: !isMobile && !isTablet && isMediaOpen,
-        resizableEdge: {
-          top:
-          isMediaOpen
-            && (input.cameraDock.position === CAMERADOCK_POSITION.CONTENT_BOTTOM
-            || (input.cameraDock.position === CAMERADOCK_POSITION.SIDEBAR_CONTENT_BOTTOM
-            && input.sidebarContent.isOpen)),
-          right:
+        isDraggable: skyroomColumnActive
+          ? false
+          : (!isMobile && !isTablet && isMediaOpen),
+        resizableEdge: skyroomColumnActive
+          ? {
+            top: false, right: false, bottom: false, left: false,
+          }
+          : {
+            top:
             isMediaOpen
-            && ((!isRTL && input.cameraDock.position === CAMERADOCK_POSITION.CONTENT_LEFT)
-            || (isRTL && input.cameraDock.position === CAMERADOCK_POSITION.CONTENT_RIGHT)),
-          bottom: isMediaOpen && input.cameraDock.position === CAMERADOCK_POSITION.CONTENT_TOP,
-          left:
-          isMediaOpen
-            && ((!isRTL && input.cameraDock.position === CAMERADOCK_POSITION.CONTENT_RIGHT)
-            || (isRTL && input.cameraDock.position === CAMERADOCK_POSITION.CONTENT_LEFT)),
-        },
-        zIndex: cameraDockBounds.zIndex,
+              && (effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_BOTTOM
+              || (effectiveCameraPosition === CAMERADOCK_POSITION.SIDEBAR_CONTENT_BOTTOM
+              && input.sidebarContent.isOpen)),
+            right:
+              isMediaOpen
+              && ((!isRTL && effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_LEFT)
+              || (isRTL && effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_RIGHT)),
+            bottom: isMediaOpen && effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_TOP,
+            left:
+              isMediaOpen
+              && ((!isRTL && effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_RIGHT)
+              || (isRTL && effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_LEFT)),
+          },
+        zIndex: safeCameraDockBounds.zIndex,
         focusedId: input.cameraDock.focusedId,
       },
     });
@@ -738,30 +976,33 @@ const CustomLayout = (props) => {
       value: dropZoneAreas,
     });
 
+    const hidePresentationForScreenshare = skyroomColumnActive
+      && hasActiveScreenShare;
+
     layoutContextDispatch({
       type: ACTIONS.SET_PRESENTATION_OUTPUT,
       value: {
-        display: presentationInput.isOpen,
-        width: mediaBounds.width,
-        height: mediaBounds.height,
-        top: mediaBounds.top,
-        left: mediaBounds.left,
-        right: isRTL ? mediaBounds.right + horizontalCameraDiff : null,
+        display: hidePresentationForScreenshare ? false : presentationInput.isOpen,
+        width: layoutMediaBounds.width,
+        height: layoutMediaBounds.height,
+        top: layoutMediaBounds.top,
+        left: layoutMediaBounds.left,
+        right: isRTL ? layoutMediaBounds.right + horizontalCameraDiff : null,
         tabOrder: DEFAULT_VALUES.presentationTabOrder,
         isResizable: false,
-        zIndex: mediaBounds.zIndex,
+        zIndex: layoutMediaBounds.zIndex,
       },
     });
 
     layoutContextDispatch({
       type: ACTIONS.SET_SCREEN_SHARE_OUTPUT,
       value: {
-        width: mediaBounds.width,
-        height: mediaBounds.height,
-        top: mediaBounds.top,
-        left: mediaBounds.left,
-        right: isRTL ? mediaBounds.right + horizontalCameraDiff : null,
-        zIndex: mediaBounds.zIndex,
+        width: layoutMediaBounds.width,
+        height: layoutMediaBounds.height,
+        top: layoutMediaBounds.top,
+        left: layoutMediaBounds.left,
+        right: isRTL ? layoutMediaBounds.right + horizontalCameraDiff : null,
+        zIndex: layoutMediaBounds.zIndex,
       },
     });
 
@@ -769,37 +1010,38 @@ const CustomLayout = (props) => {
       type: ACTIONS.SET_EXTERNAL_VIDEO_OUTPUT,
       value: {
         display: externalVideoInput.hasExternalVideo,
-        width: mediaBounds.width,
-        height: mediaBounds.height,
-        top: mediaBounds.top,
-        left: mediaBounds.left,
-        right: isRTL ? mediaBounds.right + horizontalCameraDiff : null,
+        width: layoutMediaBounds.width,
+        height: layoutMediaBounds.height,
+        top: layoutMediaBounds.top,
+        left: layoutMediaBounds.left,
+        right: isRTL ? layoutMediaBounds.right + horizontalCameraDiff : null,
       },
     });
-    
+
     layoutContextDispatch({
       type: ACTIONS.SET_GENERIC_CONTENT_OUTPUT,
       value: {
-        width: mediaBounds.width,
-        height: mediaBounds.height,
-        top: mediaBounds.top,
-        left: mediaBounds.left,
-        right: isRTL ? mediaBounds.right + horizontalCameraDiff : null,
+        width: layoutMediaBounds.width,
+        height: layoutMediaBounds.height,
+        top: layoutMediaBounds.top,
+        left: layoutMediaBounds.left,
+        right: isRTL ? layoutMediaBounds.right + horizontalCameraDiff : null,
       },
     });
 
     layoutContextDispatch({
       type: ACTIONS.SET_SHARED_NOTES_OUTPUT,
       value: {
-        width: mediaBounds.width,
-        height: mediaBounds.height,
-        top: mediaBounds.top,
-        left: mediaBounds.left,
-        right: isRTL ? mediaBounds.right + horizontalCameraDiff : null,
+        width: layoutMediaBounds.width,
+        height: layoutMediaBounds.height,
+        top: layoutMediaBounds.top,
+        left: layoutMediaBounds.left,
+        right: isRTL ? layoutMediaBounds.right + horizontalCameraDiff : null,
       },
     });
   };
 
+  /* eslint-enable no-use-before-define */
   return null;
 };
 

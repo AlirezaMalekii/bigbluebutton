@@ -105,7 +105,7 @@ const AppContainer = (props) => {
   const isExternalVideoEnabled = useIsExternalVideoEnabled();
   const isPresentationEnabled = useIsPresentationEnabled();
   const isRaiseHandEnabled = useIsRaiseHandEnabled();
-  const [showScreenshare] = usePresentationSwap();
+  const [swapShowsScreenshare] = usePresentationSwap();
   const [setPresentationFitToWidth] = useMutation(SET_PRESENTATION_FIT_TO_WIDTH);
 
   const isPresenter = currentUser?.presenter;
@@ -119,9 +119,15 @@ const AppContainer = (props) => {
 
   const shouldShowGenericMainContent = !!genericMainContent.genericContentId;
 
+  const hasScreenshare = currentMeeting?.componentsFlags?.hasScreenshare;
+  const hasScreenshareAsContent = currentMeeting?.componentsFlags?.hasScreenshareAsContent;
+  const hasCameraAsContent = currentMeeting?.componentsFlags?.hasCameraAsContent;
+  const showScreenshareInMainArea = swapShowsScreenshare
+    || Boolean(hasScreenshare && !hasScreenshareAsContent && !hasCameraAsContent);
+
   const shouldShowScreenshare = (viewScreenshare || isPresenter)
-  && (currentMeeting?.componentsFlags?.hasScreenshare
-    || currentMeeting?.componentsFlags?.hasCameraAsContent) && showScreenshare;
+    && (hasScreenshare || hasCameraAsContent)
+    && showScreenshareInMainArea;
   const shouldShowPresentation = (!shouldShowScreenshare && !isSharedNotesPinned
       && !shouldShowExternalVideo && !shouldShowGenericMainContent
       && (presentationIsOpen || presentationRestoreOnUpdate)) && isPresentationEnabled;

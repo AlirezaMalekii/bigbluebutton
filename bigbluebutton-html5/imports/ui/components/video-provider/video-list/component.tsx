@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { createPortal } from 'react-dom';
 import { IntlShape, defineMessages, injectIntl } from 'react-intl';
 import { UpdatedDataForUserCameraDomElement } from 'bigbluebutton-html-plugin-sdk/dist/cjs/dom-element-manipulation/user-camera/types';
 import { throttle } from '/imports/utils/throttle';
@@ -15,6 +16,8 @@ import { Output } from '/imports/ui/components/layout/layoutTypes';
 import { VideoItem } from '/imports/ui/components/video-provider/types';
 import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
 import { UserCameraHelperAreas } from '../../plugins-engine/extensible-areas/components/user-camera-helper/types';
+import { getSkyroomWebcamLayout } from '/imports/ui/components/skyroom-layout/webcam-bounds-store';
+import { partitionSkyroomStreams } from '/imports/ui/components/skyroom-layout/camera-placement';
 
 const intlMessages = defineMessages({
   autoplayBlockedDesc: {
@@ -95,6 +98,13 @@ interface VideoListState {
     height: number;
     columns: number;
   },
+  sidebarGrid: {
+    rows: number,
+    filledArea: number,
+    width: number;
+    height: number;
+    columns: number;
+  },
   autoplayBlocked: boolean,
 }
 
@@ -104,6 +114,8 @@ class VideoList extends Component<VideoListProps, VideoListState> {
   private grid: HTMLDivElement | null;
 
   private canvas: HTMLDivElement | null;
+
+  private sidebarGrid: HTMLDivElement | null;
 
   private failedMediaElements: unknown[];
 
@@ -120,12 +132,20 @@ class VideoList extends Component<VideoListProps, VideoListState> {
         height: 0,
         width: 0,
       },
+      sidebarGrid: {
+        rows: 1,
+        filledArea: 0,
+        columns: 0,
+        height: 0,
+        width: 0,
+      },
       autoplayBlocked: false,
     };
 
     this.ticking = false;
     this.grid = null;
     this.canvas = null;
+    this.sidebarGrid = null;
     this.failedMediaElements = [];
     this.handleCanvasResize = throttle(this.handleCanvasResize.bind(this), 66,
       {
@@ -222,42 +242,32 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     this.ticking = true;
   }
 
-  setOptimalGrid() {
-    const {
-      streams,
-      cameraDock,
-      layoutContextDispatch,
-    } = this.props;
-    const visibleStreams = streams.filter(
-      (item) => item.type === VIDEO_TYPES.GRID || !('render' in item) || item.render !== false,
-    );
+  static computeOptimalGrid(
+    visibleStreams: VideoItem[],
+    canvasWidth: number,
+    canvasHeight: number,
+    gridGutter: number,
+    focusedId: string,
+  ) {
     let numItems = visibleStreams.length;
-
-    if (numItems < 1 || !this.canvas || !this.grid) {
-      return;
+    if (numItems < 1) {
+      return null;
     }
-    const { focusedId } = this.props;
-    const canvasWidth = cameraDock?.width;
-    const canvasHeight = cameraDock?.height;
-
-    const gridGutter = parseInt(window.getComputedStyle(this.grid)
-      .getPropertyValue('grid-row-gap'), 10);
 
     const hasFocusedItem = visibleStreams.filter(
       (s) => s.type !== VIDEO_TYPES.GRID && s.stream === focusedId,
     ).length && numItems > 2;
 
-    // Has a focused item so we need +3 cells
     if (hasFocusedItem) {
       numItems += 3;
     }
-    const optimalGrid = range(1, numItems + 1)
+
+    return range(1, numItems + 1)
       .reduce((currentGrid, col) => {
         const testGrid = findOptimalGrid(
           canvasWidth, canvasHeight, gridGutter,
           ASPECT_RATIO, numItems, col,
         );
-        // We need a minimum of 2 rows and columns for the focused
         const focusedConstraint = hasFocusedItem ? testGrid.rows > 1 && testGrid.columns > 1 : true;
         const betterThanCurrent = testGrid.filledArea > currentGrid.filledArea;
         return focusedConstraint && betterThanCurrent ? testGrid : currentGrid;
@@ -267,7 +277,89 @@ class VideoList extends Component<VideoListProps, VideoListState> {
         width: number;
         height: number;
         filledArea: number;
-    });
+      });
+  }
+
+  setOptimalGrid() {
+    const {
+      streams,
+      cameraDock,
+      layoutContextDispatch,
+      focusedId,
+    } = this.props;
+    const skyroomLayout = getSkyroomWebcamLayout();
+
+    if (skyroomLayout?.split) {
+      const { sidebar, stage } = partitionSkyroomStreams(streams);
+      const sidebarBounds = skyroomLayout.sidebar;
+      let { sidebarGrid } = this.state;
+
+      if (sidebar.length > 0 && sidebarBounds && this.sidebarGrid) {
+        const sidebarGutter = parseInt(window.getComputedStyle(this.sidebarGrid)
+          .getPropertyValue('grid-row-gap'), 10) || 2;
+        const computedSidebarGrid = VideoList.computeOptimalGrid(
+          sidebar,
+          sidebarBounds.width,
+          sidebarBounds.height,
+          sidebarGutter,
+          '',
+        );
+        if (computedSidebarGrid) {
+          sidebarGrid = computedSidebarGrid;
+        }
+      }
+
+      let { optimalGrid } = this.state;
+      const visibleStage = stage.filter(
+        (item) => item.type === VIDEO_TYPES.GRID || !('render' in item) || item.render !== false,
+      );
+
+      if (visibleStage.length > 0 && this.canvas && this.grid) {
+        const gridGutter = parseInt(window.getComputedStyle(this.grid)
+          .getPropertyValue('grid-row-gap'), 10);
+        const computedStageGrid = VideoList.computeOptimalGrid(
+          visibleStage,
+          cameraDock?.width,
+          cameraDock?.height,
+          gridGutter,
+          focusedId,
+        );
+        if (computedStageGrid) {
+          optimalGrid = computedStageGrid;
+          layoutContextDispatch({
+            type: ACTIONS.SET_CAMERA_DOCK_OPTIMAL_GRID_SIZE,
+            value: {
+              width: optimalGrid.width,
+              height: optimalGrid.height,
+            },
+          });
+        }
+      }
+
+      this.setState({ optimalGrid, sidebarGrid });
+      return;
+    }
+
+    const visibleStreams = streams.filter(
+      (item) => item.type === VIDEO_TYPES.GRID || !('render' in item) || item.render !== false,
+    );
+
+    if (visibleStreams.length < 1 || !this.canvas || !this.grid) {
+      return;
+    }
+
+    const gridGutter = parseInt(window.getComputedStyle(this.grid)
+      .getPropertyValue('grid-row-gap'), 10);
+    const optimalGrid = VideoList.computeOptimalGrid(
+      visibleStreams,
+      cameraDock?.width,
+      cameraDock?.height,
+      gridGutter,
+      focusedId,
+    );
+
+    if (!optimalGrid) return;
+
     layoutContextDispatch({
       type: ACTIONS.SET_CAMERA_DOCK_OPTIMAL_GRID_SIZE,
       value: {
@@ -353,7 +445,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     );
   }
 
-  renderVideoList() {
+  renderVideoList(streamsToRender?: VideoItem[]) {
     const {
       streams,
       onVirtualBgDrop,
@@ -366,25 +458,26 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       isGridEnabled,
       overflowCount,
     } = this.props;
-    const numOfStreams = streams.filter(
+    const listStreams = streamsToRender ?? streams;
+    const numOfStreams = listStreams.filter(
       (item) => item.type === VIDEO_TYPES.GRID || !('render' in item) || item.render !== false,
     ).length;
 
     const shouldShowOverflowTile = isGridEnabled && overflowCount > 0;
 
-    let streamsToRender = streams;
+    let visibleStreams = listStreams;
     if (shouldShowOverflowTile) {
-      const lastGridUserIndex = streams.map((s, idx) => ({ s, idx }))
+      const lastGridUserIndex = listStreams.map((s, idx) => ({ s, idx }))
         .reverse()
         .find(({ s }) => s.type === VIDEO_TYPES.GRID)?.idx;
 
       if (lastGridUserIndex !== undefined) {
         // remove the last grid user to replace it with the overflow tile
-        streamsToRender = streams.filter((_, idx) => idx !== lastGridUserIndex);
+        visibleStreams = listStreams.filter((_, idx) => idx !== lastGridUserIndex);
       }
     }
 
-    const videoItems = streamsToRender.map((item) => {
+    const videoItems = visibleStreams.map((item) => {
       const { userId, name } = item;
       const isStream = item.type !== VIDEO_TYPES.GRID;
       const stream = isStream ? item.stream : null;
@@ -441,6 +534,110 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     return videoItems;
   }
 
+  renderSkyroomSplitLayout() {
+    const {
+      streams,
+      intl,
+      cameraDock,
+      isGridEnabled,
+    } = this.props;
+    const { optimalGrid, sidebarGrid, autoplayBlocked } = this.state;
+    const skyroomLayout = getSkyroomWebcamLayout();
+    const { sidebar, stage } = partitionSkyroomStreams(streams);
+    const sidebarBounds = skyroomLayout?.sidebar;
+    const { position } = cameraDock;
+
+    const sidebarDockStyle: React.CSSProperties = sidebarBounds ? {
+      position: 'fixed',
+      top: sidebarBounds.top,
+      left: sidebarBounds.left ?? undefined,
+      right: sidebarBounds.right ?? undefined,
+      width: sidebarBounds.width,
+      height: sidebarBounds.height,
+      zIndex: sidebarBounds.zIndex ?? 8,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      pointerEvents: 'auto',
+      margin: 0,
+    } : {};
+
+    const layoutEl = typeof document !== 'undefined' ? document.getElementById('layout') : null;
+
+    const sidebarDock = sidebar.length > 0 && sidebarBounds ? (
+      <div
+        id="skyroom-sidebar-webcam-dock"
+        data-test="skyroomSidebarWebcamDock"
+        style={sidebarDockStyle}
+      >
+        <Styled.VideoList
+          ref={(ref) => {
+            this.sidebarGrid = ref;
+          }}
+          className="video-provider_list skyroom-sidebar-webcam-list"
+          style={{
+            width: `${sidebarGrid.width}px`,
+            height: `${sidebarGrid.height}px`,
+            gridTemplateColumns: `repeat(${sidebarGrid.columns}, 1fr)`,
+            gridTemplateRows: `repeat(${sidebarGrid.rows}, 1fr)`,
+          }}
+        >
+          {this.renderVideoList(sidebar)}
+        </Styled.VideoList>
+      </div>
+    ) : null;
+
+    return (
+      <>
+        {layoutEl && sidebarDock
+          ? createPortal(sidebarDock, layoutEl)
+          : sidebarDock}
+        <Styled.VideoCanvas
+          $position={position}
+          ref={(ref) => {
+            this.canvas = ref;
+          }}
+          style={{
+            minHeight: 'inherit',
+          }}
+        >
+          {this.renderPreviousPageButton()}
+
+          {!stage.length && !isGridEnabled ? null : (
+            <Styled.VideoList
+              ref={(ref) => {
+                this.grid = ref;
+              }}
+              style={{
+                width: `${optimalGrid.width}px`,
+                height: `${optimalGrid.height}px`,
+                gridTemplateColumns: `repeat(${optimalGrid.columns}, 1fr)`,
+                gridTemplateRows: `repeat(${optimalGrid.rows}, 1fr)`,
+              }}
+              className="video-provider_list"
+            >
+              {this.renderVideoList(stage)}
+            </Styled.VideoList>
+          )}
+          {!autoplayBlocked ? null : (
+            <AutoplayOverlay
+              autoplayBlockedDesc={intl.formatMessage(intlMessages.autoplayBlockedDesc)}
+              autoplayAllowLabel={intl.formatMessage(intlMessages.autoplayAllowLabel)}
+              handleAllowAutoplay={this.handleAllowAutoplay}
+            />
+          )}
+
+          {
+            (position === 'contentRight' || position === 'contentLeft')
+            && <Styled.Break />
+          }
+
+          {this.renderNextPageButton()}
+        </Styled.VideoCanvas>
+      </>
+    );
+  }
+
   render() {
     const {
       streams,
@@ -448,6 +645,12 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       cameraDock,
       isGridEnabled,
     } = this.props;
+    const skyroomLayout = getSkyroomWebcamLayout();
+
+    if (skyroomLayout?.split) {
+      return this.renderSkyroomSplitLayout();
+    }
+
     const { optimalGrid, autoplayBlocked } = this.state;
     const { position } = cameraDock;
 

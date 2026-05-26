@@ -50,9 +50,10 @@ const useCursor = (publishCursorUpdate, whiteboardId) => {
   return updateCursorPosition;
 };
 
-const getPresentationOptionsMenuItem = () => document.querySelector('li#presentationFullscreen')
-    || document.querySelector('li#presentationSnapshot')
-    || document.querySelector('li#toolVisibility')
+const getPresentationOptionsMenuItem = () => document.querySelector('[data-test="presentationFullscreen"]')
+    || document.querySelector('[data-test="presentationSnapshot"]')
+    || document.querySelector('[data-test="toolVisibility"]')
+    || document.querySelector('[data-test="clearAnnotations"]')
     || null;
 
 const getTldrawOpenMenu = () => {

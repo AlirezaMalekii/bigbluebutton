@@ -1,22 +1,14 @@
 import styled from 'styled-components';
 import ModalSimple from '/imports/ui/components/common/modal/simple/component';
 import {
-  colorOffWhite,
-  colorGrayDark,
-  colorGrayLightest,
   colorPrimary,
-  colorWhite,
-  btnPrimaryActiveBg,
   colorDanger,
 } from '/imports/ui/stylesheets/styled-components/palette';
 import {
   smPaddingX,
-  smPaddingY,
-  mdPaddingY,
   lgPaddingY,
   titlePositionLeft,
   mdPaddingX,
-  borderSizeLarge,
 } from '/imports/ui/stylesheets/styled-components/general';
 import {
   fontSizeSmall,
@@ -38,8 +30,9 @@ import {
 const Item = styled.li`
   display: flex;
   width: 100%;
-  height: 4rem;
-  border-bottom: 1px solid ${colorGrayLightest};
+  min-height: 3.25rem;
+  height: auto;
+  border-bottom: 1px solid rgba(218, 230, 245, 0.1);
 
   ${({ last }) => last && `
     border: none;
@@ -171,18 +164,25 @@ const CopyContainer = styled.div`
   display: flex;
   justify-content: flex-end;
   border: none;
-  border-top: 1px solid ${colorOffWhite};
+  border-top: 1px solid rgba(20, 169, 158, 0.25);
   padding: ${mdPaddingX} 0 0 0;
+  margin-top: auto;
 `;
 
 const ConnectionStatusModal = styled(ModalSimple)`
-  padding: 1rem;
-  height: 28rem;
-
+  padding: 0;
+  width: min(680px, 94vw);
+  max-width: 680px;
+  max-height: min(86vh, 560px);
+  overflow: hidden;
 `;
 
 const Container = styled.div`
-  padding: 0 calc(${mdPaddingX} / 2 + ${borderSizeLarge});
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
 `;
 
 const Header = styled.div`
@@ -194,8 +194,8 @@ const Header = styled.div`
 `;
 
 const Title = styled.h2`
-  color: ${colorGrayDark};
-  font-weight: 500;
+  color: var(--skyroom-text-primary, #eef4fb);
+  font-weight: 700;
   font-size: ${fontSizeXL};
   text-align: left;
   margin: 0;
@@ -255,13 +255,15 @@ const HelperWrapper = styled.div`
 const Helper = styled.div`
   width: 12.5rem;
   height: 100%;
-  border-radius: .5rem;
-  background-color: ${colorOffWhite};
+  border-radius: 12px;
+  background: linear-gradient(165deg, rgba(28, 40, 62, 0.95), rgba(16, 24, 40, 0.98));
+  border: 1px solid rgba(20, 169, 158, 0.28);
+  color: var(--skyroom-text-primary, #eef4fb);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: .5rem;
+  padding: .75rem;
 `;
 
 const NetworkDataContent = styled.div`
@@ -302,10 +304,15 @@ const ConnectionTabList = styled(TabList)`
   display: flex;
   flex-flow: row;
   margin: 0;
-  margin-bottom: .5rem;
+  margin-bottom: 1rem;
   border: none;
-  padding: 0;
-  width: calc(100% / 3);
+  padding: 4px;
+  width: 100%;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: 14px;
+  border: 1px solid rgba(218, 230, 245, 0.08);
+  box-sizing: border-box;
 
   @media ${smallOnly} {
     width: 100%;
@@ -317,16 +324,15 @@ const ConnectionTabList = styled(TabList)`
 
 const ConnectionTabPanel = styled(TabPanel)`
   display: none;
-  margin: 0 0 0 1rem;
-  height: 13rem;
-
-  [dir="rtl"] & {
-    margin: 0 1rem 0 0;
-  }
+  margin: 0;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 
   &.is-selected {
     display: flex;
     flex-flow: column;
+    flex: 1;
   }
 
   & ul {
@@ -344,18 +350,18 @@ const ConnectionTabPanel = styled(TabPanel)`
 const ConnectionTabSelector = styled(Tab)`
   display: flex;
   flex-flow: row;
-  font-size: 0.9rem;
-  flex: 0 0 auto;
-  justify-content: flex-start;
+  font-size: 0.82rem;
+  flex: 1 1 0;
+  justify-content: center;
   border: none !important;
-  padding: ${mdPaddingY} ${mdPaddingX};
-
-  border-radius: .2rem;
+  padding: 10px 8px;
+  border-radius: 10px;
   cursor: pointer;
-  margin-bottom: ${smPaddingY};
+  margin: 0;
   align-items: center;
-  flex-grow: 0;
   min-width: 0;
+  color: var(--skyroom-text-secondary, #aab6c7);
+  background: transparent;
 
   & > span {
     min-width: 0;
@@ -378,15 +384,20 @@ const ConnectionTabSelector = styled(Tab)`
   }
 
   span {
-    border-bottom: 2px solid ${colorWhite};
+    border-bottom: none;
+    color: inherit;
   }
 
   &.is-selected {
     border: none;
-    color: ${colorPrimary};
+    color: #ffffff;
+    background: linear-gradient(135deg, #0d887e 0%, #14a99e 100%);
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(13, 136, 126, 0.35);
 
     span {
-      border-bottom: 2px solid ${btnPrimaryActiveBg};
+      border-bottom: none;
+      color: #ffffff;
     }
   }
 `;

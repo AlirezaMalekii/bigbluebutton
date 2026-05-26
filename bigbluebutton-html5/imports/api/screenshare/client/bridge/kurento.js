@@ -2,13 +2,18 @@ import Auth from '/imports/ui/services/auth';
 import logger from '/imports/startup/client/logger';
 import BridgeService from './service';
 import ScreenshareBroker from '/imports/ui/services/bbb-webrtc-sfu/screenshare-broker';
-import { setIsSharing, screenShareEndAlert, setOutputDeviceId } from '/imports/ui/components/screenshare/service';
+import {
+  setIsSharing,
+  screenShareEndAlert,
+  setOutputDeviceId,
+  isViewerScreenshareReconnectAllowed,
+} from '/imports/ui/components/screenshare/service';
 import { SCREENSHARING_ERRORS } from './errors';
 import { shouldForceRelay } from '/imports/ui/services/bbb-webrtc-sfu/utils';
 import MediaStreamUtils from '/imports/utils/media-stream-utils';
 import { notifyStreamStateChange } from '/imports/ui/services/bbb-webrtc-sfu/stream-state-service';
 
-const BRIDGE_NAME = 'kurento'
+const BRIDGE_NAME = 'kurento';
 const SCREENSHARE_VIDEO_TAG = 'screenshareVideo';
 const SEND_ROLE = 'send';
 const RECV_ROLE = 'recv';
@@ -28,22 +33,20 @@ const mapErrorCode = (error) => {
   const mappedError = ERROR_MAP[errorCode];
 
   if (errorCode == null || mappedError == null) return error;
-  error.errorCode = mappedError.errorCode;
-  error.errorMessage = mappedError.errorMessage;
-  error.message = mappedError.errorMessage;
-
-  return error;
-}
+  return {
+    ...error,
+    errorCode: mappedError.errorCode,
+    errorMessage: mappedError.errorMessage,
+    message: mappedError.errorMessage,
+  };
+};
 
 export default class KurentoScreenshareBridge {
   constructor() {
-    this.role;
-    this.broker;
-    this._gdmStream;
+    this._gdmStream = null;
     this.hasAudio = false;
     this.connectionAttempts = 0;
     this.reconnecting = false;
-    this.reconnectionTimeout;
     this._restartIntervalMs = null;
     this.startedOnce = false;
     this.outputDeviceId = null;
@@ -68,7 +71,9 @@ export default class KurentoScreenshareBridge {
 
   _shouldReconnect() {
     // Sender/presenter reconnect is *not* implemented yet
-    return this.reconnectionTimeout == null && this.role === RECV_ROLE;
+    return this.reconnectionTimeout == null
+      && this.role === RECV_ROLE
+      && isViewerScreenshareReconnectAllowed();
   }
 
   /**
@@ -101,6 +106,11 @@ export default class KurentoScreenshareBridge {
   }
 
   inboundStreamReconnect() {
+    if (!isViewerScreenshareReconnectAllowed()) {
+      this.reconnecting = false;
+      return;
+    }
+
     const currentRestartIntervalMs = this.restartIntervalMs;
 
     logger.warn({
@@ -116,7 +126,10 @@ export default class KurentoScreenshareBridge {
     this._stop();
     // Create new reconnect interval time
     this.restartIntervalMs = BridgeService.getNextReconnectionInterval(currentRestartIntervalMs);
-    this.view(this.hasAudio).then(() => {
+    this.view(this.streamId, {
+      hasAudio: this.hasAudio,
+      outputDeviceId: this.outputDeviceId,
+    }).then(() => {
       this.clearReconnectionTimeout();
     }).catch((error) => {
       // Error handling is a no-op because it will be "handled" in handleViewerFailure
@@ -127,18 +140,24 @@ export default class KurentoScreenshareBridge {
           errorMessage: error.errorMessage,
           reconnecting: this.reconnecting,
           role: this.role,
-          bridge: BRIDGE_NAME
+          bridge: BRIDGE_NAME,
         },
       }, 'Screensharing reconnect failed');
     });
   }
 
   handleConnectionTimeoutExpiry() {
+    if (!this._shouldReconnect()) {
+      this.reconnecting = false;
+      return;
+    }
+
     this.reconnecting = true;
 
     switch (this.role) {
       case RECV_ROLE:
-        return this.inboundStreamReconnect();
+        this.inboundStreamReconnect();
+        break;
 
       // Sender/presenter reconnect is *not* implemented yet
       case SEND_ROLE:
@@ -156,13 +175,15 @@ export default class KurentoScreenshareBridge {
     }
   }
 
-  maxConnectionAttemptsReached () {
+  maxConnectionAttemptsReached() {
     return this.connectionAttempts > BridgeService.MAX_CONN_ATTEMPTS();
   }
 
   scheduleReconnect({
     overrideTimeout,
   } = { }) {
+    if (!this._shouldReconnect()) return;
+
     if (this.reconnectionTimeout == null) {
       let nextRestartInterval = this.restartIntervalMs;
       if (typeof overrideTimeout === 'number') nextRestartInterval = overrideTimeout;
@@ -174,7 +195,7 @@ export default class KurentoScreenshareBridge {
     }
   }
 
-  clearReconnectionTimeout () {
+  clearReconnectionTimeout() {
     this.reconnecting = false;
     this.restartIntervalMs = BridgeService.BASE_MEDIA_TIMEOUT();
 
@@ -184,6 +205,7 @@ export default class KurentoScreenshareBridge {
     }
   }
 
+  // eslint-disable-next-line class-methods-use-this
   setVolume(volume) {
     const mediaElement = document.getElementById(SCREENSHARE_VIDEO_TAG);
 
@@ -198,6 +220,7 @@ export default class KurentoScreenshareBridge {
     return DEFAULT_VOLUME;
   }
 
+  // eslint-disable-next-line class-methods-use-this
   getVolume() {
     const mediaElement = document.getElementById(SCREENSHARE_VIDEO_TAG);
 
@@ -227,20 +250,29 @@ export default class KurentoScreenshareBridge {
   handleBrokerFailure(error) {
     mapErrorCode(error);
     const { errorMessage, errorCode } = error;
+    const brokerRole = this.broker?.role ?? this.role;
+    const brokerStarted = this.broker?.started;
+    const isViewerTeardown = brokerRole === RECV_ROLE && !isViewerScreenshareReconnectAllowed();
 
-    logger.error({
+    const logPayload = {
       logCode: 'screenshare_broker_failure',
       extraInfo: {
         errorCode,
         errorMessage,
-        role: this.broker.role,
-        started: this.broker.started,
+        role: brokerRole,
+        started: brokerStarted,
         reconnecting: this.reconnecting,
         bridge: BRIDGE_NAME,
       },
-    }, `Screenshare broker failure: ${errorMessage}`);
+    };
 
-    notifyStreamStateChange('screenshare', 'failed');
+    if (isViewerTeardown) {
+      logger.debug(logPayload, `Screenshare viewer session ended: ${errorMessage}`);
+    } else {
+      logger.error(logPayload, `Screenshare broker failure: ${errorMessage}`);
+      notifyStreamStateChange('screenshare', 'failed');
+    }
+
     // Screensharing was already successfully negotiated and error occurred during
     // during call; schedule a reconnect
     if (this._shouldReconnect()) {
@@ -320,10 +352,13 @@ export default class KurentoScreenshareBridge {
   }
 
   handleEnded() {
-    screenShareEndAlert();
+    if (!this.reconnecting) {
+      screenShareEndAlert();
+    }
   }
 
   share(stream, onFailure, contentType) {
+    // eslint-disable-next-line no-async-promise-executor
     return new Promise(async (resolve, reject) => {
       const SETTINGS = window.meetingClientSettings;
       const SFU_CONFIG = SETTINGS.public.kurento;
@@ -364,7 +399,7 @@ export default class KurentoScreenshareBridge {
         userName: Auth.fullname,
         stream,
         hasAudio: this.hasAudio,
-        contentType: contentType,
+        contentType,
         bitrate: BridgeService.BASE_BITRATE(),
         offering: true,
         mediaServer: BridgeService.getMediaServerAdapter(),
@@ -404,6 +439,9 @@ export default class KurentoScreenshareBridge {
   // media tag, connectionAttempts, ...)
   _stop() {
     if (this.broker) {
+      if (this.reconnecting) {
+        this.broker.onended = function onended() {};
+      }
       this.broker.stop();
       // Checks if this session is a sharer and if it's not reconnecting
       // If that's the case, clear the local sharing state in screen sharing UI

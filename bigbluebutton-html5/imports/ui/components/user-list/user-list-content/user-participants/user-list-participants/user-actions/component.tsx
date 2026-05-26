@@ -34,7 +34,8 @@ import { PANELS, ACTIONS } from '/imports/ui/components/layout/enums';
 
 import ConfirmationModal from '/imports/ui/components/common/modal/confirmation/component';
 
-import BBBMenu from '/imports/ui/components/common/menu/component';
+import Icon from '/imports/ui/components/common/icon/icon-ts/component';
+import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import { setPendingChat } from '/imports/ui/core/local-states/usePendingChat';
 import Styled from './styles';
 import { useMutation } from '@apollo/client';
@@ -601,7 +602,45 @@ const UserActions: React.FC<UserActionsProps> = ({
   ];
 
   const actions = dropdownOptions.filter((key) => key.allowed);
-  if (!(actions.length > 1) || user.bot) {
+  const iconActions = actions.filter((action): action is DropdownItem => {
+    if ('isTitle' in action) return false;
+    const item = action as DropdownItem;
+    return !item.isSeparator && Boolean(item.onClick) && Boolean(item.icon);
+  });
+
+  const renderActionIcon = (action: DropdownItem) => {
+    let iconName: string | null = null;
+    if (typeof action.icon === 'string') {
+      iconName = action.icon;
+    } else if (
+      action.icon
+      && typeof action.icon === 'object'
+      && 'iconName' in action.icon
+    ) {
+      iconName = action.icon.iconName;
+    }
+
+    if (!iconName) return null;
+
+    return (
+      <TooltipContainer key={action.key} title={action.tooltip || action.label || ''}>
+        <Styled.ActionIconButton
+          type="button"
+          aria-label={action.label}
+          data-test={action.dataTest}
+          onClick={(e) => {
+            e.stopPropagation();
+            action.onClick?.();
+            setOpenUserAction(null);
+          }}
+        >
+          <Icon iconName={iconName} />
+        </Styled.ActionIconButton>
+      </TooltipContainer>
+    );
+  };
+
+  if (iconActions.length === 0 || user.bot) {
     return (
       <Styled.NoPointerEvents>
         {children}
@@ -610,31 +649,16 @@ const UserActions: React.FC<UserActionsProps> = ({
   }
 
   return (
-    <div>
-      <BBBMenu
-        trigger={
-          (
-            <Styled.UserActionsTrigger
-              isActionsOpen={open}
-              selected={open}
-              tabIndex={-1}
-              onClick={() => setOpenUserAction(user.userId)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  setOpenUserAction(user.userId);
-                }
-              }}
-            >
-              {children}
-            </Styled.UserActionsTrigger>
-          )
-        }
-        actions={actions}
-        onCloseCallback={() => {
-          setOpenUserAction(null);
-        }}
-        open={open}
-      />
+    <Styled.UserRow>
+      <Styled.UserRowMain>
+        {children}
+      </Styled.UserRowMain>
+      <Styled.ActionIconBar
+        aria-hidden={!open}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {iconActions.map(renderActionIcon)}
+      </Styled.ActionIconBar>
       {isConfirmationModalOpen ? (
         <ConfirmationModal
           intl={intl}
@@ -651,7 +675,7 @@ const UserActions: React.FC<UserActionsProps> = ({
           }}
         />
       ) : null}
-    </div>
+    </Styled.UserRow>
   );
 };
 

@@ -1,18 +1,7 @@
-import * as DarkReader from 'darkreader';
 import data from '@emoji-mart/data';
 import { init } from 'emoji-mart';
-import Styled from './styles';
 import logger from '/imports/startup/client/logger';
 import useMeeting from '../../core/hooks/useMeeting';
-import Storage from '/imports/ui/services/storage/session';
-
-const CUSTOM_LOGO_URL_KEY = 'CustomLogoUrl';
-
-const CUSTOM_DARK_LOGO_URL_KEY = 'CustomDarkLogoUrl';
-
-const equalURLs = () => (
-  Storage.getItem(CUSTOM_LOGO_URL_KEY) === Storage.getItem(CUSTOM_DARK_LOGO_URL_KEY)
-);
 
 export function useMeetingIsBreakout() {
   const { data: meeting } = useMeeting((m) => ({
@@ -22,36 +11,48 @@ export function useMeetingIsBreakout() {
   return meeting && meeting.isBreakout;
 }
 
-export const setDarkTheme = (value) => {
-  let invert = [Styled.DtfInvert];
+/**
+ * Skyroom theme integration:
+ * BBB upstream uses the `darkreader` library to invert the page at
+ * runtime when dark mode is toggled. That destroys our brand palette
+ * (#0D887E / #070B14) by inverting it.
+ *
+ * We replace the implementation with a declarative `[data-theme]`
+ * attribute on <html>. Our stylesheet at
+ * `public/stylesheets/skyroom/theme.css` reacts to that attribute and
+ * applies the correct CSS variables for either theme.
+ *
+ * The public function signature (`setDarkTheme(boolean)` and
+ * `isDarkThemeEnabled()`) is preserved so callers across the BBB
+ * codebase keep working unchanged — minimizing merge conflicts with
+ * upstream releases.
+ */
+const SKYROOM_THEME_STORAGE_KEY = 'skyroom-theme';
 
-  if (equalURLs()) {
-    invert = [Styled.DtfBrandingInvert];
+/** Skyroom ships dark-only; BBB still calls setDarkTheme(boolean) upstream. */
+export const setDarkTheme = () => {
+  const root = document?.documentElement;
+  if (!root) return;
+
+  if (root.getAttribute('data-theme') === 'dark') return;
+
+  root.setAttribute('data-theme', 'dark');
+
+  try {
+    window.localStorage.setItem(SKYROOM_THEME_STORAGE_KEY, 'dark');
+  } catch {
+    // localStorage may be unavailable (private mode / quota) — non-fatal.
   }
 
-  if (value && !DarkReader.isEnabled()) {
-    DarkReader.enable(
-      { brightness: 100, contrast: 90 },
-      {
-        invert,
-        ignoreInlineStyle: [Styled.DtfCss],
-        ignoreImageAnalysis: [Styled.DtfImages],
-      },
-    );
-    logger.info({ logCode: 'dark_mode' }, 'Dark mode is on.');
-
-    window.dispatchEvent(new CustomEvent('darkmodechange', { detail: { enabled: true } }));
-  }
-
-  if (!value && DarkReader.isEnabled()) {
-    DarkReader.disable();
-    logger.info({ logCode: 'dark_mode' }, 'Dark mode is off.');
-
-    window.dispatchEvent(new CustomEvent('darkmodechange', { detail: { enabled: false } }));
-  }
+  logger.info({ logCode: 'dark_mode' }, 'Theme set to dark (Skyroom dark-only).');
+  window.dispatchEvent(
+    new CustomEvent('darkmodechange', { detail: { enabled: true } }),
+  );
 };
 
-export const isDarkThemeEnabled = () => DarkReader.isEnabled();
+export const isDarkThemeEnabled = () => (
+  document?.documentElement?.getAttribute('data-theme') === 'dark'
+);
 
 export const initializeEmojiData = () => {
   const DISABLE_EMOJIS = window.meetingClientSettings.public.chat.disableEmojis;

@@ -68,14 +68,20 @@ const PresentationOptionsContainer = ({
   const PUBLIC_CHAT_ID = window.meetingClientSettings.public.chat.public_group_id;
   const layoutType = layoutSelect((i) => i.layoutType);
   const isVideoFocusLayout = layoutType === LAYOUT_TYPE.VIDEO_FOCUS;
+  const presentationLabel = !presentationIsOpen
+    ? intlMessages.restorePresentationLabel
+    : intlMessages.minimizePresentationLabel;
+  const presentationDesc = !presentationIsOpen
+    ? intlMessages.restorePresentationDesc
+    : intlMessages.minimizePresentationDesc;
   return (
     <Button
       icon={`${buttonType}${!presentationIsOpen ? '_off' : ''}`}
-      label={intl.formatMessage(!presentationIsOpen ? intlMessages.restorePresentationLabel : intlMessages.minimizePresentationLabel)}
-      aria-label={intl.formatMessage(!presentationIsOpen ? intlMessages.restorePresentationLabel : intlMessages.minimizePresentationLabel)}
-      aria-describedby={intl.formatMessage(!presentationIsOpen ? intlMessages.restorePresentationDesc : intlMessages.minimizePresentationDesc)}
-      description={intl.formatMessage(!presentationIsOpen ? intlMessages.restorePresentationDesc : intlMessages.minimizePresentationDesc)}
-      color={presentationIsOpen ? "primary" : "default"}
+      label={intl.formatMessage(presentationLabel)}
+      aria-label={intl.formatMessage(presentationLabel)}
+      aria-describedby={intl.formatMessage(presentationDesc)}
+      description={intl.formatMessage(presentationDesc)}
+      color={presentationIsOpen ? 'primary' : 'default'}
       hideLabel
       circle
       size="lg"
@@ -95,7 +101,7 @@ const PresentationOptionsContainer = ({
           });
         }
         setPresentationIsOpen(layoutContextDispatch, !presentationIsOpen);
-        if (onlyPresentation) {
+        if (onlyPresentation || hasScreenshare || hasCameraAsContent) {
           Session.setItem('presentationLastState', !presentationIsOpen);
         }
       }}

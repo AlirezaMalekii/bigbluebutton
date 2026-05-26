@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BBB Local Dev Join</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #06172A;
+      color: #fff;
+      max-width: 640px;
+      margin: 48px auto;
+      padding: 0 24px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <h1>Join local HTML5 client</h1>
+  <p>Paste a server join URL or session token. This page never opens the server client.</p>
+  <label>
+    URL or token
+    <textarea id="input" rows="4" style="width:100%;margin-top:8px;"></textarea>
+  </label>
+  <p>
+    <button id="go" type="button">Open localhost client</button>
+  </p>
+  <p id="msg"></p>
+  <script>
+    const port = window.location.port || '3000';
+    const base = `${window.location.protocol}//${window.location.hostname}:${port}/html5client/`;
+
+    function extractToken(value) {
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+      try {
+        const url = new URL(trimmed);
+        return url.searchParams.get('sessionToken');
+      } catch (e) {
+        if (/^[a-z0-9]{16}$/i.test(trimmed)) return trimmed;
+      }
+      const match = trimmed.match(/sessionToken=([a-z0-9]+)/i);
+      return match ? match[1] : null;
+    }
+
+    document.getElementById('go').addEventListener('click', () => {
+      const token = extractToken(document.getElementById('input').value);
+      const msg = document.getElementById('msg');
+      if (!token) {
+        msg.textContent = 'Could not find a valid sessionToken.';
+        return;
+      }
+      window.location.href = `${base}?sessionToken=${token}`;
+    });
+  </script>
+</body>
+</html>

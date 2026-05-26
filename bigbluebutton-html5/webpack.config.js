@@ -1,6 +1,8 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
+const fs = require('fs');
+const express = require('express');
 const webpack = require('webpack');
 const CopyPlugin = require('copy-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
@@ -10,12 +12,121 @@ const CompressionPlugin = require('compression-webpack-plugin');
 const env = process.env.NODE_ENV || 'development';
 const detailedLogs = process.env.DETAILED_LOGS || false;
 const hotReload = String(process.env.HOT_RELOAD).toLowerCase() === 'true';
+const bbbServer = process.env.BBB_SERVER || '';
 const prodEnv = 'production';
 const devEnv = 'development';
 const isDev = env === devEnv;
 const isSafariTarget = process.env.TARGET === 'safari';
 
+const buildRemoteDevProxy = (remoteServerUrl, localOrigin) => {
+  const remoteUrl = new URL(remoteServerUrl);
+  const remoteOrigin = remoteUrl.origin;
+  const remoteHost = remoteUrl.host;
+  const localUrl = new URL(localOrigin);
+  const localOriginHttp = localUrl.origin;
+  const localOriginWs = localOriginHttp.replace(/^http/, 'ws');
+
+  const rewriteApiIndexResponse = (proxyRes, req, res) => {
+    const bodyChunks = [];
+
+    proxyRes.on('data', (chunk) => {
+      bodyChunks.push(chunk);
+    });
+
+    proxyRes.on('end', () => {
+      let body = Buffer.concat(bodyChunks).toString('utf8');
+      // Route HTTP + GraphQL WS through localhost. WS proxy rewrites Origin to the
+      // remote host so bbb-graphql-middleware accepts the connection (it rejects
+      // cross-origin from localhost by default).
+      body = body
+        .replace(`https://${remoteHost}/api/rest`, `${localOriginHttp}/api/rest`)
+        .replace(`wss://${remoteHost}/graphql`, `${localOriginWs}/graphql`);
+
+      res.writeHead(proxyRes.statusCode, proxyRes.headers);
+      res.end(body);
+    });
+  };
+
+  const quietProxyErrors = {
+    error: (err) => {
+      if (err?.code === 'ECONNRESET' || err?.code === 'ECONNABORTED') {
+        return;
+      }
+      process.stderr.write(`[BBB remote proxy] ${err.code || err.message}\n`);
+    },
+  };
+
+  const sharedProxyOptions = {
+    target: remoteOrigin,
+    changeOrigin: true,
+    secure: false,
+    ws: false,
+    on: quietProxyErrors,
+  };
+
+  return [
+    {
+      ...sharedProxyOptions,
+      context: (pathname) => pathname === '/bigbluebutton/api',
+      selfHandleResponse: true,
+      onProxyRes: rewriteApiIndexResponse,
+    },
+    {
+      target: remoteOrigin,
+      changeOrigin: true,
+      secure: false,
+      ws: true,
+      context: '/graphql',
+      on: quietProxyErrors,
+      onProxyReqWs: (proxyReq) => {
+        proxyReq.setHeader('origin', remoteOrigin);
+      },
+    },
+    {
+      ...sharedProxyOptions,
+      context: [
+        '/bigbluebutton',
+        '/api',
+        '/bbb-webrtc-sfu',
+        '/livekit',
+        '/hocuspocus',
+        '/pad',
+        '/learning-analytics-dashboard',
+      ],
+    },
+  ];
+};
+
+const setupRemoteDevStaticAssets = (devServer, publicPath) => {
+  const publicDir = path.join(__dirname, 'public');
+  const privateDir = path.join(__dirname, 'private');
+  const localesDir = path.join(publicDir, 'locales');
+
+  const sendLocalesIndex = (_req, res) => {
+    fs.readdir(localesDir, (err, files) => {
+      if (err) {
+        res.sendStatus(500);
+        return;
+      }
+
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.json(files.map((name) => ({ name, type: 'file' })));
+    });
+  };
+
+  // Mirrors nginx `bbb-html5.nginx.dev` locales autoindex for Mac remote dev only.
+  devServer.app.get(`${publicPath}locales`, sendLocalesIndex);
+  devServer.app.get(`${publicPath}locales/`, sendLocalesIndex);
+  devServer.app.use(publicPath, express.static(publicDir, { index: false }));
+  devServer.app.use(`${publicPath}private`, express.static(privateDir, { index: false }));
+};
+
 process.stdout.write(`Building: ${process.env.TARGET}\n`);
+
+const remoteDevPublicPath = '/html5client/';
 
 const config = {
   entry: './client/main.tsx',
@@ -24,7 +135,7 @@ const config = {
       ? 'bundle.safari.js'
       : 'bundle.[fullhash].js',
     path: path.resolve(__dirname, 'dist'),
-    publicPath: '',
+    publicPath: isDev && bbbServer ? remoteDevPublicPath : '',
   },
   cache: {
     type: 'filesystem',
@@ -148,10 +259,25 @@ if (env === prodEnv) {
   };
 } else {
   config.mode = devEnv;
+  const devServerPort = Number(process.env.PORT) || 3000;
+  const localDevOrigin = `http://localhost:${devServerPort}`;
+
   config.devServer = {
-    port: 3000,
+    port: devServerPort,
     hot: true,
     allowedHosts: 'all',
+    devMiddleware: bbbServer ? {
+      publicPath: remoteDevPublicPath,
+    } : undefined,
+    historyApiFallback: bbbServer ? {
+      rewrites: [
+        { from: /^\/html5client\/?$/, to: `${remoteDevPublicPath}index.html` },
+      ],
+    } : {
+      rewrites: [
+        { from: /^\/html5client/, to: '/index.html' },
+      ],
+    },
     client: {
       overlay: false,
       webSocketURL: 'auto://0.0.0.0:0/html5client/ws',
@@ -162,6 +288,11 @@ if (env === prodEnv) {
       }
 
       devServer.app.use((req, res, next) => {
+        if (bbbServer && req.method === 'GET' && req.path === '/') {
+          res.redirect(302, remoteDevPublicPath);
+          return;
+        }
+
         // the server crashes when it receives HEAD requests, so we need to prevent it
         if (req.method === 'HEAD') {
           // console.log(`Request received: ${req.method} ${req.url}`);
@@ -173,9 +304,20 @@ if (env === prodEnv) {
         }
       });
 
+      if (bbbServer) {
+        setupRemoteDevStaticAssets(devServer, remoteDevPublicPath);
+      }
+
       return middlewares;
     },
   };
+
+  if (bbbServer) {
+    process.stdout.write(`Remote BBB backend: ${bbbServer}\n`);
+    process.stdout.write(`Local dev UI: ${localDevOrigin}/html5client/\n`);
+    process.stdout.write('GraphQL WS: localhost proxy (Origin rewritten for remote server)\n');
+    config.devServer.proxy = buildRemoteDevProxy(bbbServer, localDevOrigin);
+  }
 }
 
 module.exports = config;

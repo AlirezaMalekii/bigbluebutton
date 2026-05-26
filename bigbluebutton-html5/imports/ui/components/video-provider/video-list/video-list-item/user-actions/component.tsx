@@ -296,6 +296,7 @@ const UserActions: React.FC<UserActionProps> = (props) => {
               <Styled.DropdownTrigger
                 tabIndex={0}
                 data-test="dropdownWebcamButton"
+                data-webcam-participant-name="true"
                 $isRTL={isRTL}
                 role="button"
               >
@@ -318,7 +319,10 @@ const UserActions: React.FC<UserActionProps> = (props) => {
         )
         : (
           <Styled.Dropdown $isFirefox={isFirefox}>
-            <Styled.UserName $noMenu={numOfStreams < 3}>
+            <Styled.UserName
+              $noMenu={numOfStreams < 3}
+              data-test="webcamParticipantName"
+            >
               {displayName}
             </Styled.UserName>
           </Styled.Dropdown>

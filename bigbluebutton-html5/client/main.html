@@ -35,13 +35,12 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
       height: 100%;
       font-family: 'Source Sans Pro', Arial, sans-serif;
       font-size: 1rem; /* 16px */
-      background-color: #06172A;
+      /* Background is owned by the Skyroom theme (see public/stylesheets/skyroom/theme.css).
+         A neutral fallback prevents a white flash before that stylesheet loads. */
+      background-color: #070B14;
     }
 
-    /* language-specific font */
-    body.lang-fa {
-      font-family: Tahoma, 'Source Sans Pro', Arial, sans-serif;
-    }
+    /* Persian font is loaded from public/stylesheets/skyroom/iranyekan.css */
 
     :-webkit-full-screen {
       background-color: inherit;
@@ -148,6 +147,19 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
   <link rel="stylesheet" href="stylesheets/modals.css" crossorigin="anonymous"/>
   <link rel="stylesheet" href="stylesheets/toastify.css" crossorigin="anonymous"/>
   <link rel="stylesheet" href="stylesheets/toggleSwitch.css" crossorigin="anonymous"/>
+  <!-- Skyroom-inspired theme: Persian font + brand palette + light/dark variants.
+       Loaded LAST so it overrides the upstream BBB stylesheets via CSS variables. -->
+  <link rel="stylesheet" href="stylesheets/skyroom/iranyekan.css" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="stylesheets/skyroom/theme.css" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="stylesheets/skyroom/modals.css" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="stylesheets/skyroom/layout.css" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="stylesheets/skyroom/sidebar.css" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="stylesheets/skyroom/whiteboard-toolbar.css" crossorigin="anonymous"/>
+  <script>
+    /* Skyroom: dark-only theme before React paints */
+    document.documentElement.setAttribute('data-theme', 'dark');
+    try { window.localStorage.setItem('skyroom-theme', 'dark'); } catch (e) {}
+  </script>
   
   <style>
     @font-face {
@@ -160,7 +172,7 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
     </style>
   <!-- fonts -->
 </head>
-<body style="background-color: #06172A">
+<body>
   <div id="aria-polite-alert" aria-live="polite" aria-atomic="false" class="sr-only"></div>
   <svg style="display: none; width: 1px; height: 1px;">
     <defs>

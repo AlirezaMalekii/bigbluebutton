@@ -5,23 +5,53 @@ import { smallOnly } from '/imports/ui/stylesheets/styled-components/breakpoints
 import { colorPrimary } from '/imports/ui/stylesheets/styled-components/palette';
 import {
   mdPaddingY,
-  btnSpacing,
 } from '/imports/ui/stylesheets/styled-components/general';
 import { lineHeightComputed } from '/imports/ui/stylesheets/styled-components/typography';
 
-const AudioOptions = styled.span`
+const AudioChoiceIntro = styled.p`
+  margin: 0 0 1.25rem;
+  padding: 0 0.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--skyroom-text-secondary, #aab6c7);
+  max-width: 36rem;
+`;
+
+const AudioOptions = styled.div`
   margin-top: auto;
   margin-bottom: auto;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  align-items: flex-start;
+  gap: 1.5rem 2.5rem;
+  width: 100%;
 `;
 
+const AudioOption = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 11.5rem;
+  text-align: center;
+`;
+
+const AudioOptionDesc = styled.p`
+  margin: 0.65rem 0 0;
+  padding: 0 0.25rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  font-weight: 400;
+  color: var(--skyroom-text-secondary, #aab6c7);
+`;
+
+/* Classic BBB mic / listen-only layout — label color adapted for dark modal shell */
 const AudioModalButton = styled(Button)`
   i {
     color: #3c5764;
   }
 
-  // Modifies the audio button icon colour
   & span:first-child {
     display: inline-block;
     color: #1b3c4b;
@@ -35,21 +65,19 @@ const AudioModalButton = styled(Button)`
     }
   }
 
-  // When hovering over a button of class audioBtn, change the border colour of first span-child
   &:hover span:first-child,
   &:focus span:first-child {
     border: 5px solid ${colorPrimary};
     background-color: #f1f8ff;
   }
 
-  // Modifies the button label text
   & span:last-child {
     display: block;
-    color: black;
-    font-size: 1rem;
+    color: var(--skyroom-text-primary, #eef4fb);
+    font-size: 0.95rem;
     font-weight: 600;
-    margin-top: ${btnSpacing};
-    line-height: 1.5;
+    margin-top: 1rem;
+    line-height: 1.35;
   }
 `;
 
@@ -64,6 +92,7 @@ const Connecting = styled.div`
   margin-bottom: auto;
   font-size: 2rem;
   text-align: center;
+  color: var(--skyroom-text-primary, #eef4fb);
 `;
 
 const ConnectingSubtext = styled.p`
@@ -71,6 +100,7 @@ const ConnectingSubtext = styled.p`
   margin-bottom: 0;
   font-size: 1.5rem;
   text-align: center;
+  color: var(--skyroom-text-secondary, #aab6c7);
 `;
 
 const ellipsis = keyframes`
@@ -88,7 +118,7 @@ const ConnectingAnimation = styled.span`
     overflow: hidden;
     display: inline-block;
     vertical-align: bottom;
-    content: "\\2026"; /* ascii code for the ellipsis character */
+    content: "\\2026";
     width: 0;
     margin-left: 0.25em;
 
@@ -110,40 +140,19 @@ const BrowserWarning = styled.p`
   border-width: 3px;
   border-style: solid;
   border-radius: 0.25rem;
+  color: var(--skyroom-text-primary, #eef4fb);
 `;
 
 const Content = styled.div`
   flex-grow: 1;
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  padding: 0;
+  align-items: center;
   margin-top: auto;
   margin-bottom: auto;
   padding: 0.5rem 0;
-
-  button:first-child {
-    margin: 0 3rem 0 0;
-
-    [dir="rtl"] & {
-      margin: 0 0 0 3rem;
-    }
-
-    @media ${smallOnly} {
-      margin: 0 1rem 0 0;
-
-      [dir="rtl"] & {
-        margin: 0 0 0 1rem;
-      }
-    }
-  }
-
-  button:only-child {
-    margin: inherit 0 inherit inherit;
-
-    [dir="rtl"] & {
-      margin: inherit inherit inherit 0 !important;
-    }
-  }
+  width: 100%;
 `;
 
 const Background = styled.span`
@@ -160,7 +169,10 @@ const Background = styled.span`
 `;
 
 export default {
+  AudioChoiceIntro,
   AudioOptions,
+  AudioOption,
+  AudioOptionDesc,
   AudioModalButton,
   AudioDial,
   Background,

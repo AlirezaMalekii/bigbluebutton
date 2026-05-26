@@ -1,0 +1,1248 @@
+/* =====================================================================
+   Skyroom-inspired theme for BigBlueButton 3.x
+   ---------------------------------------------------------------------
+   Brand color : #0D887E (teal)
+   Dark base   : #070B14
+   Strategy    : Override BBB's CSS custom properties (already used by
+                 nearly every styled-component via fallbacks like
+                 `var(--color-primary, #0F70D7)`). This means we control
+                 the entire palette without touching component source.
+
+   Upgrade safety: This file lives outside the imports/ tree and is
+   loaded as a static asset. BBB upstream changes will not conflict
+   with this file. Selectors below use stable semantic anchors only
+   (data-test attributes, ids, ARIA roles, BBB-published CSS classes).
+   ===================================================================== */
+
+
+/* ---------------------------------------------------------------------
+   1) LIGHT THEME ([data-theme="light"] only)
+   --------------------------------------------------------------------- */
+:root[data-theme="light"] {
+  /* Brand */
+  --skyroom-brand-500: #0D887E;
+  --skyroom-brand-600: #0A6F67;
+  --skyroom-brand-700: #075952;
+  --skyroom-brand-400: #14A99E;
+  --skyroom-brand-300: #3FC2B8;
+  --skyroom-brand-200: #8CDDD6;
+  --skyroom-brand-100: #D1F2EE;
+  --skyroom-brand-50:  #E9F8F6;
+
+  /* Primary */
+  --color-primary: var(--skyroom-brand-500);
+  --color-link: var(--skyroom-brand-500);
+  --color-success: var(--skyroom-brand-500);
+  --btn-primary-bg: var(--skyroom-brand-500);
+  --btn-primary-hover-bg: var(--skyroom-brand-600);
+  --btn-primary-active-bg: var(--skyroom-brand-700);
+  --btn-primary-border: rgba(13, 136, 126, 0.5);
+  --btn-primary-color: #FFFFFF;
+  --btn-success-bg: var(--skyroom-brand-500);
+  --btn-success-border: var(--skyroom-brand-500);
+
+  /* Surfaces / backgrounds */
+  --color-white: #FFFFFF;
+  --color-off-white: #EEF2F7;
+  --color-background: #EEF2F7;
+  --color-content-background: #FFFFFF;
+  --user-list-bg: #FFFFFF;
+  --dropdown-bg: #FFFFFF;
+  --toolbar-button-bg: #FFFFFF;
+  --toolbar-list-bg: #F4F7FA;
+  --toolbar-list-bg-focus: #E9F8F6;
+
+  /* Text — high contrast on light surfaces */
+  --skyroom-text-primary: #0B1220;
+  --skyroom-text-secondary: #4E5A66;
+  --skyroom-text-muted: #6B7689;
+  --skyroom-text-on-brand: #FFFFFF;
+  --color-heading: var(--skyroom-text-primary);
+  --color-text: #1F2A37;
+  --color-gray: #4E5A66;
+  --color-gray-dark: #1F2A37;
+  --color-gray-label: #4E5A66;
+  --user-list-text: var(--skyroom-text-primary);
+  --color-muted: #586571;
+  --palette-placeholder-text: #6B7689;
+  --list-item-bg-hover: #E9F8F6;
+  --btn-default-color: #1F2A37;
+  --btn-default-bg: #FFFFFF;
+  --btn-default-ghost-color: #1F2A37;
+  --btn-default-ghost-bg: rgba(13, 136, 126, 0.08);
+  --btn-default-ghost-border: rgba(13, 136, 126, 0.22);
+  --toolbar-button-color: #1F2A37;
+  --toolbar-list-color: #1F2A37;
+  --system-message-font-color: #1F2A37;
+
+  /* Lines / dividers */
+  --color-gray-lightest: #E3E8EE;
+  --color-gray-lighter: #CDD5DF;
+  --color-gray-light: #94A3B8;
+  --pll-stats-border-color: #E3E8EE;
+
+  /* Overlay / modal */
+  --color-overlay: rgba(7, 11, 20, 0.55);
+
+  /* Webcam */
+  --webcam-background-color: #0B1220;
+  --webcam-placeholder-border: rgba(13, 136, 126, 0.45);
+  --webcam-talking-background-color: rgba(13, 136, 126, 0.18);
+
+  /* Skyroom design tokens */
+  --skyroom-surface: #FFFFFF;
+  --skyroom-surface-2: #F4F7FA;
+  --skyroom-surface-3: #E9EEF5;
+  --skyroom-border: rgba(13, 136, 126, 0.16);
+  --skyroom-border-strong: rgba(13, 136, 126, 0.28);
+  --skyroom-shadow-sm: 0 2px 8px rgba(13, 136, 126, 0.06);
+  --skyroom-shadow: 0 8px 24px rgba(11, 18, 32, 0.08), 0 2px 6px rgba(11, 18, 32, 0.04);
+  --skyroom-shadow-lg: 0 20px 48px rgba(11, 18, 32, 0.12), 0 6px 16px rgba(11, 18, 32, 0.06);
+  --skyroom-glass: rgba(255, 255, 255, 0.72);
+  --skyroom-glass-strong: rgba(255, 255, 255, 0.92);
+  --skyroom-glass-blur: saturate(180%) blur(14px);
+
+  --skyroom-gradient-primary: linear-gradient(135deg, #0D887E 0%, #14A99E 100%);
+  --skyroom-gradient-primary-soft: linear-gradient(135deg, rgba(13,136,126,0.10) 0%, rgba(20,169,158,0.18) 100%);
+  --skyroom-gradient-danger: linear-gradient(135deg, #DF2721 0%, #FF6A66 100%);
+  --skyroom-gradient-bg:
+    radial-gradient(1200px 600px at 0% 0%, rgba(13,136,126,0.06), transparent 60%),
+    radial-gradient(900px 500px at 100% 100%, rgba(20,169,158,0.05), transparent 60%);
+
+  --skyroom-radius-sm: 8px;
+  --skyroom-radius: 12px;
+  --skyroom-radius-lg: 16px;
+  --skyroom-radius-xl: 22px;
+
+  /* Loader / splash */
+  --loader-bg: #EEF2F7;
+}
+
+
+/* ---------------------------------------------------------------------
+   2) DARK THEME (default — :root and [data-theme="dark"])
+   --------------------------------------------------------------------- */
+:root,
+:root[data-theme="dark"] {
+  /* Brand (slightly brighter on dark) */
+  --color-primary: var(--skyroom-brand-400);
+  --color-link: var(--skyroom-brand-400);
+  --color-success: var(--skyroom-brand-400);
+  --btn-primary-bg: var(--skyroom-brand-500);
+  --btn-primary-hover-bg: var(--skyroom-brand-400);
+  --btn-primary-active-bg: var(--skyroom-brand-600);
+  --btn-primary-border: rgba(20, 169, 158, 0.55);
+  --btn-primary-color: #FFFFFF;
+  --btn-success-bg: var(--skyroom-brand-500);
+  --btn-success-border: var(--skyroom-brand-400);
+
+  /* Surfaces / backgrounds */
+  --color-white: #FFFFFF;
+  --color-off-white: #141E32;
+  --color-background: #070B14;
+  --color-content-background: #141c28;
+  --user-list-bg: #121a28;
+  --dropdown-bg: #151c28;
+  --toolbar-button-bg: #121820;
+  --toolbar-list-bg: #151c28;
+  --toolbar-list-bg-focus: #1a2436;
+
+  /* Text — high contrast on dark surfaces */
+  --skyroom-text-primary: #E6EDF7;
+  --skyroom-text-secondary: #B5C0CE;
+  --skyroom-text-muted: #8B95A5;
+  --skyroom-text-on-brand: #FFFFFF;
+  --color-heading: var(--skyroom-text-primary);
+  --color-text: #C6D0DC;
+  --color-gray: #B5C0CE;
+  --color-gray-dark: #E6EDF7;
+  --color-gray-label: #B5C0CE;
+  --user-list-text: var(--skyroom-text-primary);
+  --color-muted: #8B95A5;
+  --palette-placeholder-text: #8B95A5;
+  --list-item-bg-hover: #16264A;
+  --btn-default-color: #E6EDF7;
+  --btn-default-bg: #101D38;
+  --btn-default-ghost-color: #E6EDF7;
+  --btn-default-ghost-bg: rgba(20, 169, 158, 0.12);
+  --btn-default-ghost-border: rgba(20, 169, 158, 0.28);
+  --toolbar-button-color: #E6EDF7;
+  --toolbar-list-color: #E6EDF7;
+  --system-message-font-color: #E6EDF7;
+
+  /* Lines / dividers */
+  --color-gray-lightest: #1A2742;
+  --color-gray-lighter: #243355;
+  --color-gray-light: #6B7689;
+  --pll-stats-border-color: #1A2742;
+
+  /* Overlay / modal */
+  --color-overlay: rgba(3, 6, 12, 0.78);
+
+  /* Webcam */
+  --webcam-background-color: #050811;
+  --webcam-placeholder-border: rgba(20, 169, 158, 0.45);
+  --webcam-talking-background-color: rgba(20, 169, 158, 0.22);
+
+  /* Skyroom design tokens (dark) */
+  --skyroom-surface: #151c28;
+  --skyroom-surface-2: #0f141c;
+  --skyroom-surface-3: #1a2436;
+  --skyroom-border: rgba(20, 169, 158, 0.18);
+  --skyroom-border-strong: rgba(20, 169, 158, 0.34);
+  --skyroom-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.30);
+  --skyroom-shadow: 0 10px 30px rgba(0, 0, 0, 0.40), 0 2px 6px rgba(0, 0, 0, 0.25);
+  --skyroom-shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55), 0 8px 20px rgba(0, 0, 0, 0.35);
+  --skyroom-glass: rgba(14, 24, 48, 0.62);
+  --skyroom-glass-strong: rgba(11, 20, 38, 0.88);
+  --skyroom-glass-blur: saturate(170%) blur(16px);
+
+  --skyroom-gradient-primary: linear-gradient(135deg, #0D887E 0%, #14A99E 100%);
+  --skyroom-gradient-primary-soft: linear-gradient(135deg, rgba(13,136,126,0.18) 0%, rgba(20,169,158,0.28) 100%);
+  --skyroom-gradient-danger: linear-gradient(135deg, #DF2721 0%, #FF6A66 100%);
+  --skyroom-gradient-bg:
+    radial-gradient(1200px 600px at 0% 0%, rgba(20,169,158,0.10), transparent 60%),
+    radial-gradient(900px 500px at 100% 100%, rgba(13,136,126,0.08), transparent 60%),
+    linear-gradient(180deg, #070B14 0%, #050811 100%);
+
+  /* Loader / splash */
+  --loader-bg: #070B14;
+}
+
+
+/* ---------------------------------------------------------------------
+   3) GLOBAL CHROME — body background + smooth theme transitions
+   --------------------------------------------------------------------- */
+html,
+body {
+  background: var(--color-background) !important;
+  background-image: var(--skyroom-gradient-bg) !important;
+  background-attachment: fixed;
+  color: var(--color-text);
+}
+
+/* Ensure smooth transition when the user toggles light/dark.
+   Restricted to color/background/border so we don't animate layout. */
+html, body, header, section, aside, nav, main,
+button, input, textarea, select,
+[role="dialog"], [role="banner"], .MuiPaper-root,
+[data-test="userListContainer"],
+[data-test="userListContent"],
+[data-test="chatMessages"],
+[data-test="webcamVideoItem"],
+#ActionsBar {
+  transition:
+    background-color 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+
+/* ---------------------------------------------------------------------
+   4) NAV BAR — glass effect + gradient bottom border
+   --------------------------------------------------------------------- */
+header[role="banner"],
+#Navbar,
+.Navbar,
+body > main #app header {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(18, 32, 52, 0.97) 0%,
+      rgba(12, 20, 36, 0.93) 60%,
+      rgba(8, 14, 26, 0.9) 100%
+    ) !important;
+  backdrop-filter: var(--skyroom-glass-blur);
+  -webkit-backdrop-filter: var(--skyroom-glass-blur);
+  border-bottom: 1px solid var(--skyroom-border);
+  box-shadow: var(--skyroom-shadow-sm);
+  position: relative;
+  min-height: 52px;
+}
+
+header[role="banner"]::after,
+#Navbar::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 2px;
+  background: var(--skyroom-gradient-primary);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* Presentation title in nav */
+[data-test="presentationTitle"] {
+  color: var(--color-heading) !important;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+
+/* ---------------------------------------------------------------------
+   5) SIDEBAR (user list + chat) — modern panel look
+   (Skyroom single-column layout uses public/stylesheets/skyroom/sidebar.css)
+   --------------------------------------------------------------------- */
+#layout:not([data-skyroom-column="true"]) [data-test="userListContainer"],
+#layout:not([data-skyroom-column="true"]) [data-test="userListContent"] {
+  background-color: var(--skyroom-surface) !important;
+  border-right: 1px solid var(--skyroom-border);
+}
+
+[dir="rtl"] #layout:not([data-skyroom-column="true"]) [data-test="userListContainer"],
+[dir="rtl"] #layout:not([data-skyroom-column="true"]) [data-test="userListContent"] {
+  border-right: 0;
+  border-left: 1px solid var(--skyroom-border);
+}
+
+/* User-list item hover */
+[data-test="userListContent"] li:hover,
+[data-test="userListContent"] [role="button"]:hover {
+  background-color: var(--skyroom-brand-50) !important;
+}
+:root[data-theme="dark"] [data-test="userListContent"] li:hover,
+:root[data-theme="dark"] [data-test="userListContent"] [role="button"]:hover {
+  background-color: var(--skyroom-surface-3) !important;
+}
+
+/* Chat panel surface */
+[data-test="chatMessages"] {
+  background-color: var(--skyroom-surface) !important;
+}
+
+
+/* ---------------------------------------------------------------------
+   6) CHAT MESSAGES — modern bubbles
+   --------------------------------------------------------------------- */
+[data-test="chatMessageItem"] {
+  border-radius: var(--skyroom-radius);
+  padding: 8px 12px;
+  margin: 4px 6px;
+  background-color: var(--skyroom-surface-2);
+  box-shadow: var(--skyroom-shadow-sm);
+  transition: background-color 180ms ease, transform 180ms ease;
+}
+
+[data-test="chatMessageItem"]:hover {
+  background-color: var(--skyroom-surface-3);
+}
+
+/* Own-message bubble — slight brand tint */
+[data-test="chatMessageItem"][data-own="true"],
+[data-test="chatMessageItem"].own,
+[data-test="chatMessageItem"][data-own-message="true"] {
+  background-image: var(--skyroom-gradient-primary-soft);
+  border: 1px solid var(--skyroom-border);
+}
+
+
+/* ---------------------------------------------------------------------
+   7) WEBCAM tiles — rounded + talking ring (gradient brand)
+   --------------------------------------------------------------------- */
+[data-test="webcamVideoItem"] {
+  border-radius: var(--skyroom-radius-lg) !important;
+  overflow: hidden;
+  box-shadow: var(--skyroom-shadow);
+  background-color: var(--webcam-background-color);
+  position: relative;
+  isolation: isolate;
+}
+
+[data-test="webcamVideoItem"] video {
+  border-radius: var(--skyroom-radius-lg);
+  background-color: var(--webcam-background-color);
+}
+
+/* Webcam participant name — readable on dark video tiles */
+[data-test="webcamVideoItem"] [data-test="webcamParticipantName"],
+[data-test="webcamVideoItem"] [data-webcam-participant-name="true"],
+[data-test="webcamVideoItem"] [class*="UserName"],
+[data-test="webcamVideoItem"] [class*="DropdownTrigger"],
+[data-test="webcamVideoItem"] [class*="SqueezedName"],
+#cameraDock [data-test="webcamParticipantName"],
+#cameraDock [data-webcam-participant-name="true"],
+#cameraDock [class*="UserName"],
+#cameraDock [class*="DropdownTrigger"],
+#cameraDock [class*="SqueezedName"],
+#skyroom-sidebar-webcam-dock [data-test="webcamParticipantName"],
+#skyroom-sidebar-webcam-dock [data-webcam-participant-name="true"],
+#skyroom-sidebar-webcam-dock [class*="UserName"],
+#skyroom-sidebar-webcam-dock [class*="DropdownTrigger"],
+#skyroom-sidebar-webcam-dock [class*="SqueezedName"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 10px rgba(0, 0, 0, 0.55) !important;
+}
+
+[data-test="webcamVideoItem"] [class*="MenuWrapper"] {
+  max-width: 92% !important;
+}
+
+[data-test="webcamVideoItem"] [class*="Dropdown"],
+[data-test="webcamVideoItem"] [class*="MenuWrapper"] > [class*="Dropdown"],
+[data-test="webcamVideoItem"] [class*="UserName"],
+[data-test="webcamVideoItem"] [class*="DropdownTrigger"],
+#cameraDock [class*="Dropdown"]:not([class*="DropdownTrigger"]),
+#cameraDock [class*="UserName"],
+#cameraDock [class*="DropdownTrigger"],
+#skyroom-sidebar-webcam-dock [class*="Dropdown"],
+#skyroom-sidebar-webcam-dock [class*="UserName"],
+#skyroom-sidebar-webcam-dock [class*="DropdownTrigger"] {
+  background-color: rgba(8, 14, 26, 0.82) !important;
+  border-radius: 8px !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45) !important;
+}
+
+[data-test="webcamVideoItem"] [class*="DropdownTrigger"]::after,
+#cameraDock [class*="DropdownTrigger"]::after,
+#skyroom-sidebar-webcam-dock [class*="DropdownTrigger"]::after {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85) !important;
+}
+
+[data-test="webcamVideoItem"] [class*="BottomBar"] span,
+#cameraDock [class*="BottomBar"] span,
+#skyroom-sidebar-webcam-dock [class*="BottomBar"] span {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Talking ring — animated brand gradient */
+[data-test="webcamVideoItem"].talking::before,
+[data-test="webcamVideoItem"][data-talking="true"]::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: calc(var(--skyroom-radius-lg) + 2px);
+  background: var(--skyroom-gradient-primary);
+  filter: blur(0.5px);
+  opacity: 0.9;
+  animation: skyroom-talk-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes skyroom-talk-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+
+/* ---------------------------------------------------------------------
+   8) ACTIONS BAR — pill cluster, elevated mic button
+   --------------------------------------------------------------------- */
+#ActionsBar {
+  background: linear-gradient(
+    0deg,
+    rgba(8, 14, 26, 0.92) 0%,
+    rgba(12, 22, 40, 0.75) 50%,
+    transparent 100%
+  ) !important;
+  padding: 12px 16px 16px !important;
+  min-height: 56px;
+  box-sizing: border-box;
+}
+
+#ActionsBar > div,
+#ActionsBar > section {
+  background:
+    linear-gradient(
+      165deg,
+      rgba(28, 40, 62, 0.92) 0%,
+      rgba(16, 24, 40, 0.88) 100%
+    );
+  backdrop-filter: var(--skyroom-glass-blur);
+  -webkit-backdrop-filter: var(--skyroom-glass-blur);
+  border: 1px solid rgba(20, 169, 158, 0.28);
+  border-radius: 999px;
+  padding: 6px 12px;
+  box-shadow: var(--skyroom-shadow);
+  width: fit-content;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+/* Action buttons (mic, cam, screenshare, raise hand…) */
+#ActionsBar button {
+  border-radius: 14px !important;
+  transition: transform 160ms ease, box-shadow 200ms ease, background-color 200ms ease;
+}
+
+#ActionsBar button:hover {
+  transform: translateY(-1px);
+}
+
+/* The primary "join audio" / mute button often is the brand-colored one */
+#ActionsBar button[aria-label*="audio" i],
+#ActionsBar button[aria-label*="microphone" i],
+#ActionsBar button[aria-label*="mic" i] {
+  position: relative;
+}
+
+#ActionsBar button[aria-label*="audio" i]::after,
+#ActionsBar button[aria-label*="microphone" i]::after,
+#ActionsBar button[aria-label*="mic" i]::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 18px;
+  background: var(--skyroom-gradient-primary);
+  opacity: 0;
+  z-index: -1;
+  filter: blur(10px);
+  transition: opacity 240ms ease;
+  pointer-events: none;
+}
+
+#ActionsBar button[aria-label*="audio" i]:hover::after,
+#ActionsBar button[aria-label*="microphone" i]:hover::after,
+#ActionsBar button[aria-label*="mic" i]:hover::after {
+  opacity: 0.55;
+}
+
+
+/* ---------------------------------------------------------------------
+   9) PRIMARY BUTTON — gradient + glow
+   --------------------------------------------------------------------- */
+button[class*="primary"],
+button[class*="Primary"],
+.btn-primary,
+[data-test*="primary" i] button {
+  background: var(--skyroom-gradient-primary) !important;
+  border: 1px solid transparent !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 6px 16px rgba(13, 136, 126, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+button[class*="primary"]:hover,
+.btn-primary:hover {
+  filter: brightness(1.04);
+  box-shadow: 0 10px 22px rgba(13, 136, 126, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+
+/* ---------------------------------------------------------------------
+   10) MODALS — backdrop blur + gradient shell (matches sidebar)
+   --------------------------------------------------------------------- */
+.modalOverlay {
+  background-color: var(--color-overlay) !important;
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+}
+
+[role="dialog"],
+.ReactModal__Content {
+  background:
+    radial-gradient(620px 320px at 12% -20%, rgba(20, 169, 158, 0.18), transparent 62%),
+    linear-gradient(165deg, #1a2234 0%, #121a28 55%, #0e1522 100%) !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(20, 169, 158, 0.30) !important;
+  box-shadow:
+    var(--skyroom-shadow-lg),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  color: var(--skyroom-text-primary) !important;
+  padding: 24px !important;
+}
+
+[role="dialog"] h1,
+[role="dialog"] h2,
+[role="dialog"] h3,
+.ReactModal__Content h1,
+.ReactModal__Content h2,
+.ReactModal__Content h3 {
+  color: var(--skyroom-text-primary) !important;
+}
+
+[role="dialog"] p,
+[role="dialog"] label,
+[role="dialog"] li,
+.ReactModal__Content p,
+.ReactModal__Content label,
+.ReactModal__Content li {
+  color: var(--skyroom-text-primary) !important;
+}
+
+/* Avoid painting every div/span (breaks selects & button labels) — see modals.css */
+[role="dialog"] span:not([class*="icon"]):not(.MuiSelect-select):not(.MuiChip-label),
+.ReactModal__Content span:not([class*="icon"]):not(.MuiSelect-select):not(.MuiChip-label) {
+  color: inherit;
+}
+
+[role="dialog"] small,
+[role="dialog"] [class*="Description"],
+[role="dialog"] [class*="Help"],
+[role="dialog"] [class*="Hint"],
+.ReactModal__Content small,
+.ReactModal__Content [class*="Description"],
+.ReactModal__Content [class*="Help"],
+.ReactModal__Content [class*="Hint"] {
+  color: var(--skyroom-text-secondary) !important;
+}
+
+[role="dialog"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+[role="dialog"] textarea,
+[role="dialog"] select,
+.ReactModal__Content input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.ReactModal__Content textarea,
+.ReactModal__Content select {
+  background: rgba(5, 10, 18, 0.72) !important;
+  color: var(--skyroom-text-primary) !important;
+  border: 1px solid rgba(218, 230, 245, 0.14) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+}
+
+[role="dialog"] button,
+.ReactModal__Content button {
+  border-radius: 12px !important;
+}
+
+/* MUI dropdown panels (BBB uses MUI Popover via BBBMenu) */
+.MuiPaper-root {
+  background:
+    radial-gradient(360px 180px at 10% 0%, rgba(20, 169, 158, 0.14), transparent 62%),
+    linear-gradient(165deg, #1a2234 0%, #121a28 100%) !important;
+  color: var(--skyroom-text-primary) !important;
+  border: 1px solid rgba(20, 169, 158, 0.28) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--skyroom-shadow-lg) !important;
+  padding: 8px !important;
+}
+
+.MuiPaper-root *,
+.MuiMenuItem-root,
+.MuiListItemText-primary,
+.MuiListItemText-secondary {
+  color: var(--skyroom-text-primary) !important;
+}
+
+.MuiList-root li:hover,
+.MuiMenuItem-root:hover {
+  background-color: var(--skyroom-brand-50) !important;
+}
+
+:root[data-theme="dark"] .MuiList-root li:hover,
+:root[data-theme="dark"] .MuiMenuItem-root:hover {
+  background-color: var(--skyroom-surface-3) !important;
+}
+
+
+/* ---------------------------------------------------------------------
+   11) TOAST — themed + branded progress bar (readable on dark chrome)
+   --------------------------------------------------------------------- */
+.toastClass,
+.actionToast,
+.raiseHandToast,
+.Toastify__toast {
+  background:
+    linear-gradient(
+      165deg,
+      rgba(28, 40, 62, 0.98) 0%,
+      rgba(16, 24, 40, 0.96) 100%
+    ) !important;
+  color: var(--skyroom-text-primary) !important;
+  border: 1px solid rgba(20, 169, 158, 0.35) !important;
+  border-radius: var(--skyroom-radius) !important;
+  box-shadow: var(--skyroom-shadow) !important;
+}
+
+.toastBodyClass,
+.Toastify__toast-body {
+  background-color: transparent !important;
+  color: var(--skyroom-text-primary) !important;
+}
+
+.toastClass *,
+.toastBodyClass *,
+.Toastify__toast-body *,
+.Toastify__toast * {
+  color: var(--skyroom-text-primary) !important;
+}
+
+.toastClass [class*="ToastMessage"],
+.toastBodyClass [class*="ToastMessage"],
+.Toastify__toast-body div {
+  color: var(--skyroom-text-primary) !important;
+}
+
+.toastClass button,
+.Toastify__close-button {
+  color: var(--skyroom-text-secondary) !important;
+  opacity: 0.85;
+}
+
+.toastProgressClass,
+.Toastify__progress-bar {
+  background: var(--skyroom-gradient-primary) !important;
+  height: 3px !important;
+}
+
+
+/* ---------------------------------------------------------------------
+   12) INPUTS — clean focus ring in brand color
+   --------------------------------------------------------------------- */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+textarea,
+select {
+  background-color: var(--skyroom-surface-2);
+  color: var(--color-text);
+  border: 1px solid var(--skyroom-border);
+  border-radius: var(--skyroom-radius-sm);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 200ms ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none !important;
+  border-color: var(--skyroom-brand-500) !important;
+  box-shadow: 0 0 0 3px rgba(13, 136, 126, 0.22) !important;
+}
+
+
+/* ---------------------------------------------------------------------
+   13) PRESENTATION CANVAS — subtle inner shadow / nicer chrome
+   --------------------------------------------------------------------- */
+[class*="presentationContainer"],
+[class*="PresentationContainer"] {
+  background-color: var(--color-content-background) !important;
+  border-radius: var(--skyroom-radius) !important;
+  box-shadow: var(--skyroom-shadow);
+  overflow: hidden;
+}
+
+
+/* ---------------------------------------------------------------------
+   14) SCROLLBARS — branded, slim
+   --------------------------------------------------------------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--skyroom-brand-300) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--skyroom-brand-400), var(--skyroom-brand-500));
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--skyroom-brand-500), var(--skyroom-brand-600));
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+
+/* ---------------------------------------------------------------------
+   15) FOCUS-VISIBLE — accessibility-friendly brand ring
+   --------------------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid var(--skyroom-brand-500) !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+
+
+/* ---------------------------------------------------------------------
+   16) SELECTION
+   --------------------------------------------------------------------- */
+::selection {
+  background-color: var(--skyroom-brand-200);
+  color: #0B1220;
+}
+
+:root[data-theme="dark"] ::selection {
+  background-color: rgba(20, 169, 158, 0.45);
+  color: #FFFFFF;
+}
+
+
+/* ---------------------------------------------------------------------
+   17) WEBCAM placeholder avatar — soft branded background
+   --------------------------------------------------------------------- */
+[class*="UserAvatar"],
+[class*="userAvatar"] {
+  box-shadow: 0 0 0 2px var(--skyroom-border-strong);
+}
+
+
+/* ---------------------------------------------------------------------
+   18) Loader / splash background
+   --------------------------------------------------------------------- */
+[class*="LoaderBackground"],
+[class*="loaderBackground"] {
+  background: var(--color-background) !important;
+  background-image: var(--skyroom-gradient-bg) !important;
+}
+
+
+/* ---------------------------------------------------------------------
+   19) TEXT CONTRAST — fix BBB hardcoded colorWhite on nav / toolbars
+   --------------------------------------------------------------------- */
+
+/* Light theme: nav & actions were white-on-light (invisible) */
+:root[data-theme="light"] header[role="banner"],
+:root[data-theme="light"] #Navbar,
+:root[data-theme="light"] #ActionsBar {
+  color: var(--skyroom-text-primary);
+}
+
+:root[data-theme="light"] #Navbar h1,
+:root[data-theme="light"] #Navbar [data-test="presentationTitle"],
+:root[data-theme="light"] #Navbar [data-test="presentationTitle"] span,
+:root[data-theme="light"] #Navbar .icon-bbb-,
+:root[data-theme="light"] header[role="banner"] h1,
+:root[data-theme="light"] header[role="banner"] [class^="icon-bbb-"] {
+  color: var(--skyroom-text-primary) !important;
+}
+
+:root[data-theme="light"] #ActionsBar button,
+:root[data-theme="light"] #ActionsBar [class^="icon-bbb-"] {
+  color: var(--skyroom-text-primary) !important;
+}
+
+/* Dark theme: ensure readable light text on dark chrome */
+:root[data-theme="dark"] header[role="banner"],
+:root[data-theme="dark"] #Navbar,
+:root[data-theme="dark"] #ActionsBar {
+  color: var(--skyroom-text-primary);
+}
+
+:root[data-theme="dark"] #Navbar h1,
+:root[data-theme="dark"] #Navbar [data-test="presentationTitle"],
+:root[data-theme="dark"] #Navbar [data-test="presentationTitle"] span,
+:root[data-theme="dark"] header[role="banner"] h1 {
+  color: var(--skyroom-text-primary) !important;
+}
+
+:root[data-theme="dark"] #ActionsBar button,
+:root[data-theme="dark"] #ActionsBar [class^="icon-bbb-"] {
+  color: var(--skyroom-text-primary) !important;
+}
+
+/* Chat panel — BBB uses --color-white (#FFF) as background always */
+.skyroom-drawer__body [class*="Chat"],
+[data-test="chatMessages"],
+[data-test="userListContainer"] {
+  background-color: var(--skyroom-surface) !important;
+  color: var(--skyroom-text-primary) !important;
+}
+
+[data-test="chatTitle"],
+[data-test="userListContent"] h2,
+[data-test="userListContent"] span,
+.skyroom-drawer__body label,
+.skyroom-drawer__body p {
+  color: var(--skyroom-text-primary);
+}
+
+[data-test="chatMessageItem"] {
+  color: var(--skyroom-text-primary) !important;
+}
+
+/* Skyroom column chat — readable text; no global bubble chrome */
+#layout[data-skyroom-column="true"] header[role="banner"],
+#layout[data-skyroom-column="true"] #Navbar {
+  min-height: var(--skyroom-navbar-h, 100px) !important;
+}
+
+#layout[data-skyroom-column="true"] #ActionsBar {
+  min-height: var(--skyroom-footer-h, 56px) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] {
+  border: 1px solid rgba(20, 169, 158, 0.30) !important;
+  border-radius: 16px !important;
+  box-shadow:
+    0 12px 34px rgba(0, 0, 0, 0.40),
+    0 0 0 1px rgba(20, 169, 158, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="chatMessages"] {
+  background-color: transparent !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="messageContent"],
+#layout[data-skyroom-column="true"] [data-test="messageContent"] * {
+  color: #1a2332 !important;
+  -webkit-text-fill-color: #1a2332 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="chatMessageItem"] {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="chatMessageItem"][data-own="true"],
+#layout[data-skyroom-column="true"] [data-test="chatMessageItem"].own,
+#layout[data-skyroom-column="true"] [data-test="chatMessageItem"][data-own-message="true"] {
+  background-image: none !important;
+  border: none !important;
+}
+
+/* User list rows — fix off-white row on dark & gray-on-gray */
+:root[data-theme="light"] [data-test="userListContent"] [role="button"],
+:root[data-theme="light"] [data-test="userListContent"] li {
+  color: var(--skyroom-text-primary) !important;
+  background-color: transparent !important;
+}
+
+:root[data-theme="dark"] [data-test="userListContent"] [role="button"],
+:root[data-theme="dark"] [data-test="userListContent"] li {
+  color: var(--skyroom-text-primary) !important;
+  background-color: transparent !important;
+}
+
+:root[data-theme="dark"] [data-test="userListContent"] [role="button"] span,
+:root[data-theme="dark"] [data-test="userListContent"] li span {
+  color: var(--skyroom-text-secondary) !important;
+}
+
+/* MUI menus & dropdowns */
+.MuiMenuItem-root,
+.MuiListItemText-primary {
+  color: var(--skyroom-text-primary) !important;
+}
+
+/* Settings / modals body text */
+[role="dialog"] label,
+[role="dialog"] p,
+[role="dialog"] span,
+.ReactModal__Content label {
+  color: var(--skyroom-text-primary);
+}
+
+/* Space around navbar talking/timer row (below header + above stage) */
+#Navbar > div:last-child {
+  margin-bottom: 0.625rem !important;
+}
+
+#Navbar > div:last-child:not(:only-child) {
+  margin-top: 0.625rem !important;
+}
+
+/* Talking indicator & timer in navbar bottom */
+#Navbar [data-test="talkingIndicator"],
+#Navbar [data-test="isTalking"],
+#Navbar [data-test="wasTalking"] {
+  color: var(--skyroom-text-secondary) !important;
+}
+
+/* Connection status, options buttons */
+#Navbar button[color="dark"],
+#Navbar button[color="light"] {
+  color: var(--skyroom-text-primary) !important;
+}
+
+/* Toast text always readable (overrides styled-components ToastMessage) */
+.toastClass,
+.toastBodyClass,
+.actionToast,
+.Toastify__toast,
+.Toastify__toast-body {
+  color: var(--skyroom-text-primary) !important;
+}
+
+.toastClass span,
+.toastBodyClass span,
+.Toastify__toast-body span,
+.Toastify__toast-body div {
+  color: var(--skyroom-text-primary) !important;
+}
+
+/* Inputs in both themes */
+input::placeholder,
+textarea::placeholder {
+  color: var(--skyroom-text-muted) !important;
+  opacity: 1;
+}
+
+
+/* ---------------------------------------------------------------------
+   20) HEADER CONTROLS — recording, options menu, toolbar contrast
+   --------------------------------------------------------------------- */
+
+/* Options (three-dot) — circle button only; do not style inner label/icon boxes */
+#Navbar [data-test="optionsButton"] {
+  color: var(--skyroom-text-primary) !important;
+  background-color: var(--skyroom-surface-3) !important;
+  border: 1px solid var(--skyroom-border-strong) !important;
+  box-shadow: var(--skyroom-shadow-sm);
+}
+
+#Navbar [data-test="optionsButton"] span,
+#Navbar [data-test="optionsButton"] i,
+#Navbar [data-test="optionsButton"] [class^="icon-bbb-"] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+
+#Navbar [data-test="optionsButton"]:hover,
+#Navbar [data-test="optionsButton"]:focus {
+  background-color: var(--skyroom-brand-50) !important;
+  border-color: var(--skyroom-brand-400) !important;
+  color: var(--skyroom-brand-600) !important;
+}
+
+:root[data-theme="dark"] #Navbar [data-test="optionsButton"] {
+  color: #F0F4FA !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+:root[data-theme="dark"] #Navbar [data-test="optionsButton"]:hover {
+  background-color: rgba(20, 169, 158, 0.22) !important;
+  border-color: var(--skyroom-brand-400) !important;
+  color: #FFFFFF !important;
+}
+
+/* Recording indicator — high contrast idle + active states */
+#Navbar [data-test="recordingIndicator"] button,
+#Navbar [data-test="recordingIndicator"] [data-test="recordingStatus"] {
+  border-radius: 10px !important;
+}
+
+#Navbar [data-test="recordingIndicator"] button:not([disabled]) {
+  border: 2px solid var(--skyroom-text-secondary) !important;
+  background: var(--skyroom-surface-2) !important;
+  padding: 6px 10px !important;
+}
+
+#Navbar [data-test="recordingIndicator"] button:not([disabled]) span,
+#Navbar [data-test="recordingIndicator"] button:not([disabled]) svg {
+  color: var(--skyroom-text-primary) !important;
+  fill: var(--skyroom-text-primary) !important;
+}
+
+#Navbar [data-test="recordingIndicator"] button:not([disabled]):hover {
+  border-color: var(--skyroom-brand-400) !important;
+  background: var(--skyroom-brand-50) !important;
+}
+
+:root[data-theme="dark"] #Navbar [data-test="recordingIndicator"] button:not([disabled]) {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+:root[data-theme="dark"] #Navbar [data-test="recordingIndicator"] button:not([disabled]) span,
+:root[data-theme="dark"] #Navbar [data-test="recordingIndicator"] button:not([disabled]) svg {
+  color: #F0F4FA !important;
+}
+
+/* Active recording — red pill with white text */
+#Navbar [data-test="recordingIndicator"]:has([class*="PresentationTitle"]) button,
+#Navbar [data-test="recordingIndicator"] [class*="RecordingStatusViewOnly"] {
+  background: linear-gradient(135deg, #DF2721 0%, #C41E18 100%) !important;
+  border: 2px solid #FF6A66 !important;
+  box-shadow: 0 0 0 3px rgba(223, 39, 33, 0.25);
+}
+
+#Navbar [data-test="recordingIndicator"]:has([class*="PresentationTitle"]) button span,
+#Navbar [data-test="recordingIndicator"]:has([class*="PresentationTitle"]) button svg,
+#Navbar [data-test="recordingIndicator"] [class*="RecordingStatusViewOnly"] span,
+#Navbar [data-test="recordingIndicator"] [class*="RecordingStatusViewOnly"] svg {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+}
+
+/* Action bar buttons (bar chrome is in layout.css) */
+#ActionsBar button,
+#ActionsBar [role="button"] {
+  border-radius: 12px !important;
+  color: var(--skyroom-text-primary) !important;
+}
+
+#ActionsBar button:hover,
+#ActionsBar [role="button"]:hover {
+  background: var(--skyroom-surface-3) !important;
+}
+
+/* Navbar icon buttons general contrast boost */
+#Navbar button:not([data-test="optionsButton"]) {
+  color: var(--skyroom-text-primary);
+}
+
+#Navbar .icon-bbb-,
+#Navbar svg {
+  opacity: 0.92;
+}
+
+
+/* ---------------------------------------------------------------------
+   22) SETTINGS MODAL — centered card (from Options → Settings)
+   --------------------------------------------------------------------- */
+.fullscreenModalOverlay {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px !important;
+  background: var(--color-overlay) !important;
+  backdrop-filter: blur(12px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(140%) !important;
+}
+
+#fsmodal.ReactModal__Content,
+.ReactModal__Content#fsmodal {
+  position: relative !important;
+  inset: auto !important;
+  width: min(920px, 94vw) !important;
+  max-width: 920px !important;
+  height: auto !important;
+  max-height: min(84vh, 700px) !important;
+  margin: auto !important;
+  align-self: center !important;
+  border-radius: 22px !important;
+  border: 1px solid rgba(20, 169, 158, 0.30) !important;
+  box-shadow:
+    var(--skyroom-shadow-lg),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  background:
+    radial-gradient(620px 320px at 12% -20%, rgba(20, 169, 158, 0.18), transparent 62%),
+    linear-gradient(165deg, #1a2234 0%, #121a28 55%, #0e1522 100%) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 30px !important;
+}
+
+#fsmodal header {
+  padding: 1rem 30px !important;
+  border-bottom: 1px solid var(--skyroom-border) !important;
+  background: rgba(255, 255, 255, 0.045) !important;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+#fsmodal header h1 {
+  color: var(--skyroom-text-primary) !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+}
+
+#fsmodal > div:last-of-type,
+#fsmodal [class*="Content"] {
+  flex: 1;
+  overflow: auto;
+  padding: 1rem 30px !important;
+  color: var(--skyroom-text-primary) !important;
+  box-sizing: border-box;
+}
+
+#fsmodal [class*="SettingsTabList"] {
+  padding: 16px 16px 12px 24px !important;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+#fsmodal [class*="SettingsTabSelector"] {
+  color: var(--skyroom-text-secondary) !important;
+  background: transparent !important;
+}
+
+#fsmodal [class*="SettingsTabSelector"].is-selected {
+  background: var(--skyroom-gradient-primary) !important;
+  color: #FFFFFF !important;
+}
+
+#fsmodal [class*="SettingsTabSelector"].is-selected i {
+  color: #FFFFFF !important;
+}
+
+#fsmodal label,
+#fsmodal p,
+#fsmodal span:not([class*="icon"]) {
+  color: var(--skyroom-text-primary) !important;
+}
+
+
+/* ---------------------------------------------------------------------
+   23) NAVBAR — leave, theme toggle, connection, all icon buttons
+   --------------------------------------------------------------------- */
+#Navbar button {
+  color: var(--skyroom-text-primary);
+}
+
+#Navbar [data-test="leaveMeetingButton"],
+#Navbar [data-test="leaveMeetingDropdown"] {
+  filter: none;
+}
+
+:root[data-theme="light"] #Navbar button[color="light"],
+:root[data-theme="light"] #Navbar button[color="dark"] {
+  color: var(--skyroom-text-primary) !important;
+}
+
+/* Theme toggle & toolbar icons */
+#Navbar [class^="icon-bbb-"]::before,
+#ActionsBar [class^="icon-bbb-"]::before {
+  color: inherit;
+}
+
+
+/* ---------------------------------------------------------------------
+   24) GLOBAL #app — force readable text (styled-components fallbacks)
+   --------------------------------------------------------------------- */
+#app,
+#app main,
+#layout {
+  color: var(--skyroom-text-primary);
+}
+
+#app a {
+  color: var(--skyroom-brand-400);
+}
+
+:root[data-theme="light"] #app a {
+  color: var(--skyroom-brand-600);
+}
+
+/* BBB menus from options dropdown */
+#app-settings-dropdown-menu,
+#app-settings-dropdown-menu .MuiMenuItem-root {
+  background-color: var(--skyroom-surface) !important;
+  color: var(--skyroom-text-primary) !important;
+}
+
+#app-settings-dropdown-menu .MuiMenuItem-root:hover {
+  background-color: var(--skyroom-surface-3) !important;
+}
+
+
+/* ---------------------------------------------------------------------
+   25) DARK-ONLY — no light theme toggle in UI
+   --------------------------------------------------------------------- */
+[data-test="darkModeToggleBtn"],
+.skyroom-theme-toggle {
+  display: none !important;
+}
+
+/* White-label: hide upstream help links */
+#layout[data-skyroom-column="true"] [data-test="helpButton"],
+#layout[data-skyroom-column="true"] a[href*="bigbluebutton.org"] {
+  display: none !important;
+}
+

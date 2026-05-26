@@ -47,6 +47,7 @@ import VoiceActivityAdapter from '../../core/adapters/voice-activity';
 import LayoutObserver from '../layout/observer';
 import BBBLiveKitRoomContainer from '/imports/ui/components/livekit/component';
 import RaiseHandNotifier from '/imports/ui/components/raisehand-notifier/container';
+import SkyroomColumnController from '/imports/ui/components/skyroom-layout/component';
 
 const intlMessages = defineMessages({
   userListLabel: {
@@ -422,6 +423,7 @@ class App extends Component {
           {this.renderActionsBar()}
           <EmojiRainContainer />
           <VoiceActivityAdapter />
+          <SkyroomColumnController />
         </Styled.Layout>
       </>
     );

@@ -6,6 +6,7 @@ import { ErrorScreen } from '/imports/ui/components/error-screen/component';
 import LoadingScreen from '/imports/ui/components/common/loading-screen/component';
 import Session from '/imports/ui/services/storage/in-memory';
 import BBBWeb from '/imports/api/bbb-web-api';
+import { applySkyroomWhiteLabelSettings } from '/imports/ui/components/skyroom-layout/white-label';
 import MeetingStaticDataStore from '/imports/ui/core/singletons/meetingStaticData';
 import { MeetingStaticData } from '/imports/ui/Types/meetingStaticData';
 
@@ -78,7 +79,9 @@ const SettingsLoader: React.FC<SettingsLoaderProps> = (props) => {
               ...staticData
             } = data?.meeting[0];
             const settings = clientSettings.clientSettingsJson;
-            window.meetingClientSettings = JSON.parse(JSON.stringify(settings));
+            window.meetingClientSettings = applySkyroomWhiteLabelSettings(
+              JSON.parse(JSON.stringify(settings)),
+            );
             MeetingStaticDataStore.setMeetingData(staticData);
             setMeetingSettings(settings);
             setLoading(false);

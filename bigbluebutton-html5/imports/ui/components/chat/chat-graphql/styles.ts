@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { colorWhite, colorPrimary } from '/imports/ui/stylesheets/styled-components/palette';
+import { userListBg, colorPrimary } from '/imports/ui/stylesheets/styled-components/palette';
 import { smallOnly } from '/imports/ui/stylesheets/styled-components/breakpoints';
 import { smPaddingX, smPaddingY } from '/imports/ui/stylesheets/styled-components/general';
 
@@ -9,7 +9,7 @@ interface ChatProps {
 }
 
 export const Chat = styled.div<ChatProps>`
-  background-color: ${colorWhite};
+  background-color: ${userListBg};
   padding: ${smPaddingX};
   padding-bottom: ${smPaddingY};
   display: flex;

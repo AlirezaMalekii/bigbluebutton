@@ -1,0 +1,155 @@
+/* =====================================================================
+   IRANYekan web font — Persian/Farsi typography for BBB
+   ---------------------------------------------------------------------
+   Files live in public/fonts/iranyekan/woff/ (added by the integrator).
+   This stylesheet only activates when BBB sets <body class="lang-fa">
+   (see client/main.html). All other locales keep BBB's default
+   Source Sans Pro.
+
+   Weight mapping (web → CSS font-weight):
+     thin       → 100
+     light      → 300
+     regular    → 400
+     medium     → 500
+     bold       → 700
+     extrabold  → 800
+     extrablack → 900
+     black      → 900 (italic-ish fallback; we expose only `black` 900)
+
+   Note: BBB's webpack copies everything under public/ to the build
+   output, so these paths are stable on production.
+   ===================================================================== */
+
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 100;
+  font-display: swap;
+  src: url('../../fonts/iranyekan/woff/iranyekanwebthinfanum.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('../../fonts/iranyekan/woff/iranyekanweblightfanum.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../../fonts/iranyekan/woff/iranyekanwebregularfanum.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../../fonts/iranyekan/woff/iranyekanwebmediumfanum.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../../fonts/iranyekan/woff/iranyekanwebboldfanum.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('../../fonts/iranyekan/woff/iranyekanwebextraboldfanum.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('../../fonts/iranyekan/woff/iranyekanwebextrablackfanum.woff') format('woff');
+}
+
+/* IRANYekan also ships a "black" cut; expose it under a separate family
+   for callers that explicitly want the heaviest weight without italic. */
+@font-face {
+  font-family: 'IRANYekan Black';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('../../fonts/iranyekan/woff/iranyekanwebblackfanum.woff') format('woff');
+}
+
+/* ---------------------------------------------------------------------
+   Activate only when BBB locale is Persian.
+   BBB tags <body class="lang-fa"> automatically (see main.html).
+   The wide `*` selector with !important is intentional: we need to
+   override BBB's countless inline `font-family` declarations made
+   through styled-components, while still letting `bbb-icons` /
+   `Material Icons` keep their own font-family thanks to the explicit
+   `:not([class*="icon"])` guards below.
+   --------------------------------------------------------------------- */
+body.lang-fa,
+body.lang-fa input,
+body.lang-fa textarea,
+body.lang-fa select,
+body.lang-fa button,
+body.lang-fa h1,
+body.lang-fa h2,
+body.lang-fa h3,
+body.lang-fa h4,
+body.lang-fa h5,
+body.lang-fa h6,
+body.lang-fa p,
+body.lang-fa span,
+body.lang-fa div,
+body.lang-fa li,
+body.lang-fa label,
+body.lang-fa a {
+  font-family: 'IRANYekan', 'Source Sans Pro', Tahoma, Arial, sans-serif !important;
+}
+
+/* Make sure icon fonts are not affected (bbb-icons, Material Icons,
+   tldraw-icons, emoji-mart fonts). */
+body.lang-fa [class^="icon-bbb-"],
+body.lang-fa [class*=" icon-bbb-"],
+body.lang-fa .material-icons,
+body.lang-fa .material-symbols-rounded,
+body.lang-fa .material-symbols-outlined,
+body.lang-fa .material-symbols-sharp,
+body.lang-fa [class*="bbb-icons"],
+body.lang-fa [class*="tldraw"] i {
+  font-family: inherit !important;
+}
+
+/* Restore the explicit icon font-families that BBB uses */
+body.lang-fa [class^="icon-bbb-"],
+body.lang-fa [class*=" icon-bbb-"] {
+  font-family: 'bbb-icons' !important;
+}
+
+body.lang-fa .material-icons {
+  font-family: 'Material Icons' !important;
+}
+
+body.lang-fa .material-symbols-rounded,
+body.lang-fa .material-symbols-outlined,
+body.lang-fa .material-symbols-sharp {
+  font-family: 'Material Symbols Rounded',
+               'Material Symbols Outlined',
+               'Material Symbols Sharp' !important;
+}
+
+/* Slightly relax letter-spacing for Persian rendering at small sizes. */
+body.lang-fa {
+  letter-spacing: 0;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

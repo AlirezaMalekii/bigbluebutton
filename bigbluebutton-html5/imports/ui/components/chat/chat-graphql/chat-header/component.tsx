@@ -3,9 +3,14 @@ import { useMutation, useQuery } from '@apollo/client';
 import { defineMessages, useIntl } from 'react-intl';
 import { GET_CHAT_DATA, GetChatDataResponse, CLOSE_PRIVATE_CHAT_MUTATION } from './queries';
 import closePrivateChat from './services';
-import { layoutSelect, layoutDispatch } from '../../../layout/context';
+import { layoutSelect, layoutSelectInput, layoutDispatch } from '../../../layout/context';
+import {
+  isSkyroomColumnLayout,
+  returnToSkyroomPublicChat,
+  toggleSkyroomPublicChat,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 import { useShortcut } from '../../../../core/hooks/useShortcut';
-import { Layout } from '../../../layout/layoutTypes';
+import { Input, Layout } from '../../../layout/layoutTypes';
 import { ACTIONS, PANELS } from '../../../layout/enums';
 import ChatActions from './chat-actions/component';
 import { ChatHeader as Header } from '../chat-message-list/page/chat-message/styles';
@@ -42,6 +47,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   const HIDE_CHAT_AK = useShortcut('hideprivatechat');
   const CLOSE_CHAT_AK = useShortcut('closeprivatechat');
   const layoutContextDispatch = layoutDispatch();
+  const sidebarNavigation = layoutSelectInput((i: Input) => i.sidebarNavigation);
+  const sidebarContent = layoutSelectInput((i: Input) => i.sidebarContent);
   const intl = useIntl();
   const [updateVisible] = useMutation(CLOSE_PRIVATE_CHAT_MUTATION);
   return (
@@ -54,6 +61,18 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         'data-test': isPublicChat ? 'hidePublicChat' : 'hidePrivateChat',
         label: title,
         onClick: () => {
+          if (isSkyroomColumnLayout()) {
+            if (isPublicChat) {
+              toggleSkyroomPublicChat(
+                layoutContextDispatch,
+                sidebarNavigation,
+                sidebarContent,
+              );
+            } else {
+              returnToSkyroomPublicChat(layoutContextDispatch);
+            }
+            return;
+          }
           layoutContextDispatch({
             type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
             value: false,
@@ -77,6 +96,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         onClick: () => {
           updateVisible({ variables: { chatId, visible: false } });
           closePrivateChat(chatId);
+          if (isSkyroomColumnLayout()) {
+            returnToSkyroomPublicChat(layoutContextDispatch);
+            return;
+          }
           layoutContextDispatch({
             type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
             value: false,

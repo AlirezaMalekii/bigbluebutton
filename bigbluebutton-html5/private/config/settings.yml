@@ -26,15 +26,15 @@ public:
     enableDynamicAudioDeviceSelection: true
     #
     skipEchoTestIfPreviousDevice: false
-    clientTitle: BigBlueButton
+    clientTitle: سیف میت
     bbbServerVersion: HTML5_FULL_BBB_VERSION
-    displayBbbServerVersion: true
-    copyright: '©2026 BigBlueButton Inc.'
+    displayBbbServerVersion: false
+    copyright: ''
     html5ClientBuild: HTML5_CLIENT_VERSION
-    helpLink: https://bigbluebutton.org/html5/
+    helpLink: ''
     delayForUnmountOfSharedNote: 120000
     bbbTabletApp:
-      enabled: true
+      enabled: false
       iosAppStoreUrl: 'https://apps.apple.com/us/app/bigbluebutton-tablet/id1641156756'
       iosAppUrlScheme: 'bigbluebutton-tablet'
     cdn: ''
@@ -203,7 +203,7 @@ public:
         pushToTalkEnabled: false
         autoCloseReactionsBar: true
         directLeaveButton: true
-        darkTheme: false
+        darkTheme: true
         # set a custom color for talking highlight in webcam
         webcamBorderHighlightColor: []
         # fallbackLocale: if the locale the client is loaded in does not have a
@@ -288,7 +288,7 @@ public:
     branding:
       displayBrandingArea: true
     connectionTimeout: 60000
-    showHelpButton: true
+    showHelpButton: false
     # Whether the fallback mechanism should be used
     # when the locale string is empty. If false, the empty
     # string will be returned.

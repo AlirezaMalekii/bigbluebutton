@@ -26,21 +26,21 @@ const DEFAULT_VALUES = {
   actionBarPadding: 11.2,
   actionBarTabOrder: 6,
 
-  sidebarNavMaxWidth: 240,
-  sidebarNavMinWidth: 70,
+  sidebarNavMaxWidth: 272,
+  sidebarNavMinWidth: 220,
   sidebarNavHeight: '100%',
   sidebarNavTop: 0,
   sidebarNavLeft: 0,
   sidebarNavTabOrder: 1,
   sidebarNavPanel: PANELS.USERLIST,
 
-  sidebarContentMaxWidth: 800,
-  sidebarContentMinWidth: 70,
+  sidebarContentMaxWidth: 272,
+  sidebarContentMinWidth: 220,
   sidebarContentMinHeight: 200,
   sidebarContentHeight: '100%',
   sidebarContentTop: 0,
   sidebarContentTabOrder: 2,
-  sidebarContentPanel: PANELS.NONE,
+  sidebarContentPanel: PANELS.CHAT,
 };
 
 export default DEFAULT_VALUES;

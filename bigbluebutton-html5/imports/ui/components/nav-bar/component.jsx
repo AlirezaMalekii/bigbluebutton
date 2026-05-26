@@ -15,6 +15,12 @@ import browserInfo from '/imports/utils/browserInfo';
 import deviceInfo from '/imports/utils/deviceInfo';
 import { PANELS, ACTIONS, LAYOUT_TYPE } from '../layout/enums';
 import Button from '/imports/ui/components/common/button/component';
+import {
+  isSkyroomColumnLayout,
+  toggleSkyroomPublicChat,
+  toggleSkyroomUserList,
+  isPublicChatOpen,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 import LeaveMeetingButtonContainer from './leave-meeting-button/container';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import Tooltip from '/imports/ui/components/common/tooltip/component';
@@ -32,6 +38,10 @@ const intlMessages = defineMessages({
   toggleUserListAria: {
     id: 'app.navBar.toggleUserList.ariaLabel',
     description: 'description of the lists inside the userlist',
+  },
+  togglePublicChatLabel: {
+    id: 'app.chat.titlePublic',
+    description: 'Toggle public chat panel in Skyroom layout',
   },
   newMessages: {
     id: 'app.navBar.toggleUserList.newMessages',
@@ -172,6 +182,7 @@ class NavBar extends Component {
     super(props);
 
     this.handleToggleUserList = this.handleToggleUserList.bind(this);
+    this.handleTogglePublicChat = this.handleTogglePublicChat.bind(this);
     this.splitPluginItems = this.splitPluginItems.bind(this);
     this.setModalIsOpen = () => {};
   }
@@ -237,6 +248,12 @@ class NavBar extends Component {
       layoutContextDispatch,
     } = this.props;
 
+    if (isSkyroomColumnLayout()) {
+      toggleSkyroomUserList(layoutContextDispatch, sidebarNavigation, sidebarContent);
+      window.dispatchEvent(new Event('resize'));
+      return;
+    }
+
     if (sidebarNavigation.isOpen) {
       if (sidebarContent.isOpen) {
         layoutContextDispatch({
@@ -270,6 +287,19 @@ class NavBar extends Component {
         type: ACTIONS.SET_SIDEBAR_NAVIGATION_PANEL,
         value: PANELS.USERLIST,
       });
+    }
+  }
+
+  handleTogglePublicChat() {
+    const {
+      sidebarNavigation,
+      sidebarContent,
+      layoutContextDispatch,
+    } = this.props;
+
+    if (isSkyroomColumnLayout()) {
+      toggleSkyroomPublicChat(layoutContextDispatch, sidebarNavigation, sidebarContent);
+      window.dispatchEvent(new Event('resize'));
     }
   }
 
@@ -318,12 +348,14 @@ class NavBar extends Component {
       hasUnreadNotes,
       intl,
       shortcuts: TOGGLE_USERLIST_AK,
+      togglePublicChatShortcut: TOGGLE_PUBLIC_CHAT_AK,
       presentationTitle,
       amIModerator,
       style,
       main,
       isPinned,
       sidebarNavigation,
+      sidebarContent,
       currentUserId,
       isDirectLeaveButtonEnabled,
       isConnected,
@@ -335,7 +367,10 @@ class NavBar extends Component {
     let ariaLabel = intl.formatMessage(intlMessages.toggleUserListAria);
     ariaLabel += hasNotification ? (` ${intl.formatMessage(intlMessages.newMessages)}`) : '';
 
-    const isExpanded = sidebarNavigation.isOpen;
+    const isUserListExpanded = sidebarNavigation.isOpen;
+    const isPublicChatExpanded = isSkyroomColumnLayout()
+      ? isPublicChatOpen(sidebarContent)
+      : false;
     const { isPhone } = deviceInfo;
 
     const { leftPluginItems, centerPluginItems, rightPluginItems } = this.splitPluginItems();
@@ -373,15 +408,15 @@ class NavBar extends Component {
         {!hideTopRow && (
           <Styled.Top>
             <Styled.Left>
-              {shouldShowNavBarToggleButton && isExpanded && document.dir === 'ltr'
+              {shouldShowNavBarToggleButton && isUserListExpanded && document.dir === 'ltr'
                 && <Styled.ArrowLeft iconName="left_arrow" />}
-              {shouldShowNavBarToggleButton && !isExpanded && document.dir === 'rtl'
+              {shouldShowNavBarToggleButton && !isUserListExpanded && document.dir === 'rtl'
                 && <Styled.ArrowLeft iconName="left_arrow" />}
               {shouldShowNavBarToggleButton && (
                 <Styled.NavbarToggleButton
                   tooltipplacement="right"
                   onClick={this.handleToggleUserList}
-                  color={isPhone && isExpanded ? 'primary' : 'dark'}
+                  color={isPhone && isUserListExpanded ? 'primary' : 'dark'}
                   size="md"
                   circle
                   hideLabel
@@ -390,14 +425,32 @@ class NavBar extends Component {
                   tooltipLabel={intl.formatMessage(intlMessages.toggleUserListLabel)}
                   aria-label={ariaLabel}
                   icon="user"
-                  aria-expanded={isExpanded}
+                  aria-expanded={isUserListExpanded}
                   accessKey={TOGGLE_USERLIST_AK}
                   hasNotification={hasNotification}
                 />
               )}
-              {shouldShowNavBarToggleButton && !isExpanded && document.dir === 'ltr'
+              {isSkyroomColumnLayout() && shouldShowNavBarToggleButton && (
+                <Styled.NavbarToggleButton
+                  tooltipplacement="right"
+                  onClick={this.handleTogglePublicChat}
+                  color={isPhone && isPublicChatExpanded ? 'primary' : 'dark'}
+                  size="md"
+                  circle
+                  hideLabel
+                  data-test="togglePublicChatNav"
+                  label={intl.formatMessage(intlMessages.togglePublicChatLabel)}
+                  tooltipLabel={intl.formatMessage(intlMessages.togglePublicChatLabel)}
+                  aria-label={intl.formatMessage(intlMessages.togglePublicChatLabel)}
+                  icon="chat"
+                  aria-expanded={isPublicChatExpanded}
+                  accessKey={TOGGLE_PUBLIC_CHAT_AK}
+                  hasNotification={hasUnreadMessages}
+                />
+              )}
+              {shouldShowNavBarToggleButton && !isUserListExpanded && document.dir === 'ltr'
                 && <Styled.ArrowRight iconName="right_arrow" />}
-              {shouldShowNavBarToggleButton && isExpanded && document.dir === 'rtl'
+              {shouldShowNavBarToggleButton && isUserListExpanded && document.dir === 'rtl'
                 && <Styled.ArrowRight iconName="right_arrow" />}
               {renderPluginItems(leftPluginItems)}
             </Styled.Left>

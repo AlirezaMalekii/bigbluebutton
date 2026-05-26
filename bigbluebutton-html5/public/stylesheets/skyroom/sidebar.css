@@ -1,0 +1,617 @@
+/* =====================================================================
+   Skyroom sidebar — two separate panels (کاربران | گپ عمومی)
+   Fixes BBB white surfaces; minimal dark glass boxes like Skyroom
+   ===================================================================== */
+
+#layout[data-skyroom-column="true"] {
+  --skyroom-panel-bg:
+    radial-gradient(420px 220px at 18% -18%, rgba(20, 169, 158, 0.18), transparent 62%),
+    linear-gradient(168deg, #1b2437 0%, #131d2c 46%, #0e1623 100%);
+  --skyroom-panel-solid: #121a28;
+  --skyroom-panel-border: rgba(20, 169, 158, 0.30);
+  --skyroom-panel-divider: rgba(218, 230, 245, 0.10);
+  --skyroom-panel-header: linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.025));
+  --skyroom-panel-text: #eef4fb;
+  --skyroom-panel-text-muted: #aab6c7;
+  --skyroom-panel-text-dim: #7b8798;
+  --skyroom-panel-input: rgba(5, 10, 18, 0.72);
+  --skyroom-panel-accent: #20c7bb;
+  --skyroom-panel-accent-2: #0d887e;
+  --skyroom-panel-accent-soft: rgba(32, 199, 187, 0.14);
+  --skyroom-panel-radius: 16px;
+  --skyroom-panel-gap: 12px;
+  --skyroom-panel-shadow:
+    0 12px 34px rgba(0, 0, 0, 0.40),
+    0 0 0 1px var(--skyroom-panel-border),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Wrappers — no chrome; panels carry visual weight */
+#layout[data-skyroom-column="true"] .resizeSidebarNavWrapper,
+#layout[data-skyroom-column="true"] .resizeSidebarContentWrapper {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+[dir="ltr"] #layout[data-skyroom-column="true"] .resizeSidebarNavWrapper,
+[dir="ltr"] #layout[data-skyroom-column="true"] .resizeSidebarContentWrapper {
+  margin-right: var(--skyroom-stage-gap, 22px) !important;
+  margin-left: 0 !important;
+}
+
+[dir="rtl"] #layout[data-skyroom-column="true"] .resizeSidebarNavWrapper,
+[dir="rtl"] #layout[data-skyroom-column="true"] .resizeSidebarContentWrapper {
+  margin-left: var(--skyroom-stage-gap, 22px) !important;
+  margin-right: 0 !important;
+}
+
+/* Users + chat panels fill their layout bounds */
+#layout[data-skyroom-column="true"] .resizeSidebarNavWrapper > [data-test="userListContainer"],
+#layout[data-skyroom-column="true"] .resizeSidebarNavWrapper > div:has([data-test="userListContainer"]) {
+  height: 100% !important;
+  min-height: 0 !important;
+  box-sizing: border-box !important;
+}
+
+#layout[data-skyroom-column="true"] .resizeSidebarContentWrapper > [data-test="publicChatPanel"] {
+  height: 100% !important;
+  min-height: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Webcam — optional third box above users */
+#layout[data-skyroom-column="true"] #WebcamContainer,
+#layout[data-skyroom-column="true"] [data-test="webcamContainer"] {
+  margin: 0 10px var(--skyroom-panel-gap) 0 !important;
+  padding: 6px !important;
+  border-radius: var(--skyroom-panel-radius) !important;
+  background: var(--skyroom-panel-bg) !important;
+  border: 1px solid var(--skyroom-panel-border) !important;
+  box-shadow: var(--skyroom-panel-shadow) !important;
+  overflow: hidden !important;
+}
+
+[dir="rtl"] #layout[data-skyroom-column="true"] #WebcamContainer,
+[dir="rtl"] #layout[data-skyroom-column="true"] [data-test="webcamContainer"] {
+  margin: 0 0 var(--skyroom-panel-gap) 10px !important;
+}
+
+/* ===================================================================
+   PANEL 1 — Users (کاربران)
+   =================================================================== */
+#layout[data-skyroom-column="true"] [data-test="userListContainer"] {
+  background: var(--skyroom-panel-bg) !important;
+  background-color: var(--skyroom-panel-solid) !important;
+  color: var(--skyroom-panel-text) !important;
+  border: 1px solid var(--skyroom-panel-border) !important;
+  border-radius: var(--skyroom-panel-radius) !important;
+  margin: 0 !important;
+  box-shadow: var(--skyroom-panel-shadow) !important;
+  font-size: 0.8125rem;
+  overflow: hidden;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative;
+  padding-right: 10px;
+}
+
+/* Decorative top line removed — looked like an empty mystery section */
+#layout[data-skyroom-column="true"] [data-test="userListContainer"]::before,
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"]::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* Skyroom users panel: only title + participant list (chat is separate column) */
+#layout[data-skyroom-column="true"] [data-test="userListContent"] > *:not(:has([data-test-users-count])):not([role="list"]) {
+  display: none !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--skyroom-panel-text) !important;
+  border: none !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Kill ALL white / off-white scroll fades inside users panel */
+#layout[data-skyroom-column="true"] .resizeSidebarNavWrapper [data-test="userListContent"] ul,
+#layout[data-skyroom-column="true"] .resizeSidebarNavWrapper [data-test="userListContent"] > div,
+#layout[data-skyroom-column="true"] .resizeSidebarNavWrapper [data-test="userListContent"] div[class] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* Header row */
+#layout[data-skyroom-column="true"] [data-test="userListContainer"] [class*="Container"]:has([data-test-users-count]),
+#layout[data-skyroom-column="true"] [data-test="userListContent"] > div:first-child {
+  background: var(--skyroom-panel-header) !important;
+  border-bottom: 1px solid var(--skyroom-panel-divider) !important;
+  padding: 16px 16px 12px !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContainer"] h2,
+#layout[data-skyroom-column="true"] [data-test="userManagementTitle"],
+#layout[data-skyroom-column="true"] [data-test="userListContent"] h2,
+#layout[data-skyroom-column="true"] [data-test-users-count] {
+  color: var(--skyroom-panel-text) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 700 !important;
+  text-transform: none !important;
+  letter-spacing: 0.01em;
+  margin: 0 !important;
+  padding: 0 !important;
+  padding-inline-end: 22px !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContainer"] [class*="Container"]:has([data-test-users-count]) {
+  padding-inline-start: 14px !important;
+  padding-inline-end: 22px !important;
+}
+
+/* Toolbar buttons */
+#layout[data-skyroom-column="true"] [data-test="userListContainer"] button,
+#layout[data-skyroom-column="true"] [data-test="waitingUsersBtn"],
+#layout[data-skyroom-column="true"] [data-test="manageUsers"] {
+  background: rgba(255, 255, 255, 0.055) !important;
+  color: var(--skyroom-panel-text-muted) !important;
+  border: 1px solid var(--skyroom-panel-divider) !important;
+  border-radius: 10px !important;
+  min-height: 34px !important;
+  box-shadow: none !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContainer"] button:hover,
+#layout[data-skyroom-column="true"] [data-test="waitingUsersBtn"]:hover,
+#layout[data-skyroom-column="true"] [data-test="manageUsers"]:hover {
+  border-color: var(--skyroom-panel-accent) !important;
+  color: var(--skyroom-panel-accent) !important;
+  background: var(--skyroom-panel-accent-soft) !important;
+}
+
+/* User rows — readable names */
+#layout[data-skyroom-column="true"] [data-test="userListItem"],
+#layout[data-skyroom-column="true"] [data-test="userListItemCurrent"],
+#layout[data-skyroom-column="true"] [data-test="userListContent"] li {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  padding: 1px 6px !important;
+  margin: 0 !important;
+  list-style: none !important;
+  min-height: 0 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListItem"] [role="button"],
+#layout[data-skyroom-column="true"] [data-test="userListItemCurrent"] [role="button"],
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [role="button"] {
+  background: transparent !important;
+  border-radius: 8px !important;
+  padding: 4px 6px !important;
+  margin: 1px 4px !important;
+  transition: background 140ms ease;
+}
+
+/* Compact rows — full text visible (no ellipsis clip) */
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="moderatorAvatar"],
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="viewerAvatar"] {
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  font-size: 0.6rem !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="UserNameContainer"] {
+  overflow: visible !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="UserName"],
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="UserName"] span {
+  font-size: 0.72rem !important;
+  line-height: 1.3 !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  white-space: normal !important;
+  word-break: break-word;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="UserNameSub"] {
+  font-size: 0.6rem !important;
+  line-height: 1.25 !important;
+  margin-top: 0 !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  white-space: normal !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="UserItemContents"] {
+  padding: 0.15rem 0.2rem !important;
+  gap: 4px;
+  align-items: center !important;
+  min-height: 32px !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="UserRow"] {
+  align-items: flex-start !important;
+  min-height: 32px;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="UserRowMain"] {
+  overflow: visible !important;
+  min-width: 0;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="ActionIconBar"] {
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  max-width: 42%;
+  justify-content: flex-end;
+  gap: 1px;
+  padding-top: 2px;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="ActionIconButton"] {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListItem"] [role="button"]:hover,
+#layout[data-skyroom-column="true"] [data-test="userListItemCurrent"] [role="button"]:hover,
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [role="button"]:hover {
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListItem"] span,
+#layout[data-skyroom-column="true"] [data-test="userListItemCurrent"] span,
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="UserName"],
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="UserNameSub"] {
+  color: var(--skyroom-panel-text) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="UserNameSub"] {
+  color: var(--skyroom-panel-text-muted) !important;
+  font-size: 0.7rem !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="UserItem"],
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="UserItemContents"],
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="ListItem"] {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* Avatars keep white initials */
+#layout[data-skyroom-column="true"] [data-test="moderatorAvatar"],
+#layout[data-skyroom-column="true"] [data-test="viewerAvatar"] {
+  color: #fff !important;
+}
+
+/* Hide redundant links — chat is in panel 2 */
+#layout[data-skyroom-column="true"] [data-test="chatButton"],
+#layout[data-skyroom-column="true"] [data-test="messageTitle"],
+#layout[data-skyroom-column="true"] [data-test="sharedNotesButton"],
+#layout[data-skyroom-column="true"] [data-test="notesTitle"],
+#layout[data-skyroom-column="true"] [data-test="brandingArea"] {
+  display: none !important;
+}
+
+/* ===================================================================
+   PANEL 2 — Public chat (گپ عمومی) — same chrome as users panel
+   =================================================================== */
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] {
+  background: var(--skyroom-panel-bg) !important;
+  background-color: var(--skyroom-panel-solid) !important;
+  color: var(--skyroom-panel-text) !important;
+  border: 1px solid var(--skyroom-panel-border) !important;
+  border-radius: var(--skyroom-panel-radius) !important;
+  margin: 0 !important;
+  box-shadow: var(--skyroom-panel-shadow) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  position: relative;
+  box-sizing: border-box !important;
+  font-size: 0.8125rem;
+  padding-right: 10px;
+}
+
+[dir="rtl"] #layout[data-skyroom-column="true"] [data-test="publicChatPanel"] {
+  padding-right: 0;
+  padding-left: 10px;
+}
+
+/* Neutralize global theme bubble rules inside Skyroom chat column */
+#layout[data-skyroom-column="true"] [data-test="chatMessageItem"]:hover {
+  background: transparent !important;
+  transform: none !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container:not(:has([class*="ChatHeading"])) [class*="MessageItemWrapper"] {
+  padding-left: 6px !important;
+  padding-right: 6px !important;
+}
+
+/* Chat root + children — no white */
+#layout[data-skyroom-column="true"] .resizeSidebarContentWrapper [class*="Chat"],
+#layout[data-skyroom-column="true"] .resizeSidebarContentWrapper [class*="Chat"] > div,
+#layout[data-skyroom-column="true"] .resizeSidebarContentWrapper [class*="ChatContent"],
+#layout[data-skyroom-column="true"] .resizeSidebarContentWrapper [class*="ChatMessages"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  padding: 0 !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="chatMessages"] {
+  background: transparent !important;
+  color: var(--skyroom-panel-text) !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 6px 8px !important;
+}
+
+/* Chat header */
+#layout[data-skyroom-column="true"] [data-test="chatTitle"] {
+  background: var(--skyroom-panel-header) !important;
+  color: var(--skyroom-panel-text) !important;
+  border-bottom: 1px solid var(--skyroom-panel-divider) !important;
+  padding: 10px 12px 8px !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  min-height: 36px !important;
+  flex-shrink: 0 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="chatTitle"] button,
+#layout[data-skyroom-column="true"] [data-test="chatTitle"] [class^="icon-bbb-"] {
+  color: var(--skyroom-panel-text-muted) !important;
+  background: transparent !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="chatTitle"] button:hover {
+  color: var(--skyroom-panel-accent) !important;
+  background: var(--skyroom-panel-accent-soft) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="hidePublicChat"] {
+  pointer-events: none !important;
+  max-width: calc(100% - 44px) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="hidePublicChat"] i,
+#layout[data-skyroom-column="true"] [data-test="hidePublicChat"] [class^="icon-bbb-"] {
+  display: none !important;
+}
+
+/* Messages — compact footprint, high-contrast readable text */
+#layout[data-skyroom-column="true"] [data-test="chatMessageItem"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--skyroom-panel-text) !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container {
+  margin-top: 0 !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container:not(:first-of-type) {
+  margin-top: 0.25rem !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container [class*="ChatWrapper"] {
+  gap: 2px !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container [class*="ChatHeading"] {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 5px !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+  line-height: 1.1 !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container [class*="ChatAvatar"] {
+  flex: 0 0 18px !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  margin: 0 !important;
+  font-size: 0.5rem !important;
+  border-width: 1px !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container [class*="ChatAvatar"] .react-loading-skeleton {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container [class*="ChatUserName"],
+#layout[data-skyroom-column="true"] .chat-message-container [class*="ChatUserName"] span {
+  font-size: 0.65rem !important;
+  font-weight: 600 !important;
+  line-height: 1.15 !important;
+  margin: 0 !important;
+  color: var(--skyroom-panel-text-muted) !important;
+  opacity: 1 !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container [class*="ChatTime"],
+#layout[data-skyroom-column="true"] .chat-message-container [class*="ChatTime"] span {
+  display: flex !important;
+  font-size: 0.58rem !important;
+  line-height: 1.1 !important;
+  color: var(--skyroom-panel-text-dim) !important;
+  opacity: 1 !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container [class*="MessageItemWrapper"] {
+  padding: 2px 7px 3px !important;
+  margin: 0 !important;
+  background: #f4f7fb !important;
+  border: 1px solid rgba(20, 169, 158, 0.22) !important;
+  border-radius: 7px !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container [class*="ChatMessageContentWrapper"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+/* User-written message body — black on light bubble */
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] [data-test="messageContent"],
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] [data-test="messageContent"] p,
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] [data-test="messageContent"] span,
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] [data-test="messageContent"] li,
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] [data-test="messageContent"] strong,
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] [data-test="messageContent"] em,
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] .chat-message-content [data-test="messageContent"],
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] .chat-message-content [class*="ChatMessage"] {
+  color: #1a2332 !important;
+  -webkit-text-fill-color: #1a2332 !important;
+  opacity: 1 !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.45 !important;
+  background-color: transparent !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] [data-test="messageContent"] a,
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] .chat-message-content [class*="ChatMessage"] a {
+  color: #0d6b63 !important;
+  -webkit-text-fill-color: #0d6b63 !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container [class*="ChatMessage"] p {
+  margin: 0 !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container [class*="ChatContentFooter"] {
+  position: static !important;
+  display: none !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="chatMessageNotificationContent"],
+#layout[data-skyroom-column="true"] [data-test="chatMessageNotificationContent"] * {
+  color: var(--skyroom-panel-text-muted) !important;
+  background: transparent !important;
+  font-size: 0.75rem !important;
+  text-align: center;
+}
+
+#layout[data-skyroom-column="true"] [data-test="chatMessageItem"] a {
+  color: var(--skyroom-panel-accent) !important;
+}
+
+/* Input footer */
+#layout[data-skyroom-column="true"] .resizeSidebarContentWrapper form {
+  background: var(--skyroom-panel-header) !important;
+  border-top: 1px solid var(--skyroom-panel-divider) !important;
+  padding: 8px 10px 10px !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+#layout[data-skyroom-column="true"] .resizeSidebarContentWrapper form > div {
+  display: flex !important;
+  align-items: flex-end !important;
+  gap: 4px !important;
+  background: var(--skyroom-panel-input) !important;
+  border: 1px solid rgba(218, 230, 245, 0.14) !important;
+  border-radius: 10px !important;
+  padding: 3px 5px 3px 8px !important;
+}
+
+#layout[data-skyroom-column="true"] .resizeSidebarContentWrapper form:focus-within > div {
+  border-color: rgba(20, 169, 158, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(20, 169, 158, 0.12) !important;
+}
+
+#layout[data-skyroom-column="true"] .resizeSidebarContentWrapper textarea,
+#layout[data-skyroom-column="true"] .resizeSidebarContentWrapper input[type="text"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--skyroom-panel-text) !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-size: 0.75rem !important;
+  line-height: 1.35 !important;
+  min-height: 28px !important;
+  padding: 5px 2px !important;
+}
+
+#layout[data-skyroom-column="true"] .resizeSidebarContentWrapper textarea::placeholder {
+  color: var(--skyroom-panel-text-dim) !important;
+  opacity: 1 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="sendMessageButton"],
+#layout[data-skyroom-column="true"] [data-test="sendMessageButton"] > span,
+#layout[data-skyroom-column="true"] [data-test="sendMessageButton"] button {
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  color: var(--skyroom-panel-accent) !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  box-shadow: none !important;
+  border-radius: 8px !important;
+  font-size: 0.85rem !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="sendMessageButton"]:hover {
+  background: var(--skyroom-panel-accent-soft) !important;
+}
+
+/* Reply bar / editing warning */
+#layout[data-skyroom-column="true"] [data-test="chatEditingWarningContainer"],
+#layout[data-skyroom-column="true"] [class*="ReplyIntention"],
+#layout[data-skyroom-column="true"] [class*="ChatOffline"] {
+  background: rgba(0, 0, 0, 0.25) !important;
+  color: var(--skyroom-panel-text-muted) !important;
+  border-top: 1px solid var(--skyroom-panel-divider) !important;
+  font-size: 0.68rem !important;
+  padding: 4px 8px !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container [class*="chat-message-toolbar"] button,
+#layout[data-skyroom-column="true"] .chat-message-container [class*="MessageReactions"] {
+  transform: scale(0.88);
+  transform-origin: center right;
+}
+
+[dir="rtl"] #layout[data-skyroom-column="true"] .chat-message-container [class*="chat-message-toolbar"] button,
+[dir="rtl"] #layout[data-skyroom-column="true"] .chat-message-container [class*="MessageReactions"] {
+  transform-origin: center left;
+}
+
+/* Scrollbars */
+#layout[data-skyroom-column="true"] .resizeSidebarNavWrapper *,
+#layout[data-skyroom-column="true"] .resizeSidebarContentWrapper * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(20, 169, 158, 0.35) transparent;
+}

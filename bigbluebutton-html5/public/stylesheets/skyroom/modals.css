@@ -1,0 +1,647 @@
+/* =====================================================================
+   Skyroom — modals (readable text, flat buttons, tables, settings, connection)
+   ===================================================================== */
+
+:root {
+  --skyroom-modal-text: #eef4fb;
+  --skyroom-modal-text-muted: #aab6c7;
+  --skyroom-modal-surface: rgba(10, 18, 32, 0.95);
+  --skyroom-modal-border: rgba(20, 169, 158, 0.32);
+}
+
+/* ---------------------------------------------------------------------
+   0) Readable text on dark modal shells (no black / gray-dark leaks)
+   --------------------------------------------------------------------- */
+[role="dialog"],
+.ReactModal__Content,
+#modals-container .ReactModal__Content {
+  color: var(--skyroom-modal-text) !important;
+}
+
+[role="dialog"] h1,
+[role="dialog"] h2,
+[role="dialog"] h3,
+[role="dialog"] h4,
+[role="dialog"] p,
+[role="dialog"] label,
+[role="dialog"] li,
+[role="dialog"] td,
+[role="dialog"] th,
+[role="dialog"] time,
+[role="dialog"] small,
+[role="dialog"] strong,
+[role="dialog"] legend,
+.ReactModal__Content h1,
+.ReactModal__Content h2,
+.ReactModal__Content h3,
+.ReactModal__Content h4,
+.ReactModal__Content p,
+.ReactModal__Content label,
+.ReactModal__Content li,
+.ReactModal__Content td,
+.ReactModal__Content th,
+.ReactModal__Content time,
+.ReactModal__Content small,
+.ReactModal__Content strong,
+.ReactModal__Content legend,
+#fsmodal h1,
+#fsmodal h2,
+#fsmodal h3,
+#fsmodal p,
+#fsmodal label,
+#fsmodal li {
+  color: var(--skyroom-modal-text) !important;
+}
+
+[role="dialog"] [class*="Description"],
+[role="dialog"] [class*="SubTitle"],
+[role="dialog"] [class*="Hint"],
+[role="dialog"] [class*="Help"],
+.ReactModal__Content [class*="Description"],
+.ReactModal__Content [class*="SubTitle"],
+#fsmodal [class*="SubTitle"] {
+  color: var(--skyroom-modal-text-muted) !important;
+}
+
+/* Kill styled-components dark text inside modals */
+[role="dialog"] [style*="color: rgb(47"],
+[role="dialog"] [style*="color: rgb(51"],
+[role="dialog"] [style*="color: rgb(33"],
+.ReactModal__Content [class*="Title"]:not([class*="icon"]) {
+  color: var(--skyroom-modal-text) !important;
+}
+
+/* ---------------------------------------------------------------------
+   1) Modal shell padding
+   --------------------------------------------------------------------- */
+.ReactModal__Content:not(#fsmodal) {
+  padding: 28px 32px 32px !important;
+  box-sizing: border-box !important;
+}
+
+.ReactModal__Content:not(#fsmodal) [class*="Footer"] {
+  margin-top: 20px !important;
+  padding-top: 20px !important;
+  gap: 12px !important;
+  justify-content: center !important;
+}
+
+/* ---------------------------------------------------------------------
+   2) Selects
+   --------------------------------------------------------------------- */
+[role="dialog"] select,
+.ReactModal__Content select,
+#fsmodal select,
+#modals-container select {
+  -webkit-appearance: menulist !important;
+  appearance: auto !important;
+  display: block !important;
+  width: 100% !important;
+  min-height: 2.5rem !important;
+  padding: 8px 36px 8px 12px !important;
+  font-size: 0.9rem !important;
+  line-height: 1.45 !important;
+  color: var(--skyroom-modal-text) !important;
+  -webkit-text-fill-color: var(--skyroom-modal-text) !important;
+  background-color: var(--skyroom-modal-surface) !important;
+  border: 1px solid var(--skyroom-modal-border) !important;
+  border-radius: 12px !important;
+  cursor: pointer !important;
+}
+
+[role="dialog"] select option,
+.ReactModal__Content select option,
+#fsmodal select option {
+  background-color: #1a2234 !important;
+  color: #eef4fb !important;
+}
+
+[role="dialog"] .MuiInputBase-root,
+.ReactModal__Content .MuiInputBase-root,
+#fsmodal .MuiInputBase-root {
+  background-color: var(--skyroom-modal-surface) !important;
+  border-radius: 12px !important;
+}
+
+[role="dialog"] .MuiSelect-select,
+[role="dialog"] .MuiInputBase-input,
+.ReactModal__Content .MuiSelect-select,
+#fsmodal .MuiSelect-select {
+  color: var(--skyroom-modal-text) !important;
+  -webkit-text-fill-color: var(--skyroom-modal-text) !important;
+}
+
+[role="dialog"] .MuiOutlinedInput-notchedOutline,
+#fsmodal .MuiOutlinedInput-notchedOutline {
+  border-color: var(--skyroom-modal-border) !important;
+}
+
+/* ---------------------------------------------------------------------
+   3) Settings — content area: 1rem 30px (overrides fullscreen Content 1rem 0)
+   --------------------------------------------------------------------- */
+#fsmodal > div:last-of-type,
+#fsmodal [class*="Content"] {
+  padding: 1rem 30px !important;
+  box-sizing: border-box !important;
+}
+
+#fsmodal [class*="SettingsTabs"] {
+  padding: 30px !important;
+}
+
+#fsmodal [class*="SettingsTabList"] {
+  padding: 16px 20px 12px 24px !important;
+}
+
+/* Horizontal inset comes from #fsmodal [class*="Content"] { padding: 1rem 30px } */
+#fsmodal [class*="SettingsTabPanel"],
+#fsmodal [class*="SettingsTabPanel"].is-selected {
+  padding: 0 0 1rem 0 !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+#fsmodal [class*="Form"] {
+  padding: 0 !important;
+  box-sizing: border-box;
+}
+
+#fsmodal [class*="Row"] {
+  margin-bottom: 0.85rem !important;
+  padding: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  gap: 12px;
+}
+
+#fsmodal [class*="Col"] {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+#fsmodal [class*="FormElement"],
+#fsmodal [class*="FormElementRight"],
+#fsmodal [class*="FormElementCenter"] {
+  padding: 8px 6px !important;
+}
+
+#fsmodal [class*="Label"],
+#fsmodal label,
+#fsmodal [class*="ToggleLabel"] {
+  color: var(--skyroom-modal-text-muted) !important;
+}
+
+/* react-toggle switches — inset from modal edge */
+#fsmodal .react-toggle,
+#fsmodal [class*="FormElementRight"] .react-toggle {
+  margin-right: 4px;
+}
+
+#fsmodal .react-toggle-track {
+  background-color: rgba(223, 39, 33, 0.55) !important;
+}
+
+#fsmodal .react-toggle--checked .react-toggle-track {
+  background: var(--skyroom-gradient-primary) !important;
+}
+
+#fsmodal .react-toggle-thumb {
+  border-color: rgba(218, 230, 245, 0.2) !important;
+}
+
+#fsmodal .toggle-label,
+#fsmodal .react-toggle-label {
+  color: var(--skyroom-modal-text-muted) !important;
+}
+
+/* ---------------------------------------------------------------------
+   4) Modal buttons — single layer (fix double-button look)
+   --------------------------------------------------------------------- */
+[role="dialog"] .buttonWrapper > button,
+.ReactModal__Content .buttonWrapper > button,
+#fsmodal .buttonWrapper > button {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 6px !important;
+  box-shadow: none !important;
+  min-height: 0 !important;
+}
+
+[role="dialog"] .buttonWrapper > button > span,
+.ReactModal__Content .buttonWrapper > button > span,
+#fsmodal .buttonWrapper > button > span {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px;
+  min-height: 40px;
+  padding: 10px 20px !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  box-sizing: border-box !important;
+}
+
+/* Default BBB Button (no wrapper) — style the button element itself */
+[role="dialog"] button[data-test="modalConfirmButton"],
+[role="dialog"] button[data-test="modalDismissButton"],
+[role="dialog"] button[data-test="closeModal"],
+[role="dialog"] [class*="ConfirmationButton"],
+[role="dialog"] [class*="CancelButton"],
+.ReactModal__Content button[data-test="modalConfirmButton"],
+.ReactModal__Content button[data-test="modalDismissButton"],
+#fsmodal button[data-test="modalConfirmButton"],
+#fsmodal button[data-test="modalDismissButton"] {
+  border-radius: 12px !important;
+  padding: 10px 20px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  box-shadow: none !important;
+  border: 1px solid transparent !important;
+}
+
+[role="dialog"] button[data-test="modalConfirmButton"],
+[role="dialog"] button[color="primary"]:not([data-test="closeModal"]),
+.ReactModal__Content button[color="primary"]:not([data-test="closeModal"]),
+#fsmodal button[data-test="modalConfirmButton"],
+#fsmodal button[color="primary"] {
+  background: var(--skyroom-gradient-primary) !important;
+  color: #ffffff !important;
+  border-color: rgba(32, 199, 187, 0.45) !important;
+  box-shadow: 0 6px 16px rgba(13, 136, 126, 0.28) !important;
+}
+
+[role="dialog"] button[data-test="modalDismissButton"],
+[role="dialog"] button[color="secondary"],
+.ReactModal__Content button[color="secondary"],
+#fsmodal button[data-test="modalDismissButton"],
+#fsmodal button[color="secondary"] {
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: var(--skyroom-modal-text) !important;
+  border-color: rgba(218, 230, 245, 0.2) !important;
+}
+
+[role="dialog"] button[color="danger"],
+.ReactModal__Content button[color="danger"] {
+  background: var(--skyroom-gradient-danger) !important;
+  color: #ffffff !important;
+}
+
+/* Inner spans must not duplicate chrome */
+[role="dialog"] button[data-test] > span,
+[role="dialog"] button[color] > span,
+.ReactModal__Content button[data-test] > span,
+#fsmodal button[data-test] > span {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  color: inherit !important;
+  display: inline !important;
+  min-height: 0 !important;
+}
+
+/* buttonWrapper primary / secondary / danger */
+[role="dialog"] .buttonWrapper button[color="primary"] > span,
+#fsmodal .buttonWrapper button[color="primary"] > span {
+  background: var(--skyroom-gradient-primary) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(32, 199, 187, 0.45) !important;
+  box-shadow: 0 6px 16px rgba(13, 136, 126, 0.28) !important;
+}
+
+[role="dialog"] .buttonWrapper button[color="secondary"] > span,
+[role="dialog"] .buttonWrapper button[color="default"] > span,
+#fsmodal .buttonWrapper button[color="secondary"] > span {
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: var(--skyroom-modal-text) !important;
+  border: 1px solid rgba(218, 230, 245, 0.2) !important;
+  box-shadow: none !important;
+}
+
+[role="dialog"] .buttonWrapper button[color="danger"] > span {
+  background: var(--skyroom-gradient-danger) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 106, 102, 0.4) !important;
+}
+
+[role="dialog"] [data-test="closeModal"],
+[role="dialog"] [data-test="closeModal"] > span {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--skyroom-modal-text-muted) !important;
+  border: 1px solid rgba(218, 230, 245, 0.14) !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 6px !important;
+  border-radius: 10px !important;
+}
+
+/* ---------------------------------------------------------------------
+   5) Tables inside modals
+   --------------------------------------------------------------------- */
+[role="dialog"] table,
+.ReactModal__Content table,
+#fsmodal table {
+  width: 100%;
+  border-collapse: separate !important;
+  border-spacing: 0;
+  background: transparent !important;
+  color: var(--skyroom-modal-text) !important;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+[role="dialog"] thead,
+[role="dialog"] th,
+.ReactModal__Content thead,
+.ReactModal__Content th {
+  background: rgba(20, 169, 158, 0.14) !important;
+  color: var(--skyroom-modal-text) !important;
+  border-bottom: 1px solid var(--skyroom-modal-border) !important;
+  padding: 10px 12px !important;
+  font-weight: 600 !important;
+}
+
+[role="dialog"] tbody tr,
+.ReactModal__Content tbody tr {
+  background: transparent !important;
+}
+
+[role="dialog"] tbody tr:nth-child(even),
+.ReactModal__Content tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+[role="dialog"] tbody tr:hover,
+.ReactModal__Content tbody tr:hover {
+  background: rgba(20, 169, 158, 0.1) !important;
+}
+
+[role="dialog"] td,
+.ReactModal__Content td {
+  color: var(--skyroom-modal-text) !important;
+  border-bottom: 1px solid rgba(218, 230, 245, 0.08) !important;
+  padding: 10px 12px !important;
+  background: transparent !important;
+}
+
+/* Div-based tables (shortcut help, debug) */
+[role="dialog"] [class*="TableWrapper"],
+[role="dialog"] [class*="ShortcutTable"],
+[role="dialog"] [class*="Table"] {
+  background: rgba(10, 18, 32, 0.55) !important;
+  border: 1px solid var(--skyroom-modal-border) !important;
+  border-radius: 12px !important;
+  color: var(--skyroom-modal-text) !important;
+  overflow: hidden;
+}
+
+[role="dialog"] [class*="TableRow"],
+[role="dialog"] [class*="TableCell"] {
+  background: transparent !important;
+  color: var(--skyroom-modal-text) !important;
+  border-color: rgba(218, 230, 245, 0.08) !important;
+}
+
+[role="dialog"] [class*="TableRow"]:nth-child(even) {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* White panels leaked into modals */
+[role="dialog"] [class*="Content"],
+[role="dialog"] [class*="Container"],
+[role="dialog"] [class*="Wrapper"],
+.ReactModal__Content [class*="Content"]:not([class*="Modal"]) {
+  background-color: transparent !important;
+}
+
+[role="dialog"] [style*="background-color: rgb(255, 255, 255)"],
+[role="dialog"] [style*="background-color: white"],
+[role="dialog"] [style*="background: rgb(255, 255, 255)"] {
+  background-color: rgba(10, 18, 32, 0.6) !important;
+}
+
+/* ---------------------------------------------------------------------
+   6) Connection status modal — full redesign
+   --------------------------------------------------------------------- */
+[data-test="connectionStatusModal"].ReactModal__Content {
+  width: min(680px, 94vw) !important;
+  max-width: 680px !important;
+  max-height: min(86vh, 560px) !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+[data-test="connectionStatusModal"] > div > div > header:first-of-type {
+  position: absolute !important;
+  top: 16px !important;
+  right: 20px !important;
+  z-index: 5 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+[dir="rtl"] [data-test="connectionStatusModal"] > div > div > header:first-of-type {
+  right: auto !important;
+  left: 20px !important;
+}
+
+[data-test="connectionStatusModal"] > div > div > header:first-of-type h2,
+[data-test="connectionStatusModal"] > div > div > header:first-of-type [class*="Title"] {
+  display: none !important;
+}
+
+[data-test="connectionStatusModal"] > div > div > [class*="Content"] {
+  padding: 0 !important;
+  overflow: hidden !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+[data-test="connectionStatusModal"] [class*="Container"] {
+  padding: 24px 24px 20px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  box-sizing: border-box !important;
+}
+
+[data-test="connectionStatusModal"] [class*="Header"]:not(header) {
+  padding: 0 40px 16px 0 !important;
+  margin: 0 !important;
+  border: none !important;
+}
+
+[dir="rtl"] [data-test="connectionStatusModal"] [class*="Header"]:not(header) {
+  padding: 0 0 16px 40px !important;
+}
+
+[data-test="connectionStatusModal"] [class*="Title"] {
+  font-size: 1.15rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em;
+}
+
+[data-test="connectionStatusModal"] [class*="ConnectionTabs"] {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+}
+
+[data-test="connectionStatusModal"] [class*="ConnectionTabList"] {
+  display: flex !important;
+  flex-direction: row !important;
+  width: 100% !important;
+  gap: 8px !important;
+  margin: 0 0 16px !important;
+  padding: 4px !important;
+  background: rgba(0, 0, 0, 0.22) !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(218, 230, 245, 0.08) !important;
+  box-sizing: border-box !important;
+}
+
+[data-test="connectionStatusModal"] [class*="ConnectionTabSelector"] {
+  flex: 1 1 0 !important;
+  justify-content: center !important;
+  padding: 10px 8px !important;
+  margin: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  border: none !important;
+  color: var(--skyroom-modal-text-muted) !important;
+  font-size: 0.82rem !important;
+}
+
+[data-test="connectionStatusModal"] [class*="ConnectionTabSelector"].is-selected {
+  background: var(--skyroom-gradient-primary) !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 12px rgba(13, 136, 126, 0.35) !important;
+}
+
+[data-test="connectionStatusModal"] [class*="ConnectionTabSelector"] span {
+  border: none !important;
+  color: inherit !important;
+}
+
+[data-test="connectionStatusModal"] [class*="ConnectionTabPanel"].is-selected {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+[data-test="connectionStatusModal"] [class*="ConnectionTabPanel"] > div {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+}
+
+[data-test="connectionStatusModal"] [data-test="networkDataContainer"] {
+  background: rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid var(--skyroom-modal-border) !important;
+  border-radius: 14px !important;
+  padding: 14px !important;
+  margin-bottom: 12px !important;
+  max-height: 220px !important;
+}
+
+[data-test="connectionStatusModal"] [class*="Wrapper"] {
+  max-height: 280px !important;
+  overflow-y: auto !important;
+  border: 1px solid rgba(218, 230, 245, 0.1) !important;
+  border-radius: 14px !important;
+  background: rgba(0, 0, 0, 0.15) !important;
+  padding: 4px 8px !important;
+}
+
+[data-test="connectionStatusModal"] [class*="Item"] {
+  border-bottom: 1px solid rgba(218, 230, 245, 0.08) !important;
+  padding: 10px 8px !important;
+  min-height: 3.25rem !important;
+  height: auto !important;
+  align-items: center !important;
+}
+
+[data-test="connectionStatusModal"] [class*="Item"]:last-child {
+  border-bottom: none !important;
+}
+
+[data-test="connectionStatusModal"] [class*="Helper"] {
+  background: linear-gradient(165deg, rgba(28, 40, 62, 0.95), rgba(16, 24, 40, 0.98)) !important;
+  border: 1px solid var(--skyroom-modal-border) !important;
+  border-radius: 12px !important;
+  padding: 12px !important;
+}
+
+[data-test="connectionStatusModal"] [class*="CopyContainer"] {
+  margin-top: auto !important;
+  padding-top: 14px !important;
+  border-top: 1px solid var(--skyroom-modal-border) !important;
+}
+
+[data-test="connectionStatusModal"] ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ---------------------------------------------------------------------
+   7) Audio modal — icon/label spacing + visible option descriptions
+   --------------------------------------------------------------------- */
+[role="dialog"] [data-test="audioModalChoiceDesc"] {
+  color: var(--skyroom-modal-text-muted, #aab6c7) !important;
+  font-size: 0.9rem !important;
+  line-height: 1.55 !important;
+  margin-bottom: 1.25rem !important;
+}
+
+[role="dialog"] [data-test="audioModalOptions"] {
+  gap: 1.5rem 2.5rem !important;
+}
+
+[role="dialog"] [data-test="audioModalOptions"] [id="mic-description"],
+[role="dialog"] [data-test="audioModalOptions"] [id="listenOnly-description"] {
+  color: var(--skyroom-modal-text-muted, #aab6c7) !important;
+  font-size: 0.78rem !important;
+  line-height: 1.45 !important;
+  margin-top: 0.65rem !important;
+  max-width: 11.5rem;
+}
+
+[role="dialog"] [data-test="audioModalOptions"] button > span:last-child,
+[role="dialog"] [data-test="echoYesBtn"] > span:last-child,
+[role="dialog"] [data-test="echoNoBtn"] > span:last-child,
+[role="dialog"] [data-test="microphoneBtn"] > span:last-child,
+[role="dialog"] [data-test="listenOnlyBtn"] > span:last-child {
+  color: var(--skyroom-modal-text, #eef4fb) !important;
+  margin-top: 1rem !important;
+  display: block !important;
+}
+
+[role="dialog"] [data-test="microphoneBtn"] > span:first-child,
+[role="dialog"] [data-test="listenOnlyBtn"] > span:first-child,
+[role="dialog"] [data-test="echoYesBtn"] > span:first-child,
+[role="dialog"] [data-test="echoNoBtn"] > span:first-child {
+  margin-bottom: 0 !important;
+}
+
+[role="dialog"] [class*="Connecting"],
+[role="dialog"] [class*="ConnectingSubtext"] {
+  color: var(--skyroom-modal-text, #eef4fb) !important;
+}

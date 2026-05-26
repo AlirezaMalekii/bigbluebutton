@@ -1,0 +1,489 @@
+---
+alwaysApply: true
+---
+
+# BigBlueButton 3.x Development Rules
+
+You are working on a customized fork of BigBlueButton (BBB) version 3.x.
+
+This project is NOT a generic React application.
+It is a large-scale realtime conferencing platform with tightly coupled frontend/backend architecture based on WebRTC, GraphQL, realtime synchronization, mediasoup/SFU, Redis, and BBB backend services.
+
+You MUST follow these rules strictly.
+
+---
+
+# PROJECT CONTEXT
+
+This repository is a fork of:
+
+https://github.com/bigbluebutton/bigbluebutton
+
+Target branch:
+
+v3.0.x-release
+
+The project goal is:
+
+* Customize and redesign the BBB frontend
+* Extend meeting UI/UX
+* Add custom realtime features
+* Keep compatibility with upstream BBB updates
+* Avoid breaking core BBB architecture
+* Maintain upgradeability
+
+Development environment:
+
+* Frontend runs locally on macOS
+* Backend/realtime services run on a production/staging BBB Ubuntu server
+
+Architecture:
+
+MacBook React Dev Environment
+↓
+Production BBB Server
+↓
+Realtime APIs/WebSocket/WebRTC
+
+---
+
+# MANDATORY DOCUMENTATION SOURCES
+
+You MUST ALWAYS consult the official BBB development documentation before:
+
+* creating architecture changes
+* modifying meeting lifecycle logic
+* changing realtime behavior
+* modifying GraphQL interactions
+* touching media/audio/video systems
+* changing build/deploy logic
+* changing frontend state management
+* changing websocket interactions
+
+Primary documentation source:
+
+https://docs.bigbluebutton.org/development/
+
+You MUST heavily rely on these documentation sections:
+
+architecture
+development workflow
+Development Design Guide
+deployment
+realtime systems
+customization patterns
+frontend structure
+GraphQL behavior
+websocket flows
+build systems
+testing strategy
+release compatibility
+
+
+ALWAYS prefer official BBB documentation over assumptions.
+
+DO NOT invent undocumented BBB architecture behavior.
+
+---
+
+# DEVELOPMENT PHILOSOPHY
+
+IMPORTANT:
+Preserve BBB core stability.
+
+The following systems are considered CORE and must NOT be rewritten unless explicitly requested:
+
+* meeting synchronization
+* websocket core logic
+* GraphQL core infrastructure
+* mediasoup/SFU internals
+* WebRTC transport logic
+* audio bridge logic
+* recording pipeline
+* Redis event infrastructure
+* backend service contracts
+* BBB API authentication flow
+
+Preferred customization areas:
+
+* React UI
+* layouts
+* themes
+* panels
+* meeting widgets
+* custom hooks
+* feature extensions
+* isolated components
+* styles
+* UX improvements
+* optional plugins
+* AI integrations
+* custom sidebars
+* analytics UI
+* whiteboard UI extensions
+
+---
+
+# FRONTEND STRUCTURE RULES
+
+Primary frontend directory:
+
+bigbluebutton-html5/
+
+Important directories:
+
+imports/ui/components/
+imports/ui/layouts/
+imports/ui/services/
+imports/ui/core/
+imports/ui/hooks/
+imports/ui/styles/
+imports/api/
+private/config/
+
+Before modifying any component:
+
+1. Analyze dependency chain
+2. Identify realtime dependencies
+3. Identify GraphQL subscriptions
+4. Check meeting state coupling
+5. Check upstream compatibility impact
+
+---
+
+# COMPONENT DEVELOPMENT RULES
+
+Prefer:
+
+* composition
+* wrappers
+* adapters
+* extension layers
+
+Avoid:
+
+* modifying core shared logic directly
+* massive rewrites
+* deeply coupled component mutations
+
+Preferred approach:
+
+GOOD:
+CustomMeetingLayout.tsx
+CustomSidebar.tsx
+CustomToolbar.tsx
+
+BAD:
+rewriting original meeting core architecture
+
+When extending behavior:
+
+* create new components
+* inject through configuration
+* use isolated hooks
+* preserve upstream component contracts
+
+---
+
+# STATE MANAGEMENT RULES
+
+BBB uses complex realtime state synchronization.
+
+NEVER:
+
+* introduce conflicting global state systems
+* bypass official meeting state
+* mutate shared realtime stores unsafely
+* duplicate websocket state logic
+
+ALWAYS:
+
+* inspect existing hooks/selectors first
+* reuse existing meeting state infrastructure
+* preserve subscription lifecycle
+* preserve synchronization guarantees
+
+---
+
+# REALTIME & WEBSOCKET RULES
+
+Realtime systems are sensitive.
+
+DO NOT:
+
+* rewrite websocket transport
+* alter subscription protocols
+* modify event payload contracts
+* change mediasoup interaction patterns
+* alter audio/video synchronization flow
+
+Before touching realtime code:
+
+* trace event origin
+* trace GraphQL subscription flow
+* inspect backend coupling
+* validate synchronization impact
+
+---
+
+# GRAPHQL RULES
+
+Before creating new GraphQL queries/subscriptions:
+
+1. Check existing schema
+2. Reuse existing subscriptions if possible
+3. Avoid duplicate realtime channels
+4. Preserve naming conventions
+5. Keep queries optimized
+
+NEVER create unnecessary polling systems.
+
+Prefer realtime subscriptions.
+
+---
+
+# UI/UX RULES
+
+Allowed:
+
+* full visual redesign
+* custom layouts
+* responsive redesign
+* dark mode
+* theme systems
+* custom navigation
+* widget systems
+* advanced meeting panels
+* custom chat interfaces
+* enhanced presentation UI
+* custom onboarding flows
+
+Design goals:
+
+* modern
+* clean
+* minimal
+* realtime-friendly
+* low-latency feeling
+* accessibility-friendly
+
+Avoid:
+
+* UI blocking operations
+* excessive rerenders
+* large unnecessary DOM trees
+* breaking responsive layouts
+
+---
+
+# PERFORMANCE RULES
+
+BBB is realtime-critical.
+
+Always:
+
+* optimize rerenders
+* memoize expensive operations
+* lazy-load large features
+* minimize websocket overhead
+* avoid unnecessary state duplication
+
+Be careful with:
+
+* large participant meetings
+* screen sharing
+* presentation rendering
+* chat rendering
+* webcam grids
+
+---
+
+# TYPESCRIPT RULES
+
+Prefer:
+
+* strict typing
+* explicit interfaces
+* reusable types
+* shared contracts
+
+Avoid:
+
+* any
+* unsafe casting
+* duplicated type definitions
+
+---
+
+# STYLING RULES
+
+Preferred:
+
+* modular styles
+* maintainable theming
+* reusable design tokens
+* scalable component styling
+
+Avoid:
+
+* deeply coupled CSS overrides
+* modifying generated CSS directly
+* patching built assets
+
+Never edit production build artifacts.
+
+---
+
+# BUILD & DEPLOYMENT RULES
+
+Development:
+
+* local frontend only
+* remote BBB backend
+
+Production:
+
+* build artifacts deployed separately
+
+Never:
+
+* develop directly on production server
+* edit minified production assets
+* patch compiled files manually
+
+Preferred deployment flow:
+
+GitHub
+→ Dev Branch
+→ Build
+→ Staging
+→ Production
+
+---
+
+# GIT WORKFLOW RULES
+
+Repository model:
+
+upstream/bigbluebutton
+↓
+fork/v3.0.x-release
+↓
+custom dev branches
+
+Always:
+
+* keep upstream sync clean
+* isolate custom features
+* create focused commits
+* avoid massive mixed commits
+
+Before major changes:
+
+* analyze upstream compatibility
+* minimize merge conflicts
+* preserve upgrade path
+
+---
+
+# UPDATE STRATEGY
+
+This project MUST remain upgradeable with future BBB releases.
+
+Therefore:
+
+* avoid modifying deeply shared files when possible
+* prefer extension layers
+* isolate custom business logic
+* preserve public interfaces
+* keep patches modular
+
+When upstream changes:
+
+* sync upstream first
+* resolve conflicts carefully
+* validate realtime behavior
+* validate meeting lifecycle
+
+---
+
+# DEBUGGING RULES
+
+When debugging:
+
+1. Identify whether issue is frontend/backend/realtime
+2. Inspect websocket traffic
+3. Inspect GraphQL subscriptions
+4. Inspect browser console
+5. Inspect BBB backend logs
+6. Validate CORS/security configuration
+
+Never assume issue origin.
+
+---
+
+# SECURITY RULES
+
+Never:
+
+* expose secrets
+* hardcode credentials
+* bypass BBB authentication
+* weaken websocket security
+* disable validation checks carelessly
+
+Respect:
+
+* BBB authentication flow
+* session validation
+* permission boundaries
+* moderator/viewer role separation
+
+---
+
+# DEVELOPMENT PRIORITIES
+
+Priority order:
+
+1. Stability
+2. Realtime integrity
+3. Upstream compatibility
+4. Performance
+5. Maintainability
+6. UI polish
+
+---
+
+# WHEN GENERATING CODE
+
+You MUST:
+
+* analyze existing BBB patterns first
+* preserve architecture consistency
+* explain integration impact
+* avoid speculative changes
+* generate production-quality code
+* prefer incremental changes
+* preserve upgradeability
+
+Before editing:
+
+* identify file responsibility
+* identify realtime coupling
+* identify upstream conflict risk
+
+Always think like a senior BBB platform engineer.
+
+---
+
+# WHEN UNSURE
+
+If architecture impact is unclear:
+
+1. Consult BBB docs
+2. Inspect existing implementation
+3. Choose minimal invasive approach
+4. Preserve compatibility
+5. Ask for clarification if needed
+
+Never invent undocumented BBB internals.

@@ -2,7 +2,7 @@ import styled, { css } from 'styled-components';
 import {
   colorGrayLighter,
   colorGrayLightest,
-  colorWhite,
+  userListBg,
 } from '/imports/ui/stylesheets/styled-components/palette';
 import {
   borderRadius, lgPadding, smPadding,
@@ -49,7 +49,7 @@ const Container = styled.div`
   max-width: max-content;
   display: flex;
   border-radius: 1rem;
-  background-color: ${colorWhite};
+  background-color: ${userListBg};
   box-shadow: 0 0.125rem 0.125rem 0 ${colorGrayLighter};
   padding: ${smPadding} ${lgPadding};
   gap: ${smPadding};

@@ -14,9 +14,8 @@ class BBBWebApi {
   private static buildURL(route: string) {
     const pathMatch = window.location.pathname.match('^(.*)/html5client/?$');
     const serverPathPrefix = pathMatch ? `${pathMatch[1]}/` : '';
-    const { hostname, protocol } = window.location;
 
-    return new URL(route, `${protocol}//${hostname}${serverPathPrefix}`);
+    return new URL(route, `${window.location.origin}${serverPathPrefix}`);
   }
 
   public async index(signal?: AbortSignal): Promise<{

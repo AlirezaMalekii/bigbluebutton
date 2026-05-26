@@ -60,6 +60,16 @@ export const isSharingVar = makeVar(false);
 export const sharingContentTypeVar = makeVar(false);
 export const cameraAsContentDeviceIdTypeVar = makeVar('');
 
+// Viewer reconnect is only allowed while a global screenshare/camera-as-content
+// session is active (GraphQL subscription). Prevents reconnect loops after stop.
+let viewerScreenshareReconnectAllowed = false;
+
+export const setViewerScreenshareReconnectAllowed = (allowed) => {
+  viewerScreenshareReconnectAllowed = !!allowed;
+};
+
+export const isViewerScreenshareReconnectAllowed = () => viewerScreenshareReconnectAllowed;
+
 export const useScreenshare = () => {
   const {
     data: meeting,
@@ -217,6 +227,8 @@ export const useScreenshareStreamId = () => {
 };
 
 export const screenshareHasEnded = () => {
+  setViewerScreenshareReconnectAllowed(false);
+
   if (isSharingVar()) {
     setIsSharing(false);
   }
@@ -369,6 +381,8 @@ export const shareScreen = async (
 };
 
 export const viewScreenshare = (streamId, hasAudio, options = {}) => {
+  setViewerScreenshareReconnectAllowed(true);
+
   screenShareBridge.view(streamId, { hasAudio, outputDeviceId: options.outputDeviceId })
     .catch((error) => {
       logger.error({

@@ -1,0 +1,303 @@
+/* =====================================================================
+   Skyroom layout — narrow sidebar + stage grid alignment
+   ===================================================================== */
+
+:root {
+  --skyroom-column-gap: 14px;
+  --skyroom-column-width: clamp(292px, 21vw, 328px);
+  --skyroom-nav-offset: 100px;
+  --skyroom-navbar-h: 100px;
+  --skyroom-chrome-h: 56px;
+  --skyroom-footer-h: 56px;
+  --skyroom-footer-safe: 56px;
+  --skyroom-panel-radius: 16px;
+  --skyroom-stage-gap: 22px;
+  --skyroom-edge-gap: 22px;
+  --skyroom-block-gap: 22px;
+  --skyroom-chat-footer-gap: 22px;
+}
+
+/* Chrome height only — item layout stays in theme.css */
+#layout[data-skyroom-column="true"] header[role="banner"],
+#layout[data-skyroom-column="true"] #Navbar {
+  min-height: var(--skyroom-navbar-h) !important;
+  height: var(--skyroom-navbar-h) !important;
+  box-sizing: border-box !important;
+  z-index: 12;
+}
+
+#layout[data-skyroom-column="true"] #ActionsBar {
+  min-height: var(--skyroom-footer-h) !important;
+  z-index: 20 !important;
+}
+
+/* Mute-while-speaking hint — above presentation / whiteboard */
+#layout[data-skyroom-column="true"] #ActionsBar [data-debug="live-watcher"] {
+  position: relative;
+  z-index: 30;
+}
+
+#layout[data-skyroom-column="true"] #ActionsBar [class*="MuteWarning"] {
+  z-index: 1100 !important;
+}
+
+/* Narrow sidebar column */
+#layout[data-skyroom-column="true"] .resizeSidebarNavWrapper,
+#layout[data-skyroom-column="true"] .resizeSidebarContentWrapper {
+  width: var(--skyroom-column-width) !important;
+  max-width: 328px !important;
+  min-width: 292px !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#layout[data-skyroom-column="true"] .resizeSidebarNavWrapper {
+  z-index: 4;
+  padding-top: var(--skyroom-block-gap) !important;
+  padding-bottom: var(--skyroom-block-gap) !important;
+  box-sizing: border-box;
+}
+
+#layout[data-skyroom-column="true"] .resizeSidebarContentWrapper {
+  z-index: 3;
+  padding-top: 0 !important;
+  padding-bottom: var(--skyroom-block-gap) !important;
+  box-sizing: border-box;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+[dir="ltr"] #layout[data-skyroom-column="true"] .resizeSidebarNavWrapper,
+[dir="ltr"] #layout[data-skyroom-column="true"] .resizeSidebarContentWrapper {
+  padding-left: var(--skyroom-edge-gap) !important;
+  padding-right: 0 !important;
+}
+
+[dir="rtl"] #layout[data-skyroom-column="true"] .resizeSidebarNavWrapper,
+[dir="rtl"] #layout[data-skyroom-column="true"] .resizeSidebarContentWrapper {
+  padding-left: 0 !important;
+  padding-right: var(--skyroom-edge-gap) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="chatButton"] {
+  display: none !important;
+}
+
+#layout[data-skyroom-column="true"] .resizeSidebarNavWrapper .react-resizable-handle,
+#layout[data-skyroom-column="true"] .resizeSidebarContentWrapper .react-resizable-handle {
+  display: none !important;
+}
+
+/* Stage (presentation / whiteboard / screenshare) — same grid cell, above sidebar */
+#layout[data-skyroom-column="true"] [data-test="screenshareArea"],
+#layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"],
+#layout[data-skyroom-column="true"] [data-test="presentationContainer"],
+#layout[data-skyroom-column="true"] [class*="presentationContainer"],
+#layout[data-skyroom-column="true"] [class*="PresentationContainer"],
+#layout[data-skyroom-column="true"] [data-test="whiteboard"],
+#layout[data-skyroom-column="true"] [class*="Whiteboard"],
+#layout[data-skyroom-column="true"] [class*="whiteboard"] {
+  margin: 0 !important;
+  z-index: 6 !important;
+  border-radius: var(--skyroom-panel-radius) !important;
+  border: 1px solid var(--skyroom-panel-border, rgba(20, 169, 158, 0.30)) !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  background:
+    linear-gradient(180deg, rgba(14, 24, 48, 0.78), rgba(7, 11, 20, 0.92)) !important;
+  box-shadow:
+    0 18px 46px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+/* LTR: sidebar left — stage inset from column + outer edge */
+[dir="ltr"] #layout[data-skyroom-column="true"] [data-test="screenshareArea"],
+[dir="ltr"] #layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"],
+[dir="ltr"] #layout[data-skyroom-column="true"] [data-test="presentationContainer"],
+[dir="ltr"] #layout[data-skyroom-column="true"] [class*="presentationContainer"],
+[dir="ltr"] #layout[data-skyroom-column="true"] [class*="PresentationContainer"] {
+  left: calc(var(--skyroom-column-width) + var(--skyroom-stage-gap)) !important;
+  right: auto !important;
+  width: calc(100% - var(--skyroom-column-width) - var(--skyroom-stage-gap) * 2) !important;
+  max-width: none !important;
+}
+
+/* Stage media (screenshare / presentation) — below viewer webcam strip */
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-presentation-minimized="true"]) [data-test="screenshareArea"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-presentation-minimized="true"]) [data-skyroom-stage-media="true"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-screen-share="true"]) [data-test="presentationContainer"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-screen-share="true"]) [class*="presentationContainer"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-screen-share="true"]) [class*="PresentationContainer"] {
+  top: var(--skyroom-screenshare-top, auto) !important;
+  height: var(--skyroom-screenshare-height, auto) !important;
+}
+
+/* Viewer webcam strip above stage media (#cameraDock is inside .react-draggable, not a direct #layout child) */
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] .react-draggable:has(#cameraDock),
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock {
+  position: fixed !important;
+  inset: auto !important;
+  top: var(--skyroom-stage-webcam-top) !important;
+  left: var(--skyroom-stage-webcam-left, auto) !important;
+  right: var(--skyroom-stage-webcam-right, auto) !important;
+  bottom: auto !important;
+  width: var(--skyroom-stage-webcam-width) !important;
+  height: var(--skyroom-stage-webcam-height) !important;
+  transform: translate3d(0, 0, 0) !important;
+  z-index: 7 !important;
+  margin: 0 !important;
+}
+
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] .react-draggable:has(#cameraDock) > div,
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock > div {
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock,
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #WebcamContainer,
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] [data-test="webcamContainer"],
+#layout[data-skyroom-column="true"][data-skyroom-screen-share="true"] #skyroom-sidebar-webcam-dock {
+  z-index: 7 !important;
+}
+
+/* RTL: sidebar right */
+[dir="rtl"] #layout[data-skyroom-column="true"] [data-test="screenshareArea"],
+[dir="rtl"] #layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"],
+[dir="rtl"] #layout[data-skyroom-column="true"] [data-test="presentationContainer"],
+[dir="rtl"] #layout[data-skyroom-column="true"] [class*="presentationContainer"],
+[dir="rtl"] #layout[data-skyroom-column="true"] [class*="PresentationContainer"] {
+  right: calc(var(--skyroom-column-width) + var(--skyroom-stage-gap)) !important;
+  left: var(--skyroom-stage-gap) !important;
+  width: calc(100% - var(--skyroom-column-width) - var(--skyroom-stage-gap) * 2) !important;
+  max-width: none !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="screenshareArea"],
+#layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"] {
+  border-radius: var(--skyroom-panel-radius) !important;
+  border: 1px solid var(--skyroom-panel-border, rgba(20, 169, 158, 0.30)) !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="screenshareArea"] #screenshareContainer,
+#layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"] #screenshareContainer {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: inherit !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="screenshareArea"] video,
+#layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"] video {
+  object-fit: contain !important;
+}
+
+/* Presentation minimized while screenshare is active — show webcam grid on stage */
+#layout[data-skyroom-column="true"][data-skyroom-presentation-minimized="true"] [data-test="screenshareArea"],
+#layout[data-skyroom-column="true"][data-skyroom-presentation-minimized="true"] [data-skyroom-stage-media="true"] {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+#layout[data-skyroom-column="true"][data-skyroom-presentation-minimized="true"] #cameraDock,
+#layout[data-skyroom-column="true"][data-skyroom-presentation-minimized="true"] #WebcamContainer,
+#layout[data-skyroom-column="true"][data-skyroom-presentation-minimized="true"] [data-test="webcamContainer"] {
+  z-index: 7 !important;
+}
+
+/* Both panels hidden — presentation fills the stage */
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] [data-test="screenshareArea"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] [data-skyroom-stage-media="true"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] [data-test="presentationContainer"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] [class*="presentationContainer"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] [class*="PresentationContainer"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] [data-test="whiteboard"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] [class*="Whiteboard"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] [class*="whiteboard"] {
+  left: var(--skyroom-stage-gap) !important;
+  right: var(--skyroom-stage-gap) !important;
+  width: calc(100% - var(--skyroom-stage-gap) * 2) !important;
+  max-width: none !important;
+}
+
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] .resizeSidebarNavWrapper,
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] .resizeSidebarContentWrapper {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Single panel expanded — full column height for the visible box */
+#layout[data-skyroom-column="true"][data-skyroom-users-visible="false"][data-skyroom-chat-visible="true"] [data-test="publicChatPanel"],
+#layout[data-skyroom-column="true"][data-skyroom-users-visible="true"][data-skyroom-chat-visible="false"] [data-test="userListContainer"] {
+  min-height: 100% !important;
+}
+
+#layout[data-skyroom-column="true"] #skyroom-sidebar-webcam-dock {
+  box-sizing: border-box;
+  padding: 0 var(--skyroom-edge-gap) 0 0;
+  pointer-events: none;
+}
+
+/* Split layout: presenter webcams above users panel (direct child of #layout, not inside #cameraDock) */
+#layout[data-skyroom-column="true"][data-skyroom-split-cameras="true"] #skyroom-sidebar-webcam-dock {
+  position: fixed !important;
+  inset: auto !important;
+  top: var(--skyroom-sidebar-webcam-top) !important;
+  left: var(--skyroom-sidebar-webcam-left, auto) !important;
+  right: var(--skyroom-sidebar-webcam-right, auto) !important;
+  bottom: auto !important;
+  width: var(--skyroom-sidebar-webcam-width) !important;
+  height: var(--skyroom-sidebar-webcam-height) !important;
+  transform: none !important;
+  z-index: 8 !important;
+  margin: 0 !important;
+}
+
+#layout[data-skyroom-column="true"] #skyroom-sidebar-webcam-dock .skyroom-sidebar-webcam-list,
+#layout[data-skyroom-column="true"] #skyroom-sidebar-webcam-dock [data-test="webcamVideoItem"] {
+  pointer-events: auto;
+}
+
+[dir="rtl"] #layout[data-skyroom-column="true"] #skyroom-sidebar-webcam-dock {
+  padding: 0 0 0 var(--skyroom-edge-gap);
+}
+
+/* Webcam dock — fixed position, no drag / resize */
+#layout[data-skyroom-column="true"] #cameraDock,
+#layout[data-skyroom-column="true"] #cameraDock video,
+#layout[data-skyroom-column="true"] #cameraDock [class*="videoContainer"] {
+  cursor: default !important;
+}
+
+#layout[data-skyroom-column="true"] #cameraDock .react-resizable-handle,
+#layout[data-skyroom-column="true"] #skyroom-sidebar-webcam-dock .react-resizable-handle {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+#layout[data-skyroom-column="true"] #WebcamContainer,
+#layout[data-skyroom-column="true"] [data-test="webcamContainer"] {
+  padding: 0 8px 0 0;
+}
+
+[dir="rtl"] #layout[data-skyroom-column="true"] #WebcamContainer,
+[dir="rtl"] #layout[data-skyroom-column="true"] [data-test="webcamContainer"] {
+  padding: 0 0 0 8px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --skyroom-footer-safe: 112px;
+  }
+
+  #layout[data-skyroom-column="true"] .resizeSidebarNavWrapper,
+  #layout[data-skyroom-column="true"] .resizeSidebarContentWrapper {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
