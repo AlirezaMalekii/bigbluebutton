@@ -1054,17 +1054,17 @@ textarea::placeholder {
 }
 
 /* Active recording — red pill with white text */
-#Navbar [data-test="recordingIndicator"]:has([class*="PresentationTitle"]) button,
-#Navbar [data-test="recordingIndicator"] [class*="RecordingStatusViewOnly"] {
+#Navbar [data-test="recordingIndicator"][data-recording="true"] button,
+#Navbar [data-test="recordingIndicator"][data-recording="true"] [class*="RecordingStatusViewOnly"] {
   background: linear-gradient(135deg, #DF2721 0%, #C41E18 100%) !important;
   border: 2px solid #FF6A66 !important;
   box-shadow: 0 0 0 3px rgba(223, 39, 33, 0.25);
 }
 
-#Navbar [data-test="recordingIndicator"]:has([class*="PresentationTitle"]) button span,
-#Navbar [data-test="recordingIndicator"]:has([class*="PresentationTitle"]) button svg,
-#Navbar [data-test="recordingIndicator"] [class*="RecordingStatusViewOnly"] span,
-#Navbar [data-test="recordingIndicator"] [class*="RecordingStatusViewOnly"] svg {
+#Navbar [data-test="recordingIndicator"][data-recording="true"] button span,
+#Navbar [data-test="recordingIndicator"][data-recording="true"] button svg,
+#Navbar [data-test="recordingIndicator"][data-recording="true"] [class*="RecordingStatusViewOnly"] span,
+#Navbar [data-test="recordingIndicator"][data-recording="true"] [class*="RecordingStatusViewOnly"] svg {
   color: #FFFFFF !important;
   fill: #FFFFFF !important;
 }

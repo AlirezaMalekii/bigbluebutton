@@ -645,3 +645,72 @@
 [role="dialog"] [class*="ConnectingSubtext"] {
   color: var(--skyroom-modal-text, #eef4fb) !important;
 }
+
+/* ---------------------------------------------------------------------
+   8) Breakout room — room management grid
+   --------------------------------------------------------------------- */
+[role="dialog"] [data-test="roomGrid"] {
+  width: 100%;
+}
+
+[role="dialog"] [data-test="roomGrid"] > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+[role="dialog"] [id^="breakoutBox-"] {
+  background: rgba(6, 14, 28, 0.72) !important;
+  border: 1px solid rgba(20, 169, 158, 0.24) !important;
+  border-radius: 12px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+[role="dialog"] [data-test="roomUserItem"] {
+  color: var(--skyroom-modal-text, #eef4fb) !important;
+}
+
+[role="dialog"] [data-test="randomlyAssign"] > span,
+[role="dialog"] [data-test="resetAssignments"] > span {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  font-weight: 600 !important;
+}
+
+[role="dialog"] [data-test="randomlyAssign"] {
+  color: var(--skyroom-brand-400, #14a99e) !important;
+}
+
+[role="dialog"] [data-test="resetAssignments"] {
+  color: #ff8a85 !important;
+}
+
+[role="dialog"] input[data-test^="roomName-"],
+[role="dialog"] input[readonly][data-test="roomUserItem"],
+[role="dialog"] #breakoutBox-0 ~ [class*="SpanWarn"],
+[role="dialog"] [data-test="warningNoUserAssigned"] {
+  color: var(--skyroom-modal-text-muted, #aab6c7) !important;
+}
+
+[role="dialog"] input[type="text"][readonly] {
+  background: rgba(20, 169, 158, 0.1) !important;
+  border-color: rgba(20, 169, 158, 0.24) !important;
+  color: var(--skyroom-modal-text, #eef4fb) !important;
+}
+
+[role="dialog"] input[type="text"]:not([readonly]),
+[role="dialog"] input[type="number"] {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(20, 169, 158, 0.24) !important;
+  color: var(--skyroom-modal-text, #eef4fb) !important;
+  border-radius: 10px !important;
+}
+
+[role="dialog"] input[type="checkbox"] {
+  accent-color: var(--skyroom-brand-500, #0d887e);
+  width: 1rem;
+  height: 1rem;
+}

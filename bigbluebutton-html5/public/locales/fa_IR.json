@@ -208,6 +208,7 @@
     "app.userList.userOptions.usersJoinMutedDisableDesc": "کاربرانی که به جلسه می‌پیوندند به صورت پیشفرض بی‌صدا نیستند",
     "app.userList.userOptions.clearAllReactionsLabel": "پاک‌کردن همهٔ واکنش‌ها",
     "app.userList.userOptions.clearAllReactionsDesc": "همهٔ شکلک‌های واکنش را از کاربران پاک می‌کند",
+    "app.userList.userOptions.clearedReactions": "همهٔ واکنش‌های کاربران پاک شد",
     "app.userList.userOptions.muteAllExceptPresenterLabel": "بستن صدای همهٔ کاربران به جز ارائه‌دهنده",
     "app.userList.userOptions.muteAllExceptPresenterDesc": "بستن صدای همهٔ کاربران به جز ارائه‌دهنده",
     "app.userList.userOptions.lockViewersLabel": "قفل‌کردن کاربران",

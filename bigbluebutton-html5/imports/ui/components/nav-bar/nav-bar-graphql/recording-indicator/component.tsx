@@ -217,6 +217,7 @@ const RecordingIndicator: React.FC<RecordingIndicatorProps> = ({
       aria-label={recordTitle}
       aria-describedby="recording-description"
       recording={recording} // Removed the recording prop here
+      data-recording={recording ? 'true' : 'false'}
       disabled={disabled}
       tabIndex={0}
       key="recording-toggle"
@@ -280,6 +281,7 @@ const RecordingIndicator: React.FC<RecordingIndicatorProps> = ({
       ) : null}
       <Styled.RecordingIndicator
         data-test="recordingIndicator"
+        data-recording={recording ? 'true' : 'false'}
         isPhone={isMobile}
         recording={recording}
         disabled={!showButton}
@@ -295,6 +297,7 @@ const RecordingIndicator: React.FC<RecordingIndicatorProps> = ({
               aria-label={recording
                 ? `${intl.formatMessage(intlMessages.notificationRecordingStart)}`
                 : customRecordTooltip}
+              data-recording={recording ? 'true' : 'false'}
               recording={recording}
             >
               {recordingIndicatorIcon}

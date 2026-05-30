@@ -1,6 +1,5 @@
 import styled from 'styled-components';
 import { smallOnly } from '/imports/ui/stylesheets/styled-components/breakpoints';
-import { ScrollboxVertical } from '/imports/ui/stylesheets/styled-components/scrollable';
 import HoldButton from '/imports/ui/components/presentation/presentation-toolbar/zoom-tool/holdButton/component';
 import Button from '/imports/ui/components/common/button/component';
 import { FlexRow, FlexColumn } from '/imports/ui/stylesheets/styled-components/placeholders';
@@ -8,7 +7,6 @@ import {
   colorDanger,
   colorGray,
   colorGrayLight,
-  colorGrayLighter,
   colorWhite,
   colorPrimary,
   colorBlueLight,
@@ -16,10 +14,8 @@ import {
 } from '/imports/ui/stylesheets/styled-components/palette';
 import { fontSizeSmall, fontSizeBase, fontSizeSmaller } from '/imports/ui/stylesheets/styled-components/typography';
 import {
-  borderRadius,
   borderSize,
   lgPaddingX,
-  lgPaddingY,
 } from '/imports/ui/stylesheets/styled-components/general';
 
 type withValidProp = {
@@ -40,24 +36,39 @@ type LabelTextProps = {
   bold: boolean;
 };
 
+const breakoutSurface = 'rgba(6, 14, 28, 0.72)';
+const breakoutBorder = 'rgba(20, 169, 158, 0.24)';
+const breakoutText = 'var(--skyroom-modal-text, #eef4fb)';
+const breakoutTextMuted = 'var(--skyroom-modal-text-muted, #aab6c7)';
+
 const BoxContainer = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-gap: 1.6rem 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr));
+  grid-gap: 1rem;
   box-sizing: border-box;
-  padding-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  width: 100%;
 `;
 
 const ContentContainer = styled.div`
   display: grid;
-  grid-template-columns: 1fr 2fr;
+  grid-template-columns: minmax(11.5rem, 14rem) minmax(0, 1fr);
   grid-template-areas: "sidebar content";
-  grid-gap: 1rem;
+  grid-gap: 1.25rem;
+  align-items: start;
+  margin-top: 0.75rem;
+
+  @media ${smallOnly} {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "sidebar"
+      "content";
+  }
 `;
 
 const Alert = styled.div<withValidProp>`
   grid-area: sidebar;
-  margin-bottom: 2.5rem;
+  margin-bottom: 0;
   ${({ valid }) => valid === false && `
     position: relative;
 
@@ -70,11 +81,11 @@ const Alert = styled.div<withValidProp>`
 
 const FreeJoinLabel = styled.label`
   font-size: ${fontSizeSmall};
-  font-weight: bolder;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  font-size: ${fontSizeSmall};
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.45rem;
+  color: ${breakoutTextMuted};
 
   & > * {
     margin: 0 .5rem 0 0;
@@ -89,29 +100,59 @@ const BreakoutNameInput = styled.input`
   width: 100%;
   text-align: center;
   font-weight: 600;
-  padding: .25rem .25rem .25rem 0;
-  margin: 0;
+  padding: 0.45rem 0.6rem;
+  margin: 0 0 0.45rem;
+  color: ${breakoutText};
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid ${breakoutBorder};
+  border-radius: 10px;
+  box-sizing: border-box;
+
   &::placeholder {
-    color: ${colorGray};
+    color: ${breakoutTextMuted};
     opacity: 1;
   }
-  border: 1px solid ${colorGrayLightest};
-  margin-bottom: 1rem;
 
   ${({ readOnly }) => readOnly && `
     cursor: default;
+    background: rgba(20, 169, 158, 0.1);
   `}
 `;
 
-const BreakoutBox = styled(ScrollboxVertical)<BreakoutBoxProps>`
-  max-width: 13rem;
+const BreakoutBox = styled.div<BreakoutBoxProps>`
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  min-height: 9.5rem;
   height: 10rem;
-  border: 1px solid ${colorGrayLightest};
-  border-radius: ${borderRadius};
-  padding: ${lgPaddingY} 0;
+  border: 1px solid ${breakoutBorder};
+  border-radius: 12px;
+  padding: 0.35rem 0.25rem;
+  background: ${breakoutSurface};
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(20, 169, 158, 0.45) rgba(255, 255, 255, 0.06);
+
+  &::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(20, 169, 158, 0.45);
+    border-radius: 50px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 50px;
+  }
 
   ${({ hundred }) => hundred && `
-  height: 100%;
+    height: 100%;
+    min-height: 11rem;
   `}
 `;
 
@@ -154,7 +195,7 @@ const BreakoutSettings = styled.div`
 `;
 
 const FormLabel = styled.p<withValidProp>`
-  color: ${colorGray};
+  color: ${breakoutTextMuted};
   white-space: nowrap;
   margin-bottom: .5rem;
 
@@ -164,14 +205,13 @@ const FormLabel = styled.p<withValidProp>`
 `;
 
 const InputRooms = styled.select<withValidProp>`
-  background-color: ${colorWhite};
-  color: ${colorGray};
-  border: 1px solid ${colorGrayLighter};
-  border-radius: ${borderRadius};
+  background-color: rgba(255, 255, 255, 0.06);
+  color: ${breakoutText};
+  border: 1px solid ${breakoutBorder};
+  border-radius: 10px;
   width: 100%;
-  padding-top: .25rem;
-  padding-bottom: .25rem;
-  padding: .25rem 0 .25rem .25rem;
+  padding: 0.45rem 0.5rem;
+  box-sizing: border-box;
 
   ${({ valid }) => !valid && `
       border-color: ${colorDanger} !important;
@@ -188,13 +228,13 @@ const DurationLabel = styled.label<withValidProp>`
 `;
 
 const LabelText = styled.p<LabelTextProps>`
-  color: ${colorGray};
+  color: ${breakoutText};
   white-space: nowrap;
   margin-bottom: .5rem;
 
   ${({ bold }) => bold && `
-  font-weight: bold;
-  font-size: 1.5rem;
+  font-weight: 700;
+  font-size: 1.05rem;
   `}
 `;
 
@@ -205,17 +245,17 @@ const DurationArea = styled.div`
 `;
 
 const DurationInput = styled.input`
-  background-color: ${colorWhite};
-  color: ${colorGray};
-  border: 1px solid ${colorGrayLighter};
-  border-radius: ${borderRadius};
+  background-color: rgba(255, 255, 255, 0.06);
+  color: ${breakoutText};
+  border: 1px solid ${breakoutBorder};
+  border-radius: 10px;
   width: 100%;
   text-align: left;
-  padding: .25rem;
-  
+  padding: 0.45rem 0.5rem;
+  box-sizing: border-box;
 
   &::placeholder {
-    color: ${colorGray};
+    color: ${breakoutTextMuted};
   }
 `;
 
@@ -233,21 +273,24 @@ const HoldButtonWrapper = styled(HoldButton)`
 `;
 
 const AssignBtnsContainer = styled.div`
-  justify-items: center;
+  justify-content: space-between;
+  align-items: center;
   display: flex;
-  flex-flow: row;
-  align-items: baseline;
-  margin-top: auto;
+  flex-flow: row wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid rgba(218, 230, 245, 0.1);
 `;
 // @ts-ignore - Button is a JS component
 const AssignBtns = styled(Button)`
   color: ${colorDanger};
   font-size: ${fontSizeSmall};
   white-space: nowrap;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
 
   ${({ $random }) => $random && `
-  color: ${colorPrimary};
+  color: var(--skyroom-brand-400, ${colorPrimary});
   `}
 `;
 
@@ -270,29 +313,55 @@ const FreeJoinCheckbox = styled.input`
 `;
 
 const RoomUserItem = styled.p`
-  margin: 0;
-  padding: .25rem 0 .25rem .25rem;
+  margin: 0.2rem 0.35rem;
+  padding: 0.4rem 0.55rem;
   text-overflow: ellipsis;
   white-space: nowrap;
-  cursor: pointer;
+  cursor: grab;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 0.35rem;
+  color: ${breakoutText};
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(218, 230, 245, 0.08);
+  border-radius: 8px;
+  font-size: ${fontSizeSmall};
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 
   [dir="rtl"] & {
-    padding: .25rem .25rem .25rem 0;
+    padding: 0.4rem 0.55rem;
   }
 
   span.close {
-    display: flex;
-    flex-direction: column;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
     justify-content: center;
-    margin-right: 5px;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin: 0;
+    border-radius: 6px;
     font-size: ${fontSizeSmaller};
+    color: ${breakoutTextMuted};
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  &:hover {
+    background: rgba(20, 169, 158, 0.14);
+    border-color: rgba(20, 169, 158, 0.35);
   }
 
   &:focus {
-    background-color: ${colorPrimary};
+    background: rgba(20, 169, 158, 0.22);
+    border-color: rgba(20, 169, 158, 0.45);
     color: ${colorWhite};
+    outline: none;
+  }
+
+  &:active {
+    cursor: grabbing;
+    transform: scale(0.99);
   }
 `;
 
@@ -343,7 +412,8 @@ const WithError = styled.span`
 const SubTitle = styled.p`
   font-size: ${fontSizeBase};
   text-align: justify;
-  color: ${colorGray};
+  color: ${breakoutTextMuted};
+  line-height: 1.55;
 `;
 
 const Content = styled(FlexColumn)``;

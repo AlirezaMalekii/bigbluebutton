@@ -6,11 +6,8 @@ import React, {
 import LockViewersContainer from '/imports/ui/components/lock-viewers/container';
 import GuestPolicyContainer from '/imports/ui/components/waiting-users/guest-policy/container';
 import CreateBreakoutRoomContainerGraphql from '../../../../breakout-room/create-breakout-room/component';
-import BBBMenu from '/imports/ui/components/common/menu/component';
 import Styled from './styles';
 import { defineMessages, useIntl } from 'react-intl';
-import { layoutSelect } from '/imports/ui/components/layout/context';
-import { Layout } from '/imports/ui/components/layout/layoutTypes';
 import { uid } from 'radash';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import {
@@ -136,10 +133,17 @@ const intlMessages = defineMessages({
     id: 'app.userList.userOptions.clearedReactions',
     description: 'Used in toast notification when reactions have been cleared',
   },
+  usersJoinMutedOnToast: {
+    id: 'app.toast.usersJoinMutedOn.label',
+    description: 'Toast when users join muted is enabled',
+  },
+  usersJoinMutedOffToast: {
+    id: 'app.toast.usersJoinMutedOff.label',
+    description: 'Toast when users join muted is disabled',
+  },
 });
 
 interface UserTitleOptionsProps {
-  isRTL: boolean;
   isMeetingMuted: boolean | undefined;
   isBreakout: boolean | undefined;
   isModerator: boolean;
@@ -149,8 +153,30 @@ interface UserTitleOptionsProps {
   meetingId: string | undefined;
 }
 
+interface UserOptionAction {
+  allow?: boolean;
+  key: string;
+  label?: string;
+  description?: string;
+  onClick?: () => void;
+  icon?: string;
+  dataTest?: string;
+  isSeparator?: boolean;
+}
+
+const inlineActionPriority: Record<string, number> = {
+  usersJoinMuted: 10,
+  muteAllExceptPresenter: 20,
+  lockViewersButton: 30,
+  guestPolicyLabel: 40,
+  clearStatus: 50,
+  createBreakoutRooms: 60,
+  inviteUsers: 70,
+  downloadUserNamesList: 80,
+  learningDashboard: 90,
+};
+
 const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
-  isRTL,
   isMeetingMuted,
   isBreakout,
   isModerator,
@@ -215,27 +241,45 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         muted,
         exceptPresenter,
       },
-    });
+    })
+      .then(() => {
+        if (!exceptPresenter) {
+          notify(
+            intl.formatMessage(intlMessages[muted ? 'usersJoinMutedOnToast' : 'usersJoinMutedOffToast']),
+            'info',
+            muted ? 'mute' : 'unmute',
+          );
+        }
 
-    if (!muted) {
-      return logger.info(
-        {
-          logCode: 'useroptions_unmute_all',
-          extraInfo: { logType: 'moderator_action' },
-        },
-        'moderator disabled meeting mute',
-      );
-    }
+        if (!muted) {
+          logger.info(
+            {
+              logCode: 'useroptions_unmute_all',
+              extraInfo: { logType: 'moderator_action' },
+            },
+            'moderator disabled meeting mute',
+          );
+          return;
+        }
 
-    const logCode = exceptPresenter ? 'useroptions_mute_all_except_presenter' : 'useroptions_mute_all';
-    const logMessage = exceptPresenter ? 'moderator enabled meeting mute, all users muted except presenter' : 'moderator enabled meeting mute, all users muted';
-    return logger.info(
-      {
-        logCode,
-        extraInfo: { logType: 'moderator_action' },
-      },
-      logMessage,
-    );
+        const logCode = exceptPresenter ? 'useroptions_mute_all_except_presenter' : 'useroptions_mute_all';
+        const logMessage = exceptPresenter
+          ? 'moderator enabled meeting mute, all users muted except presenter'
+          : 'moderator enabled meeting mute, all users muted';
+        logger.info(
+          {
+            logCode,
+            extraInfo: { logType: 'moderator_action' },
+          },
+          logMessage,
+        );
+      })
+      .catch((error) => {
+        logger.error({
+          logCode: 'useroptions_set_muted_error',
+          extraInfo: { error, muted, exceptPresenter },
+        }, 'Failed to update meeting mute setting');
+      });
   };
 
   const clearReactions = () => {
@@ -245,7 +289,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
 
   const { dynamicGuestPolicy } = window.meetingClientSettings.public.app;
 
-  const actions = useMemo(() => {
+  const actions = useMemo<UserOptionAction[]>(() => {
     const canCreateBreakout = isModerator
       && !isBreakout
       && !hasBreakoutRooms
@@ -256,7 +300,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         key: uuids.current[0],
         label: intl.formatMessage(intlMessages[isMeetingMuted ? 'usersJoinMutedDisableLabel' : 'usersJoinMutedEnableLabel']),
         description: intl.formatMessage(intlMessages[isMeetingMuted ? 'usersJoinMutedDisableDesc' : 'usersJoinMutedEnableDesc']),
-        onClick: callSetMuted.bind(null, !isMeetingMuted, false),
+        onClick: () => callSetMuted(!isMeetingMuted, false),
         icon: isMeetingMuted ? 'unmute' : 'mute',
         dataTest: 'usersJoinMuted',
       },
@@ -335,46 +379,40 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
       {
         allow: isLearningDashboardEnabled,
         icon: 'multi_whiteboard',
-        iconRight: 'popout_window',
         label: intl.formatMessage(intlMessages.learningDashboardLabel),
         description: `${intl.formatMessage(intlMessages.learningDashboardDesc)}
         ${intl.formatMessage(intlMessages.newTab)}`,
         key: uuids.current[8],
         onClick: () => { openLearningDashboardUrl(locale, learningDashboardToken); },
-        dividerTop: true,
         dataTest: 'learningDashboard',
       },
     ].filter(({ allow }) => allow);
   }, [isModerator, hasBreakoutRooms, isMeetingMuted, locale, intl, isBreakoutRoomsEnabled, isLearningDashboardEnabled]);
 
-  const newLocal = 'true';
+  const iconActions = actions
+    .filter((action) => !action.isSeparator && action.icon)
+    .sort((firstAction, secondAction) => (
+      (inlineActionPriority[firstAction.dataTest ?? ''] ?? 100)
+      - (inlineActionPriority[secondAction.dataTest ?? ''] ?? 100)
+    ));
+
   return (
-    <>
-      <BBBMenu
-        trigger={(
-          <Styled.OptionsButton
-            label={intl.formatMessage(intlMessages.optionsLabel)}
-            data-test="manageUsers"
-            icon="settings"
+    <Styled.OptionsGroup>
+      <Styled.HeaderActions data-test="user-management-header-actions">
+        {iconActions.map((action) => (
+          <Styled.HeaderActionButton
+            key={action.key}
+            label={action.label}
+            aria-label={action.label}
+            data-test={`${action.dataTest ?? action.key}-header`}
+            icon={action.icon}
             color="light"
             hideLabel
-            size="md"
-            circle
-            onClick={() => null}
+            size="sm"
+            onClick={action.onClick}
           />
-        )}
-        actions={actions}
-        opts={{
-          id: 'user-options-dropdown-menu',
-          keepMounted: true,
-          transitionDuration: 0,
-          elevation: 3,
-          getcontentanchorel: null,
-          fullwidth: newLocal,
-          anchorOrigin: { vertical: 'bottom', horizontal: isRTL ? 'right' : 'left' },
-          transformOrigin: { vertical: 'top', horizontal: isRTL ? 'right' : 'left' },
-        }}
-      />
+        ))}
+      </Styled.HeaderActions>
       {createBreakoutRoomModal.isOpen && (
         <CreateBreakoutRoomContainerGraphql
           priority="medium"
@@ -402,12 +440,11 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         />
       )}
 
-    </>
+    </Styled.OptionsGroup>
   );
 };
 
 const UserTitleOptionsContainer: React.FC = () => {
-  const isRTL = layoutSelect((i: Layout) => i.isRTL);
   const { data: meetingInfo } = useMeeting((meeting) => ({
     voiceSettings: meeting?.voiceSettings,
     isBreakout: meeting?.isBreakout,
@@ -428,7 +465,6 @@ const UserTitleOptionsContainer: React.FC = () => {
 
   return (
     <UserTitleOptions
-      isRTL={isRTL}
       isMeetingMuted={meetingInfo?.voiceSettings?.muteOnStart}
       isBreakout={meetingInfo?.isBreakout}
       isModerator={currentUser?.isModerator ?? false}

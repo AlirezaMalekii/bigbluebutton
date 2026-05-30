@@ -9,6 +9,7 @@ import {
 import {
   colorWhite,
   colorPrimary,
+  colorDanger,
   colorDangerDark,
   colorGray,
 } from '/imports/ui/stylesheets/styled-components/palette';
@@ -70,9 +71,10 @@ const RecordingControl = styled.button<RecordingIndicatorProps>`
 
   ${({ recording }) => recording && `
     padding: 5px;
-    background-color: ${colorDangerDark};
-    border: ${borderSizeLarge} solid ${colorDangerDark};
+    background: linear-gradient(135deg, ${colorDanger} 0%, ${colorDangerDark} 100%);
+    border: ${borderSizeLarge} solid rgba(255, 255, 255, 0.35);
     border-radius: 10px;
+    box-shadow: 0 0 0 3px rgba(223, 39, 33, 0.22);
 
     &:focus {
       background-clip: padding-box;
@@ -168,9 +170,10 @@ const RecordingStatusViewOnly = styled.div<RecordingStatusViewOnlyProps>`
 
   ${({ recording }) => recording && `
     padding: 5px 5px 5px 5px;
-    background-color: ${colorDangerDark};
-    border: ${borderSizeLarge} solid ${colorDangerDark};
+    background: linear-gradient(135deg, ${colorDanger} 0%, ${colorDangerDark} 100%);
+    border: ${borderSizeLarge} solid rgba(255, 255, 255, 0.35);
     border-radius: 10px;
+    box-shadow: 0 0 0 3px rgba(223, 39, 33, 0.22);
   `}
 `;
 

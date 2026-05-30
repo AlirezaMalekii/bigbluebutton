@@ -8,8 +8,6 @@ import {
 import {
   colorPrimary,
   colorWhite,
-  colorGrayLightest,
-  colorOffWhite,
 } from '/imports/ui/stylesheets/styled-components/palette';
 import {
   fontSizeLarger,
@@ -170,22 +168,32 @@ const PresentationToolbar = styled.div`
 const ToastSeparator = styled(ToastStyled.Separator)``;
 
 const Button = styled.button`
-  background-color: ${colorOffWhite};
-  border: none;
-  border-radius: 13px;
-  box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.16),
-    0px 2px 3px rgba(0, 0, 0, 0.24),
-    0px 2px 6px rgba(0, 0, 0, 0.1);
-  color: #2d2d2d;
+  background-color: rgba(243, 246, 249, 0.92);
+  border: 1px solid rgba(15, 112, 215, 0.16);
+  border-radius: 0.7rem;
+  box-shadow: 0 6px 18px rgba(6, 23, 42, 0.14),
+    0 2px 6px rgba(6, 23, 42, 0.1);
+  color: ${colorPrimary};
   cursor: pointer;
   padding: .3rem .5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   tab-index: 0;
+  transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
 
-  &:hover {
-    background-color: ${colorGrayLightest};
+  &:hover,
+  &:focus {
+    background-color: rgba(15, 112, 215, 0.12);
+    border-color: rgba(15, 112, 215, 0.32);
+    box-shadow: 0 0 0 2px rgba(15, 112, 215, 0.2),
+      0 8px 18px rgba(6, 23, 42, 0.16);
+    outline: none;
+  }
+
+  &:active {
+    background-color: rgba(15, 112, 215, 0.18);
+    transform: translateY(1px);
   }
 `;
 

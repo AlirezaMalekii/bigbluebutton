@@ -33,6 +33,15 @@ const UserTitle: React.FC<UserTitleProps> = ({
 }) => {
   const intl = useIntl();
   const userListLabel = hideUserList ? messages.lockedUsersTitle : messages.usersTitle;
+  const formattedCount = count.toLocaleString('en-US', { notation: 'standard' });
+  const formattedTitle = intl.formatMessage(
+    userListLabel,
+    {
+      userCount: formattedCount,
+    },
+  );
+  const countPattern = new RegExp(`\\s*\\(?\\s*${formattedCount}\\s*\\)?\\s*`);
+  const titleWithoutCount = formattedTitle.replace(countPattern, ' ').trim();
 
   return (
     <Styled.Container>
@@ -41,12 +50,10 @@ const UserTitle: React.FC<UserTitleProps> = ({
           data-test-users-count={count}
           data-test-users-with-audio-count={countWithAudio}
         >
-          {intl.formatMessage(
-            userListLabel,
-            {
-              userCount: count.toLocaleString('en-US', { notation: 'standard' }),
-            },
-          )}
+          <Styled.TitleText>{titleWithoutCount || formattedTitle}</Styled.TitleText>
+          <Styled.CountBadge aria-label={formattedCount}>
+            {formattedCount}
+          </Styled.CountBadge>
         </span>
       </Styled.SmallTitle>
       <UserTitleOptionsContainer />

@@ -3,6 +3,7 @@ import QuickPollDropdownContainer from '/imports/ui/components/actions-bar/quick
 import {
   colorOffWhite,
   colorBlueLightest,
+  colorPrimary,
   toolbarButtonColor,
   colorDanger,
   colorWhite,
@@ -19,6 +20,41 @@ import {
   smPaddingX,
 } from '/imports/ui/stylesheets/styled-components/general';
 import Button from '/imports/ui/components/common/button/component';
+
+const toolbarControlBg = 'rgba(15, 112, 215, 0.08)';
+const toolbarControlHoverBg = 'rgba(15, 112, 215, 0.14)';
+const toolbarControlActiveBg = 'rgba(15, 112, 215, 0.2)';
+const toolbarControlFocusShadow = '0 0 0 2px rgba(15, 112, 215, 0.28)';
+
+const toolbarIconButtonStyles = `
+  border-radius: 0.5rem;
+  transition: color 120ms ease, transform 120ms ease;
+
+  & > span {
+    background-color: ${toolbarControlBg};
+    border-radius: 0.5rem;
+    color: ${toolbarButtonColor};
+    transition: background-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
+  }
+
+  &:hover:not([aria-disabled="true"]) > span,
+  &:focus:not([aria-disabled="true"]) > span {
+    background-color: ${toolbarControlHoverBg} !important;
+    box-shadow: ${toolbarControlFocusShadow} !important;
+    color: ${colorPrimary} !important;
+  }
+
+  &:active:not([aria-disabled="true"]) > span {
+    background-color: ${toolbarControlActiveBg} !important;
+    color: ${colorPrimary} !important;
+    transform: translateY(1px);
+  }
+
+  &[aria-disabled="true"] > span {
+    background-color: rgba(139, 154, 168, 0.08);
+    color: ${toolbarButtonColorDisabled};
+  }
+`;
 
 const PresentationToolbarWrapper = styled.div`
   position: absolute;
@@ -97,6 +133,8 @@ const PresentationSlideControls = styled.div`
 `;
 
 const PrevSlideButton = styled(Button)`
+  ${toolbarIconButtonStyles}
+
   i {
     font-size: 1rem;
     padding-left: 20%;
@@ -112,6 +150,8 @@ const PrevSlideButton = styled(Button)`
 `;
 
 const NextSlideButton = styled(Button)`
+  ${toolbarIconButtonStyles}
+
   i {
     font-size: 1rem;
     padding-left: 60%;
@@ -145,13 +185,14 @@ const SkipSlideSelect = styled.select`
     outline: transparent;
     outline-style: dotted;
     outline-width: ${borderSize};
-    background-color: #DCE4EC;
+    background-color: ${toolbarControlHoverBg};
+    color: ${colorPrimary};
     border-radius: 4px;
   }
 
   &:focus {
     outline-style: solid;
-    box-shadow: 0 0 0 1px #cdd6e0 !important;
+    box-shadow: ${toolbarControlFocusShadow} !important;
   }
 `;
 
@@ -177,6 +218,8 @@ const PresentationZoomControls = styled.div`
 `;
 
 const FitToWidthButton = styled(Button)`
+  ${toolbarIconButtonStyles}
+
   border: none !important;
 
   & > i {
@@ -196,7 +239,6 @@ const FitToWidthButton = styled(Button)`
 
   position: relative;
   color: ${toolbarButtonColor};
-  background-color: ${colorOffWhite};
   border-radius: 0;
   box-shadow: none !important;
   border: 0;
@@ -255,6 +297,8 @@ const MUTPlaceholder = styled.div`
 `;
 
 const WBAccessButton = styled(Button)`
+  ${toolbarIconButtonStyles}
+
   border: none !important;
 
   i {
@@ -271,7 +315,6 @@ const WBAccessButton = styled(Button)`
 
   position: relative;
   color: ${toolbarButtonColor};
-  background-color: ${colorOffWhite};
   border-radius: 0;
   box-shadow: none !important;
   border: 0;
@@ -287,6 +330,8 @@ const WBAccessButton = styled(Button)`
 `;
 
 const InfiniteWhiteboardButton = styled(Button)`
+  ${toolbarIconButtonStyles}
+
   border: none !important;
 
   svg {
@@ -301,7 +346,6 @@ const InfiniteWhiteboardButton = styled(Button)`
 
   position: relative;
   color: ${toolbarButtonColor};
-  background-color: ${colorOffWhite};
   border-radius: 0;
   box-shadow: none !important;
   border: 0;

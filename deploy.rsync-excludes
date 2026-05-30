@@ -1,0 +1,18 @@
+# Excluded from laptop → server sync (rebuilt on server)
+.git/
+.cursor/
+.idea/
+**/.DS_Store
+**/.metals/
+**/.cache-main
+**/.cache-tests
+**/node_modules/
+**/target/
+**/dist/
+bigbluebutton-html5/public/locales/index.json
+bigbluebutton-web/exploded/
+bbb-learning-dashboard/build/
+akka-bbb-apps/*.log
+*.iml
+*~
+.deploy.env
