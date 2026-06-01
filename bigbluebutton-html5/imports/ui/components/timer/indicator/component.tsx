@@ -1,5 +1,6 @@
 import { useMutation } from '@apollo/client';
 import React, { useEffect, useRef, useState } from 'react';
+import { defineMessages, useIntl } from 'react-intl';
 import Styled from './styles';
 import Icon from '/imports/ui/components/common/icon/icon-ts/component';
 import humanizeSeconds from '/imports/utils/humanizeSeconds';
@@ -13,6 +14,7 @@ import usePreviousValue from '/imports/ui/hooks/usePreviousValue';
 interface TimerIndicatorProps {
   timePassed: number;
   songTrack: string;
+  stopwatch: boolean;
   elapsed?: boolean;
   running: boolean;
   isModerator: boolean;
@@ -20,15 +22,72 @@ interface TimerIndicatorProps {
   sidebarContentIsOpen: boolean;
 }
 
+const intlMessages = defineMessages({
+  timer: {
+    id: 'app.timer.timer.title',
+    description: 'Timer label',
+  },
+  stopwatch: {
+    id: 'app.timer.stopwatch.title',
+    description: 'Stopwatch label',
+  },
+  stateRunning: {
+    id: 'app.timer.state.running',
+    description: 'Timer running state',
+  },
+  statePaused: {
+    id: 'app.timer.state.paused',
+    description: 'Timer paused state',
+  },
+  stateElapsed: {
+    id: 'app.timer.state.elapsed',
+    description: 'Timer elapsed state',
+  },
+  toolTipTimerStopped: {
+    id: 'app.timer.toolTipTimerStopped',
+    description: 'Timer stopped tooltip',
+  },
+  toolTipTimerRunning: {
+    id: 'app.timer.toolTipTimerRunning',
+    description: 'Timer running tooltip',
+  },
+  toolTipStopwatchStopped: {
+    id: 'app.timer.toolTipStopwatchStopped',
+    description: 'Stopwatch stopped tooltip',
+  },
+  toolTipStopwatchRunning: {
+    id: 'app.timer.toolTipStopwatchRunning',
+    description: 'Stopwatch running tooltip',
+  },
+  toolTipTimerStoppedMod: {
+    id: 'app.timer.toolTipTimerStoppedMod',
+    description: 'Timer stopped tooltip for moderator',
+  },
+  toolTipTimerRunningMod: {
+    id: 'app.timer.toolTipTimerRunningMod',
+    description: 'Timer running tooltip for moderator',
+  },
+  toolTipStopwatchStoppedMod: {
+    id: 'app.timer.toolTipStopwatchStoppedMod',
+    description: 'Stopwatch stopped tooltip for moderator',
+  },
+  toolTipStopwatchRunningMod: {
+    id: 'app.timer.toolTipStopwatchRunningMod',
+    description: 'Stopwatch running tooltip for moderator',
+  },
+});
+
 const TimerIndicator: React.FC<TimerIndicatorProps> = ({
   timePassed,
   songTrack,
+  stopwatch,
   elapsed,
   running,
   isModerator,
   sidebarNavigationIsOpen,
   sidebarContentIsOpen,
 }) => {
+  const intl = useIntl();
   const timeRef = useRef<HTMLSpanElement>(null);
   const alarm = useRef<HTMLAudioElement>();
   const music = useRef<HTMLAudioElement>();
@@ -116,6 +175,27 @@ const TimerIndicator: React.FC<TimerIndicatorProps> = ({
   }, [running, songTrackState]);
 
   const onClick = running ? stopTimer : startTimer;
+  const modeLabel = stopwatch
+    ? intl.formatMessage(intlMessages.stopwatch)
+    : intl.formatMessage(intlMessages.timer);
+  let stateLabel = intl.formatMessage(intlMessages.statePaused);
+  if (elapsed) {
+    stateLabel = intl.formatMessage(intlMessages.stateElapsed);
+  } else if (running) {
+    stateLabel = intl.formatMessage(intlMessages.stateRunning);
+  }
+
+  let tooltipMessage;
+  if (stopwatch) {
+    tooltipMessage = running
+      ? intlMessages[isModerator ? 'toolTipStopwatchRunningMod' : 'toolTipStopwatchRunning']
+      : intlMessages[isModerator ? 'toolTipStopwatchStoppedMod' : 'toolTipStopwatchStopped'];
+  } else {
+    tooltipMessage = running
+      ? intlMessages[isModerator ? 'toolTipTimerRunningMod' : 'toolTipTimerRunning']
+      : intlMessages[isModerator ? 'toolTipTimerStoppedMod' : 'toolTipTimerStopped'];
+  }
+  const fullLabel = `${modeLabel}: ${humanizeSeconds(Math.floor(timePassed / 1000))}. ${stateLabel}.`;
 
   return (
     <Styled.TimerWrapper>
@@ -128,17 +208,32 @@ const TimerIndicator: React.FC<TimerIndicatorProps> = ({
           tabIndex={0}
           onClick={isModerator ? onClick : () => {}}
           data-test="timeIndicator"
+          title={intl.formatMessage(tooltipMessage)}
+          aria-label={fullLabel}
         >
           <Styled.TimerContent>
             <Styled.TimerIcon>
               <Icon iconName="time" />
             </Styled.TimerIcon>
-            <Styled.TimerTime
-              aria-hidden
-              ref={timeRef}
-            >
-              {humanizeSeconds(Math.floor(timePassed / 1000))}
-            </Styled.TimerTime>
+            <Styled.TimerMeta>
+              <Styled.TimeWithStatus>
+                <Styled.PrimaryLine>
+                  <Styled.TimerPill running={running}>
+                    {modeLabel}
+                  </Styled.TimerPill>
+                  <Styled.Dot running={running} />
+                  <Styled.TimerStatus>{stateLabel}</Styled.TimerStatus>
+                </Styled.PrimaryLine>
+                <Styled.SecondaryLine>
+                  <Styled.TimerTime
+                    aria-hidden
+                    ref={timeRef}
+                  >
+                    {humanizeSeconds(Math.floor(timePassed / 1000))}
+                  </Styled.TimerTime>
+                </Styled.SecondaryLine>
+              </Styled.TimeWithStatus>
+            </Styled.TimerMeta>
           </Styled.TimerContent>
         </Styled.TimerButton>
       </Styled.Timer>
@@ -165,6 +260,7 @@ const TimerIndicatorContainer: React.FC = () => {
   const {
     timePassed = 0,
     songTrack,
+    stopwatch,
     elapsed,
     running,
   } = currentTimer;
@@ -173,6 +269,7 @@ const TimerIndicatorContainer: React.FC = () => {
     <TimerIndicator
       timePassed={timePassed}
       songTrack={songTrack}
+      stopwatch={stopwatch}
       elapsed={elapsed}
       running={running}
       isModerator={currentUser?.isModerator ?? false}

@@ -11,6 +11,7 @@ const ChatMessageTextContent: React.FC<ChatMessageTextContentProps> = ({
 }) => {
   return (
     <Styled.ChatMessage
+      dir="auto"
       // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{ __html: text }}
       data-test={dataTest}

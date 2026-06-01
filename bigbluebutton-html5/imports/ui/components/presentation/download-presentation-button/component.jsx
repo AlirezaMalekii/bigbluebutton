@@ -26,12 +26,13 @@ const DownloadPresentationButton = ({
   <Styled.ButtonWrapper theme={dark ? 'dark' : 'light'}>
     <Styled.DownloadButton
       data-test="presentationDownload"
-      color="default"
+      color="primary"
       icon="template_download"
       size="sm"
       onClick={handleDownloadPresentation}
       label={intl.formatMessage(intlMessages.downloadPresentationButton)}
-      hideLabel
+      hideLabel={!dark}
+      $skyroom={dark}
     />
   </Styled.ButtonWrapper>
 );

@@ -14,7 +14,7 @@ const StatusIconWrapper = styled.div`
     let bgColor = colorSuccess;
     bgColor = color === 'warning' ? colorWarning : bgColor;
     bgColor = color === 'danger' ? colorDanger : bgColor;
-    return `background-color: ${bgColor};`
+    return `background-color: ${bgColor};`;
   }}
 `;
 

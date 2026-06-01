@@ -4,14 +4,17 @@ import { defineMessages } from 'react-intl';
 import ExternalVideoModal from '/imports/ui/components/external-video-player/external-video-player-graphql/modal/component';
 import LayoutModalContainer from '/imports/ui/components/layout/modal/container';
 import BBBMenu from '/imports/ui/components/common/menu/component';
+import ModalSimple from '/imports/ui/components/common/modal/simple/component';
 import { ActionButtonDropdownItemType } from 'bigbluebutton-html-plugin-sdk/dist/cjs/extensible-areas/action-button-dropdown-item/enums';
 import Styled from './styles';
 import { colorPrimary } from '/imports/ui/stylesheets/styled-components/palette';
-import { PANELS, ACTIONS } from '../../layout/enums';
 import { uniqueId } from '/imports/utils/string-utils';
 import VideoPreviewContainer from '/imports/ui/components/video-preview/container';
+import PollContainer from '/imports/ui/components/poll/container';
+import TimerActivationModal from '/imports/ui/components/timer/activation-modal/component';
 import { screenshareHasEnded } from '/imports/ui/components/screenshare/service';
 import Session from '/imports/ui/services/storage/in-memory';
+import { notify } from '/imports/ui/services/notification';
 import { ModalRegistration } from '/imports/ui/core/singletons/modalController';
 
 const propTypes = {
@@ -88,6 +91,18 @@ const intlMessages = defineMessages({
     id: 'app.actionsBar.actionsDropdown.pollBtnDesc',
     description: 'poll menu toggle button description',
   },
+  pollPaneTitle: {
+    id: 'app.poll.pollPaneTitle',
+    description: 'poll modal title',
+  },
+  pollCloseHint: {
+    id: 'app.poll.modal.closeHint',
+    description: 'hint shown when clicking outside poll modal',
+  },
+  timerPaneTitle: {
+    id: 'app.timer.activationModal.title',
+    description: 'timer activation modal title',
+  },
   takePresenter: {
     id: 'app.actionsBar.actionsDropdown.takePresenter',
     description: 'Label for take presenter role option',
@@ -133,6 +148,8 @@ class ActionsDropdown extends PureComponent {
     this.handleExternalVideoClick = this.handleExternalVideoClick.bind(this);
     this.makePresentationItems = this.makePresentationItems.bind(this);
     this.handleTimerClick = this.handleTimerClick.bind(this);
+    this.handlePollActionClick = this.handlePollActionClick.bind(this);
+    this.handlePollModalOutsideClick = this.handlePollModalOutsideClick.bind(this);
   }
 
   componentDidUpdate(prevProps) {
@@ -148,12 +165,25 @@ class ActionsDropdown extends PureComponent {
   }
 
   handleTimerClick() {
-    const { isTimerActive, activateTimer, deactivateTimer } = this.props;
+    const { isTimerActive, deactivateTimer } = this.props;
     if (!isTimerActive) {
-      activateTimer();
+      this.setTimerModalIsOpen(true);
     } else {
       deactivateTimer();
     }
+  }
+
+  handlePollActionClick() {
+    if (Session.equals('pollInitiated', true)) {
+      Session.setItem('resetPollPanel', true);
+    }
+    Session.setItem('forcePollOpen', true);
+    this.setPollModalIsOpen(true);
+  }
+
+  handlePollModalOutsideClick() {
+    const { intl } = this.props;
+    notify(intl.formatMessage(intlMessages.pollCloseHint), 'warning', 'close');
   }
 
   getAvailableActions() {
@@ -167,7 +197,6 @@ class ActionsDropdown extends PureComponent {
       stopExternalVideoShare,
       isTimerActive,
       isTimerEnabled,
-      layoutContextDispatch,
       amIModerator,
       hasCameraAsContent,
       actionButtonDropdownItems,
@@ -213,20 +242,7 @@ class ActionsDropdown extends PureComponent {
         dataTest: 'polling',
         label: isQuizEnabled ? formatMessage(pollQuizBtnLabel) : formatMessage(pollBtnLabel),
         key: this.pollId,
-        onClick: () => {
-          if (Session.equals('pollInitiated', true)) {
-            Session.setItem('resetPollPanel', true);
-          }
-          layoutContextDispatch({
-            type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
-            value: true,
-          });
-          layoutContextDispatch({
-            type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL,
-            value: PANELS.POLL,
-          });
-          Session.setItem('forcePollOpen', true);
-        },
+        onClick: this.handlePollActionClick,
       });
     }
 
@@ -339,7 +355,6 @@ class ActionsDropdown extends PureComponent {
     return presentationItemElements;
   }
 
-
   render() {
     const {
       intl,
@@ -394,7 +409,7 @@ class ActionsDropdown extends PureComponent {
             transformOrigin: { vertical: 'bottom', horizontal: isRTL ? 'right' : 'left' },
           }}
         />
-            {/* External Video Modal */}
+        {/* External Video Modal */}
         <ModalRegistration id="externalVideoModal" priority="low">
           {({
             isOpen,
@@ -438,6 +453,83 @@ class ActionsDropdown extends PureComponent {
                 id={id}
                 setIsOpen={isOpen ? close : open}
               />
+            );
+          }}
+        </ModalRegistration>
+
+        {/* Poll Modal */}
+        <ModalRegistration id="pollModal" priority="low">
+          {({
+            isOpen,
+            id,
+            open,
+            close,
+          }) => {
+            this.setPollModalIsOpen = (value) => {
+              if (value) open();
+              else close();
+            };
+            return isOpen && (
+              <ModalSimple
+                id={id}
+                modalIsOpen={isOpen}
+                className="poll-creation-modal"
+                data-test="pollCreationModal"
+                shouldCloseOnOverlayClick={false}
+                shouldCloseOnEsc={false}
+                onOutsideClick={this.handlePollModalOutsideClick}
+                onRequestClose={() => {
+                  Session.setItem('forcePollOpen', false);
+                  close();
+                }}
+                title={intl.formatMessage(intlMessages.pollPaneTitle)}
+              >
+                <Styled.PollModalBody>
+                  <PollContainer
+                    isEmbeddedInModal
+                    onRequestClose={() => {
+                      Session.setItem('forcePollOpen', false);
+                      close();
+                    }}
+                  />
+                </Styled.PollModalBody>
+              </ModalSimple>
+            );
+          }}
+        </ModalRegistration>
+
+        {/* Timer Activation Modal */}
+        <ModalRegistration id="timerActivationModal" priority="low">
+          {({
+            isOpen,
+            id,
+            open,
+            close,
+          }) => {
+            this.setTimerModalIsOpen = (value) => {
+              if (value) open();
+              else close();
+            };
+            return isOpen && (
+              <ModalSimple
+                id={id}
+                modalIsOpen={isOpen}
+                className="timer-activation-modal"
+                data-test="timerActivationModal"
+                onRequestClose={close}
+                title={intl.formatMessage(intlMessages.timerPaneTitle)}
+              >
+                <Styled.TimerModalBody>
+                  <TimerActivationModal
+                    onSubmit={(payload) => {
+                      const { activateTimer } = this.props;
+                      activateTimer(payload);
+                      close();
+                    }}
+                    onRequestClose={close}
+                  />
+                </Styled.TimerModalBody>
+              </ModalSimple>
             );
           }}
         </ModalRegistration>

@@ -54,6 +54,7 @@ interface ResponseAreaProps {
     index: number;
   };
   setCorrectAnswer: (param: {text: string, index: number }) => void;
+  onStartPoll?: () => void;
 }
 
 const ResponseArea: React.FC<ResponseAreaProps> = ({
@@ -73,10 +74,12 @@ const ResponseArea: React.FC<ResponseAreaProps> = ({
   isQuiz,
   correctAnswer,
   setCorrectAnswer,
+  onStartPoll,
 }) => {
   const POLL_SETTINGS = window.meetingClientSettings.public.poll;
   const MAX_CUSTOM_FIELDS = POLL_SETTINGS.maxCustom;
   const intl = useIntl();
+  const options = optList || [];
   const defaultPoll = isDefaultPoll(type as string);
   if (defaultPoll || type === pollTypes.Response) {
     return (
@@ -99,7 +102,7 @@ const ResponseArea: React.FC<ResponseAreaProps> = ({
         {defaultPoll && (
           <PollInputs
             error={error}
-            optList={optList}
+            optList={options}
             handleInputChange={handleInputChange}
             handleRemoveOption={handleRemoveOption}
             type={type}
@@ -115,7 +118,7 @@ const ResponseArea: React.FC<ResponseAreaProps> = ({
             aria-describedby="add-item-button"
             color="default"
             icon="add"
-            disabled={optList.length >= MAX_CUSTOM_FIELDS}
+            disabled={options.length >= MAX_CUSTOM_FIELDS}
             onClick={() => handleAddOption()}
           />
         )}
@@ -157,7 +160,7 @@ const ResponseArea: React.FC<ResponseAreaProps> = ({
         <StartPollButton
           question={question}
           multipleResponse={multipleResponse}
-          optList={optList}
+          optList={options}
           type={type}
           secretPoll={secretPoll}
           setError={setError}
@@ -165,6 +168,7 @@ const ResponseArea: React.FC<ResponseAreaProps> = ({
           key="startPollButton"
           isQuiz={isQuiz}
           correctAnswer={correctAnswer}
+          onStartPoll={onStartPoll}
         />
       </Styled.ResponseArea>
     );

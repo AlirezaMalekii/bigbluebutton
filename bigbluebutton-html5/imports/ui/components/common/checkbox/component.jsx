@@ -12,7 +12,7 @@ export default class Checkbox extends Base {
       <Styled.Checkbox
         checked={checked}
         disabled={disabled}
-        focusRipple={true}
+        focusRipple
         inputProps={{
           'aria-label': ariaLabel,
           'aria-describedby': ariaDescribedBy,

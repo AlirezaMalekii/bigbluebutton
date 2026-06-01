@@ -286,7 +286,10 @@ const VirtualBgSelector = ({
           onClick={() => _virtualBgSelected(EFFECT_TYPES.BLUR_TYPE, 'Blur', index)}
         />
         <div aria-hidden className="sr-only" id="vr-cam-btn-blur">
-          {intl.formatMessage(intlMessages.camBgAriaDesc, { backgroundName: EFFECT_TYPES.BLUR_TYPE })}
+          {intl.formatMessage(
+            intlMessages.camBgAriaDesc,
+            { backgroundName: EFFECT_TYPES.BLUR_TYPE },
+          )}
         </div>
       </Styled.ThumbnailButtonWrapper>
     );
@@ -425,13 +428,16 @@ const VirtualBgSelector = ({
           data-test="noneBackgroundButton"
         />
         <div aria-hidden className="sr-only" id="vr-cam-btn-none">
-          {intl.formatMessage(intlMessages.camBgAriaDesc, { backgroundName: EFFECT_TYPES.NONE_TYPE })}
+          {intl.formatMessage(
+            intlMessages.camBgAriaDesc,
+            { backgroundName: EFFECT_TYPES.NONE_TYPE },
+          )}
         </div>
       </>
     );
 
     const renderSkeleton = () => (
-      <SkeletonTheme baseColor="#DCE4EC" direction={isRTL ? 'rtl' : 'ltr'}>
+      <SkeletonTheme baseColor="#1a2234" highlightColor="#2a3548" direction={isRTL ? 'rtl' : 'ltr'}>
         {new Array(SKELETON_COUNT).fill(null).map((_, index) => (
           // eslint-disable-next-line react/no-array-index-key
           <Styled.SkeletonWrapper key={`skeleton-${index}`}>
@@ -502,13 +508,15 @@ const VirtualBgSelector = ({
 
   return (
     <>
-      <Styled.Label>
-        {intl.formatMessage(
-          isVirtualBackgroundSupported()
-            ? intlMessages.virtualBackgroundSettingsLabel
-            : intlMessages.virtualBackgroundSettingsDisabledLabel,
-        )}
-      </Styled.Label>
+      {!showThumbnails && (
+        <Styled.Label>
+          {intl.formatMessage(
+            isVirtualBackgroundSupported()
+              ? intlMessages.virtualBackgroundSettingsLabel
+              : intlMessages.virtualBackgroundSettingsDisabledLabel,
+          )}
+        </Styled.Label>
+      )}
 
       {renderSelector()}
     </>

@@ -10,8 +10,7 @@ const intlMessages = defineMessages({
   },
 });
 
-const FallbackModal = ({ error, intl }) => {
-  return (
+const FallbackModal = ({ error, intl }) => (
   <ModalSimple
     hideBorder
     priority="medium"
@@ -21,6 +20,6 @@ const FallbackModal = ({ error, intl }) => {
   >
     <FallbackView {...{ error }} />
   </ModalSimple>
-)};
+);
 
 export default injectIntl(FallbackModal);

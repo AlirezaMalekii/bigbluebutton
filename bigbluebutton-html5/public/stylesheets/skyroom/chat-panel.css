@@ -1,0 +1,92 @@
+/* =====================================================================
+   Skyroom — Public chat panel (گپ عمومی)
+   Minimal layout: title strip | search | messages | composer pill
+   ===================================================================== */
+
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] {
+  padding: 0 !important;
+  gap: 0 !important;
+}
+
+/* Header, search, options → panel-chrome.css */
+
+/* Messages scroll */
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] [data-test="chatMessages"] {
+  padding: 6px 10px !important;
+  scrollbar-gutter: stable;
+}
+
+/* Composer — compact; no outer pill / glow */
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] form[data-skyroom-composer="true"] {
+  padding: 4px 8px !important;
+  border-top: 1px solid rgba(218, 230, 245, 0.08) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroomChatComposer"] {
+  min-height: 0 !important;
+  align-items: center !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroomChatComposer"] [data-test="sendMessageButton"],
+#layout[data-skyroom-column="true"] [data-test="skyroomChatComposer"] [data-test="emojiPickerButton"] {
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  min-width: 0 !important;
+  transform: none !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroomChatComposer"] [data-test="sendMessageButton"] [class*="ButtonLabel"] {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  opacity: 0 !important;
+}
+
+/* Keep icon-only controls compact in Skyroom composer */
+#layout[data-skyroom-column="true"] [data-test="skyroomChatComposer"] [data-test="emojiPickerButton"] > span,
+#layout[data-skyroom-column="true"] [data-test="skyroomChatComposer"] [data-test="sendMessageButton"] > span {
+  margin: 0 !important;
+}
+
+/* ---------------------------------------------------------------------
+   Presentation download link in public chat (annotated PDF export)
+   --------------------------------------------------------------------- */
+#layout[data-skyroom-column="true"] [data-skyroom="chat-presentation-download"],
+#layout[data-skyroom-column="true"] [data-test="downloadPresentationContainer"] {
+  background: rgba(32, 199, 187, 0.1) !important;
+  border: 1px solid rgba(32, 199, 187, 0.28) !important;
+  border-inline-start: 3px solid var(--skyroom-brand-400, #14a99e) !important;
+  border-radius: 12px !important;
+  color: var(--skyroom-text-primary, #eef4fb) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-skyroom="chat-presentation-download"] > span,
+#layout[data-skyroom-column="true"] [data-test="downloadPresentationContainer"] > span {
+  color: var(--skyroom-text-primary, #eef4fb) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-skyroom="chat-presentation-download"] a,
+#layout[data-skyroom-column="true"] [data-test="downloadPresentationContainer"] a {
+  color: #fff !important;
+  background: var(--skyroom-gradient-primary) !important;
+  border: 1px solid rgba(32, 199, 187, 0.45) !important;
+  border-radius: 8px !important;
+  padding: 6px 14px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-content:has([data-skyroom="chat-presentation-download"]),
+#layout[data-skyroom-column="true"] .chat-message-content:has([data-test="downloadPresentationContainer"]) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Presentation export system message — neutralize legacy light card */
+#layout[data-skyroom-column="true"] .chat-message-container:has([data-skyroom="chat-presentation-download"]) {
+  background: transparent !important;
+}

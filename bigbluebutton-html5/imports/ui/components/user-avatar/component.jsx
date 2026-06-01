@@ -84,7 +84,7 @@ const UserAvatar = ({
         </Styled.Avatar>
       )}
     </>
-  )
+  );
 };
 
 UserAvatar.propTypes = propTypes;

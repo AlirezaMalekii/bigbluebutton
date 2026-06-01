@@ -9,6 +9,7 @@ import GuestPanelOpenerContainer from '../user-list-graphql/user-participants-ti
 import UserPollsContainer from './user-polls/container';
 import BreakoutRoomContainer from './breakout-room/container';
 import UserTitleContainer from '../user-list-graphql/user-participants-title/component';
+import SkyroomUserSearch from '../../skyroom-layout/user-search/component';
 import RaisedHandsContainer from './raised-hands/component';
 import GenericSidekickContentNavButtonContainer from './generic-sidekick-content-button/container';
 import deviceInfo from '/imports/utils/deviceInfo';
@@ -59,6 +60,7 @@ class UserContent extends PureComponent {
               <GenericSidekickContentNavButtonContainer />
               <RaisedHandsContainer />
               <UserTitleContainer />
+              <SkyroomUserSearch />
               <UserListParticipants compact={compact} />
             </Styled.List>
           </Styled.ScrollableList>
@@ -73,6 +75,7 @@ class UserContent extends PureComponent {
             <GenericSidekickContentNavButtonContainer />
             <RaisedHandsContainer />
             <UserTitleContainer />
+            <SkyroomUserSearch />
             <UserListParticipants compact={compact} />
           </>
         )}

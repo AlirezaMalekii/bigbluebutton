@@ -73,7 +73,7 @@ const withFileReader = (
         break;
       case STATUS.ERROR:
       default:
-        icon = 'circle_close'
+        icon = 'circle_close';
         statusMessage = intl.formatMessage(intlMessages.errorOnRead);
     }
 
@@ -111,7 +111,7 @@ const withFileReader = (
     }
 
     toastId.current = toast(renderToastContent(text, status), {
-      hideProgressBar: status === STATUS.DONE ? false : true,
+      hideProgressBar: status !== STATUS.DONE,
       autoClose: status === STATUS.DONE ? 5000 : false,
       newestOnTop: true,
       closeOnClick: true,
@@ -144,7 +144,8 @@ const withFileReader = (
           'error',
         );
       }
-      return onError(new Error('Maximum file size exceeded.'));
+      onError(new Error('Maximum file size exceeded.'));
+      return;
     }
 
     if (!mimeTypesAllowed.includes(type)) {
@@ -154,7 +155,8 @@ const withFileReader = (
           'error',
         );
       }
-      return onError(new Error('File type not allowed.'));
+      onError(new Error('File type not allowed.'));
+      return;
     }
 
     const filenameWithoutExtension = parseFilename(name);
@@ -183,6 +185,6 @@ const withFileReader = (
   };
 
   return <Component readFile={readFile} {...props} />;
-}
+};
 
 export default withFileReader;

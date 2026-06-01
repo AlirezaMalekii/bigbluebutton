@@ -6,7 +6,6 @@ import {
   lgPaddingX,
   borderRadius,
   borderSize,
-  pollInputHeight,
   pollSmMargin,
   pollMdMargin,
   mdPaddingX,
@@ -31,7 +30,6 @@ import {
   colorWhite,
   pollBlue,
   pollStatsBorderColor,
-  colorOffWhite,
   SegmentedButtonRingOffsetShadow,
   SegmentedButtonRingShadow,
   SegmentedButtonBoxShadowSm,
@@ -39,7 +37,6 @@ import {
   darkCyanLime,
   colorInfoBoxQuizBg,
   colorInfoBoxQuizBorder,
-  colorInfoBoxQuizText,
   colorSelectedCorrectAnswerText,
   colorSelectedCorrectAnswerBg,
   colorSelectedCorrectAnswerTextActive,
@@ -69,12 +66,7 @@ type PollOptionInputProps = {
 };
 
 const PollOptionInput = styled.input<PollOptionInputProps>`
-  margin-right: 1rem;
-
-  [dir="rtl"] & {
-      margin-right: 0;
-      margin-left: 1rem;
-  }
+  margin: 0;
 
   &:focus {
     outline: none;
@@ -90,6 +82,8 @@ const PollOptionInput = styled.input<PollOptionInputProps>`
   font-size: ${fontSizeBase};
   border: 1px solid ${colorGrayLighter};
   box-shadow: 0 0 0 1px ${colorGrayLighter};
+  background: ${colorWhite};
+  min-height: 2.75rem;
 
   ${({ isCorrect }) => isCorrect && ` 
     background-color: rgb(240, 253, 244);
@@ -101,9 +95,16 @@ const DeletePollOptionButton = styled(Button)`
   font-size: ${fontSizeBase};
   flex: none;
   width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border: 1px solid ${colorGrayLight};
+  border-radius: 50%;
+  background: ${colorWhite};
+  color: ${colorPrimary};
   position: relative;
   & > i {
     font-size: 150%;
+    color: ${colorPrimary};
   }
 `;
 
@@ -143,6 +144,9 @@ const PollQuestionArea = styled.textarea<PollQuestionAreaProps>`
   font-size: ${fontSizeBase};
   border: 1px solid ${colorGrayLighter};
   box-shadow: 0 0 0 1px ${colorGrayLighter};
+  min-height: 7.5rem;
+  line-height: 1.5;
+  background: ${colorWhite};
 
   ${({ hasError }) => hasError && `
     border-color: ${colorDanger};
@@ -151,24 +155,25 @@ const PollQuestionArea = styled.textarea<PollQuestionAreaProps>`
 `;
 
 const PollQuestionAreaWrapper = styled.div`
-  margin-bottom: ${lgPaddingX};
+  margin-bottom: ${mdPaddingX};
 `;
 
 const SectionHeading = styled.h4`
   margin-top: 0;
   font-weight: 600;
   color: ${colorHeading};
-  margin-bottom: .25rem; 
+  margin-bottom: .5rem;
 `;
 
 const ResponseType = styled.div`
   display: flex;
   justify-content: space-between;
   flex-flow: wrap;
+  gap: 0.65rem;
   overflow-wrap: break-word;
   position: relative;
   width: 100%;
-  margin-bottom: ${lgPaddingX};
+  margin-bottom: ${mdPaddingX};
 
   & > button {
     position: relative;
@@ -179,11 +184,14 @@ const ResponseType = styled.div`
 // @ts-ignore - Button is a JS Component
 const PollConfigButton = styled(Button)`
   border: solid ${colorGrayLight} 1px;
-  min-height: ${pollInputHeight};
+  min-height: 2.75rem;
   font-size: ${fontSizeBase};
+  font-weight: 600;
   white-space: pre-wrap;
   width: 100%;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
+  border-radius: ${borderRadiusRounded};
+  transition: box-shadow 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
 
   & > span {
     &:hover {
@@ -192,7 +200,9 @@ const PollConfigButton = styled(Button)`
   }
 
   ${({ selected }) => selected && `
-    background-color: ${colorGrayLightest};
+    background-color: ${colorBlueLightest};
+    color: ${colorPrimary};
+    border-color: ${colorBlueLighter};
     font-size: ${fontSizeBase};
 
     &:hover,
@@ -214,7 +224,8 @@ const PollConfigButton = styled(Button)`
 
 const PollParagraph = styled.div`
   color: ${colorText};
-  margin-bottom: 0.9rem;
+  margin-bottom: 0.85rem;
+  line-height: 1.5;
 `;
 
 const PollCheckbox = styled.div`
@@ -229,12 +240,18 @@ const AddItemButton = styled(Button)`
   position: relative;
   display: block;
   width: 100%;
-  text-align: left;
+  text-align: center;
   color: ${colorPrimary};
+  background: ${colorBlueLightest};
+  border-radius: ${borderRadius};
+  border: 1px solid ${colorBlueLighter};
+  min-height: 2.5rem;
   padding-left: 0;
   padding-right: 0;
   font-size: ${fontSizeBase};
   white-space: pre-wrap;
+  margin-top: .35rem;
+  justify-content: center;
 
   &:hover {
     & > span {
@@ -248,8 +265,8 @@ const Row = styled.div`
   flex-flow: wrap;
   flex-grow: 1;
   justify-content: space-between;
-  margin-top: 0.7rem;
-  margin-bottom: 0.7rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 `;
 
 const Warning = styled.div`
@@ -262,6 +279,8 @@ const CustomInputRow = styled.div`
   flex-flow: nowrap;
   flex-grow: 1;
   justify-content: space-between;
+  align-items: center;
+  gap: .5rem;
 `;
 
 const Col = styled.div`
@@ -291,11 +310,13 @@ const Toggle = styled.label`
 const StartPollBtn = styled(Button)`
   position: relative;
   width: 100%;
-  min-height: ${pollInputHeight};
-  margin-top: 1rem;
+  min-height: 2.9rem;
+  margin-top: 1.15rem;
   font-size: ${fontSizeBase};
+  font-weight: 600;
   overflow-wrap: break-word;
   white-space: pre-wrap;
+  border-radius: ${borderRadiusRounded};
 
   &:hover {
     & > span {
@@ -390,6 +411,8 @@ const OptionWrapper = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.65rem;
+  width: 100%;
 `;
 
 const ResponseArea = styled.div`
@@ -646,8 +669,11 @@ const SegmentedButtonWrapper = styled.div`
 
 const SegmentedButtonContainer = styled.div`
   display: flex;
+  width: fit-content;
+  max-width: 100%;
   padding: 0.15rem;
-  background-color: ${colorOffWhite};
+  background-color: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: ${borderRadiusRounded};
 `;
 
@@ -659,17 +685,18 @@ const SegmentedButton = styled.button<TabSelectorButtonProps>`
   border: 0;
   background-color: transparent;
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  color: rgb(75 85 99 / 1);
+  color: rgba(255, 255, 255, 0.72);
   font-weight: 500;
   font-size: ${fontSizeBase};
   line-height: ${lineHeightComputed};
   padding: ${mdPaddingY} ${mdPaddingX};
-  min-height: 2.5rem;
+  min-height: 2.35rem;
+  min-width: 6rem;
   border-radius: .5rem;
   cursor: pointer;
 
   &:hover {
-    color: rgb(17 24 39 / 1);
+    color: rgba(255, 255, 255, 0.92);
   }
 
   ${({ active }) => active && `
@@ -754,20 +781,30 @@ const InfoBoxContainer = styled.div<InfoBoxContainerProps>`
   border-radius: .5rem;
   margin-bottom: 1rem;
 
-  color: ${colorBlueLight};
+  color: ${slate900} !important;
   background-color: ${colorBlueLightest};
   border: 1px solid ${colorBlueLighter};
 
   ${({ isQuiz }) => isQuiz && `
     background-color: ${colorInfoBoxQuizBg};
     border: 1px solid ${colorInfoBoxQuizBorder};
-    color: ${colorInfoBoxQuizText};
+    color: ${slate900} !important;
   `}
+
+  & > p {
+    margin: 0;
+    line-height: 1.45;
+    font-size: ${fontSizeSmall};
+    color: ${slate900} !important;
+    font-weight: 600;
+  }
 `;
 
 const ResponseHeader = styled.div`
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
   margin-bottom: 0.5rem;
 `;
 
@@ -776,15 +813,18 @@ type SelectedCorrectAnswerIndicatorProps = {
 };
 
 const SelectedCorrectAnswerIndicator = styled.span<SelectedCorrectAnswerIndicatorProps>`
-  color: ${colorSelectedCorrectAnswerText};
+  color: ${colorSelectedCorrectAnswerText} !important;
   line-height: 1.25rem;
   padding: 0.25rem 0.50rem;
   background-color: ${colorSelectedCorrectAnswerBg};
   border-radius: 9999px;
+  font-size: ${fontSizeSmaller};
+  white-space: nowrap;
+  font-weight: 700;
 
   ${({ hasCorrectAnswer }) => hasCorrectAnswer && `
-    color: ${colorSelectedCorrectAnswerTextActive};
-    background-color: ${colorSelectedCorrectAnswerBgActive};
+    color: ${colorSelectedCorrectAnswerTextActive} !important;
+    background-color: ${colorSelectedCorrectAnswerBgActive} !important;
   `}
 `;
 
@@ -805,6 +845,11 @@ const PollInputContainer = styled.div`
   display: flex;
   flex: 1 1 0%;
   position: relative;
+  min-width: 0;
+`;
+
+const EmbeddedPollContent = styled.div`
+  padding: 0.35rem 0.25rem 0.25rem;
 `;
 
 export default {
@@ -872,4 +917,5 @@ export default {
   CorrectLabel,
   PollInputContainer,
   PollQuestionAreaWrapper,
+  EmbeddedPollContent,
 };

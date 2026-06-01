@@ -1,46 +1,19 @@
 import styled from 'styled-components';
-
-import { smPaddingX, lgPaddingY } from '/imports/ui/stylesheets/styled-components/general';
-
 import {
-  colorGray,
+  PanelHeaderContainer,
+  PanelTitle,
+  PanelTitleText,
+} from '/imports/ui/components/skyroom-layout/panel-chrome/styles';
+import {
   colorPrimary,
   colorWhite,
 } from '/imports/ui/stylesheets/styled-components/palette';
 
-export const Container = styled.div`
-  display: flex;
-  align-items: center;
-  margin-bottom: ${lgPaddingY};
-  margin-top: ${smPaddingX};
-  gap: 0.5rem;
-  min-width: 0;
-  width: 100%;
-`;
+export const Container = PanelHeaderContainer;
 
-export const SmallTitle = styled.h2`
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  padding: 0;
-  color: ${colorGray};
-  flex: 0 0 auto;
-  margin: 0;
-  min-width: 0;
-  order: 0;
+export const SmallTitle = PanelTitle;
 
-  & > span {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    min-width: 0;
-    white-space: nowrap;
-  }
-`;
-
-export const TitleText = styled.span`
-  flex-shrink: 0;
-`;
+export const TitleText = PanelTitleText;
 
 export const CountBadge = styled.span`
   align-items: center;

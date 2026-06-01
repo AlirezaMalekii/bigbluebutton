@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { useMutation } from '@apollo/client';
 import ActionsDropdown from './component';
 import { layoutSelectInput, layoutDispatch, layoutSelect } from '../../layout/context';
-import { SMALL_VIEWPORT_BREAKPOINT, ACTIONS, PANELS } from '../../layout/enums';
+import { SMALL_VIEWPORT_BREAKPOINT } from '../../layout/enums';
 import {
   useIsCameraAsContentEnabled,
   useIsPresentationEnabled,
@@ -15,7 +15,12 @@ import {
 } from '/imports/ui/components/whiteboard/queries';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
 import { SET_PRESENTER } from '/imports/ui/core/graphql/mutations/userMutations';
-import { TIMER_ACTIVATE, TIMER_DEACTIVATE } from '../../timer/mutations';
+import {
+  TIMER_ACTIVATE,
+  TIMER_DEACTIVATE,
+  TIMER_SET_SONG_TRACK,
+  TIMER_SWITCH_MODE,
+} from '../../timer/mutations';
 import Auth from '/imports/ui/services/auth';
 import { PRESENTATION_SET_CURRENT } from '../../presentation/mutations';
 import { useStorageKey } from '/imports/ui/services/storage/hooks';
@@ -56,6 +61,8 @@ const ActionsDropdownContainer = (props) => {
   const [setPresenter] = useMutation(SET_PRESENTER);
   const [timerActivate] = useMutation(TIMER_ACTIVATE);
   const [timerDeactivate] = useMutation(TIMER_DEACTIVATE);
+  const [timerSetSongTrack] = useMutation(TIMER_SET_SONG_TRACK);
+  const [timerSwitchMode] = useMutation(TIMER_SWITCH_MODE);
   const [presentationSetCurrent] = useMutation(PRESENTATION_SET_CURRENT);
 
   const handleTakePresenter = () => {
@@ -66,25 +73,28 @@ const ActionsDropdownContainer = (props) => {
     presentationSetCurrent({ variables: { presentationId } });
   };
 
-  const activateTimer = () => {
+  const activateTimer = async ({
+    stopwatch = false,
+    running = false,
+    time = 0,
+    songTrack = 'noTrack',
+  } = {}) => {
     const TIMER_CONFIG = window.meetingClientSettings.public.timer;
-    const MILLI_IN_MINUTE = 60000;
-    const stopwatch = true;
-    const running = false;
-    const time = TIMER_CONFIG.time * MILLI_IN_MINUTE;
+    const defaultTime = TIMER_CONFIG.time * 60000;
+    const normalizedTime = stopwatch ? 0 : Math.max(0, time || defaultTime);
 
-    timerActivate({ variables: { stopwatch, running, time } });
-
-    setTimeout(() => {
-      layoutContextDispatch({
-        type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
-        value: true,
-      });
-      layoutContextDispatch({
-        type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL,
-        value: PANELS.TIMER,
-      });
-    }, 500);
+    // Ensure mode is updated even when re-activating after a previous mode was used.
+    await timerSwitchMode({ variables: { stopwatch } });
+    await timerActivate({
+      variables: {
+        stopwatch,
+        running,
+        time: normalizedTime,
+      },
+    });
+    if (TIMER_CONFIG.music?.enabled) {
+      await timerSetSongTrack({ variables: { track: songTrack || 'noTrack' } });
+    }
   };
 
   const isDropdownOpen = useStorageKey('dropdownOpen');

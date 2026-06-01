@@ -12,14 +12,16 @@ import {
 
 export const SKYROOM_COLUMN_ATTR = 'data-skyroom-column';
 
-/** Match layout.css --skyroom-block-gap (header/footer/panel rhythm) */
+/** Match tokens.css --space-page (header/footer/panel rhythm) */
 export const SKYROOM_BLOCK_GAP = 22;
-const GAP = 14;
+/** Match tokens.css --space-column-stack (users ↔ chat vertical gap) */
+export const SKYROOM_COLUMN_STACK_GAP = 18;
+const GAP = SKYROOM_COLUMN_STACK_GAP;
 const STAGE_GAP = SKYROOM_BLOCK_GAP;
 /** Match layout.css --skyroom-footer-h */
 export const SKYROOM_FOOTER_H = 56;
 /** Two-row navbar (title + talking/timer). Match layout.css --skyroom-navbar-h */
-export const SKYROOM_NAVBAR_H = 100;
+export const SKYROOM_NAVBAR_H = 60;
 /** @deprecated use SKYROOM_FOOTER_H */
 export const SKYROOM_CHROME_H = SKYROOM_FOOTER_H;
 /** Stage media (slides, whiteboard, screenshare) */
@@ -31,7 +33,7 @@ const MAX_COLUMN = 328;
 const MIN_USERS = 180;
 const MIN_CHAT = 160;
 /** When users + chat are both open, chat gets the larger share */
-const CHAT_PANEL_HEIGHT_RATIO = 0.6;
+const CHAT_PANEL_HEIGHT_RATIO = 0.5;
 
 const isSkyroomColumnActive = () => {
   const layoutEl = document.getElementById('layout');
@@ -210,37 +212,59 @@ const adjustSkyroomColumnLayout = ({
   sidebarContentWidth.width = columnW;
   sidebarContentWidth.maxWidth = columnVisible ? MAX_COLUMN : 0;
 
-  sidebarNavBounds.top = sidebarPanelTop;
+  const contentTop = sidebarPanelTop;
+
+  sidebarNavBounds.top = contentTop;
   sidebarNavHeight = usersH;
 
   sidebarContentBounds.top = usersOpen && chatOpen
-    ? sidebarPanelTop + usersH + GAP
-    : sidebarPanelTop;
+    ? contentTop + usersH + GAP
+    : contentTop;
+
+  const panelStackBottom = (() => {
+    if (usersOpen && chatOpen) {
+      return contentTop + usersH + GAP + chatH;
+    }
+    if (chatOpen) return contentTop + chatH;
+    if (usersOpen) return contentTop + usersH;
+    return columnBottom;
+  })();
   sidebarContentBounds.left = sidebarNavBounds.left;
   sidebarContentBounds.right = sidebarNavBounds.right;
+
+  if (columnVisible) {
+    if (isRTL) {
+      sidebarNavBounds.right = STAGE_GAP;
+      sidebarNavBounds.left = null;
+      sidebarContentBounds.right = STAGE_GAP;
+      sidebarContentBounds.left = null;
+    } else {
+      sidebarNavBounds.left = STAGE_GAP;
+      sidebarNavBounds.right = null;
+      sidebarContentBounds.left = STAGE_GAP;
+      sidebarContentBounds.right = null;
+    }
+  }
 
   const nextSidebarContentHeight = chatH;
 
   const stageWidth = columnVisible
-    ? viewportW - columnW - STAGE_GAP * 2
+    ? viewportW - columnW - STAGE_GAP * 3
     : viewportW - STAGE_GAP * 2;
   mediaAreaBounds.width = stageWidth;
   if (isRTL) {
     mediaAreaBounds.left = STAGE_GAP;
-    mediaAreaBounds.right = columnVisible ? columnW + STAGE_GAP : STAGE_GAP;
+    mediaAreaBounds.right = columnVisible ? columnW + STAGE_GAP * 2 : STAGE_GAP;
   } else {
-    mediaAreaBounds.left = columnVisible ? columnW + STAGE_GAP : STAGE_GAP;
+    mediaAreaBounds.left = columnVisible ? columnW + STAGE_GAP * 2 : STAGE_GAP;
     mediaAreaBounds.right = null;
   }
 
-  let presentationTop = areaTop;
-  if (usersOpen) {
-    presentationTop = areaTop + SKYROOM_BLOCK_GAP;
-  } else if (chatOpen) {
-    presentationTop = areaTop;
-  }
+  let presentationTop = contentTop;
 
-  let presentationHeight = columnBottom - presentationTop;
+  let presentationHeight = columnVisible
+    ? Math.max(120, panelStackBottom - presentationTop)
+    : columnBottom - presentationTop;
   let stageWebcamStripTop = presentationTop;
 
   if (screenshareMinimized && totalCount > 0) {
@@ -254,7 +278,10 @@ const adjustSkyroomColumnLayout = ({
   } else if (useStage && stageWebcamH > 0) {
     stageWebcamStripTop = presentationTop;
     presentationTop = stageWebcamStripTop + stageWebcamH + GAP;
-    presentationHeight = Math.max(120, columnBottom - presentationTop);
+    presentationHeight = Math.max(
+      120,
+      panelStackBottom - presentationTop,
+    );
     mediaAreaBounds.top = presentationTop;
     mediaAreaBounds.height = presentationHeight;
   } else {

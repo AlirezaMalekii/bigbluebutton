@@ -204,7 +204,7 @@ const QuickPollDropdown = (props) => {
 
       const formattedOpt = cleanedOpt.substring(0, MAX_CHAR_LIMIT);
       optionsWithLabels.push(formattedOpt);
-      const labelChar = formattedOpt.replace(/[.)].*/,'') || ''; // protect against empty strings
+      const labelChar = formattedOpt.replace(/[.)].*/, '') || ''; // protect against empty strings
       return `\r${labelChar}.`;
     });
   }
@@ -222,16 +222,16 @@ const QuickPollDropdown = (props) => {
         options: [currentValue],
       });
       optionGroupsWithLabels.push(
-        [optionsWithLabels.shift()]
+        [optionsWithLabels.shift()],
       );
       return acc;
     }
 
     const {
-      options,
+      options: groupOptions,
     } = lastElement;
 
-    const lastOption = options[options.length - 1];
+    const lastOption = groupOptions[groupOptions.length - 1];
 
     const tokenRegex = /^\s*(\d{1,2}|[A-Sa-s])/;
     const lastMatch = lastOption.match(tokenRegex);
@@ -240,7 +240,7 @@ const QuickPollDropdown = (props) => {
     if (!lastMatch || !currentMatch) {
       acc.push({ options: [currentValue] });
       optionGroupsWithLabels.push(
-        [optionsWithLabels.shift()]
+        [optionsWithLabels.shift()],
       );
       return acc;
     }
@@ -255,36 +255,35 @@ const QuickPollDropdown = (props) => {
       if (isLastInteger) {
         // Number
         if (parseInt(currentToken, 10) > parseInt(lastToken, 10)) {
-          options.push(currentValue);
+          groupOptions.push(currentValue);
           lastElementWithLabels.push(optionsWithLabels.shift());
         } else {
           acc.push({ options: [currentValue] });
           optionGroupsWithLabels.push(
-            [optionsWithLabels.shift()]
+            [optionsWithLabels.shift()],
           );
         }
+      } else if (
+        currentToken.toLowerCase().charCodeAt(0) > lastToken.toLowerCase().charCodeAt(0)
+      ) {
+        groupOptions.push(currentValue);
+        lastElementWithLabels.push(optionsWithLabels.shift());
       } else {
-        // Alphabet
-        if (currentToken.toLowerCase().charCodeAt(0) > lastToken.toLowerCase().charCodeAt(0)) {
-          options.push(currentValue);
-          lastElementWithLabels.push(optionsWithLabels.shift());
-        } else {
-          acc.push({ options: [currentValue] });
-          optionGroupsWithLabels.push(
-            [optionsWithLabels.shift()]
-          );
-        }
+        acc.push({ options: [currentValue] });
+        optionGroupsWithLabels.push(
+          [optionsWithLabels.shift()],
+        );
       }
     } else {
       acc.push({ options: [currentValue] });
       optionGroupsWithLabels.push(
-        [optionsWithLabels.shift()]
+        [optionsWithLabels.shift()],
       );
     }
     return acc;
   }, []).filter(({
-    options,
-  }) => options.length > 1 && options.length < 20).forEach((p) => {
+    options: pollGroupOptions,
+  }) => pollGroupOptions.length > 1 && pollGroupOptions.length < 20).forEach((p) => {
     const poll = p;
     if (doubleQuestion) poll.multiResp = true;
     if (poll.options.length <= 5 || MAX_CUSTOM_FIELDS <= 5) {
@@ -359,7 +358,7 @@ const QuickPollDropdown = (props) => {
   };
 
   const getAvailableQuickPolls = (
-    slideId, parsedSlides, funcStartPoll, _pollTypes, _layoutContextDispatch,
+    currentSlideId, parsedSlides, funcStartPoll, _pollTypes, _layoutContextDispatch,
   ) => {
     let idx = -1;
     const pollItemElements = parsedSlides.map((poll) => {
@@ -380,7 +379,7 @@ const QuickPollDropdown = (props) => {
               }
               setTimeout(() => {
                 handleClickQuickPoll(_layoutContextDispatch);
-                funcStartPoll(type, slideId, letterAnswers, pollData?.question);
+                funcStartPoll(type, currentSlideId, letterAnswers, pollData?.question);
               }, CANCELED_POLL_DELAY);
             }}
             question={pollData?.question}
@@ -391,8 +390,8 @@ const QuickPollDropdown = (props) => {
       if (type !== _pollTypes.YesNo
           && type !== _pollTypes.YesNoAbstention
           && type !== _pollTypes.TrueFalse) {
-        const { options } = itemLabel;
-        itemLabel = options.join('/').replace(/[\n.)]/g, '');
+        const { options: pollItemOptions } = itemLabel;
+        itemLabel = pollItemOptions.join('/').replace(/[\n.)]/g, '');
         if (type === _pollTypes.Custom) {
           letterAnswers = (optionGroupsWithLabels[idx] || []).slice(0, MAX_CUSTOM_FIELDS);
         }
@@ -402,8 +401,25 @@ const QuickPollDropdown = (props) => {
       itemLabel = itemLabel?.replace(/\s+/g, '').toUpperCase();
 
       const numChars = {
-        1: 'A', 2: 'B', 3: 'C', 4: 'D', 5: 'E', 6: 'F', 7: 'G', 8: 'H', 9: 'I', 10: 'J',
-        11: 'K', 12: 'L', 13: 'M', 14: 'N', 15: 'O', 16: 'P', 17: 'Q', 18: 'R', 19: 'S',
+        1: 'A',
+        2: 'B',
+        3: 'C',
+        4: 'D',
+        5: 'E',
+        6: 'F',
+        7: 'G',
+        8: 'H',
+        9: 'I',
+        10: 'J',
+        11: 'K',
+        12: 'L',
+        13: 'M',
+        14: 'N',
+        15: 'O',
+        16: 'P',
+        17: 'Q',
+        18: 'R',
+        19: 'S',
       };
       itemLabel = itemLabel.split('/').map((c) => {
         if (numChars[c]) return numChars[c];
@@ -433,7 +449,7 @@ const QuickPollDropdown = (props) => {
               handleClickQuickPoll(_layoutContextDispatch);
               funcStartPoll(
                 type,
-                slideId,
+                currentSlideId,
                 letterAnswers,
                 pollQuestion,
                 pollData?.multiResp,

@@ -25,4 +25,4 @@ const Branding = styled.div`
 export default {
   Separator,
   Branding,
-}
+};

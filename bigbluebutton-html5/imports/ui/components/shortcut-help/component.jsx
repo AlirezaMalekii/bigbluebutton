@@ -277,25 +277,20 @@ const intlMessages = defineMessages({
   },
 });
 
+const renderItem = (func, key) => (
+  <tr key={uniqueId('hotkey-item-')}>
+    <Styled.DescCell>{func}</Styled.DescCell>
+    <Styled.KeyCell>{key}</Styled.KeyCell>
+  </tr>
+);
 
-const renderItem = (func, key) => {
-  return (
-    <tr key={uniqueId('hotkey-item-')}>
-      <Styled.DescCell>{func}</Styled.DescCell>
-      <Styled.KeyCell>{key}</Styled.KeyCell>
-    </tr>
-  );
-}
-
-const renderItemWhiteBoard = (func, key, alt) => {
-  return (
-    <tr key={uniqueId('hotkey-item-')}>
-      <Styled.DescCell>{func}</Styled.DescCell>
-      <Styled.KeyCell>{key}</Styled.KeyCell>
-      <Styled.KeyCell>{alt}</Styled.KeyCell>
-    </tr>
-  );
-}
+const renderItemWhiteBoard = (func, key, alt) => (
+  <tr key={uniqueId('hotkey-item-')}>
+    <Styled.DescCell>{func}</Styled.DescCell>
+    <Styled.KeyCell>{key}</Styled.KeyCell>
+    <Styled.KeyCell>{alt}</Styled.KeyCell>
+  </tr>
+);
 
 const ShortcutHelpComponent = ({
   intl = {},
@@ -306,7 +301,7 @@ const ShortcutHelpComponent = ({
 }) => {
   const { browserName } = browserInfo;
   const { isIos, isMacos } = deviceInfo;
-  const [ selectedTab, setSelectedTab] = React.useState(0);
+  const [selectedTab, setSelectedTab] = React.useState(0);
   const isChatEnabled = useIsChatEnabled();
 
   let accessMod = null;
@@ -339,39 +334,39 @@ const ShortcutHelpComponent = ({
     if (!isChatEnabled && shortcut.descId.indexOf('Chat') !== -1) return null;
     return renderItem(
       `${intl.formatMessage(intlMessages[`${shortcut.descId.toLowerCase()}`])}`,
-      `${accessMod} + ${shortcut.accesskey}`
+      `${accessMod} + ${shortcut.accesskey}`,
     );
   });
 
   const ptt = renderItem(
     `${intl.formatMessage(intlMessages.pushToTalkDesc)}`,
-    `M`
+    'M',
   );
 
   generalShortcutItems.splice(3, 0, ptt);
-  generalShortcutItems.push( renderItem(
+  generalShortcutItems.push(renderItem(
     `${intl.formatMessage(intlMessages.openCustomPoll)}`,
-    isMacos ? `Cmd + Opt + P` : `Ctrl + Alt + P`
+    isMacos ? 'Cmd + Opt + P' : 'Ctrl + Alt + P',
   ));
 
   const shortcutItems = [];
   shortcutItems.push(renderItem(intl.formatMessage(intlMessages.togglePan),
-   intl.formatMessage(intlMessages.togglePanKey)));
+    intl.formatMessage(intlMessages.togglePanKey)));
   shortcutItems.push(renderItem(intl.formatMessage(intlMessages.toggleFullscreen),
-   intl.formatMessage(intlMessages.toggleFullscreenKey)));
+    intl.formatMessage(intlMessages.toggleFullscreenKey)));
   shortcutItems.push(renderItem(intl.formatMessage(intlMessages.nextSlideDesc),
-   intl.formatMessage(intlMessages.nextSlideKey)));
+    intl.formatMessage(intlMessages.nextSlideKey)));
   shortcutItems.push(renderItem(intl.formatMessage(intlMessages.previousSlideDesc),
-   intl.formatMessage(intlMessages.previousSlideKey)));
+    intl.formatMessage(intlMessages.previousSlideKey)));
 
   const gestureItems = [];
   gestureItems.push(renderItem(intl.formatMessage(intlMessages.undo),
-   `2-${intl.formatMessage(intlMessages.fingerTap)}`));
+    `2-${intl.formatMessage(intlMessages.fingerTap)}`));
   gestureItems.push(renderItem(intl.formatMessage(intlMessages.redo),
-   `3-${intl.formatMessage(intlMessages.fingerTap)}`));
+    `3-${intl.formatMessage(intlMessages.fingerTap)}`));
 
   const whiteboardShortcutItems = [];
-  //tools
+  // tools
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.select), '1', 'V'));
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.pencil), '2', 'D, P'));
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.eraser), '3', 'E'));
@@ -384,12 +379,12 @@ const ShortcutHelpComponent = ({
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.note), '0', 'N, S'));
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.hand), '', 'H'));
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.highlight), '', 'Shift D'));
-  //views
+  // views
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.zoomIn), 'Ctrl +', 'Ctrl M. Wheel up'));
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.zoomOut), 'Ctrl -', 'Ctrl M. Wheel down'));
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.zoomFit), 'Shift 1', 'N/A'));
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.zoomSelect), 'Shift 2', 'N/A'));
-//transform
+  // transform
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.flipH), 'Shift H', 'N/A'));
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.flipV), 'Shift V', 'N/A'));
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.lock), 'Ctrl Shift L', 'N/A'));
@@ -397,7 +392,7 @@ const ShortcutHelpComponent = ({
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.moveForward), ']', 'N/A'));
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.moveBackward), '[', 'N/A'));
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.moveToBack), 'Shift [', 'N/A'));
-  //edit
+  // edit
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.undo), 'Ctrl Z', 'N/A'));
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.redo), 'Ctrl Shift Z', 'N/A'));
   whiteboardShortcutItems.push(renderItemWhiteBoard(intl.formatMessage(intlMessages.cut), 'Ctrl X', 'N/A'));
@@ -449,21 +444,20 @@ const ShortcutHelpComponent = ({
         </StyledSettings.SettingsTabList>
 
         <Styled.TabPanel selectedClassName="is-selected">
-        {!accessMod ? <p>{intl.formatMessage(intlMessages.accessKeyNotAvailable)}</p>
-          : (
-            <Styled.TableWrapper>
-              <Styled.ShortcutTable>
-                <tbody>
-                  <tr>           
-                    <th>{intl.formatMessage(intlMessages.functionLabel)}</th>
-                    <th>{intl.formatMessage(intlMessages.comboLabel)}</th>
-                  </tr>
-                  {generalShortcutItems}
-                </tbody>
-              </Styled.ShortcutTable>
-            </Styled.TableWrapper>
-          )
-        }
+          {!accessMod ? <p>{intl.formatMessage(intlMessages.accessKeyNotAvailable)}</p>
+            : (
+              <Styled.TableWrapper>
+                <Styled.ShortcutTable>
+                  <tbody>
+                    <tr>
+                      <th>{intl.formatMessage(intlMessages.functionLabel)}</th>
+                      <th>{intl.formatMessage(intlMessages.comboLabel)}</th>
+                    </tr>
+                    {generalShortcutItems}
+                  </tbody>
+                </Styled.ShortcutTable>
+              </Styled.TableWrapper>
+            )}
         </Styled.TabPanel>
         <Styled.TabPanel selectedClassName="is-selected">
           <Styled.TableWrapper>
@@ -513,7 +507,10 @@ const ShortcutHelpComponent = ({
 };
 
 ShortcutHelpComponent.propTypes = {
-  intl: PropTypes.object.isRequired,
+  intl: PropTypes.shape({
+    formatMessage: PropTypes.func.isRequired,
+    messages: PropTypes.shape({}),
+  }).isRequired,
   shortcuts: PropTypes.arrayOf(PropTypes.shape({
     accesskey: PropTypes.string.isRequired,
     descId: PropTypes.string.isRequired,

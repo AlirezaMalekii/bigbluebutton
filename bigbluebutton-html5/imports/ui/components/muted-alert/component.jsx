@@ -9,9 +9,7 @@ import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import { isMobile } from '/imports/utils/deviceInfo';
 
 const propTypes = {
-  inputStream: PropTypes.objectOf(PropTypes.any).isRequired,
-  isPresenter: PropTypes.bool.isRequired,
-  isViewer: PropTypes.bool.isRequired,
+  inputStream: PropTypes.shape({}).isRequired,
   muted: PropTypes.bool.isRequired,
 };
 
@@ -137,6 +135,13 @@ class MutedAlert extends Component {
     } = this.props;
     const { visible } = this.state;
 
+    const unmuteIcon = (
+      <>
+        <span className="sr-only">{intl.formatMessage(intlMessages.unmuteAudio)}</span>
+        <Icon iconName="mute" aria-hidden="true" />
+      </>
+    );
+
     return visible && muted ? (
       <TooltipContainer
         title={intl.formatMessage(intlMessages.tooltip)}
@@ -147,7 +152,7 @@ class MutedAlert extends Component {
           $mobile={isMobile}
         >
           <span>
-            {intl.formatMessage(intlMessages.warningLabel, { unmuteIcon: <><span class="sr-only">{intl.formatMessage(intlMessages.unmuteAudio)}</span><Icon iconName="mute" aria-hidden="true" /></> })}
+            {intl.formatMessage(intlMessages.warningLabel, { unmuteIcon })}
           </span>
         </Styled.MuteWarning>
       </TooltipContainer>

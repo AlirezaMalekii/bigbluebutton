@@ -1,3 +1,4 @@
+/* eslint-disable react/destructuring-assignment, react/jsx-props-no-multi-spaces */
 import React from 'react';
 import PropTypes from 'prop-types';
 import { omit } from 'radash';
@@ -27,24 +28,24 @@ const propTypes = {
    */
   onClick: (props, propName, componentName) => {
     if (!props.onClick && !props.onMouseDown && !props.onMouseUp) {
-      return new Error('One of props \'onClick\' or \'onMouseDown\' or' +
-        ` 'onMouseUp' was not specified in '${componentName}'.`);
+      return new Error('One of props \'onClick\' or \'onMouseDown\' or'
+        + ` 'onMouseUp' was not specified in '${componentName}'.`);
     }
 
     return null;
   },
   onMouseDown: (props, propName, componentName) => {
     if (!props.onClick && !props.onMouseDown && !props.onMouseUp) {
-      return new Error('One of props \'onClick\' or \'onMouseDown\' or' +
-        ` 'onMouseUp' was not specified in '${componentName}'.`);
+      return new Error('One of props \'onClick\' or \'onMouseDown\' or'
+        + ` 'onMouseUp' was not specified in '${componentName}'.`);
     }
 
     return null;
   },
   onMouseUp: (props, propName, componentName) => {
     if (!props.onClick && !props.onMouseDown && !props.onMouseUp) {
-      return new Error('One of props \'onClick\' or \'onMouseDown\' or' +
-        ` 'onMouseUp' was not specified in '${componentName}'.`);
+      return new Error('One of props \'onClick\' or \'onMouseDown\' or'
+        + ` 'onMouseUp' was not specified in '${componentName}'.`);
     }
 
     return null;
@@ -132,7 +133,7 @@ export default class ButtonBase extends React.Component {
   render() {
     const Component = this.props.tagName;
 
-    const remainingProps = Object.assign({}, this.props);
+    const remainingProps = { ...this.props };
     delete remainingProps.label;
     delete remainingProps.tagName;
     delete remainingProps.disabled;

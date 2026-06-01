@@ -51,10 +51,12 @@ const PollQuestionArea: React.FC<PollQuestionAreaProps> = ({
   const POLL_SETTINGS = window.meetingClientSettings.public.poll;
   const MAX_INPUT_CHARS = POLL_SETTINGS.maxTypedAnswerLength;
   const intl = useIntl();
+  const normalizedQuestionAndOptions = questionAndOptions || '';
+  const normalizedQuestion = question || '';
   const hasOptionError = (customInput && optList.length === 0 && error);
   const hasWarning = (customInput && warning);
   const hasQuestionError = (type === pollTypes.Response
-    && questionAndOptions.length === 0 && error);
+    && normalizedQuestionAndOptions.length === 0 && error);
   const questionsAndOptionsPlaceholder = intlMessages.questionAndOptionsPlaceholder;
   const questionPlaceholder = (type === pollTypes.Response)
     ? intlMessages.questionLabel
@@ -64,7 +66,7 @@ const PollQuestionArea: React.FC<PollQuestionAreaProps> = ({
       <Styled.PollQuestionArea
         hasError={hasQuestionError || hasOptionError}
         data-test="pollQuestionArea"
-        value={customInput ? questionAndOptions : question}
+        value={customInput ? normalizedQuestionAndOptions : normalizedQuestion}
         onChange={(e) => handleTextareaChange(e)}
         onPaste={(e) => { e.stopPropagation(); setIsPasting(true); }}
         onCut={(e) => { e.stopPropagation(); }}

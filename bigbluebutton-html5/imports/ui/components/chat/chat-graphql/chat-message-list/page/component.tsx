@@ -5,7 +5,9 @@ import React, {
   memo,
   useRef,
   useCallback,
+  useMemo,
 } from 'react';
+import { defineMessages, useIntl } from 'react-intl';
 import { PluginsContext } from '/imports/ui/components/components-data/plugin-context/context';
 import {
   UpdatedEventDetailsForChatMessageDomElements,
@@ -28,6 +30,24 @@ import Storage from '/imports/ui/services/storage/in-memory';
 import { getValueByPointer } from '/imports/utils/object-utils';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
 import ChatPageLoading from './loader/component';
+import { useSkyroomChatMessageFilter } from '/imports/ui/components/skyroom-layout/chat-message-filter/context';
+import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import SearchStyles from '/imports/ui/components/skyroom-layout/user-search/styles';
+
+const filterIntlMessages = defineMessages({
+  empty: {
+    id: 'app.skyroom.chatUserSearch.empty',
+    description: 'No public chat messages match sender filter',
+    defaultMessage: 'No messages from this participant',
+  },
+});
+
+const messageMatchesSenderFilter = (message: Message, query: string): boolean => {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return true;
+  const senderName = (message.senderName || message.user?.name || '').toLowerCase();
+  return senderName.includes(normalized);
+};
 
 interface ChatListPageCommonProps {
   firstPageToLoad: number;
@@ -109,7 +129,7 @@ const areChatPagesEqual = (prevProps: ChatListPageProps, nextProps: ChatListPage
 };
 
 const ChatListPage: React.FC<ChatListPageProps> = ({
-  messages,
+  messages: messagesProp,
   messageReadFeedbackEnabled,
   lastSenderPreviousPage,
   page,
@@ -133,6 +153,14 @@ const ChatListPage: React.FC<ChatListPageProps> = ({
   focusedSequence,
   allPagesLoaded,
 }) => {
+  const intl = useIntl();
+  const { filterTerm, isFiltering } = useSkyroomChatMessageFilter();
+  const senderFilterActive = isPublicChat && isSkyroomColumnLayout() && isFiltering;
+  const messages = useMemo(() => {
+    if (!senderFilterActive) return messagesProp;
+    return messagesProp.filter((message) => messageMatchesSenderFilter(message, filterTerm));
+  }, [messagesProp, filterTerm, senderFilterActive]);
+
   const { domElementManipulationIdentifiers } = useContext(PluginsContext);
   const messageRefs = useRef<Record<number, ChatMessageRef | null>>({});
   const chatFocusMessageRequest = useStorageKey(ChatEvents.CHAT_FOCUS_MESSAGE_REQUEST, STORAGES.IN_MEMORY);
@@ -237,6 +265,11 @@ const ChatListPage: React.FC<ChatListPageProps> = ({
 
   return (
     <React.Fragment key={`messagePage-${page}`}>
+      {senderFilterActive && messages.length === 0 ? (
+        <SearchStyles.EmptyHint>
+          {intl.formatMessage(filterIntlMessages.empty)}
+        </SearchStyles.EmptyHint>
+      ) : null}
       {messages.map((message, index, messagesArray) => {
         const previousMessage = messagesArray[index - 1];
         return (

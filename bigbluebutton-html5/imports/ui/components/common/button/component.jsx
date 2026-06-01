@@ -111,8 +111,9 @@ const defaultProps = {
 };
 
 export default class Button extends BaseButton {
+  // eslint-disable-next-line class-methods-use-this
   _cleanProps(otherProps) {
-    const remainingProps = Object.assign({}, otherProps);
+    const remainingProps = { ...otherProps };
     delete remainingProps.icon;
     delete remainingProps.svgIcon;
     delete remainingProps.customIcon;

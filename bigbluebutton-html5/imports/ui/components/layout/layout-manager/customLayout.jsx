@@ -724,6 +724,30 @@ const CustomLayout = (props) => {
       }
 
       const layoutEl = document.getElementById('layout');
+      if (layoutEl) {
+        const stageTop = layoutMediaBounds.top ?? skyroomLayout.mediaAreaBounds.top ?? 0;
+        const stageHeight = layoutMediaBounds.height ?? skyroomLayout.mediaAreaBounds.height ?? 0;
+        const stageWidth = layoutMediaBounds.width
+          ?? skyroomLayout.mediaAreaBounds.width
+          ?? 0;
+        let stageLeft = !isRTL
+          ? (layoutMediaBounds.left ?? skyroomLayout.mediaAreaBounds.left)
+          : null;
+        if (stageLeft == null && isRTL) {
+          const stageRight = layoutMediaBounds.right ?? skyroomLayout.mediaAreaBounds.right ?? 0;
+          stageLeft = windowWidth - stageRight - stageWidth;
+        }
+        stageLeft = stageLeft ?? 0;
+        const actionbarTop = layoutActionbarBounds.top
+          ?? (windowHeight - (layoutActionbarBounds.height
+            ?? layoutActionbarBounds.innerHeight
+            ?? 56));
+        layoutEl.style.setProperty('--skyroom-stage-top', `${stageTop}px`);
+        layoutEl.style.setProperty('--skyroom-stage-bottom', `${stageTop + stageHeight}px`);
+        layoutEl.style.setProperty('--skyroom-stage-left', `${stageLeft}px`);
+        layoutEl.style.setProperty('--skyroom-stage-width', `${stageWidth}px`);
+        layoutEl.style.setProperty('--skyroom-actionbar-top', `${actionbarTop}px`);
+      }
       const hasStageWebcamStrip = (skyroomLayout.stageWebcamStripHeight ?? 0) > 0
         || (skyroomLayout.useSplitCameras && skyroomLayout.cameraDockBounds);
       if (layoutEl && (hasActiveScreenShare || hasStageWebcamStrip)) {
@@ -795,7 +819,13 @@ const CustomLayout = (props) => {
         clearSkyroomWebcamLayout();
       }
     } else {
-      document.getElementById('layout')?.removeAttribute('data-skyroom-split-cameras');
+      const layoutElOff = document.getElementById('layout');
+      layoutElOff?.removeAttribute('data-skyroom-split-cameras');
+      layoutElOff?.style.removeProperty('--skyroom-stage-top');
+      layoutElOff?.style.removeProperty('--skyroom-stage-bottom');
+      layoutElOff?.style.removeProperty('--skyroom-stage-left');
+      layoutElOff?.style.removeProperty('--skyroom-stage-width');
+      layoutElOff?.style.removeProperty('--skyroom-actionbar-top');
       clearSkyroomWebcamLayout();
     }
 

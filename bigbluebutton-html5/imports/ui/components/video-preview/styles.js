@@ -1,26 +1,17 @@
 import styled, { css, keyframes } from 'styled-components';
 import {
-  borderSizeSmall,
   borderSize,
   borderSizeLarge,
   mdPaddingX,
   titlePositionLeft,
-  lgPaddingY,
 } from '/imports/ui/stylesheets/styled-components/general';
 import {
-  colorGrayLabel,
-  colorWhite,
-  colorBlack,
-  colorGrayLighter,
-  colorGrayLightest,
-  colorPrimary,
   colorText,
 } from '/imports/ui/stylesheets/styled-components/palette';
 import {
   fontSizeLarge,
   lineHeightComputed,
   headingsFontWeight,
-  fontSizeLarger,
 } from '/imports/ui/stylesheets/styled-components/typography';
 import { smallOnly, mediumOnly, landscape } from '/imports/ui/stylesheets/styled-components/breakpoints';
 import ModalSimple from '/imports/ui/components/common/modal/simple/component';
@@ -51,14 +42,15 @@ const Text = styled.div`
 const Col = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100%;
-  justify-content: center;
-  margin: 0 0.5rem 0 0.5rem;
+  width: 100%;
+  justify-content: flex-start;
+  gap: 12px;
+  margin: 0;
 
   @media ${smallOnly}, ${mediumOnly} {
-    justify-content: space-between;
-    align-items: center;
-    overflow: auto;
+    justify-content: flex-start;
+    align-items: stretch;
+    overflow: visible;
     margin: 0;
   }
 `;
@@ -66,13 +58,13 @@ const Col = styled.div`
 const BgnCol = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100%;
-  justify-content: center;
-  margin: 0 0.5rem 0 0.5rem;
+  width: 100%;
+  justify-content: flex-start;
+  margin: 0;
 
   @media ${smallOnly} {
-    justify-content: space-between;
-    align-items: center;
+    justify-content: flex-start;
+    align-items: stretch;
     margin: 0;
   }
 `;
@@ -90,11 +82,12 @@ const InternCol = styled.div`
 `;
 
 const ContentCol = styled.div`
-  width: 60%;
-  height: 25vh;
+  width: min(100%, 340px);
+  min-height: 25vh;
+  flex-shrink: 0;
 
   @media ${smallOnly} {
-    width: 90%;
+    width: 100%;
   }
 `;
 
@@ -105,56 +98,58 @@ const BackgroundCol = styled.div`
 
 const VideoCol = styled(Col)`
   align-items: center;
+  flex: 1 1 320px;
+  max-width: 320px;
 
   @media ${landscape} {
-     width: 50%;
-   }
+    width: auto;
+  }
+
+  @media ${smallOnly} {
+    max-width: 100%;
+  }
 `;
 
 const Label = styled.label`
-  margin-top: 8px;
-  font-size: 0.85rem;
-  font-weight: bold;
-  color: ${colorGrayLabel};
+  display: block;
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(170, 182, 199, 0.95);
 `;
 
 const Select = styled.select`
-  background-color: ${colorWhite};
-  border: ${borderSize} solid ${colorWhite};
-  border-radius: ${borderSize};
-  border-bottom: 0.1rem solid ${colorGrayLighter};
-  color: ${colorGrayLabel};
+  background-color: rgba(10, 18, 32, 0.95);
+  border: 1px solid rgba(20, 169, 158, 0.32);
+  border-radius: 12px;
+  color: #eef4fb;
   width: 100%;
-  height: 1.75rem;
-  padding: 1px;
+  min-height: 2.5rem;
+  padding: 8px 12px;
 
   &:focus {
     outline: none;
-    border-radius: ${borderSize};
-    box-shadow: 0 0 0 ${borderSize} ${colorPrimary}, inset 0 0 0 1px ${colorPrimary};
-  }
-
-  &:hover,
-  &:focus {
-    outline: transparent;
-    outline-style: dotted;
-    outline-width: ${borderSize};
+    box-shadow: 0 0 0 3px rgba(13, 136, 126, 0.22);
+    border-color: rgba(20, 169, 158, 0.5);
   }
 `;
 
 const Content = styled.div`
   display: flex;
   justify-content: center;
-  align-items: center;
-  
+  align-items: stretch;
+  gap: 20px;
   color: ${colorText};
   font-weight: normal;
+  padding: 4px 0 8px;
 
   @media ${smallOnly} {
-    display: flex;
     flex-wrap: wrap;
-    flex-direction: row;
-    margin: 5px;
+    flex-direction: column;
+    margin: 0;
+    gap: 16px;
   }
 `;
 
@@ -225,13 +220,17 @@ const ExtraActions = styled.div`
 `;
 
 const VideoPreviewModal = styled(ModalSimple)`
-  padding: 1rem;
+  padding: 1.25rem 1.5rem 1.5rem;
   min-height: 25rem;
   max-height: 100vh;
+  width: min(720px, 94vw) !important;
+  max-width: 720px !important;
 
   @media ${smallOnly} {
     height: unset;
     min-height: 22.5rem;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   ${({ isPhone }) => isPhone && `
@@ -287,6 +286,8 @@ const FetchingAnimation = styled.span`
 const VideoPreview = styled.video`
   height: 100%;
   width: 100%;
+  object-fit: cover;
+  border-radius: 14px;
 
   @media ${smallOnly} {
     height: 10rem;
@@ -295,6 +296,23 @@ const VideoPreview = styled.video`
   ${({ mirroredVideo }) => mirroredVideo && `
     transform: scale(-1, 1);
   `}
+`;
+
+const VideoPreviewFrame = styled.div`
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 4 / 3;
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(20, 169, 158, 0.28);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  @media ${smallOnly} {
+    max-width: 100%;
+  }
 `;
 
 const Marker = styled.div`
@@ -324,71 +342,90 @@ const Container = styled.div`
 `;
 
 const Header = styled.div`
-  margin: 0;
+  margin: 0 0 1rem;
   padding: 0;
   border: none;
   line-height: ${titlePositionLeft};
-  margin-bottom: ${lgPaddingY};
 `;
 
 const WebcamTabs = styled(Tabs)`
   display: flex;
   flex-flow: column;
-
-  &:hover {
-    cursor: pointer;
-  }
-
 `;
 
 const WebcamTabList = styled(TabList)`
   display: flex;
-  justify-content: space-around;
-  padding: 0;
+  flex-direction: row;
+  gap: 8px;
+  margin: 0;
+  padding: 4px;
   list-style-type: none;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(218, 230, 245, 0.08);
+  border-radius: 14px;
+  box-sizing: border-box;
 `;
 
 const WebcamTabSelector = styled(Tab)`
   display: flex;
+  align-items: center;
   justify-content: center;
-  flex-grow: 1;
+  gap: 8px;
+  flex: 1 1 0;
+  min-height: 44px;
+  padding: 8px 12px;
+  margin: 0;
+  border: none;
+  border-radius: 10px;
   text-align: center;
-  font-weight: bold;
-  color: ${colorGrayLighter};
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(170, 182, 199, 0.95);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 
   &.is-selected {
-    border: none;
-    color: ${colorBlack};
+    color: #ffffff;
+    background: linear-gradient(135deg, #14a99e 0%, #0d887e 100%);
+    box-shadow: 0 4px 12px rgba(13, 136, 126, 0.35);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(20, 169, 158, 0.65);
+    outline-offset: 2px;
   }
 `;
 
 const HeaderSeparator = styled.div`
-  border-left: 1px solid ${colorText};
-  content: '|';
-  margin: 0 1.5rem; 
-  height: 1.5rem;
-  align-self: center;
-  opacity: 0.75;
+  display: none;
 `;
 
 const BottomSeparator = styled.div`
   position: relative;
   width: 100%;
-  height: ${borderSizeSmall};
-  background-color: ${colorGrayLightest};
-  margin-top: calc(${lineHeightComputed} * 1.25);
-  margin-bottom: calc(${lineHeightComputed} * 1.25);
+  height: 1px;
+  background: rgba(218, 230, 245, 0.1);
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 `;
 
 const IconSvg = styled.img`
-  height: ${fontSizeLarger};
-  border-radius: 5px;
-  margin: 5px;
+  height: 1.1rem;
+  width: 1.1rem;
+  border-radius: 4px;
+  margin: 0;
+  flex-shrink: 0;
+  opacity: 0.9;
 
   ${({ darkThemeState }) => darkThemeState && css`
-      filter: invert(1);
-    `}
+    filter: brightness(0) invert(1);
+  `}
 
+  ${WebcamTabSelector}.is-selected & {
+    filter: brightness(0) invert(1);
+    opacity: 1;
+  }
 `;
 
 const SharingButton = styled(Button)`
@@ -438,6 +475,7 @@ export default {
   VideoPreviewModal,
   FetchingAnimation,
   VideoPreview,
+  VideoPreviewFrame,
   Marker,
   MarkerDynamic,
   MarkerWrapper,

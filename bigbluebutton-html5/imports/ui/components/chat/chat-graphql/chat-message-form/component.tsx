@@ -31,6 +31,8 @@ import { Layout } from '../../../layout/layoutTypes';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
 
 import ChatOfflineIndicator from './chat-offline-indicator/component';
+import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import SkyroomComposer from '/imports/ui/components/skyroom-layout/chat-composer/styles';
 import { ChatEvents } from '/imports/ui/core/enums/chat';
 import { CHAT_SEND_MESSAGE, CHAT_SET_TYPING } from './mutations';
 import Storage from '/imports/ui/services/storage/session';
@@ -50,6 +52,8 @@ import connectionStatus from '/imports/ui/core/graphql/singletons/connectionStat
 
 const CLOSED_CHAT_LIST_KEY = 'closedChatList';
 const START_TYPING_THROTTLE_INTERVAL = 1000;
+const RTL_CHAR_REGEX = /[\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
+const LTR_CHAR_REGEX = /[A-Za-z]/;
 
 interface ChatMessageFormProps {
   minMessageLength: number,
@@ -136,6 +140,7 @@ const ChatMessageForm: React.FC<ChatMessageFormProps> = ({
   const [hasErrors, setHasErrors] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [message, setMessage] = React.useState('');
+  const [inputDir, setInputDir] = React.useState<'rtl' | 'ltr'>(isRTL ? 'rtl' : 'ltr');
   const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const emojiPickerButtonRef = useRef<HTMLDivElement>(null);
@@ -338,6 +343,16 @@ const ChatMessageForm: React.FC<ChatMessageFormProps> = ({
       newMessage = newMessage.substring(0, maxMessageLength);
     }
     setMessage(newMessage);
+    const firstStrongChar = newMessage.trim().charAt(0);
+    if (firstStrongChar) {
+      if (RTL_CHAR_REGEX.test(firstStrongChar)) {
+        setInputDir('rtl');
+      } else if (LTR_CHAR_REGEX.test(firstStrongChar)) {
+        setInputDir('ltr');
+      }
+    } else {
+      setInputDir(isRTL ? 'rtl' : 'ltr');
+    }
     setError(newError);
     throttleHandleUserTyping(newError != null);
   };
@@ -355,6 +370,23 @@ const ChatMessageForm: React.FC<ChatMessageFormProps> = ({
       textAreaRef.current?.dispatchEvent?.('autosize:update');
     }
   }, [message]);
+
+  useEffect(() => {
+    const firstStrongChar = message.trim().charAt(0);
+    if (!firstStrongChar) {
+      setInputDir(isRTL ? 'rtl' : 'ltr');
+      return;
+    }
+    if (RTL_CHAR_REGEX.test(firstStrongChar)) {
+      setInputDir('rtl');
+      return;
+    }
+    if (LTR_CHAR_REGEX.test(firstStrongChar)) {
+      setInputDir('ltr');
+      return;
+    }
+    setInputDir(isRTL ? 'rtl' : 'ltr');
+  }, [message, isRTL]);
 
   useEffect(() => {
     const handleReplyIntention = (e: Event) => {
@@ -617,96 +649,194 @@ const ChatMessageForm: React.FC<ChatMessageFormProps> = ({
       };
     }, []);
 
+    const skyroomComposer = isSkyroomColumnLayout();
+
+    const messageInputProps = {
+      id: 'message-input',
+      ref: textAreaRef,
+      dir: inputDir,
+      placeholder: intl.formatMessage(messages.inputPlaceholder, { chatName: title }),
+      'aria-label': intl.formatMessage(messages.inputLabel, { chatName: title }),
+      'aria-invalid': hasErrors ? 'true' as const : 'false' as const,
+      autoCorrect: 'off' as const,
+      autoComplete: 'off' as const,
+      spellCheck: true,
+      disabled: disabled || partnerIsLoggedOut,
+      value: message,
+      onFocus: () => {
+        window.dispatchEvent(new CustomEvent(PluginSdk.ChatFormUiDataNames.CHAT_INPUT_IS_FOCUSED, {
+          detail: { value: true },
+        }));
+        setIsTextAreaFocused(true);
+      },
+      onBlur: () => {
+        window.dispatchEvent(new CustomEvent(PluginSdk.ChatFormUiDataNames.CHAT_INPUT_IS_FOCUSED, {
+          detail: { value: false },
+        }));
+      },
+      onChange: handleMessageChange,
+      onKeyDown: handleMessageKeyDown,
+      onPaste: (e: React.ClipboardEvent) => { e.stopPropagation(); },
+      onCut: (e: React.ClipboardEvent) => { e.stopPropagation(); },
+      onCopy: (e: React.ClipboardEvent) => { e.stopPropagation(); },
+      async: true,
+    };
+
+    const emojiPickerNode = showEmojiPicker ? (
+      <Styled.EmojiPickerWrapper ref={emojiPickerRef}>
+        <Styled.EmojiPicker
+          onEmojiSelect={(emojiObject: { native: string }) => handleEmojiSelect(emojiObject)}
+          showPreview={false}
+          showSkinTones={false}
+        />
+      </Styled.EmojiPickerWrapper>
+    ) : null;
+
+    const emojiButtonNode = ENABLE_EMOJI_PICKER ? (
+      <div ref={emojiPickerButtonRef}>
+        {skyroomComposer ? (
+          <SkyroomComposer.EmojiButton
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            icon="happy"
+            color="light"
+            ghost
+            type="button"
+            size="sm"
+            hideLabel
+            label={intl.formatMessage(messages.emojiButtonLabel)}
+            data-test="emojiPickerButton"
+            disabled={disabled || partnerIsLoggedOut || chatSendMessageLoading}
+          />
+        ) : (
+          <Styled.EmojiButton
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            icon="happy"
+            color="light"
+            ghost
+            type="button"
+            circle
+            hideLabel
+            label={intl.formatMessage(messages.emojiButtonLabel)}
+            data-test="emojiPickerButton"
+            disabled={disabled || partnerIsLoggedOut || chatSendMessageLoading}
+          />
+        )}
+      </div>
+    ) : null;
+
+    const sendButtonNode = skyroomComposer ? (
+      <SkyroomComposer.SendButton
+        hideLabel
+        size="sm"
+        aria-label={intl.formatMessage(messages.submitLabel)}
+        type="submit"
+        disabled={disabled || partnerIsLoggedOut || chatSendMessageLoading}
+        label={intl.formatMessage(messages.submitLabel)}
+        color="primary"
+        icon="send"
+        onClick={() => { }}
+        data-test="sendMessageButton"
+      />
+    ) : (
+      <Styled.SendButton
+        hideLabel
+        circle
+        aria-label={intl.formatMessage(messages.submitLabel)}
+        type="submit"
+        disabled={disabled || partnerIsLoggedOut || chatSendMessageLoading}
+        label={intl.formatMessage(messages.submitLabel)}
+        color="primary"
+        icon="send"
+        onClick={() => { }}
+        data-test="sendMessageButton"
+      />
+    );
+
+    if (skyroomComposer) {
+      return (
+        <SkyroomComposer.Form
+          ref={formRef}
+          onSubmit={handleSubmit}
+          data-skyroom-composer="true"
+        >
+          {emojiPickerNode}
+          <SkyroomComposer.Row data-test="skyroomChatComposer">
+            <SkyroomComposer.InputWrapper>
+              <SkyroomComposer.Textarea
+                id={messageInputProps.id}
+                ref={messageInputProps.ref}
+                dir={messageInputProps.dir}
+                placeholder={messageInputProps.placeholder}
+                aria-label={messageInputProps['aria-label']}
+                aria-invalid={messageInputProps['aria-invalid']}
+                autoCorrect={messageInputProps.autoCorrect}
+                autoComplete={messageInputProps.autoComplete}
+                spellCheck={messageInputProps.spellCheck}
+                disabled={messageInputProps.disabled}
+                value={messageInputProps.value}
+                onFocus={messageInputProps.onFocus}
+                onBlur={messageInputProps.onBlur}
+                onChange={messageInputProps.onChange}
+                onKeyDown={messageInputProps.onKeyDown}
+                onPaste={messageInputProps.onPaste}
+                onCut={messageInputProps.onCut}
+                onCopy={messageInputProps.onCopy}
+                async={messageInputProps.async}
+              />
+              {emojiButtonNode}
+            </SkyroomComposer.InputWrapper>
+            {sendButtonNode}
+          </SkyroomComposer.Row>
+          {error ? (
+            <SkyroomComposer.ErrorText data-test="errorTypingIndicator">
+              {error}
+            </SkyroomComposer.ErrorText>
+          ) : null}
+        </SkyroomComposer.Form>
+      );
+    }
+
     return (
       <Styled.Form
         ref={formRef}
         onSubmit={handleSubmit}
         isRTL={isRTL}
       >
-        {showEmojiPicker ? (
-          <Styled.EmojiPickerWrapper ref={emojiPickerRef}>
-            <Styled.EmojiPicker
-              onEmojiSelect={(emojiObject: { native: string }) => handleEmojiSelect(emojiObject)}
-              showPreview={false}
-              showSkinTones={false}
-            />
-          </Styled.EmojiPickerWrapper>
-        ) : null}
+        {emojiPickerNode}
         <Styled.Wrapper>
           <Styled.InputWrapper>
             <Styled.Input
-              id="message-input"
-              ref={textAreaRef}
-              placeholder={intl.formatMessage(messages.inputPlaceholder, { chatName: title })}
-              aria-label={intl.formatMessage(messages.inputLabel, { chatName: title })}
-              aria-invalid={hasErrors ? 'true' : 'false'}
-              autoCorrect="off"
-              autoComplete="off"
-              spellCheck="true"
-              disabled={disabled || partnerIsLoggedOut}
-              value={message}
-              onFocus={() => {
-                window.dispatchEvent(new CustomEvent(PluginSdk.ChatFormUiDataNames.CHAT_INPUT_IS_FOCUSED, {
-                  detail: {
-                    value: true,
-                  },
-                }));
-                setIsTextAreaFocused(true);
-              }}
-              onBlur={() => {
-                window.dispatchEvent(new CustomEvent(PluginSdk.ChatFormUiDataNames.CHAT_INPUT_IS_FOCUSED, {
-                  detail: {
-                    value: false,
-                  },
-                }));
-              }}
-              onChange={handleMessageChange}
-              onKeyDown={handleMessageKeyDown}
-              onPaste={(e) => { e.stopPropagation(); }}
-              onCut={(e) => { e.stopPropagation(); }}
-              onCopy={(e) => { e.stopPropagation(); }}
-              async
+              id={messageInputProps.id}
+              ref={messageInputProps.ref}
+              dir={messageInputProps.dir}
+              placeholder={messageInputProps.placeholder}
+              aria-label={messageInputProps['aria-label']}
+              aria-invalid={messageInputProps['aria-invalid']}
+              autoCorrect={messageInputProps.autoCorrect}
+              autoComplete={messageInputProps.autoComplete}
+              spellCheck={messageInputProps.spellCheck}
+              disabled={messageInputProps.disabled}
+              value={messageInputProps.value}
+              onFocus={messageInputProps.onFocus}
+              onBlur={messageInputProps.onBlur}
+              onChange={messageInputProps.onChange}
+              onKeyDown={messageInputProps.onKeyDown}
+              onPaste={messageInputProps.onPaste}
+              onCut={messageInputProps.onCut}
+              onCopy={messageInputProps.onCopy}
+              async={messageInputProps.async}
             />
-            {ENABLE_EMOJI_PICKER ? (
-              <div ref={emojiPickerButtonRef}>
-                <Styled.EmojiButton
-                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  icon="happy"
-                  color="light"
-                  ghost
-                  type="button"
-                  circle
-                  hideLabel
-                  label={intl.formatMessage(messages.emojiButtonLabel)}
-                  data-test="emojiPickerButton"
-                  disabled={disabled || partnerIsLoggedOut || chatSendMessageLoading}
-                />
-              </div>
-            ) : null}
+            {emojiButtonNode}
           </Styled.InputWrapper>
           <div style={{ zIndex: 10 }}>
-            <Styled.SendButton
-              hideLabel
-              circle
-              aria-label={intl.formatMessage(messages.submitLabel)}
-              type="submit"
-              disabled={disabled || partnerIsLoggedOut || chatSendMessageLoading}
-              label={intl.formatMessage(messages.submitLabel)}
-              color="primary"
-              icon="send"
-              onClick={() => { }}
-              data-test="sendMessageButton"
-            />
+            {sendButtonNode}
           </div>
         </Styled.Wrapper>
-        {
-          error && (
-            <Styled.ChatMessageError data-test="errorTypingIndicator">
-              {error}
-            </Styled.ChatMessageError>
-          )
-        }
-
+        {error ? (
+          <Styled.ChatMessageError data-test="errorTypingIndicator">
+            {error}
+          </Styled.ChatMessageError>
+        ) : null}
       </Styled.Form>
     );
   };

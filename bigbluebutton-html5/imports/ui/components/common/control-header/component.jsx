@@ -21,21 +21,24 @@ const Header = ({
     </Styled.RightWrapper>
   );
 
+  let rightContent = null;
+  if (customRightButton) {
+    rightContent = renderCustomRightButton();
+  } else if (rightButtonProps) {
+    rightContent = renderCloseButton();
+  }
+
   return (
-    <Styled.Header data-test={dataTest ? dataTest : ''} {...rest}>
+    <Styled.Header data-test={dataTest || ''} {...rest}>
       {leftButtonProps ? <Left {...leftButtonProps} /> : <div />}
-      {customRightButton
-        ? renderCustomRightButton()
-        : rightButtonProps
-          ? renderCloseButton()
-          : null}
+      {rightContent}
     </Styled.Header>
   );
-}
+};
 
 Header.propTypes = {
-  leftButtonProps: PropTypes.object,
-  rightButtonProps: PropTypes.object,
+  leftButtonProps: PropTypes.shape({}),
+  rightButtonProps: PropTypes.shape({}),
   customRightButton: PropTypes.element,
   dataTest: PropTypes.string,
 };

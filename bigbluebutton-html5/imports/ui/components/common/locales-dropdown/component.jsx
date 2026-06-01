@@ -6,7 +6,7 @@ const DEFAULT_VALUE = 'select';
 const DEFAULT_KEY = -1;
 
 const propTypes = {
-  allLocales: PropTypes.arrayOf(PropTypes.object).isRequired,
+  allLocales: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   value: PropTypes.string,
   handleChange: PropTypes.func.isRequired,
   elementId: PropTypes.string.isRequired,
@@ -58,7 +58,7 @@ class LocalesDropdown extends PureComponent {
         id={elementId}
         onChange={handleChange}
         value={defaultLocale}
-        aria-label={ariaLabel||''}
+        aria-label={ariaLabel || ''}
       >
         <option disabled key={DEFAULT_KEY} value={DEFAULT_VALUE}>
           {selectMessage}
@@ -71,7 +71,8 @@ class LocalesDropdown extends PureComponent {
 
           return (
             <option key={localeItem.locale} value={localeItem.locale} lang={localeItem.locale}>
-              {localeItem.name}{localizedName && localizedName !== '-' && ` - ${localizedName}`}
+              {localeItem.name}
+              {localizedName && localizedName !== '-' && ` - ${localizedName}`}
             </option>
           );
         })}

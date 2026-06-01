@@ -19,6 +19,7 @@ import { LAYOUT_TYPE } from '/imports/ui/components/layout/enums';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import Toggle from '/imports/ui/components/common/switch/component';
 import { ModalRegistration } from '/imports/ui/core/singletons/modalController';
+import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const intlMessages = defineMessages({
   optionsLabel: {
@@ -353,7 +354,10 @@ class OptionsDropdown extends PureComponent {
 
     const Settings = getSettingsSingletonInstance();
     const { selectedLayout } = Settings.application;
-    const showLayoutButton = window.meetingClientSettings.public.layout.enableDeprecatedLayoutSelection;
+    const showLayoutButton = window.meetingClientSettings
+      .public
+      .layout
+      .enableDeprecatedLayoutSelection;
     const shouldShowManageLayoutButton = selectedLayout !== LAYOUT_TYPE.CAMERAS_ONLY
       && selectedLayout !== LAYOUT_TYPE.PRESENTATION_ONLY
       && selectedLayout !== LAYOUT_TYPE.PARTICIPANTS_AND_CHAT_ONLY
@@ -432,12 +436,41 @@ class OptionsDropdown extends PureComponent {
       intl, shortcuts: OPEN_OPTIONS_AK, isDropdownOpen, isMobile, isRTL,
     } = this.props;
     const customStyles = { top: '1rem' };
+    const skyroomColumn = isSkyroomColumnLayout();
+    const menuOpts = {
+      id: 'app-settings-dropdown-menu',
+      className: 'skyroom-app-settings-menu',
+      keepMounted: true,
+      transitionDuration: 0,
+      elevation: skyroomColumn ? 8 : 3,
+      getcontentanchorel: null,
+      fullwidth: 'true',
+      disableScrollLock: true,
+      // Invisible backdrop: no dimming, but click-outside still closes the menu.
+      BackdropProps: {
+        invisible: true,
+      },
+      anchorOrigin: {
+        vertical: 'bottom',
+        horizontal: isRTL ? 'left' : 'right',
+      },
+      transformorigin: {
+        vertical: 'top',
+        horizontal: isRTL ? 'left' : 'right',
+      },
+      ...(skyroomColumn ? {
+        MenuListProps: {
+          className: 'skyroom-options-menu-list',
+        },
+      } : {}),
+    };
 
     return (
       <>
         <BBBMenu
           accessKey={OPEN_OPTIONS_AK}
           customStyles={!isMobile ? customStyles : null}
+          overrideMobileStyles
           trigger={(
             <Styled.DropdownButton
               state={isDropdownOpen ? 'open' : 'closed'}
@@ -452,16 +485,7 @@ class OptionsDropdown extends PureComponent {
             />
           )}
           actions={this.renderMenuItems()}
-          opts={{
-            id: 'app-settings-dropdown-menu',
-            keepMounted: true,
-            transitionDuration: 0,
-            elevation: 3,
-            getcontentanchorel: null,
-            fullwidth: 'true',
-            anchorOrigin: { vertical: 'bottom', horizontal: isRTL ? 'left' : 'right' },
-            transformorigin: { vertical: 'top', horizontal: isRTL ? 'left' : 'right' },
-          }}
+          opts={menuOpts}
         />
 
         {/* About Modal */}

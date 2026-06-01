@@ -4,6 +4,7 @@ import injectWbResizeEvent from '/imports/ui/components/presentation/resize-wrap
 import Styled from './styles';
 import CustomLogo from './custom-logo/component';
 import UserContentContainer from './user-list-content/container';
+import { SkyroomUserSearchProvider } from '../skyroom-layout/user-search/context';
 
 const propTypes = {
   compact: PropTypes.bool,
@@ -38,7 +39,9 @@ class UserList extends PureComponent {
             && logoUrl
             ? <CustomLogo CustomLogoUrl={logoUrl} /> : null
         }
-        <UserContentContainer compact={compact} />
+        <SkyroomUserSearchProvider>
+          <UserContentContainer compact={compact} />
+        </SkyroomUserSearchProvider>
       </Styled.UserList>
     );
   }

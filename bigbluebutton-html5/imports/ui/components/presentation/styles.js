@@ -200,15 +200,16 @@ const Button = styled.button`
 const ExtraTools = styled.div`
   position: absolute;
   top: 2px;
-  right: 43px;
+  left: 10px;
+  right: auto;
   z-index: 399;
   display: flex;
   gap: 5px;
   height: 35px;
 
   [dir="rtl"] & {
+    left: 10px;
     right: auto;
-    left: 43px;
   }
 
   ${({ isToolbarVisible }) => !isToolbarVisible && `

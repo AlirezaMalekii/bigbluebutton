@@ -6,6 +6,9 @@ import React, {
 import LockViewersContainer from '/imports/ui/components/lock-viewers/container';
 import GuestPolicyContainer from '/imports/ui/components/waiting-users/guest-policy/container';
 import CreateBreakoutRoomContainerGraphql from '../../../../breakout-room/create-breakout-room/component';
+import BBBMenu from '/imports/ui/components/common/menu/component';
+import { layoutSelect } from '/imports/ui/components/layout/context';
+import { Layout } from '/imports/ui/components/layout/layoutTypes';
 import Styled from './styles';
 import { defineMessages, useIntl } from 'react-intl';
 import { uid } from 'radash';
@@ -144,6 +147,7 @@ const intlMessages = defineMessages({
 });
 
 interface UserTitleOptionsProps {
+  isRTL: boolean;
   isMeetingMuted: boolean | undefined;
   isBreakout: boolean | undefined;
   isModerator: boolean;
@@ -160,23 +164,13 @@ interface UserOptionAction {
   description?: string;
   onClick?: () => void;
   icon?: string;
+  iconRight?: string;
   dataTest?: string;
   isSeparator?: boolean;
 }
 
-const inlineActionPriority: Record<string, number> = {
-  usersJoinMuted: 10,
-  muteAllExceptPresenter: 20,
-  lockViewersButton: 30,
-  guestPolicyLabel: 40,
-  clearStatus: 50,
-  createBreakoutRooms: 60,
-  inviteUsers: 70,
-  downloadUserNamesList: 80,
-  learningDashboard: 90,
-};
-
 const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
+  isRTL,
   isMeetingMuted,
   isBreakout,
   isModerator,
@@ -310,7 +304,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         label: intl.formatMessage(intlMessages.muteAllExceptPresenterLabel),
         description: intl.formatMessage(intlMessages.muteAllExceptPresenterDesc),
         onClick: callSetMuted.bind(null, true, true),
-        icon: 'mute',
+        icon: 'no_audio',
         dataTest: 'muteAllExceptPresenter',
       },
       {
@@ -374,11 +368,12 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
       {
         key: 'separator-02',
         isSeparator: true,
-        allow: canCreateBreakout,
+        allow: isLearningDashboardEnabled && (canCreateBreakout || canInviteUsers),
       },
       {
         allow: isLearningDashboardEnabled,
         icon: 'multi_whiteboard',
+        iconRight: 'popout_window',
         label: intl.formatMessage(intlMessages.learningDashboardLabel),
         description: `${intl.formatMessage(intlMessages.learningDashboardDesc)}
         ${intl.formatMessage(intlMessages.newTab)}`,
@@ -389,30 +384,39 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
     ].filter(({ allow }) => allow);
   }, [isModerator, hasBreakoutRooms, isMeetingMuted, locale, intl, isBreakoutRoomsEnabled, isLearningDashboardEnabled]);
 
-  const iconActions = actions
-    .filter((action) => !action.isSeparator && action.icon)
-    .sort((firstAction, secondAction) => (
-      (inlineActionPriority[firstAction.dataTest ?? ''] ?? 100)
-      - (inlineActionPriority[secondAction.dataTest ?? ''] ?? 100)
-    ));
-
   return (
-    <Styled.OptionsGroup>
-      <Styled.HeaderActions data-test="user-management-header-actions">
-        {iconActions.map((action) => (
-          <Styled.HeaderActionButton
-            key={action.key}
-            label={action.label}
-            aria-label={action.label}
-            data-test={`${action.dataTest ?? action.key}-header`}
-            icon={action.icon}
+    <Styled.OptionsGroup data-test="user-management-options">
+      <BBBMenu
+        dataTest="user-options-dropdown-menu"
+        trigger={(
+          <Styled.OptionsButton
+            label={intl.formatMessage(intlMessages.optionsLabel)}
+            data-test="manageUsers"
+            icon="more"
             color="light"
             hideLabel
             size="sm"
-            onClick={action.onClick}
+            circle={false}
+            onClick={() => null}
           />
-        ))}
-      </Styled.HeaderActions>
+        )}
+        actions={actions}
+        customStyles={{ zIndex: 1005 }}
+        opts={{
+          id: 'user-options-dropdown-menu',
+          keepMounted: true,
+          transitionDuration: 0,
+          elevation: 8,
+          getcontentanchorel: null,
+          fullwidth: 'true',
+          disableScrollLock: true,
+          BackdropProps: {
+            invisible: true,
+          },
+          anchorOrigin: { vertical: 'bottom', horizontal: isRTL ? 'right' : 'left' },
+          transformOrigin: { vertical: 'top', horizontal: isRTL ? 'right' : 'left' },
+        }}
+      />
       {createBreakoutRoomModal.isOpen && (
         <CreateBreakoutRoomContainerGraphql
           priority="medium"
@@ -445,6 +449,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
 };
 
 const UserTitleOptionsContainer: React.FC = () => {
+  const isRTL = layoutSelect((i: Layout) => i.isRTL);
   const { data: meetingInfo } = useMeeting((meeting) => ({
     voiceSettings: meeting?.voiceSettings,
     isBreakout: meeting?.isBreakout,
@@ -465,6 +470,7 @@ const UserTitleOptionsContainer: React.FC = () => {
 
   return (
     <UserTitleOptions
+      isRTL={isRTL}
       isMeetingMuted={meetingInfo?.voiceSettings?.muteOnStart}
       isBreakout={meetingInfo?.isBreakout}
       isModerator={currentUser?.isModerator ?? false}

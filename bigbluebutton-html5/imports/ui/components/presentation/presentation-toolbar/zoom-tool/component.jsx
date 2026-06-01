@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { defineMessages, injectIntl } from 'react-intl';
 import {
-  HUNDRED_PERCENT
+  HUNDRED_PERCENT,
 } from '/imports/utils/slideCalcUtils';
 import Styled from './styles';
 import HoldButton from './holdButton/component';
@@ -49,7 +49,6 @@ class ZoomTool extends PureComponent {
     this.setInt = 0;
     this.state = {
       stateZoomValue: props.zoomValue,
-      initialstateZoomValue: props.zoomValue,
       mouseHolding: false,
     };
   }

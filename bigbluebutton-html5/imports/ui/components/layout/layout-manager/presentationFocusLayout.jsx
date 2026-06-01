@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define, consistent-return */
 import { useEffect, useRef } from 'react';
 import { throttle } from '/imports/utils/throttle';
 import { layoutDispatch, layoutSelect, layoutSelectInput } from '/imports/ui/components/layout/context';
@@ -193,7 +194,7 @@ const PresentationFocusLayout = (props) => {
     mediaAreaBounds,
     sidebarNavWidth,
     sidebarContentWidth,
-    sidebarContentHeight
+    sidebarContentHeight,
   ) => {
     const { baseCameraDockBounds } = props;
     const sidebarSize = sidebarNavWidth + sidebarContentWidth;
@@ -225,15 +226,17 @@ const PresentationFocusLayout = (props) => {
       if (cameraDockInput.height === 0) {
         cameraDockHeight = min(
           max(windowHeight() - sidebarContentHeight, cameraDockMinHeight),
-          windowHeight() - cameraDockMinHeight
+          windowHeight() - cameraDockMinHeight,
         );
-        const bannerAreaDiff =
-          windowHeight() - sidebarContentHeight - cameraDockHeight - bannerAreaHeight();
+        const bannerAreaDiff = windowHeight()
+          - sidebarContentHeight
+          - cameraDockHeight
+          - bannerAreaHeight();
         cameraDockHeight += bannerAreaDiff;
       } else {
         cameraDockHeight = min(
           max(cameraDockInput.height, cameraDockMinHeight),
-          windowHeight() - cameraDockMinHeight
+          windowHeight() - cameraDockMinHeight,
         );
       }
       cameraDockBounds.top = windowHeight() - cameraDockHeight - bannerAreaHeight();
@@ -255,10 +258,10 @@ const PresentationFocusLayout = (props) => {
     const { element: fullscreenElement } = fullscreen;
 
     if (
-      fullscreenElement === 'Presentation' ||
-      fullscreenElement === 'Screenshare' ||
-      fullscreenElement === 'ExternalVideo' ||
-      fullscreenElement === 'GenericContent'
+      fullscreenElement === 'Presentation'
+      || fullscreenElement === 'Screenshare'
+      || fullscreenElement === 'ExternalVideo'
+      || fullscreenElement === 'GenericContent'
     ) {
       mediaBounds.width = windowWidth();
       mediaBounds.height = windowHeight();
@@ -304,7 +307,7 @@ const PresentationFocusLayout = (props) => {
     const sidebarContentBounds = calculatesSidebarContentBounds(sidebarNavWidth.width);
     const mediaAreaBounds = calculatesMediaAreaBounds(
       sidebarNavWidth.width,
-      sidebarContentWidth.width
+      sidebarContentWidth.width,
     );
     const navbarBounds = calculatesNavbarBounds(mediaAreaBounds);
     const actionbarBounds = calculatesActionbarBounds(mediaAreaBounds);
@@ -316,7 +319,7 @@ const PresentationFocusLayout = (props) => {
       mediaAreaBounds,
       sidebarNavWidth.width,
       sidebarContentWidth.width,
-      sidebarContentHeight.height
+      sidebarContentHeight.height,
     );
     const { isOpen } = presentationInput;
 

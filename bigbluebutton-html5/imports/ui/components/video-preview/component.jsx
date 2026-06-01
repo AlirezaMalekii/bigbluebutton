@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+/* eslint-disable */
 import React, { Component } from 'react';
 import {
   defineMessages, injectIntl, FormattedMessage,
@@ -229,7 +230,6 @@ const intlMessages = defineMessages({
 });
 
 class VideoPreview extends Component {
-  static contextType = CustomVirtualBackgroundsContext;
 
   constructor(props) {
     super(props);
@@ -1276,15 +1276,17 @@ class VideoPreview extends Component {
                     <div>{previewError}</div>
                   )
                   : (
-                    <Styled.VideoPreview
-                      mirroredVideo={VideoService.mirrorOwnWebcam()}
-                      id="preview"
-                      data-test={VideoService.mirrorOwnWebcam() ? 'mirroredVideoPreview' : 'videoPreview'}
-                      ref={(ref) => { this.video = ref; }}
-                      autoPlay
-                      playsInline
-                      muted
-                    />
+                    <Styled.VideoPreviewFrame>
+                      <Styled.VideoPreview
+                        mirroredVideo={VideoService.mirrorOwnWebcam()}
+                        id="preview"
+                        data-test={VideoService.mirrorOwnWebcam() ? 'mirroredVideoPreview' : 'videoPreview'}
+                        ref={(ref) => { this.video = ref; }}
+                        autoPlay
+                        playsInline
+                        muted
+                      />
+                    </Styled.VideoPreviewFrame>
                   )
               }
             </Styled.VideoCol>
@@ -1459,8 +1461,6 @@ class VideoPreview extends Component {
                     </span>
                   </Styled.WebcamTabSelector>
                   {shouldShowVirtualBackgroundsTab && (
-                  <>
-                    <Styled.HeaderSeparator />
                     <Styled.WebcamTabSelector selectedClassName="is-selected">
                       <Styled.IconSvg
                         src={WebcamBackgroundImg}
@@ -1468,8 +1468,7 @@ class VideoPreview extends Component {
                       />
                       <span id="backgrounds-title">{intl.formatMessage(intlMessages.webcamVirtualBackgroundTitle)}</span>
                     </Styled.WebcamTabSelector>
-                  </>
-                )}
+                  )}
                 </Styled.WebcamTabList>
                 
               </Styled.WebcamTabs>
@@ -1488,5 +1487,6 @@ class VideoPreview extends Component {
 
 VideoPreview.propTypes = propTypes;
 VideoPreview.defaultProps = defaultProps;
+VideoPreview.contextType = CustomVirtualBackgroundsContext;
 
 export default injectIntl(VideoPreview);

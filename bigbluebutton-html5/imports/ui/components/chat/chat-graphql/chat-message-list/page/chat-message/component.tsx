@@ -451,7 +451,7 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
       case ChatMessageType.PRESENTATION:
         return {
           name: '',
-          color: '#0F70D7',
+          color: '#14a99e',
           isModerator: false,
           isPresentationUpload: true,
           isSystemSender: true,
@@ -708,11 +708,25 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
 
   if (!message) return null;
 
+  const getDefaultAvatarIconClass = () => {
+    const { user: messageUser } = message;
+    if (messageContent.isModerator || messageUser?.isModerator || messageUser?.role === 'MODERATOR') {
+      return 'icon-bbb-star_filled';
+    }
+    if (messageUser?.presenter) {
+      return 'icon-bbb-presentation';
+    }
+    if (messageUser?.bot) {
+      return 'icon-bbb-group_chat';
+    }
+    return 'icon-bbb-user';
+  };
+
   let avatarDisplay;
 
   if (!messageContent.avatarIcon) {
     if (!message.user || message.user?.avatar.length === 0) {
-      avatarDisplay = messageContent.name.toLowerCase().slice(0, 2);
+      avatarDisplay = <i className={getDefaultAvatarIconClass()} aria-hidden />;
     } else {
       avatarDisplay = '';
     }

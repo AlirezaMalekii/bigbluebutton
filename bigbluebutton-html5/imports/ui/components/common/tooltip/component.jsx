@@ -19,7 +19,7 @@ const TIP_OFFSET = [0, 10];
 
 const propTypes = {
   title: PropTypes.string,
-  position: PropTypes.oneOf(['bottom','top']),
+  position: PropTypes.oneOf(['bottom', 'top']),
   children: PropTypes.element.isRequired,
   className: PropTypes.string,
 };
@@ -64,7 +64,7 @@ class Tooltip extends Component {
     const Settings = getSettingsSingletonInstance();
     const { animations } = Settings.application;
 
-    const overridePlacement = placement ? placement : position;
+    const overridePlacement = placement || position;
     let overrideDelay;
     if (animations) {
       overrideDelay = delay ? [delay, ANIMATION_DELAY[1]] : ANIMATION_DELAY;
@@ -128,8 +128,8 @@ class Tooltip extends Component {
           ? DEFAULT_ANIMATION : ANIMATION_NONE,
         duration: animations ? ANIMATION_DURATION : 0,
       };
-      if (!e.getAttribute("delay")) {
-        newProps["delay"] = animations ? ANIMATION_DELAY : [ANIMATION_DELAY[0], 0];
+      if (!e.getAttribute('delay')) {
+        newProps.delay = animations ? ANIMATION_DELAY : [ANIMATION_DELAY[0], 0];
       }
       instance.setProps(newProps);
     });
@@ -146,14 +146,6 @@ class Tooltip extends Component {
     }, 150);
   }
 
-  onShow() {
-    document.addEventListener('keyup', this.handleEscapeHide);
-  }
-
-  onHide() {
-    document.removeEventListener('keyup', this.handleEscapeHide);
-  }
-
   handleEscapeHide(e) {
     if (this.tooltip
       && e.keyCode === ESCAPE
@@ -161,6 +153,14 @@ class Tooltip extends Component {
       && this.tooltip.tooltips[0]) {
       this.tooltip.tooltips[0].hide();
     }
+  }
+
+  onShow() {
+    document.addEventListener('keyup', this.handleEscapeHide);
+  }
+
+  onHide() {
+    document.removeEventListener('keyup', this.handleEscapeHide);
   }
 
   render() {

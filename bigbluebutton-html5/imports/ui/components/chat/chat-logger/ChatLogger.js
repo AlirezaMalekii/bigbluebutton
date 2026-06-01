@@ -1,5 +1,3 @@
-
-
 class ChatLogger {
   constructor() {
     this.logLevel = 'info';

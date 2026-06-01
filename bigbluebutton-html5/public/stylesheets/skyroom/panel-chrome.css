@@ -1,0 +1,229 @@
+/* =====================================================================
+   Skyroom panel chrome — shared Users + Public chat headers & search
+   ===================================================================== */
+
+/* --- Header row --- */
+#layout[data-skyroom-column="true"] [data-test="userListContainer"] [class*="Container"]:has([data-test-users-count]),
+#layout[data-skyroom-column="true"] [data-test="userListContent"] > div:first-child,
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] [data-test="chatTitle"] {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--space-3) !important;
+  flex-shrink: 0 !important;
+  min-height: var(--skyroom-header-height, 56px) !important;
+  width: 100% !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  ) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  padding: 0 var(--space-3) !important;
+  padding-inline-start: 26px !important;
+  padding-inline-end: var(--space-3, 12px) !important;
+  box-shadow: none !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContainer"] h2,
+#layout[data-skyroom-column="true"] [data-test="userManagementTitle"],
+#layout[data-skyroom-column="true"] [data-test="userListContent"] h2,
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] [data-test="chatTitle"] h2,
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] [data-test="hidePublicChat"],
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] [data-test="hidePublicChat"] span {
+  color: var(--skyroom-panel-text) !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  text-transform: none !important;
+  letter-spacing: -0.2px;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="user-management-options"],
+#layout[data-skyroom-column="true"] [data-test="skyroom-chat-header-options"] {
+  flex: 0 0 auto !important;
+  margin-inline-start: auto !important;
+}
+
+/* --- Settings / options trigger (⋯) --- */
+#layout[data-skyroom-column="true"] [data-test="manageUsers"],
+#layout[data-skyroom-column="true"] [data-test="chatOptionsMenu"] {
+  align-items: center !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.018)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  color: var(--skyroom-panel-text-muted) !important;
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  height: 32px !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  min-height: 32px !important;
+  min-width: 32px !important;
+  padding: 0 !important;
+  width: 32px !important;
+  transition:
+    background-color 130ms ease,
+    border-color 130ms ease,
+    color 130ms ease,
+    box-shadow 130ms ease,
+    transform 120ms ease !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="manageUsers"] i,
+#layout[data-skyroom-column="true"] [data-test="manageUsers"] svg,
+#layout[data-skyroom-column="true"] [data-test="chatOptionsMenu"] i,
+#layout[data-skyroom-column="true"] [data-test="chatOptionsMenu"] svg {
+  color: currentColor !important;
+  fill: currentColor !important;
+  font-size: 0.9rem !important;
+  height: 1em !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  width: 1em !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="manageUsers"]:hover,
+#layout[data-skyroom-column="true"] [data-test="manageUsers"]:focus,
+#layout[data-skyroom-column="true"] [data-test="chatOptionsMenu"]:hover,
+#layout[data-skyroom-column="true"] [data-test="chatOptionsMenu"]:focus {
+  background: linear-gradient(180deg, rgba(80, 220, 220, 0.18), rgba(80, 220, 220, 0.08)) !important;
+  border-color: rgba(80, 220, 220, 0.26) !important;
+  box-shadow: 0 0 0 2px rgba(80, 220, 220, 0.08) !important;
+  color: #ffffff !important;
+  transform: translateY(-0.5px);
+}
+
+#layout[data-skyroom-column="true"] [data-test="manageUsers"]:active,
+#layout[data-skyroom-column="true"] [data-test="chatOptionsMenu"]:active {
+  background: linear-gradient(180deg, rgba(80, 220, 220, 0.16), rgba(80, 220, 220, 0.07)) !important;
+  transform: translateY(0);
+}
+
+/* --- Search row --- */
+#layout[data-skyroom-column="true"] [data-test="skyroomUserSearch"],
+#layout[data-skyroom-column="true"] [data-test="skyroomChatUserSearch"] {
+  flex-shrink: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  padding: var(--space-2) var(--space-3) !important;
+  margin: 0 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroomUserSearch"] label,
+#layout[data-skyroom-column="true"] [data-test="skyroomChatUserSearch"] label {
+  min-height: 40px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+  box-shadow: none !important;
+  padding-inline: 12px !important;
+  gap: 10px !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroomUserSearch"] label:hover,
+#layout[data-skyroom-column="true"] [data-test="skyroomChatUserSearch"] label:hover {
+  border-color: rgba(80, 220, 220, 0.22) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroomUserSearch"] label,
+#layout[data-skyroom-column="true"] [data-test="skyroomChatUserSearch"] label,
+#layout[data-skyroom-column="true"] [data-test="skyroomUserSearch"] label:focus-within,
+#layout[data-skyroom-column="true"] [data-test="skyroomChatUserSearch"] label:focus-within {
+  border-color: rgba(80, 220, 220, 0.32) !important;
+  background: rgba(0, 0, 0, 0.26) !important;
+  box-shadow: 0 0 0 2px rgba(80, 220, 220, 0.06) !important;
+  outline: none !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroomUserSearch"] input,
+#layout[data-skyroom-column="true"] [data-test="skyroomChatUserSearch"] input,
+#layout[data-skyroom-column="true"] [data-test="skyroomUserSearch"] input:focus,
+#layout[data-skyroom-column="true"] [data-test="skyroomChatUserSearch"] input:focus,
+#layout[data-skyroom-column="true"] [data-test="skyroomUserSearch"] input:focus-visible,
+#layout[data-skyroom-column="true"] [data-test="skyroomChatUserSearch"] input:focus-visible {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroomUserSearch"] input::placeholder,
+#layout[data-skyroom-column="true"] [data-test="skyroomChatUserSearch"] input::placeholder {
+  color: rgba(198, 208, 220, 0.62) !important;
+  opacity: 1 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroomUserSearch"] label::before,
+#layout[data-skyroom-column="true"] [data-test="skyroomChatUserSearch"] label::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* --- Dropdown menus (light card) --- */
+.MuiModal-root:has(#user-options-dropdown-menu) .MuiBackdrop-root,
+.MuiModal-root:has(.skyroom-chat-options-menu) .MuiBackdrop-root {
+  background-color: transparent !important;
+}
+
+.MuiModal-root:has(.skyroom-chat-options-menu) .override-mobile-styles,
+.MuiModal-root:has(.skyroom-chat-options-menu) .MuiPaper-root.override-mobile-styles {
+  position: absolute !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: auto !important;
+  max-width: min(300px, 92vw) !important;
+}
+
+#layout[data-skyroom-column="true"] #user-options-dropdown-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] [data-test="user-options-dropdown-menu"] .MuiPaper-root,
+#layout[data-skyroom-column="true"] #chat-options-dropdown-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] .skyroom-chat-options-menu .MuiPaper-root {
+  background: #ffffff !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow:
+    0 4px 6px rgba(15, 23, 42, 0.04),
+    0 16px 40px rgba(15, 23, 42, 0.14) !important;
+  padding: 6px 0 !important;
+}
+
+#layout[data-skyroom-column="true"] #user-options-dropdown-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] [data-test="user-options-dropdown-menu"] .MuiPaper-root {
+  min-width: min(320px, calc(100vw - 24px)) !important;
+  max-width: min(360px, calc(100vw - 24px)) !important;
+}
+
+#layout[data-skyroom-column="true"] #chat-options-dropdown-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] .skyroom-chat-options-menu .MuiPaper-root {
+  min-width: min(260px, calc(100vw - 24px)) !important;
+  max-width: min(300px, calc(100vw - 24px)) !important;
+}
+
+#layout[data-skyroom-column="true"] #user-options-dropdown-menu .MuiMenuItem-root,
+#layout[data-skyroom-column="true"] [data-test="user-options-dropdown-menu"] .MuiMenuItem-root,
+#layout[data-skyroom-column="true"] #chat-options-dropdown-menu .MuiMenuItem-root,
+#layout[data-skyroom-column="true"] .skyroom-chat-options-menu .MuiMenuItem-root {
+  color: #1e293b !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  min-height: 40px !important;
+  transition: background-color 0.12s ease !important;
+}
+
+#layout[data-skyroom-column="true"] #user-options-dropdown-menu .MuiMenuItem-root:hover,
+#layout[data-skyroom-column="true"] [data-test="user-options-dropdown-menu"] .MuiMenuItem-root:hover,
+#layout[data-skyroom-column="true"] #chat-options-dropdown-menu .MuiMenuItem-root:hover,
+#layout[data-skyroom-column="true"] .skyroom-chat-options-menu .MuiMenuItem-root:hover {
+  background: rgba(32, 199, 187, 0.1) !important;
+}

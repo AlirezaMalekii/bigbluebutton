@@ -1,9 +1,7 @@
 import styled from 'styled-components';
 
 import {
-  colorHeading,
   colorGrayLight,
-  colorGrayDark,
 } from '/imports/ui/stylesheets/styled-components/palette';
 import { fontSizeSmaller, lineHeightComputed } from '/imports/ui/stylesheets/styled-components/typography';
 
@@ -21,7 +19,9 @@ export const HeaderContent = styled.div`
 export const ChatUserName = styled.div<ChatUserNameProps>`
   display: flex;
   min-width: 0;
-  font-weight: 600;
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1.2;
   position: relative;
 
   margin-right: calc(${lineHeightComputed} / 2);
@@ -34,7 +34,7 @@ export const ChatUserName = styled.div<ChatUserNameProps>`
   flex-shrink: 1;
 
   ${({ currentlyInMeeting }) => currentlyInMeeting && `
-    color: ${colorHeading};
+    color: var(--skyroom-panel-text-muted, #c6d0dc);
   `}
 
   ${({ currentlyInMeeting }) => !currentlyInMeeting && `
@@ -54,11 +54,11 @@ export const ChatUserName = styled.div<ChatUserNameProps>`
 `;
 
 export const ChatUserOffline = styled.span`
-  color: ${colorGrayLight};
+  color: rgba(198, 208, 220, 0.62);
   font-weight: 100;
   text-transform: lowercase;
   font-style: italic;
-  font-size: 85%;
+  font-size: 10px;
   line-height: 1;
   user-select: none;
   margin-right: calc(${lineHeightComputed} / 2);
@@ -68,9 +68,9 @@ export const ChatTime = styled.time`
   flex-shrink: 0;
   flex-grow: 0;
   flex-basis: max-content;
-  color: ${colorGrayDark};
+  color: rgba(198, 208, 220, 0.62);
   text-transform: uppercase;
-  font-size: 75%;
+  font-size: 10px;
   [dir='rtl'] & {
     margin: 0 calc(${lineHeightComputed} / 2) 0 0;
   }

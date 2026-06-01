@@ -1,0 +1,101 @@
+/* =====================================================================
+   Skyroom design tokens — single source for spacing, radius, elevation
+   Loaded before theme.css (see client/main.html)
+   Sync numeric gaps with column-layout.js (SKYROOM_BLOCK_GAP, GAP)
+   ===================================================================== */
+
+:root {
+  /* Spacing (8px base) */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-page: 22px;
+  --space-column-stack: 18px;
+  --space-list-gap: var(--space-1);
+  --space-gutter-column-stage: var(--space-page);
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+  --radius-panel: var(--radius-lg);
+  --radius-bubble: var(--radius-sm);
+
+  /* Icon sizes */
+  --icon-xs: 14px;
+  --icon-sm: 16px;
+  --icon-md: 20px;
+  --icon-lg: 24px;
+  --icon-toolbar: 24px;
+
+  /* Header / chrome (sync column-layout.js SKYROOM_NAVBAR_H / SKYROOM_FOOTER_H) */
+  --skyroom-header-height: 56px;
+  --skyroom-footer-height: 56px;
+  --skyroom-header-accent-opacity: 0.5;
+  --skyroom-header-subrow-gap: 0;
+  --skyroom-panel-header-padding: var(--space-4) var(--space-4) var(--space-3);
+
+  /* Chat (column layout) */
+  --chat-avatar-size: 20px;
+  --chat-meta-size: 0.6875rem;
+  --chat-message-gap: 0.375rem;
+
+  /* Borders */
+  --border-width: 1px;
+  --border-subtle: rgba(218, 230, 245, 0.08);
+  --border-emphasis: rgba(20, 169, 158, 0.14);
+  --skyroom-panel-border-token: var(--border-emphasis);
+
+  /* Elevation — neutral dark shadows (no teal tint) */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.32);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.40);
+  --shadow-glow-sm: 0 0 0 1px rgba(20, 169, 158, 0.10);
+  --shadow-glow-md: 0 6px 16px rgba(13, 136, 126, 0.18);
+  --skyroom-elevation-panel: var(--shadow-md);
+  --skyroom-elevation-stage: var(--shadow-lg);
+  --skyroom-panel-shadow-token:
+    var(--skyroom-elevation-panel),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --skyroom-stage-shadow-token:
+    var(--skyroom-elevation-stage),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  /* Chat bubbles (dark column) */
+  --skyroom-bubble-bg: var(--skyroom-surface-3, #1a2436);
+  --skyroom-bubble-text: var(--skyroom-text-primary, #e6edf7);
+  --skyroom-bubble-border: var(--border-subtle);
+
+  /* Brand scale (dark-only fork — must live on :root) */
+  --skyroom-brand-500: #0d887e;
+  --skyroom-brand-600: #0a6f67;
+  --skyroom-brand-700: #075952;
+  --skyroom-brand-400: #14a99e;
+  --skyroom-brand-300: #3fc2b8;
+  --skyroom-brand-200: #8cddd6;
+  --skyroom-brand-100: #d1f2ee;
+  --skyroom-brand-50: #e9f8f6;
+
+  /* Legacy aliases */
+  --skyroom-radius-sm: var(--radius-sm);
+  --skyroom-radius: var(--radius-md);
+  --skyroom-radius-lg: var(--radius-lg);
+  --skyroom-radius-xl: var(--radius-xl);
+  --skyroom-column-gap: var(--space-column-stack);
+  --skyroom-stage-gap: var(--space-page);
+  --skyroom-edge-gap: var(--space-page);
+  --skyroom-block-gap: var(--space-page);
+  --skyroom-chat-footer-gap: var(--space-page);
+  --skyroom-panel-radius: var(--radius-panel);
+  --skyroom-navbar-h: var(--skyroom-header-height);
+  --skyroom-footer-h: var(--skyroom-footer-height);
+  --skyroom-chrome-h: var(--skyroom-footer-height);
+  --skyroom-nav-offset: var(--skyroom-header-height);
+}

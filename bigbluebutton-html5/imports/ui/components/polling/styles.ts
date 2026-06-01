@@ -11,8 +11,6 @@ import {
   overlayOpacity,
   pollIndex,
   lgPaddingY,
-  pollBottomOffset,
-  jumboPaddingX,
   pollColAmount,
   borderSize,
 } from '/imports/ui/stylesheets/styled-components/general';
@@ -25,7 +23,6 @@ import {
   colorText,
   colorBlueLight,
   colorGrayLighter,
-  colorOffWhite,
   colorGrayDark,
   colorWhite,
   colorPrimary,
@@ -119,15 +116,12 @@ const MultipleResponseAnswersTableAnswerText = styled.td`
 `;
 
 const Overlay = styled.div`
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: ${overlayIndex};
-  pointer-events: none;
-
-  @media ${hasPhoneDimentions} {
-    pointer-events: auto;
-    background-color: rgba(0, 0, 0, ${overlayOpacity});
-  }
+  pointer-events: auto;
+  background-color: rgba(0, 0, 0, ${overlayOpacity});
+  backdrop-filter: blur(2px);
 `;
 
 const QHeader = styled.span`
@@ -154,42 +148,31 @@ const QText = styled.div`
 
 const PollingContainer = styled.aside<{ autoWidth: boolean }>`
   pointer-events: auto;
-  min-width: ${pollWidth};
-  position: absolute;
-
+  min-width: min(${pollWidth}, 90vw);
+  width: min(32rem, 90vw);
+  position: fixed;
   z-index: ${pollIndex};
-  border: 1px solid ${colorOffWhite};
+  border: 1px solid ${colorGrayLighter};
   border-radius: ${borderRadius};
-  box-shadow: ${colorGrayDark} 0px 0px ${lgPaddingY};
+  box-shadow: ${colorGrayDark} 0 0 ${lgPaddingY};
   align-items: center;
   text-align: center;
   font-weight: 600;
-  padding: ${mdPaddingY};
+  padding: ${mdPaddingY} ${smPaddingX};
   background-color: ${colorWhite};
-  bottom: ${pollBottomOffset};
-  right: ${jumboPaddingX};
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-height: min(90vh, 46rem);
+  overflow-y: auto;
 
   &:focus {
     border: 1px solid ${colorPrimary};
   }
 
-  [dir="rtl"] & {
-    left: ${jumboPaddingX};
-    right: auto;
-  }
-
   @media ${hasPhoneDimentions} {
-    bottom: auto;
-    right: auto;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    max-height: 95%;
-    overflow-y: auto;
-
-    [dir="rtl"] & {
-      left: 50%;
-    }
+    width: min(30rem, 94vw);
+    max-height: 94vh;
   }
 
   ${({ autoWidth }) => autoWidth

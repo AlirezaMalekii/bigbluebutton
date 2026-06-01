@@ -14,6 +14,8 @@ import UserListParticipantsPageContainer from './page/component';
 import IntersectionWatcher from './intersection-watcher/intersectionWatcher';
 import { setLocalUserList } from '/imports/ui/core/hooks/useLoadedUserList';
 import roveBuilder from '/imports/ui/core/utils/keyboardRove';
+import { useSkyroomUserSearch } from '/imports/ui/components/skyroom-layout/user-search/context';
+import SkyroomUserSearchResults from '/imports/ui/components/skyroom-layout/user-search/search-results';
 
 interface UserListParticipantsProps {
   count: number;
@@ -22,6 +24,8 @@ interface UserListParticipantsProps {
 const UserListParticipants: React.FC<UserListParticipantsProps> = ({
   count,
 }) => {
+  const { searchTerm, isSearching } = useSkyroomUserSearch();
+
   const [visibleUsers, setVisibleUsers] = React.useState<{
     [key: number]: User[];
   }>({});
@@ -78,6 +82,10 @@ const UserListParticipants: React.FC<UserListParticipantsProps> = ({
     };
   }, []);
   // --- End of plugin related code ---
+
+  if (isSearching) {
+    return <SkyroomUserSearchResults searchTerm={searchTerm} />;
+  }
 
   const amountOfPages = Math.ceil(count / 50);
   return (

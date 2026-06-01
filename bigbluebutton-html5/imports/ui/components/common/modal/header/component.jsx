@@ -1,6 +1,6 @@
 import React from 'react';
-import Styled from './styles';
 import PropTypes from 'prop-types';
+import Styled from './styles';
 
 const propTypes = {
   hideBorder: PropTypes.bool,
@@ -22,57 +22,49 @@ const defaultProps = {
   closeButtonProps: {},
 };
 
-class Header extends React.Component {
-  constructor(props) {
-    super(props);
-  }
+const Header = ({
+  children,
+  closeButtonProps,
+  headerPosition,
+  hideBorder,
+  modalDismissDescription,
+  shouldShowCloseButton,
+  ...other
+}) => {
+  if (!shouldShowCloseButton && !children) return null;
 
-  render() {
-    const {
-      children,
-      closeButtonProps,
-      headerPosition,
-      hideBorder,
-      modalDismissDescription,
-      shouldShowCloseButton,
-      ...other
-    } = this.props;
+  const headerOnTop = headerPosition === 'top';
+  const innerHeader = headerPosition === 'inner';
 
-    if (!shouldShowCloseButton && !children) return null;
-
-    const headerOnTop = headerPosition === 'top';
-    const innerHeader = headerPosition === 'inner';
-
-    return (
-      <Styled.Header
-        $hideBorder={hideBorder}
+  return (
+    <Styled.Header
+      $hideBorder={hideBorder}
+      $headerOnTop={headerOnTop}
+      $innerHeader={innerHeader}
+      {...other}
+    >
+      <Styled.Title
+        $hasMarginBottom={innerHeader}
         $headerOnTop={headerOnTop}
         $innerHeader={innerHeader}
-        {...other}
       >
-        <Styled.Title
-          $hasMarginBottom={innerHeader}
+        {children}
+      </Styled.Title>
+      {shouldShowCloseButton ? (
+        <Styled.DismissButton
+          data-test="closeModal"
+          icon="close"
+          circle
+          hideLabel
+          aria-describedby="modalDismissDescription"
           $headerOnTop={headerOnTop}
           $innerHeader={innerHeader}
-        >
-          {children}
-        </Styled.Title>
-        {shouldShowCloseButton ? (
-          <Styled.DismissButton
-            data-test="closeModal"
-            icon="close"
-            circle
-            hideLabel
-            aria-describedby="modalDismissDescription"
-            $headerOnTop={headerOnTop}
-            $innerHeader={innerHeader}
-            {...closeButtonProps}
-          />
-        ) : null}
-        <div id="modalDismissDescription" hidden>{modalDismissDescription}</div>
-      </Styled.Header>
-    );
-  }
+          {...closeButtonProps}
+        />
+      ) : null}
+      <div id="modalDismissDescription" hidden>{modalDismissDescription}</div>
+    </Styled.Header>
+  );
 };
 
 Header.propTypes = propTypes;

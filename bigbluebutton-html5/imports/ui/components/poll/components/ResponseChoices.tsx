@@ -53,6 +53,7 @@ interface ResponseChoicesProps {
     index: number;
   };
   setCorrectAnswer: (param: {text: string, index: number }) => void;
+  onStartPoll?: () => void;
 }
 
 const ResponseChoices: React.FC<ResponseChoicesProps> = ({
@@ -74,6 +75,7 @@ const ResponseChoices: React.FC<ResponseChoicesProps> = ({
   isQuiz,
   correctAnswer,
   setCorrectAnswer,
+  onStartPoll,
 }) => {
   const intl = useIntl();
   if ((!customInput && type) || (questionAndOptions && customInput)) {
@@ -133,6 +135,7 @@ const ResponseChoices: React.FC<ResponseChoicesProps> = ({
           isQuiz={isQuiz}
           correctAnswer={correctAnswer}
           setCorrectAnswer={setCorrectAnswer}
+          onStartPoll={onStartPoll}
         />
       </div>
     );

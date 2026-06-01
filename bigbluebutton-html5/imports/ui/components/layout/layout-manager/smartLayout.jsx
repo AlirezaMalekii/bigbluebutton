@@ -1,9 +1,12 @@
+/* eslint-disable no-use-before-define, consistent-return */
 import { useEffect, useRef } from 'react';
 import { throttle } from '/imports/utils/throttle';
 import { layoutDispatch, layoutSelect, layoutSelectInput } from '/imports/ui/components/layout/context';
 import DEFAULT_VALUES from '/imports/ui/components/layout/defaultValues';
 import { INITIAL_INPUT_STATE } from '/imports/ui/components/layout/initState';
-import { ACTIONS, PANELS, LAYOUT_TYPE, CAMERADOCK_POSITION } from '/imports/ui/components/layout/enums';
+import {
+  ACTIONS, PANELS, LAYOUT_TYPE, CAMERADOCK_POSITION,
+} from '/imports/ui/components/layout/enums';
 import { defaultsDeep } from '/imports/utils/array-utils';
 import Session from '/imports/ui/services/storage/in-memory';
 
@@ -11,7 +14,9 @@ const windowWidth = () => window.document.documentElement.clientWidth;
 const windowHeight = () => window.document.documentElement.clientHeight;
 
 const SmartLayout = (props) => {
-  const { prevLayout, bannerAreaHeight, isMobile, calculatesNavbarHeight } = props;
+  const {
+    prevLayout, bannerAreaHeight, isMobile, calculatesNavbarHeight,
+  } = props;
 
   function usePrevious(value) {
     const ref = useRef();
@@ -168,10 +173,9 @@ const SmartLayout = (props) => {
     cameraDockBounds.isCameraHorizontal = false;
     cameraDockBounds.position = CAMERADOCK_POSITION.CONTENT_TOP;
 
-    const mediaBoundsWidth =
-      mediaBounds.width > presentationToolbarMinWidth && !isMobile
-        ? mediaBounds.width
-        : presentationToolbarMinWidth;
+    const mediaBoundsWidth = mediaBounds.width > presentationToolbarMinWidth && !isMobile
+      ? mediaBounds.width
+      : presentationToolbarMinWidth;
 
     cameraDockBounds.top = navBarHeight + bannerAreaHeight();
     cameraDockBounds.left = mediaAreaBounds.left;
@@ -280,10 +284,10 @@ const SmartLayout = (props) => {
     }
 
     if (
-      fullscreenElement === 'Presentation' ||
-      fullscreenElement === 'Screenshare' ||
-      fullscreenElement === 'ExternalVideo' ||
-      fullscreenElement === 'GenericContent'
+      fullscreenElement === 'Presentation'
+      || fullscreenElement === 'Screenshare'
+      || fullscreenElement === 'ExternalVideo'
+      || fullscreenElement === 'GenericContent'
     ) {
       mediaBounds.width = windowWidth();
       mediaBounds.height = windowHeight();
@@ -297,7 +301,7 @@ const SmartLayout = (props) => {
     const mediaContentSize = hasScreenShare ? screenShareSize : slideSize;
 
     if (cameraDockInput.numCameras > 0 && !cameraDockInput.isDragging) {
-      if (mediaContentSize.width !== 0 && mediaContentSize.height !== 0 
+      if (mediaContentSize.width !== 0 && mediaContentSize.height !== 0
         && !hasExternalVideo && !genericContentId) {
         if (mediaContentSize.width < mediaAreaBounds.width && !isMobile) {
           if (mediaContentSize.width < mediaAreaBounds.width * 0.8) {
@@ -365,7 +369,7 @@ const SmartLayout = (props) => {
     const sidebarContentBounds = calculatesSidebarContentBounds(sidebarNavWidth.width);
     const mediaAreaBounds = calculatesMediaAreaBounds(
       sidebarNavWidth.width,
-      sidebarContentWidth.width
+      sidebarContentWidth.width,
     );
     const navbarBounds = calculatesNavbarBounds(mediaAreaBounds);
     const actionbarBounds = calculatesActionbarBounds(mediaAreaBounds);
@@ -376,7 +380,7 @@ const SmartLayout = (props) => {
       mediaAreaBounds,
       slideSize,
       sidebarSize,
-      screenShareSize
+      screenShareSize,
     );
     const cameraDockBounds = calculatesCameraDockBounds(mediaAreaBounds, mediaBounds, sidebarSize);
     const horizontalCameraDiff = cameraDockBounds.isCameraHorizontal
@@ -548,7 +552,7 @@ const SmartLayout = (props) => {
         right: isRTL ? mediaBounds.right + horizontalCameraDiff : null,
       },
     });
-    
+
     layoutContextDispatch({
       type: ACTIONS.SET_GENERIC_CONTENT_OUTPUT,
       value: {

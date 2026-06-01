@@ -3,26 +3,19 @@
    ===================================================================== */
 
 :root {
-  --skyroom-column-gap: 14px;
+  /* Layout-only; spacing/chrome tokens live in tokens.css */
   --skyroom-column-width: clamp(292px, 21vw, 328px);
-  --skyroom-nav-offset: 100px;
-  --skyroom-navbar-h: 100px;
-  --skyroom-chrome-h: 56px;
-  --skyroom-footer-h: 56px;
-  --skyroom-footer-safe: 56px;
-  --skyroom-panel-radius: 16px;
-  --skyroom-stage-gap: 22px;
-  --skyroom-edge-gap: 22px;
-  --skyroom-block-gap: 22px;
-  --skyroom-chat-footer-gap: 22px;
+  --skyroom-footer-safe: var(--skyroom-footer-h, 56px);
+  /* Set at runtime by customLayout when column mode is active */
+  --skyroom-stage-bottom: 72vh;
+  --skyroom-stage-left: 24px;
+  --skyroom-stage-width: 50vw;
+  --skyroom-actionbar-top: 92vh;
 }
 
 /* Chrome height only — item layout stays in theme.css */
 #layout[data-skyroom-column="true"] header[role="banner"],
 #layout[data-skyroom-column="true"] #Navbar {
-  min-height: var(--skyroom-navbar-h) !important;
-  height: var(--skyroom-navbar-h) !important;
-  box-sizing: border-box !important;
   z-index: 12;
 }
 
@@ -31,14 +24,74 @@
   z-index: 20 !important;
 }
 
-/* Mute-while-speaking hint — above presentation / whiteboard */
+/* Mute hint — compact pill in gap between stage bottom and mic bar */
 #layout[data-skyroom-column="true"] #ActionsBar [data-debug="live-watcher"] {
-  position: relative;
-  z-index: 30;
+  position: fixed !important;
+  left: calc(var(--skyroom-stage-left, 24px) + var(--skyroom-stage-width, 50vw) / 2) !important;
+  right: auto !important;
+  top: clamp(
+    calc(var(--skyroom-stage-bottom, 72vh) + 10px),
+    calc(
+      var(--skyroom-stage-bottom, 72vh)
+      + (var(--skyroom-actionbar-top, 92vh) - var(--skyroom-stage-bottom, 72vh)) / 2
+      - 14px
+    ),
+    calc(var(--skyroom-actionbar-top, 92vh) - 38px)
+  ) !important;
+  bottom: auto !important;
+  transform: translateX(-50%) !important;
+  z-index: 19 !important;
+  width: max-content;
+  max-width: min(240px, calc(var(--skyroom-stage-width, 400px) - 40px));
+  pointer-events: none;
 }
 
 #layout[data-skyroom-column="true"] #ActionsBar [class*="MuteWarning"] {
-  z-index: 1100 !important;
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+  z-index: 1 !important;
+  pointer-events: auto;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 10px !important;
+  border-radius: var(--radius-pill, 999px) !important;
+  font-size: 0.65rem !important;
+  font-weight: 500;
+  line-height: 1.3 !important;
+  text-align: center;
+  white-space: nowrap;
+  max-width: 100%;
+  color: var(--skyroom-panel-text, #eef4fb) !important;
+  background: rgba(12, 20, 34, 0.92) !important;
+  border: 1px solid rgba(20, 169, 158, 0.2) !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.32) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+#layout[data-skyroom-column="true"] #ActionsBar [class*="MuteWarning"] > span {
+  white-space: nowrap !important;
+}
+
+#layout[data-skyroom-column="true"] #ActionsBar [class*="MuteWarning"] .icon-bbb-mute,
+#layout[data-skyroom-column="true"] #ActionsBar [class*="MuteWarning"] [class^="icon-bbb-"] {
+  color: var(--skyroom-panel-accent, #20c7bb) !important;
+  font-size: 0.78em !important;
+  vertical-align: middle;
+  margin: 0 !important;
+}
+
+/* Keep hint above stage media, below floating UI chrome */
+#layout[data-skyroom-column="true"] [data-test="presentationContainer"],
+#layout[data-skyroom-column="true"] [class*="PresentationContainer"],
+#layout[data-skyroom-column="true"] [data-test="screenshareArea"] {
+  z-index: 6 !important;
 }
 
 /* Narrow sidebar column */
@@ -54,7 +107,7 @@
 
 #layout[data-skyroom-column="true"] .resizeSidebarNavWrapper {
   z-index: 4;
-  padding-top: var(--skyroom-block-gap) !important;
+  padding-top: 0 !important;
   padding-bottom: var(--skyroom-block-gap) !important;
   box-sizing: border-box;
 }
@@ -70,14 +123,18 @@
 
 [dir="ltr"] #layout[data-skyroom-column="true"] .resizeSidebarNavWrapper,
 [dir="ltr"] #layout[data-skyroom-column="true"] .resizeSidebarContentWrapper {
-  padding-left: var(--skyroom-edge-gap) !important;
+  padding-left: 0 !important;
   padding-right: 0 !important;
+  margin-right: 0 !important;
+  margin-left: 0 !important;
 }
 
 [dir="rtl"] #layout[data-skyroom-column="true"] .resizeSidebarNavWrapper,
 [dir="rtl"] #layout[data-skyroom-column="true"] .resizeSidebarContentWrapper {
   padding-left: 0 !important;
-  padding-right: var(--skyroom-edge-gap) !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="chatButton"] {
@@ -101,14 +158,12 @@
   margin: 0 !important;
   z-index: 6 !important;
   border-radius: var(--skyroom-panel-radius) !important;
-  border: 1px solid var(--skyroom-panel-border, rgba(20, 169, 158, 0.30)) !important;
+  border: var(--border-width) solid var(--skyroom-panel-border-token, var(--border-emphasis)) !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
   background:
     linear-gradient(180deg, rgba(14, 24, 48, 0.78), rgba(7, 11, 20, 0.92)) !important;
-  box-shadow:
-    0 18px 46px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  box-shadow: var(--skyroom-stage-shadow-token) !important;
 }
 
 /* LTR: sidebar left — stage inset from column + outer edge */
@@ -117,9 +172,9 @@
 [dir="ltr"] #layout[data-skyroom-column="true"] [data-test="presentationContainer"],
 [dir="ltr"] #layout[data-skyroom-column="true"] [class*="presentationContainer"],
 [dir="ltr"] #layout[data-skyroom-column="true"] [class*="PresentationContainer"] {
-  left: calc(var(--skyroom-column-width) + var(--skyroom-stage-gap)) !important;
+  left: calc(var(--skyroom-column-width) + var(--skyroom-stage-gap) * 2) !important;
   right: auto !important;
-  width: calc(100% - var(--skyroom-column-width) - var(--skyroom-stage-gap) * 2) !important;
+  width: calc(100% - var(--skyroom-column-width) - var(--skyroom-stage-gap) * 3) !important;
   max-width: none !important;
 }
 
@@ -171,18 +226,19 @@
 [dir="rtl"] #layout[data-skyroom-column="true"] [data-test="presentationContainer"],
 [dir="rtl"] #layout[data-skyroom-column="true"] [class*="presentationContainer"],
 [dir="rtl"] #layout[data-skyroom-column="true"] [class*="PresentationContainer"] {
-  right: calc(var(--skyroom-column-width) + var(--skyroom-stage-gap)) !important;
+  right: calc(var(--skyroom-column-width) + var(--skyroom-stage-gap) * 2) !important;
   left: var(--skyroom-stage-gap) !important;
-  width: calc(100% - var(--skyroom-column-width) - var(--skyroom-stage-gap) * 2) !important;
+  width: calc(100% - var(--skyroom-column-width) - var(--skyroom-stage-gap) * 3) !important;
   max-width: none !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="screenshareArea"],
 #layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"] {
   border-radius: var(--skyroom-panel-radius) !important;
-  border: 1px solid var(--skyroom-panel-border, rgba(20, 169, 158, 0.30)) !important;
+  border: var(--border-width) solid var(--skyroom-panel-border-token, var(--border-emphasis)) !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
+  box-shadow: var(--skyroom-stage-shadow-token) !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="screenshareArea"] #screenshareContainer,
@@ -228,6 +284,25 @@
 #layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] .resizeSidebarNavWrapper,
 #layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] .resizeSidebarContentWrapper {
   visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Hide closed panels — only the toggled box is shown */
+#layout[data-skyroom-column="true"][data-skyroom-users-visible="false"] .resizeSidebarNavWrapper {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+
+#layout[data-skyroom-column="true"][data-skyroom-chat-visible="false"] .resizeSidebarContentWrapper {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
   pointer-events: none !important;
 }
 
@@ -282,12 +357,31 @@
 
 #layout[data-skyroom-column="true"] #WebcamContainer,
 #layout[data-skyroom-column="true"] [data-test="webcamContainer"] {
-  padding: 0 8px 0 0;
+  padding: 0 var(--space-2) 0 0;
 }
 
 [dir="rtl"] #layout[data-skyroom-column="true"] #WebcamContainer,
 [dir="rtl"] #layout[data-skyroom-column="true"] [data-test="webcamContainer"] {
-  padding: 0 0 0 8px;
+  padding: 0 0 0 var(--space-2);
+}
+
+/* ---------------------------------------------------------------------
+   Presentation area — download original file button
+   --------------------------------------------------------------------- */
+#layout[data-skyroom-column="true"] [data-test="presentationDownload"] {
+  z-index: 12 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="presentationDownload"] > span:last-child,
+#layout[data-skyroom-column="true"] [data-test="presentationDownload"] [class*="ButtonLabel"] {
+  color: #fff !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="presentationDownload"] i,
+#layout[data-skyroom-column="true"] [data-test="presentationDownload"] i::before {
+  color: #fff !important;
 }
 
 @media (max-width: 768px) {

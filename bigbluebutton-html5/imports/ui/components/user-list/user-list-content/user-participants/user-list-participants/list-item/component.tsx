@@ -221,7 +221,16 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, lockSettings, index }
       return user.reactionEmoji;
     }
     if (user.name && userAvatarFiltered.length === 0) {
-      return user.name.toLowerCase().slice(0, 2);
+      if (user.isModerator || user.role === 'MODERATOR') {
+        return <i className="icon-bbb-star_filled" aria-hidden />;
+      }
+      if (user.presenter) {
+        return <i className="icon-bbb-presentation" aria-hidden />;
+      }
+      if (user.bot) {
+        return <i className="icon-bbb-group_chat" aria-hidden />;
+      }
+      return <i className="icon-bbb-user" aria-hidden />;
     }
     return '';
   };

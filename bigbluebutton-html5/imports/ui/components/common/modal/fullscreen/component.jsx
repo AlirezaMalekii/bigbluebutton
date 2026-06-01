@@ -104,7 +104,7 @@ class ModalFullscreen extends PureComponent {
         id="fsmodal"
         isOpen={isOpen || preventClosing}
         contentLabel={title}
-        overlayClassName={"fullscreenModalOverlay"}
+        overlayClassName="fullscreenModalOverlay"
         {...otherProps}
       >
         <Styled.Header>

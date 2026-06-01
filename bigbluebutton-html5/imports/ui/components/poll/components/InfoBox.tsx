@@ -21,15 +21,21 @@ const InfoBox: React.FC<InfoBoxContainerProps> = ({
   isQuiz,
 }) => {
   const intl = useIntl();
+  const message = (() => {
+    try {
+      return isQuiz
+        ? intl.formatMessage(intlMessages.quizInfo)
+        : intl.formatMessage(intlMessages.pollInfo);
+    } catch (error) {
+      return isQuiz
+        ? 'حالت آزمون: پاسخ صحیح هر پرسش را انتخاب کنید.'
+        : 'حالت نظرسنجی: دیدگاه‌ها را جمع‌آوری و نتایج را بررسی کنید.';
+    }
+  })();
+
   return (
     <Styled.InfoBoxContainer isQuiz={isQuiz}>
-      {
-        isQuiz ? (
-          <p>{intl.formatMessage(intlMessages.quizInfo)}</p>
-        ) : (
-          <p>{intl.formatMessage(intlMessages.pollInfo)}</p>
-        )
-      }
+      <p>{message}</p>
     </Styled.InfoBoxContainer>
   );
 };

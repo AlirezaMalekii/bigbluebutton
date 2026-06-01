@@ -1,10 +1,4 @@
 import styled from 'styled-components';
-import {
-  colorDangerDark,
-  colorGrayLightest,
-  colorOffWhite,
-  colorText,
-} from '/imports/ui/stylesheets/styled-components/palette';
 
 interface ChatMessageProps {
   systemMsg?: boolean;
@@ -15,7 +9,12 @@ export const ChatMessage = styled.div<ChatMessageProps>`
   display: flex;
   flex-flow: row;
   flex-direction: column;
-  color: ${colorText};
+  unicode-bidi: plaintext;
+  text-align: start;
+  color: var(--skyroom-bubble-text, #dfe9f5);
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 400;
   word-break: break-word;
 
   & img {
@@ -26,21 +25,22 @@ export const ChatMessage = styled.div<ChatMessageProps>`
   & p {
     margin: 0;
     white-space: pre-wrap;
+    color: inherit;
   }
 
   & pre:has(code), p code:not(pre > code) {
-    background-color: ${colorOffWhite};
-    border: solid 1px ${colorGrayLightest};
+    background-color: rgba(7, 14, 24, 0.68);
+    border: solid 1px rgba(255, 255, 255, 0.1);
     border-radius: 4px;
     padding: 2px;
     margin: 0;
-    font-size: 12px;
+    font-size: 11px;
     white-space: pre-wrap;
     word-wrap: break-word;
     overflow-wrap: anywhere;
   }
   & p code:not(pre > code) {
-    color: ${colorDangerDark};
+    color: #89dfd8;
   }
   & h1 {
     font-size: 1.5em;

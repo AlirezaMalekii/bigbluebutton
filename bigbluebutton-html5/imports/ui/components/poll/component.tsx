@@ -235,11 +235,15 @@ interface PollCreationPanelProps {
     value: string | boolean;
   }) => void;
   hasPoll: boolean;
+  isEmbeddedInModal?: boolean;
+  onRequestClose?: () => void;
 }
 
 const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
   layoutContextDispatch,
   hasPoll,
+  isEmbeddedInModal = false,
+  onRequestClose,
 }) => {
   const POLL_SETTINGS = window.meetingClientSettings.public.poll;
   const isQuizEnabled = useIsQuizEnabled();
@@ -278,13 +282,13 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
   useEffect(() => {
     if (quickPollVariables) {
       const {
-        answers,
+        answers = [],
         multipleResponse,
         pollType,
-        question,
+        question = '',
         secretPoll,
-        isQuiz,
-        correctAnswer,
+        isQuiz = false,
+        correctAnswer = '',
       } = quickPollVariables;
       const isCustom = pollType === pollTypes.Custom;
 
@@ -457,18 +461,18 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
 
       setCustomInput(customInput);
       setMultipleResponse(multipleResponse);
-      setOptList(optList);
-      setError(error);
-      setQuestion(question);
-      setQuestionAndOptions(questionAndOptions);
-      setSecretPoll(secretPoll);
-      setType(type);
-      setWarning(warning);
+      setOptList(optList || []);
+      setError(error || null);
+      setQuestion(question || '');
+      setQuestionAndOptions(questionAndOptions || '');
+      setSecretPoll(!!secretPoll);
+      setType(type || '');
+      setWarning(warning || null);
       setIsQuiz(isQuiz);
       setCorrectAnswer({
-        text: correctAnswer.text,
+        text: correctAnswer.text || '',
         index: correctAnswer.index === -1
-          ? optList.findIndex((o) => o.val === correctAnswer.text)
+          ? (optList || []).findIndex((o) => o.val === correctAnswer.text)
           : correctAnswer.index,
       });
     }
@@ -493,7 +497,7 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
       val: validatedVal,
     };
 
-    if (questionAndOptions.length > 0) {
+    if ((questionAndOptions || '').length > 0) {
       const QnO = questionAndOptions as string;
       questionAndOptionsList = QnO.split('\n');
       questionAndOptionsList[index + 1] = validatedVal;
@@ -756,53 +760,59 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
           isQuiz={isQuiz}
           correctAnswer={correctAnswer}
           setCorrectAnswer={setCorrectAnswer}
+          onStartPoll={onRequestClose}
         />
       </>
     );
   };
 
+  const closeSidebarPoll = () => {
+    layoutContextDispatch({
+      type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
+      value: false,
+    });
+    layoutContextDispatch({
+      type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL,
+      value: PANELS.NONE,
+    });
+  };
+
   return (
     <div>
-      <Header
-        data-test="pollPaneTitle"
-        bottomless
-        leftButtonProps={{
-          'aria-label': intl.formatMessage(intlMessages.hidePollDesc),
-          'data-test': 'hidePollDesc',
-          label: intl.formatMessage(intlMessages.pollPaneTitle),
-          onClick: () => {
-            layoutContextDispatch({
-              type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
-              value: false,
-            });
-            layoutContextDispatch({
-              type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL,
-              value: PANELS.NONE,
-            });
-          },
-        }}
-        rightButtonProps={{
-          'aria-label': `${intl.formatMessage(intlMessages.closeLabel)} ${intl.formatMessage(intlMessages.pollPaneTitle)}`,
-          'data-test': 'closePolling',
-          icon: 'close',
-          label: intl.formatMessage(intlMessages.closeLabel),
-          onClick: () => {
-            if (hasPoll) stopPoll();
-            layoutContextDispatch({
-              type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
-              value: false,
-            });
-            layoutContextDispatch({
-              type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL,
-              value: PANELS.NONE,
-            });
-            Session.setItem('forcePollOpen', false);
-            Session.setItem('pollInitiated', false);
-          },
-        }}
-        customRightButton={null}
-      />
-      {pollOptions()}
+      {!isEmbeddedInModal && (
+        <Header
+          data-test="pollPaneTitle"
+          bottomless
+          leftButtonProps={{
+            'aria-label': intl.formatMessage(intlMessages.hidePollDesc),
+            'data-test': 'hidePollDesc',
+            label: intl.formatMessage(intlMessages.pollPaneTitle),
+            onClick: () => {
+              closeSidebarPoll();
+              onRequestClose?.();
+            },
+          }}
+          rightButtonProps={{
+            'aria-label': `${intl.formatMessage(intlMessages.closeLabel)} ${intl.formatMessage(intlMessages.pollPaneTitle)}`,
+            'data-test': 'closePolling',
+            icon: 'close',
+            label: intl.formatMessage(intlMessages.closeLabel),
+            onClick: () => {
+              if (hasPoll) stopPoll();
+              closeSidebarPoll();
+              Session.setItem('forcePollOpen', false);
+              Session.setItem('pollInitiated', false);
+              onRequestClose?.();
+            },
+          }}
+          customRightButton={null}
+        />
+      )}
+      {
+        isEmbeddedInModal
+          ? <Styled.EmbeddedPollContent>{pollOptions()}</Styled.EmbeddedPollContent>
+          : pollOptions()
+      }
       <span className="sr-only" id="poll-config-button">{intl.formatMessage(intlMessages.showRespDesc)}</span>
       <span className="sr-only" id="add-item-button">{intl.formatMessage(intlMessages.addRespDesc)}</span>
       <span className="sr-only" id="start-poll-button">{intl.formatMessage(intlMessages.startPollDesc)}</span>
@@ -810,7 +820,15 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
   );
 };
 
-const PollCreationPanelContainer: React.FC = () => {
+type PollCreationPanelContainerProps = {
+  isEmbeddedInModal?: boolean;
+  onRequestClose?: () => void;
+};
+
+const PollCreationPanelContainer: React.FC<PollCreationPanelContainerProps> = ({
+  isEmbeddedInModal = false,
+  onRequestClose,
+}) => {
   const sidebarContent = layoutSelectInput((i: Input) => i.sidebarContent);
   const layoutContextDispatch = layoutDispatch();
   const { sidebarContentPanel } = sidebarContent;
@@ -835,7 +853,12 @@ const PollCreationPanelContainer: React.FC = () => {
   if (currentUserLoading || !currentUser) return null;
   if (currentMeetingLoading || !currentMeeting) return null;
 
-  if (!currentUser.presenter && sidebarContentPanel === PANELS.POLL) {
+  if (isEmbeddedInModal && !currentUser.presenter) {
+    onRequestClose?.();
+    return null;
+  }
+
+  if (!isEmbeddedInModal && !currentUser.presenter && sidebarContentPanel === PANELS.POLL) {
     layoutContextDispatch({
       type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
       value: false,
@@ -850,6 +873,8 @@ const PollCreationPanelContainer: React.FC = () => {
     <PollCreationPanel
       layoutContextDispatch={layoutContextDispatch}
       hasPoll={currentMeeting?.componentsFlags?.hasPoll ?? false}
+      isEmbeddedInModal={isEmbeddedInModal}
+      onRequestClose={onRequestClose}
     />
   );
 };

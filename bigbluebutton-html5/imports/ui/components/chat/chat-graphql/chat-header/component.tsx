@@ -14,6 +14,7 @@ import { Input, Layout } from '../../../layout/layoutTypes';
 import { ACTIONS, PANELS } from '../../../layout/enums';
 import ChatActions from './chat-actions/component';
 import { ChatHeader as Header } from '../chat-message-list/page/chat-message/styles';
+import SkyroomPublicChatHeader from '/imports/ui/components/skyroom-layout/public-chat-header/component';
 
 interface ChatHeaderProps {
   chatId: string;
@@ -47,7 +48,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   const HIDE_CHAT_AK = useShortcut('hideprivatechat');
   const CLOSE_CHAT_AK = useShortcut('closeprivatechat');
   const layoutContextDispatch = layoutDispatch();
-  const sidebarNavigation = layoutSelectInput((i: Input) => i.sidebarNavigation);
   const sidebarContent = layoutSelectInput((i: Input) => i.sidebarContent);
   const intl = useIntl();
   const [updateVisible] = useMutation(CLOSE_PRIVATE_CHAT_MUTATION);
@@ -65,7 +65,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             if (isPublicChat) {
               toggleSkyroomPublicChat(
                 layoutContextDispatch,
-                sidebarNavigation,
                 sidebarContent,
               );
             } else {
@@ -156,6 +155,16 @@ const ChatHeaderContainer: React.FC = () => {
   const isPublicChat = chatData.chat[0]?.public;
   const title = isPublicChat ? intl.formatMessage(intlMessages.titlePublic)
     : intl.formatMessage(intlMessages.titlePrivate, { participantName: chatData?.chat[0]?.participant?.name });
+
+  if (isSkyroomColumnLayout() && isPublicChat) {
+    return (
+      <>
+        <h2 className="sr-only">{title}</h2>
+        <SkyroomPublicChatHeader title={title} />
+      </>
+    );
+  }
+
   return (
     <>
       <h2 className="sr-only">{title}</h2>

@@ -49,7 +49,7 @@ export const restoreSkyroomSplitLayout = (layoutContextDispatch) => {
   openSkyroomPublicChat(layoutContextDispatch);
 };
 
-export const toggleSkyroomUserList = (layoutContextDispatch, sidebarNavigation, sidebarContent) => {
+export const toggleSkyroomUserList = (layoutContextDispatch, sidebarNavigation) => {
   if (sidebarNavigation.isOpen) {
     layoutContextDispatch({
       type: ACTIONS.SET_SIDEBAR_NAVIGATION_IS_OPEN,
@@ -59,10 +59,6 @@ export const toggleSkyroomUserList = (layoutContextDispatch, sidebarNavigation, 
       type: ACTIONS.SET_SIDEBAR_NAVIGATION_PANEL,
       value: PANELS.NONE,
     });
-
-    if (!isPublicChatOpen(sidebarContent)) {
-      openSkyroomPublicChat(layoutContextDispatch);
-    }
     return;
   }
 
@@ -76,11 +72,7 @@ export const toggleSkyroomUserList = (layoutContextDispatch, sidebarNavigation, 
   });
 };
 
-export const toggleSkyroomPublicChat = (
-  layoutContextDispatch,
-  sidebarNavigation,
-  sidebarContent,
-) => {
+export const toggleSkyroomPublicChat = (layoutContextDispatch, sidebarContent) => {
   if (isPublicChatOpen(sidebarContent)) {
     layoutContextDispatch({
       type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,

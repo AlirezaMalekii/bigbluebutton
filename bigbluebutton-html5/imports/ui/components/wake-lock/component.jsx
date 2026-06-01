@@ -20,7 +20,7 @@ const intlMessages = defineMessages({
   },
   wakeLockDisclaimer: {
     id: 'app.toast.wakeLock.disclaimer',
-  }
+  },
 });
 
 const propTypes = {
@@ -32,10 +32,6 @@ const propTypes = {
 };
 
 class WakeLock extends Component {
-  constructor() {
-    super();
-  }
-
   componentDidMount() {
     const { wakeLockSettings } = this.props;
 
@@ -55,6 +51,7 @@ class WakeLock extends Component {
     }
   }
 
+  // eslint-disable-next-line class-methods-use-this
   getToast(id, message) {
     return (
       <div id={id}>
@@ -67,7 +64,7 @@ class WakeLock extends Component {
 
   feedbackToast(result) {
     const { intl } = this.props;
-    
+
     const feedbackToastProps = {
       closeOnClick: true,
       autoClose: true,
@@ -77,14 +74,14 @@ class WakeLock extends Component {
     const toastType = result.error ? 'error' : 'success';
     const message = result.error
       ? intl.formatMessage(intlMessages.wakeLockDisclaimer, {
-          error: intl.formatMessage(intlMessages[result.locale])
-        })
-    : intl.formatMessage(intlMessages.wakeLockAcquireSuccess);
+        error: intl.formatMessage(intlMessages[result.locale]),
+      })
+      : intl.formatMessage(intlMessages.wakeLockAcquireSuccess);
     const feedbackToast = this.getToast('wakeLockToast', message);
     notify(feedbackToast, toastType, 'lock', feedbackToastProps, null, true);
   }
 
-  requestWakeLock () {
+  requestWakeLock() {
     const Settings = getSettingsSingletonInstance();
     const { request, setLocalSettings } = this.props;
     request().then((result) => {

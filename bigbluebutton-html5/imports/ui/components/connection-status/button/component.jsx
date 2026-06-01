@@ -37,7 +37,6 @@ class ConnectionStatusButton extends PureComponent {
       connected,
     } = this.props;
 
-
     const ConnectionStatusModal = (
       <ModalRegistration id="connectionStatusModal" priority="low">
         {({
@@ -46,7 +45,7 @@ class ConnectionStatusButton extends PureComponent {
           this.setModalIsOpen = (value) => {
             if (value) open();
             else close();
-          }
+          };
           if (!isOpen) return null;
           return (
             <ConnectionStatusModalComponent

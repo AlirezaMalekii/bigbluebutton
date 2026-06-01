@@ -65,6 +65,7 @@ interface StartPollButtonProps {
     text: string;
     index: number;
   };
+  onStartPoll?: () => void;
 }
 
 const StartPollButton: React.FC<StartPollButtonProps> = ({
@@ -77,6 +78,7 @@ const StartPollButton: React.FC<StartPollButtonProps> = ({
   multipleResponse,
   isQuiz = false,
   correctAnswer = { text: '', index: -1 },
+  onStartPoll,
 }) => {
   const CHAT_CONFIG = window.meetingClientSettings.public.chat;
   const PUBLIC_CHAT_KEY = CHAT_CONFIG.public_id;
@@ -86,6 +88,7 @@ const StartPollButton: React.FC<StartPollButtonProps> = ({
   const intl = useIntl();
 
   const [createPoll] = useMutation(POLL_CREATE);
+  const normalizedQuestion = question || '';
 
   const startPoll = (
     pollType: string | null,
@@ -135,7 +138,7 @@ const StartPollButton: React.FC<StartPollButtonProps> = ({
         if (hasNotMinOptions) {
           err = intl.formatMessage(intlMessages.optionErr);
         }
-        if (type === pollTypes.Response && question.length === 0) {
+        if (type === pollTypes.Response && normalizedQuestion.length === 0) {
           err = intl.formatMessage(intlMessages.questionErr);
         }
         if (!hasVal && type !== pollTypes.Response) {
@@ -163,21 +166,23 @@ const StartPollButton: React.FC<StartPollButtonProps> = ({
             startPoll(
               verifiedPollType,
               secretPoll,
-              question,
+              normalizedQuestion,
               multipleResponse,
               isQuiz,
               correctAnswer.text,
               verifiedOptions?.filter(Boolean),
             );
+            if (onStartPoll) onStartPoll();
           } else {
             startPoll(
               verifiedPollType,
               secretPoll,
-              question,
+              normalizedQuestion,
               multipleResponse,
               isQuiz,
               correctAnswer.text,
             );
+            if (onStartPoll) onStartPoll();
           }
         }
       }}

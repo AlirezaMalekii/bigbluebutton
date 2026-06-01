@@ -26,6 +26,7 @@ const propTypes = {
   shouldShowCloseButton: PropTypes.bool,
   overlayClassName: PropTypes.string,
   modalIsOpen: PropTypes.bool,
+  onOutsideClick: PropTypes.func,
 };
 
 const defaultProps = {
@@ -38,6 +39,7 @@ const defaultProps = {
   overlayClassName: 'modalOverlay',
   headerPosition: 'inner',
   modalIsOpen: false,
+  onOutsideClick: null,
 };
 
 class ModalSimple extends Component {
@@ -79,10 +81,20 @@ class ModalSimple extends Component {
   }
 
   handleOutsideClick(e) {
-    const { modalIsOpen } = this.props;
-    if (this.modalRef.current && e.target?.contains(this.modalRef.current) && modalIsOpen) {
+    const {
+      modalIsOpen,
+      shouldCloseOnOverlayClick,
+      onOutsideClick,
+    } = this.props;
+    const clickedOutside = this.modalRef.current && e.target?.contains(this.modalRef.current);
+    if (!clickedOutside || !modalIsOpen) return;
+
+    if (shouldCloseOnOverlayClick) {
       this.handleRequestClose(e);
+      return;
     }
+
+    if (onOutsideClick) onOutsideClick(e);
   }
 
   render() {

@@ -359,6 +359,7 @@ class App extends Component {
         <GlobalStyles />
         <Styled.Layout
           id="layout"
+          data-skyroom-column="true"
           style={{
             width: '100%',
             height: '100%',

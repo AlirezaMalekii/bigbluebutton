@@ -10,7 +10,12 @@ const BannerContainer = (props) => {
   const color = useStorageKey('bannerColor') || '#0F70D7';
   const text = useStorageKey('bannerText') || '';
 
-  return <BannerComponent {...{ hasBanner, layoutContextDispatch, color, text, ...props }} />;
+  return (
+    <BannerComponent {...{
+      hasBanner, layoutContextDispatch, color, text, ...props,
+    }}
+    />
+  );
 };
 
 export default BannerContainer;

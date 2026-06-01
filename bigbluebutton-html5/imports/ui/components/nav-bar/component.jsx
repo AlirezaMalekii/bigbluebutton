@@ -249,7 +249,7 @@ class NavBar extends Component {
     } = this.props;
 
     if (isSkyroomColumnLayout()) {
-      toggleSkyroomUserList(layoutContextDispatch, sidebarNavigation, sidebarContent);
+      toggleSkyroomUserList(layoutContextDispatch, sidebarNavigation);
       window.dispatchEvent(new Event('resize'));
       return;
     }
@@ -292,13 +292,12 @@ class NavBar extends Component {
 
   handleTogglePublicChat() {
     const {
-      sidebarNavigation,
       sidebarContent,
       layoutContextDispatch,
     } = this.props;
 
     if (isSkyroomColumnLayout()) {
-      toggleSkyroomPublicChat(layoutContextDispatch, sidebarNavigation, sidebarContent);
+      toggleSkyroomPublicChat(layoutContextDispatch, sidebarContent);
       window.dispatchEvent(new Event('resize'));
     }
   }

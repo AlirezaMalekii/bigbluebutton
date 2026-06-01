@@ -65,10 +65,6 @@ class LeaveMeetingButton extends PureComponent {
   constructor(props) {
     super(props);
 
-    this.state = {
-      isEndMeetingConfirmationModalOpen: false,
-    };
-
     // Set the logout code to 680 because it's not a real code and can be matched on the other side
     this.LOGOUT_CODE = '680';
 
@@ -160,8 +156,6 @@ class LeaveMeetingButton extends PureComponent {
       connected,
     } = this.props;
 
-    const { isEndMeetingConfirmationModalOpen } = this.state;
-
     const customStyles = { top: '1rem' };
 
     const actions = this.renderMenuItems();
@@ -179,37 +173,37 @@ class LeaveMeetingButton extends PureComponent {
             customStyles={!ismobile ? customStyles : null}
             trigger={(
               <Styled.LeaveButton
-              state={isDropdownOpen ? 'open' : 'closed'}
-              ismobile={ismobile.toString()}
-              accessKey={openLeaveMenu}
-              aria-label={intl.formatMessage(intlMessages.leaveMeetingBtnLabel)}
-              label={intl.formatMessage(intlMessages.leaveMeetingBtnLabel)}
-              tooltipLabel={intl.formatMessage(intlMessages.leaveMeetingBtnLabel)}
-              description={intl.formatMessage(intlMessages.leaveMeetingBtnDesc)}
-              data-test="leaveMeetingDropdown"
-              icon="logout"
-              color="danger"
-              size="lg"
-              hideLabel
-              disabled={isDisabled}
+                state={isDropdownOpen ? 'open' : 'closed'}
+                ismobile={ismobile.toString()}
+                accessKey={openLeaveMenu}
+                aria-label={intl.formatMessage(intlMessages.leaveMeetingBtnLabel)}
+                label={intl.formatMessage(intlMessages.leaveMeetingBtnLabel)}
+                tooltipLabel={intl.formatMessage(intlMessages.leaveMeetingBtnLabel)}
+                description={intl.formatMessage(intlMessages.leaveMeetingBtnDesc)}
+                data-test="leaveMeetingDropdown"
+                icon="logout"
+                color="danger"
+                size="lg"
+                hideLabel
+                disabled={isDisabled}
               // FIXME: Without onClick react proptypes keep warning
               // even after the DropdownTrigger inject an onClick handler
-              onClick={() => null}
-            />
+                onClick={() => null}
+              />
           )}
-          actions={actions}
-          disabled={isDisabled}
-          opts={{
-            id: 'app-leave-meeting-menu',
-            keepMounted: true,
-            transitionDuration: 0,
-            elevation: 3,
-            getcontentanchorel: null,
-            fullwidth: 'true',
-            anchorOrigin: { vertical: 'bottom', horizontal: isRTL ? 'left' : 'right' },
-            transformorigin: { vertical: 'top', horizontal: isRTL ? 'left' : 'right' },
-          }}
-        />
+            actions={actions}
+            disabled={isDisabled}
+            opts={{
+              id: 'app-leave-meeting-menu',
+              keepMounted: true,
+              transitionDuration: 0,
+              elevation: 3,
+              getcontentanchorel: null,
+              fullwidth: 'true',
+              anchorOrigin: { vertical: 'bottom', horizontal: isRTL ? 'left' : 'right' },
+              transformorigin: { vertical: 'top', horizontal: isRTL ? 'left' : 'right' },
+            }}
+          />
         </Styled.LeaveMeetingWrapper>
         <ModalRegistration id="leaveMeetingMenuModal" priority="low">
           {({

@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import React, { memo } from 'react';
 import PropTypes from 'prop-types';
 import { defineMessages, injectIntl } from 'react-intl';
 import deviceInfo from '/imports/utils/deviceInfo';
@@ -95,7 +95,7 @@ const intlMessages = defineMessages({
   toastHelpLabel: {
     id: 'app.screenshare.screenshareToastHelpLabel',
     description: 'Label of the help button in toast notifications that opens external link',
-  }
+  },
 });
 
 const getErrorLocale = (errorCode) => {
@@ -149,7 +149,10 @@ const ScreenshareButton = ({
   isConnected,
   screenshareDataSavingSetting,
 }) => {
-  const TROUBLESHOOTING_URLS = window.meetingClientSettings.public.media.screenshareTroubleshootingLinks;
+  const TROUBLESHOOTING_URLS = window.meetingClientSettings
+    .public
+    .media
+    .screenshareTroubleshootingLinks;
   const [stopExternalVideoShare] = useMutation(EXTERNAL_VIDEO_STOP);
   const isCameraAsContentBroadcasting = useIsCameraAsContentBroadcasting();
 
@@ -181,7 +184,7 @@ const ScreenshareButton = ({
     } = error;
 
     const localizedError = getErrorLocale(errorCode);
-    const helpInfo =  getHelpInfoForError(errorCode);
+    const helpInfo = getHelpInfoForError(errorCode);
     const toastType = getToastType(errorCode);
 
     if (localizedError) {
@@ -236,7 +239,11 @@ const ScreenshareButton = ({
           ? (
             <Styled.Container>
               <Button
-                disabled={(!isConnected && !isScreenBroadcasting) || !screenshareDataSavingSetting || !amIPresenter}
+                disabled={
+                  (!isConnected && !isScreenBroadcasting)
+                  || !screenshareDataSavingSetting
+                  || !amIPresenter
+                }
                 icon={amIBroadcasting ? 'desktop' : 'desktop_off'}
                 data-test={dataTest}
                 label={intl.formatMessage(intlMessages[`${info}Label`])}
