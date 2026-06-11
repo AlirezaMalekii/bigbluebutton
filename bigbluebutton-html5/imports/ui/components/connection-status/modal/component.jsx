@@ -10,6 +10,8 @@ import ConnectionStatusHelper from '../status-helper/component';
 import Auth from '/imports/ui/services/auth';
 import connectionStatus from '../../../core/graphql/singletons/connectionStatus';
 import logger from '/imports/startup/client/logger';
+import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import SkyroomConnectionStatusModal from '/imports/ui/components/skyroom-layout/connection-status-modal/SkyroomConnectionStatusModal';
 
 const MIN_TIMEOUT = 3000;
 
@@ -507,6 +509,32 @@ class ConnectionStatusComponent extends PureComponent {
     );
   }
 
+  renderSkyroomModal() {
+    const {
+      setModalIsOpen,
+      intl,
+      amIModerator,
+      connectionData,
+      networkData,
+    } = this.props;
+
+    const { selectedTab, copyButtonText } = this.state;
+
+    return (
+      <SkyroomConnectionStatusModal
+        intl={intl}
+        selectedTab={selectedTab}
+        onSelectTab={this.handleSelectTab}
+        amIModerator={amIModerator}
+        connectionData={connectionData}
+        networkData={networkData}
+        copyButtonText={copyButtonText}
+        onCopyNetworkData={() => this.copyNetworkData()}
+        setModalIsOpen={setModalIsOpen}
+      />
+    );
+  }
+
   render() {
     const {
       setModalIsOpen,
@@ -516,6 +544,23 @@ class ConnectionStatusComponent extends PureComponent {
     } = this.props;
 
     const { selectedTab } = this.state;
+
+    if (isSkyroomTheme()) {
+      return (
+        <Styled.ConnectionStatusModal
+          priority="low"
+          onRequestClose={() => setModalIsOpen(false)}
+          setIsOpen={setModalIsOpen}
+          hideBorder
+          isOpen={isModalOpen}
+          contentLabel={intl.formatMessage(intlMessages.ariaTitle)}
+          data-test="connectionStatusModal"
+          className="skyroom-conn-status-modal"
+        >
+          {this.renderSkyroomModal()}
+        </Styled.ConnectionStatusModal>
+      );
+    }
 
     return (
       <Styled.ConnectionStatusModal

@@ -171,9 +171,9 @@ const CopyContainer = styled.div`
 
 const ConnectionStatusModal = styled(ModalSimple)`
   padding: 0;
-  width: min(680px, 94vw);
-  max-width: 680px;
-  max-height: min(86vh, 560px);
+  width: min(760px, 96vw);
+  max-width: 760px;
+  max-height: min(90vh, 640px);
   overflow: hidden;
 `;
 

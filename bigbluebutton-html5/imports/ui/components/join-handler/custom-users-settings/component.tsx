@@ -5,6 +5,8 @@ import BBBWeb from '/imports/api/bbb-web-api';
 import Session from '/imports/ui/services/storage/in-memory';
 import { ErrorScreen } from '/imports/ui/components/error-screen/component';
 import LoadingScreen from '/imports/ui/components/common/loading-screen/component';
+import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import useSkyroomLoadingSource from '/imports/ui/components/skyroom-layout/loading/useSkyroomLoadingSource';
 
 const CONNECTION_TIMEOUT = 60000;
 
@@ -24,8 +26,11 @@ const CustomUsersSettings: React.FC<CustomUsersSettingsProps> = ({
 }) => {
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const [fetched, setFetched] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const skyroomTheme = isSkyroomTheme();
+
+  useSkyroomLoadingSource('userSettings', skyroomTheme && loading);
 
   useEffect(() => {
     setLoading(true);
@@ -104,7 +109,7 @@ const CustomUsersSettings: React.FC<CustomUsersSettingsProps> = ({
           endedReason={error}
         />
       ) : null}
-      {loading ? (
+      {loading && !skyroomTheme ? (
         <LoadingScreen />
       ) : null}
     </>

@@ -170,6 +170,7 @@
   --color-gray-lighter: #243355;
   --color-gray-light: #6B7689;
   --pll-stats-border-color: #1A2742;
+  --color-blue-lightest: rgba(20, 169, 158, 0.22);
 
   /* Overlay / modal */
   --color-overlay: rgba(3, 6, 12, 0.78);
@@ -202,6 +203,9 @@
 
   /* Loader / splash */
   --loader-bg: #070B14;
+  --loader-bullet: #20c7bb;
+  --loader-ring: rgba(32, 199, 187, 0.18);
+  --loader-ring-active: rgba(32, 199, 187, 0.85);
 }
 
 
@@ -324,7 +328,7 @@ header[role="banner"]::after,
 
 #layout:not([data-skyroom-column="true"]) [data-test="chatMessageItem"]:hover {
   background-color: rgba(16, 30, 44, 0.86);
-  border-color: rgba(80, 220, 220, 0.16);
+  border-color: var(--skyroom-accent-soft, rgba(32, 199, 187, 0.16));
 }
 
 /* Own-message bubble — slight brand tint */
@@ -332,7 +336,7 @@ header[role="banner"]::after,
 #layout:not([data-skyroom-column="true"]) [data-test="chatMessageItem"].own,
 #layout:not([data-skyroom-column="true"]) [data-test="chatMessageItem"][data-own-message="true"] {
   background-image: none;
-  border: 1px solid rgba(80, 220, 220, 0.2);
+  border: 1px solid var(--skyroom-accent-soft, rgba(32, 199, 187, 0.20));
 }
 
 #layout:not([data-skyroom-column="true"]) [data-test="chatMessageItem"] [class*="ChatAvatar"] {

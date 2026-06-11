@@ -19,10 +19,10 @@ const PresentationUploaderToastContainer = (props) => {
   // Force show toast in first render, since default.pdf is completely uploaded at this point
   const [forceShowToast, setForceShowToast] = useState(true);
   const [setPresentationUploadCompletionNotified] = useMutation(SET_PRESENTATION_RENDERED_IN_TOAST);
-  const presentations = presentationData?.pres_presentation || [];
+  const presentations = (presentationData?.pres_presentation || []).filter(Boolean);
 
   const presentationsToBeShowed = presentations.filter(
-    (p) => (!p.uploadCompletionNotified),
+    (p) => p && !p.uploadCompletionNotified,
   );
 
   if (presentationLoading) return null;

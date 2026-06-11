@@ -1,9 +1,24 @@
 import { ACTIONS, PANELS } from '/imports/ui/components/layout/enums';
 import { SKYROOM_COLUMN_ATTR } from './column-layout';
+import {
+  clearSkyroomNotesLocalDismiss,
+  dismissSkyroomNotesLocally,
+  getSkyroomNotesGlobalOpen,
+  getSkyroomNotesLocallyDismissed,
+  getSkyroomNotesOpen,
+  setSkyroomNotesGlobalOpen,
+} from './notes-panel-state';
+import { broadcastSkyroomNotesGlobalOpen } from './notes-panel-sync/useSkyroomNotesPanelSync';
 
 export const isSkyroomColumnLayout = () => {
   const layoutEl = document.getElementById('layout');
   return Boolean(layoutEl?.hasAttribute(SKYROOM_COLUMN_ATTR));
+};
+
+/** True during bootstrap before #layout mounts (see main.html data-skyroom). */
+export const isSkyroomTheme = () => {
+  if (isSkyroomColumnLayout()) return true;
+  return document.documentElement.getAttribute('data-skyroom') === 'true';
 };
 
 export const getPublicChatId = () => window.meetingClientSettings.public.chat.public_group_id;
@@ -70,6 +85,36 @@ export const toggleSkyroomUserList = (layoutContextDispatch, sidebarNavigation) 
     type: ACTIONS.SET_SIDEBAR_NAVIGATION_PANEL,
     value: PANELS.USERLIST,
   });
+};
+
+export const isSkyroomNotesOpen = () => getSkyroomNotesOpen();
+
+/** Moderator nav-bar toggle: opens/closes shared notes for every participant. */
+export const toggleSkyroomSharedNotesGlobally = () => {
+  if (getSkyroomNotesLocallyDismissed()) {
+    clearSkyroomNotesLocalDismiss();
+    return;
+  }
+
+  const next = !getSkyroomNotesGlobalOpen();
+  setSkyroomNotesGlobalOpen(next, { clearDismiss: true });
+  broadcastSkyroomNotesGlobalOpen(next);
+};
+
+/** Per-user close/reopen when the panel is globally shared. */
+export const toggleSkyroomSharedNotesLocally = () => {
+  if (getSkyroomNotesLocallyDismissed()) {
+    clearSkyroomNotesLocalDismiss();
+    return;
+  }
+  if (getSkyroomNotesGlobalOpen()) {
+    dismissSkyroomNotesLocally();
+  }
+};
+
+/** Panel header close button — hides notes only for the current user. */
+export const dismissSkyroomSharedNotes = () => {
+  dismissSkyroomNotesLocally();
 };
 
 export const toggleSkyroomPublicChat = (layoutContextDispatch, sidebarContent) => {

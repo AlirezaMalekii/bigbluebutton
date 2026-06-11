@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 
+import { PanelOptionsButton } from '/imports/ui/components/skyroom-layout/panel-chrome/styles';
 import {
   smPaddingY,
   borderSize,
@@ -64,6 +65,22 @@ const UserRowMain = styled.div`
   overflow: visible;
 `;
 
+const ActionMenuWrap = styled.div`
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  margin-inline-start: 4px;
+`;
+
+const SkyroomActionsTrigger = styled(PanelOptionsButton)`
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  border-radius: 8px !important;
+  flex-shrink: 0;
+`;
+
 const ActionIconBar = styled.div`
   display: flex;
   flex-direction: row;
@@ -107,6 +124,8 @@ export default {
   NoPointerEvents,
   UserRow,
   UserRowMain,
+  ActionMenuWrap,
+  SkyroomActionsTrigger,
   ActionIconBar,
   ActionIconButton,
 };

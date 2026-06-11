@@ -1,5 +1,10 @@
 import React, { useRef } from 'react';
 import { CircularProgress } from '@mui/material';
+import SkyroomSpinner from '/imports/ui/components/skyroom-layout/loading/SkyroomSpinner';
+import {
+  isSkyroomTheme,
+  isSkyroomColumnLayout,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 import ChatHeader from './chat-header/component';
 import { layoutSelect, layoutSelectInput } from '../../layout/context';
 import { Input, Layout } from '../../layout/layoutTypes';
@@ -9,7 +14,6 @@ import ChatMessageFormContainer from './chat-message-form/component';
 import ChatTypingIndicatorContainer from './chat-typing-indicator/component';
 import { SkyroomChatMessageFilterProvider } from '/imports/ui/components/skyroom-layout/chat-message-filter/context';
 import SkyroomChatUserSearch from '/imports/ui/components/skyroom-layout/chat-user-search/component';
-import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import { PANELS, ACTIONS } from '/imports/ui/components/layout/enums';
 import usePendingChat from '/imports/ui/core/local-states/usePendingChat';
 import useChat from '/imports/ui/core/hooks/useChat';
@@ -97,7 +101,9 @@ export const ChatLoading: React.FC<ChatProps> = ({ isRTL }) => {
   const { isChrome } = browserInfo;
   return (
     <Styled.Chat isRTL={isRTL} isChrome={isChrome} data-test="publicChatPanel">
-      <CircularProgress style={{ alignSelf: 'center' }} />
+      {isSkyroomTheme()
+        ? <SkyroomSpinner size="md" data-test="chatLoading" />
+        : <CircularProgress style={{ alignSelf: 'center' }} />}
     </Styled.Chat>
   );
 };

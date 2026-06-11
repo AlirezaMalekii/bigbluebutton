@@ -16,8 +16,10 @@ import { screenshareHasEnded } from '/imports/ui/components/screenshare/service'
 import Session from '/imports/ui/services/storage/in-memory';
 import { notify } from '/imports/ui/services/notification';
 import { ModalRegistration } from '/imports/ui/core/singletons/modalController';
+import { SKYROOM_OPEN_POLL_RESULTS_EVENT } from '/imports/ui/components/skyroom-layout/active-poll-summary/openPollResultsModal';
 
 const propTypes = {
+  hasActivePoll: PropTypes.bool,
   amIPresenter: PropTypes.bool,
   intl: PropTypes.shape({
     formatMessage: PropTypes.func.isRequired,
@@ -43,6 +45,7 @@ const propTypes = {
 };
 
 const defaultProps = {
+  hasActivePoll: false,
   shortcuts: '',
   isPresentationManagementDisabled: false,
   amIPresenter: false,
@@ -86,6 +89,14 @@ const intlMessages = defineMessages({
   pollQuizBtnLabel: {
     id: 'app.actionsBar.actionsDropdown.pollQuizBtnLabel',
     description: 'poll/quiz menu toggle button label',
+  },
+  viewPollResultsLabel: {
+    id: 'app.actionsBar.actionsDropdown.viewPollResultsLabel',
+    description: 'label when a poll is active — opens live results',
+  },
+  viewQuizResultsLabel: {
+    id: 'app.actionsBar.actionsDropdown.viewQuizResultsLabel',
+    description: 'label when a quiz is active — opens live results',
   },
   pollBtnDesc: {
     id: 'app.actionsBar.actionsDropdown.pollBtnDesc',
@@ -150,6 +161,11 @@ class ActionsDropdown extends PureComponent {
     this.handleTimerClick = this.handleTimerClick.bind(this);
     this.handlePollActionClick = this.handlePollActionClick.bind(this);
     this.handlePollModalOutsideClick = this.handlePollModalOutsideClick.bind(this);
+    this.handleSkyroomOpenPollResults = this.handleSkyroomOpenPollResults.bind(this);
+  }
+
+  componentDidMount() {
+    window.addEventListener(SKYROOM_OPEN_POLL_RESULTS_EVENT, this.handleSkyroomOpenPollResults);
   }
 
   componentDidUpdate(prevProps) {
@@ -158,6 +174,16 @@ class ActionsDropdown extends PureComponent {
     if (wasPresenter && !isPresenter) {
       this.setExternalVideoModalIsOpen(false);
     }
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener(SKYROOM_OPEN_POLL_RESULTS_EVENT, this.handleSkyroomOpenPollResults);
+  }
+
+  handleSkyroomOpenPollResults() {
+    Session.setItem('forcePollOpen', true);
+    Session.setItem('pollInitiated', true);
+    this.setPollModalIsOpen(true);
   }
 
   handleExternalVideoClick() {
@@ -174,10 +200,11 @@ class ActionsDropdown extends PureComponent {
   }
 
   handlePollActionClick() {
-    if (Session.equals('pollInitiated', true)) {
-      Session.setItem('resetPollPanel', true);
-    }
+    const { hasActivePoll } = this.props;
     Session.setItem('forcePollOpen', true);
+    if (hasActivePoll) {
+      Session.setItem('pollInitiated', true);
+    }
     this.setPollModalIsOpen(true);
   }
 
@@ -207,6 +234,7 @@ class ActionsDropdown extends PureComponent {
       isPresentationManagementDisabled,
       isQuizEnabled,
       isBreakout,
+      hasActivePoll,
     } = this.props;
 
     const {
@@ -214,6 +242,8 @@ class ActionsDropdown extends PureComponent {
       presentationLabel,
       takePresenter,
       pollQuizBtnLabel,
+      viewPollResultsLabel,
+      viewQuizResultsLabel,
     } = intlMessages;
 
     const { formatMessage } = intl;
@@ -237,10 +267,18 @@ class ActionsDropdown extends PureComponent {
     }
 
     if (amIPresenter && isPollingEnabled) {
+      let pollActionLabel = isQuizEnabled
+        ? formatMessage(pollQuizBtnLabel)
+        : formatMessage(pollBtnLabel);
+      if (hasActivePoll) {
+        pollActionLabel = isQuizEnabled
+          ? formatMessage(viewQuizResultsLabel)
+          : formatMessage(viewPollResultsLabel);
+      }
       actions.push({
         icon: 'polling',
-        dataTest: 'polling',
-        label: isQuizEnabled ? formatMessage(pollQuizBtnLabel) : formatMessage(pollBtnLabel),
+        dataTest: hasActivePoll ? 'viewPollResults' : 'polling',
+        label: pollActionLabel,
         key: this.pollId,
         onClick: this.handlePollActionClick,
       });

@@ -156,29 +156,111 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     width: 20px !important;
   }
 
-  .tlui-toolbar__inner {
-    flex-direction: column-reverse !important;
-  }
+  ${({ isSkyroom }) => (isSkyroom ? `
+    .tlui-toolbar__inner {
+      flex-direction: row-reverse !important;
+    }
 
-  .tlui-toolbar__tools {
-    flex-direction: column !important;
-  }
+    .tlui-toolbar__tools {
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 2px !important;
+      padding: 4px 6px !important;
+      border-radius: 14px !important;
+      background: rgba(12, 20, 34, 0.92) !important;
+      border: 1px solid rgba(20, 169, 158, 0.22) !important;
+      backdrop-filter: blur(12px) !important;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+    }
 
-  .tlui-toolbar {
-    align-items: end !important;
-  }
+    .tlui-toolbar {
+      align-items: center !important;
+      justify-content: center !important;
+    }
 
-  .tlui-layout__bottom {
-    grid-row: auto / auto !important;
-    position: absolute !important;
-    right: 10px !important;
-  }
+    #whiteboard-element .tlui-layout {
+      position: relative !important;
+    }
+
+    .tlui-layout__bottom {
+      grid-row: unset !important;
+      grid-column: unset !important;
+      position: absolute !important;
+      top: auto !important;
+      bottom: var(--skyroom-wb-toolbar-gap, 8px) !important;
+      left: 50% !important;
+      right: auto !important;
+      transform: translateX(-50%) !important;
+      z-index: 12 !important;
+      width: max-content !important;
+      height: auto !important;
+      margin: 0 !important;
+    }
+
+    .tlui-button__tool {
+      width: 36px !important;
+      height: 36px !important;
+      border-radius: 10px !important;
+      color: #e8edf4 !important;
+    }
+
+    .tlui-button__tool:hover {
+      background: rgba(32, 199, 187, 0.14) !important;
+    }
+
+    .tl-container {
+      --color-selected: rgba(32, 199, 187, 0.38) !important;
+      --color-selected-contrast: #ffffff !important;
+    }
+
+    .tlui-button__tool[data-state="selected"],
+    .tlui-button__tool[aria-pressed="true"] {
+      color: #fff !important;
+    }
+
+    .tlui-button__tool[data-state="selected"]:not(:disabled)::after,
+    .tlui-button__tool[aria-pressed="true"]:not(:disabled)::after {
+      background: rgba(32, 199, 187, 0.38) !important;
+      opacity: 1 !important;
+    }
+
+    .tlui-popover__content:has(.tlui-style-panel) {
+      left: unset !important;
+    }
+
+    [data-side="top"][role="dialog"]:has(.tlui-style-panel),
+    [data-side="bottom"][role="dialog"]:has(.tlui-style-panel) {
+      left: unset !important;
+      right: unset !important;
+      bottom: unset !important;
+      top: unset !important;
+      transform: none !important;
+    }
+  ` : `
+    .tlui-toolbar__inner {
+      flex-direction: column-reverse !important;
+    }
+
+    .tlui-toolbar__tools {
+      flex-direction: column !important;
+    }
+
+    .tlui-toolbar {
+      align-items: end !important;
+    }
+
+    .tlui-layout__bottom {
+      grid-row: auto / auto !important;
+      position: absolute !important;
+      right: 10px !important;
+    }
+  `)}
 
   .tlui-kbd > span {
     font-family: 'Arial', sans-serif !important;
   }
 
-  [data-side="bottom"][data-align="end"][data-state="open"][role="dialog"] {
+  [data-side="bottom"][data-align="end"][data-state="open"][role="dialog"]:not(:has(.tlui-style-panel)) {
     right: 3.5rem !important;
     bottom: 9.5rem !important;
   }
@@ -191,7 +273,9 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     display: flex;
   }
 
-  ${({ presentationHeight }) => {
+  ${({ presentationHeight, isSkyroom }) => {
+    if (isSkyroom) return '';
+
     const minRange = { height: 345, top: 14 };
     const maxRange = { height: 1200, top: 384 };
 

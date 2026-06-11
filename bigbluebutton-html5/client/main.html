@@ -153,15 +153,27 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
   <link rel="stylesheet" href="stylesheets/skyroom/tokens.css" crossorigin="anonymous"/>
   <link rel="stylesheet" href="stylesheets/skyroom/theme.css" crossorigin="anonymous"/>
   <link rel="stylesheet" href="stylesheets/skyroom/modals.css" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="stylesheets/skyroom/connection-status-modal.css" crossorigin="anonymous"/>
   <link rel="stylesheet" href="stylesheets/skyroom/layout.css" crossorigin="anonymous"/>
   <link rel="stylesheet" href="stylesheets/skyroom/navbar.css" crossorigin="anonymous"/>
   <link rel="stylesheet" href="stylesheets/skyroom/sidebar.css" crossorigin="anonymous"/>
   <link rel="stylesheet" href="stylesheets/skyroom/panel-chrome.css" crossorigin="anonymous"/>
   <link rel="stylesheet" href="stylesheets/skyroom/chat-panel.css" crossorigin="anonymous"/>
   <link rel="stylesheet" href="stylesheets/skyroom/whiteboard-toolbar.css" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="stylesheets/skyroom/loading.css" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="stylesheets/skyroom/actionsbar.css" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="stylesheets/skyroom/meeting-ended.css" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="stylesheets/skyroom/polling.css" crossorigin="anonymous"/>
+  <link rel="stylesheet" href="stylesheets/skyroom/poll-summary.css" crossorigin="anonymous"/>
   <script>
     /* Skyroom: dark-only theme before React paints */
     document.documentElement.setAttribute('data-theme', 'dark');
+    document.documentElement.setAttribute('data-skyroom', 'true');
+    document.documentElement.setAttribute('dir', 'rtl');
+    document.documentElement.setAttribute('lang', 'fa');
+    document.addEventListener('DOMContentLoaded', function () {
+      if (document.body) document.body.classList.add('lang-fa');
+    });
     try { window.localStorage.setItem('skyroom-theme', 'dark'); } catch (e) {}
   </script>
   

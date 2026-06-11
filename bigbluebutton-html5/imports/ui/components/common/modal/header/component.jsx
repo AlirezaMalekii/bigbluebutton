@@ -14,23 +14,19 @@ const propTypes = {
   }),
 };
 
-const defaultProps = {
-  hideBorder: true,
-  headerPosition: 'inner',
-  shouldShowCloseButton: true,
-  modalDismissDescription: '',
-  closeButtonProps: {},
-};
-
 const Header = ({
   children,
-  closeButtonProps,
-  headerPosition,
-  hideBorder,
-  modalDismissDescription,
-  shouldShowCloseButton,
+  closeButtonProps = {},
+  headerPosition = 'inner',
+  hideBorder = true,
+  modalDismissDescription = '',
+  shouldShowCloseButton = true,
   ...other
 }) => {
+  const {
+    onClick: closeButtonOnClick = () => {},
+    ...restCloseButtonProps
+  } = closeButtonProps;
   if (!shouldShowCloseButton && !children) return null;
 
   const headerOnTop = headerPosition === 'top';
@@ -59,7 +55,8 @@ const Header = ({
           aria-describedby="modalDismissDescription"
           $headerOnTop={headerOnTop}
           $innerHeader={innerHeader}
-          {...closeButtonProps}
+          onClick={closeButtonOnClick}
+          {...restCloseButtonProps}
         />
       ) : null}
       <div id="modalDismissDescription" hidden>{modalDismissDescription}</div>
@@ -68,6 +65,5 @@ const Header = ({
 };
 
 Header.propTypes = propTypes;
-Header.defaultProps = defaultProps;
 
 export default Header;

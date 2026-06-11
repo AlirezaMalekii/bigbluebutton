@@ -41,11 +41,14 @@ const intlMessages = defineMessages({
 });
 
 interface NotesContainerGraphqlProps {
-  area: 'media' | undefined;
-  isToSharedNotesBeShow: boolean;
+  area?: 'media';
+  isToSharedNotesBeShow?: boolean;
+  skyroomColumn?: boolean;
 }
 
-interface NotesGraphqlProps extends NotesContainerGraphqlProps {
+interface NotesGraphqlProps extends Required<Pick<NotesContainerGraphqlProps, 'isToSharedNotesBeShow'>> {
+  area: 'media' | undefined;
+  skyroomColumn?: boolean;
   hasPermission: boolean;
   sharedNotesEditor: string;
   padId: string;
@@ -81,6 +84,7 @@ const NotesGraphql: React.FC<NotesGraphqlProps> = (props) => {
     shouldShowSharedNotesOnPresentationArea,
     handlePinSharedNotes,
     isPresentationEnabled,
+    skyroomColumn = false,
   } = props;
   const [shouldRenderNotes, setShouldRenderNotes] = useState(false);
   const intl = useIntl();
@@ -145,7 +149,7 @@ const NotesGraphql: React.FC<NotesGraphqlProps> = (props) => {
       isChrome={isChrome}
       style={style}
     >
-      {!isOnMediaArea ? (
+      {!isOnMediaArea && !skyroomColumn ? (
         // @ts-ignore Until everything in Typescript
         <>
           <h2 className="sr-only">{intl.formatMessage(intlMessages.title)}</h2>
@@ -177,7 +181,8 @@ const NotesGraphql: React.FC<NotesGraphqlProps> = (props) => {
           )}
           />
         </>
-      ) : renderHeaderOnMedia()}
+      ) : null}
+      {isOnMediaArea ? renderHeaderOnMedia() : null}
       { isEtherpadSharedNotes
         ? (
           <PadContainer
@@ -192,7 +197,11 @@ const NotesGraphql: React.FC<NotesGraphqlProps> = (props) => {
 };
 
 const NotesContainerGraphql: React.FC<NotesContainerGraphqlProps> = (props) => {
-  const { area, isToSharedNotesBeShow } = props;
+  const {
+    area,
+    isToSharedNotesBeShow = false,
+    skyroomColumn = false,
+  } = props;
 
   const hasPermission = useHasPermission();
 
@@ -262,6 +271,7 @@ const NotesContainerGraphql: React.FC<NotesContainerGraphqlProps> = (props) => {
       shouldShowSharedNotesOnPresentationArea={shouldShowSharedNotesOnPresentationArea}
       isRTL={isRTL}
       isToSharedNotesBeShow={isToSharedNotesBeShow}
+      skyroomColumn={skyroomColumn}
       handlePinSharedNotes={handlePinSharedNotes}
       isPresentationEnabled={isPresentationEnabled}
     />

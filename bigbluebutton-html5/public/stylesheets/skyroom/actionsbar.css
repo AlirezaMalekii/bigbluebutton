@@ -1,0 +1,308 @@
+/* =====================================================================
+   Skyroom — Actions bar (نوار ابزار پایین)
+   Dark glass treatment matching the navbar aesthetic.
+   Sync height token: tokens.css --skyroom-footer-height
+   ===================================================================== */
+
+/* -----------------------------------------------------------------------
+   Bar container — glass shell identical in feel to the navbar
+   ----------------------------------------------------------------------- */
+#layout[data-skyroom-column="true"] #ActionsBar {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(10, 16, 26, 0.97) 0%,
+      rgba(6, 9, 16, 0.98) 100%
+    ) !important;
+  backdrop-filter: blur(16px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.2) !important;
+  border-top: 1px solid rgba(218, 230, 245, 0.07) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.032),
+    0 -8px 24px rgba(0, 0, 0, 0.20) !important;
+  /* Keep layout-engine absolute positioning (component sets top/left inline) */
+  padding: 10px 0 !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+/* -----------------------------------------------------------------------
+   Centered cluster row — tools · media · session
+   Overrides BBB Left/Center/Right flex (Center defaults to flex:1 spread).
+   ----------------------------------------------------------------------- */
+#layout[data-skyroom-column="true"] #ActionsBar > div {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  padding: 0 16px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Shared cluster shell — items in the same category sit tight together */
+#layout[data-skyroom-column="true"] #ActionsBar > div > div:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar > div > div:nth-child(2),
+#layout[data-skyroom-column="true"] #ActionsBar > div > div:last-child {
+  position: relative !important;
+  display: flex !important;
+  flex: 0 0 auto !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  padding: 3px 9px !important;
+  margin: 0 !important;
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, 0.035) !important;
+  border: 1px solid rgba(218, 230, 245, 0.10) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 2px 8px rgba(0, 0, 0, 0.14) !important;
+}
+
+/* Media cluster — primary controls, slightly emphasized */
+#layout[data-skyroom-column="true"] #ActionsBar > div > div:nth-child(2) {
+  gap: 6px !important;
+  padding: 0 11px !important;
+  border-radius: 16px !important;
+  background:
+    linear-gradient(
+      165deg,
+      rgba(32, 199, 187, 0.10) 0%,
+      rgba(255, 255, 255, 0.04) 100%
+    ) !important;
+  border-color: rgba(32, 199, 187, 0.18) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 3px 12px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* Right cluster inner gap wrapper */
+#layout[data-skyroom-column="true"] #ActionsBar > div > div:last-child > div {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+/* Elegant dividers between category clusters */
+#layout[data-skyroom-column="true"] #ActionsBar > div > div:not(:last-child) {
+  margin-inline-end: 20px !important;
+}
+
+#layout[data-skyroom-column="true"] #ActionsBar > div > div:not(:last-child)::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 50% !important;
+  inset-inline-end: -10px !important;
+  transform: translateY(-50%) !important;
+  width: 1px !important;
+  height: 26px !important;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(218, 230, 245, 0.22) 18%,
+    rgba(32, 199, 187, 0.42) 50%,
+    rgba(218, 230, 245, 0.22) 82%,
+    transparent 100%
+  ) !important;
+  pointer-events: none !important;
+}
+
+/* Audio mic + device chevron — one tight unit inside media cluster */
+#layout[data-skyroom-column="true"] #ActionsBar > div > div:nth-child(2) > span:has([data-test="muteMicButton"]),
+#layout[data-skyroom-column="true"] #ActionsBar > div > div:nth-child(2) > span:has([data-test="unmuteMicButton"]),
+#layout[data-skyroom-column="true"] #ActionsBar > div > div:nth-child(2) > span:has([data-test="leaveListenOnly"]) {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0 !important;
+  padding: 2px !important;
+  border-radius: 12px !important;
+  background: rgba(0, 0, 0, 0.14) !important;
+  border: 1px solid rgba(218, 230, 245, 0.08) !important;
+}
+
+/* Teal accent hairline at the top edge — mirrors navbar bottom line */
+#layout[data-skyroom-column="true"] #ActionsBar::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 0 auto 0 !important;
+  top: 0 !important;
+  height: 1px !important;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(32, 199, 187, 0.28) 20%,
+    rgba(32, 199, 187, 0.65) 50%,
+    rgba(32, 199, 187, 0.28) 80%,
+    transparent 100%
+  ) !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+/* Separator between button groups */
+#layout[data-skyroom-column="true"] #ActionsBar [class*="Separator"] {
+  border-color: rgba(218, 230, 245, 0.12) !important;
+  opacity: 1 !important;
+}
+
+/* -----------------------------------------------------------------------
+   Action buttons — dark-glass base style
+   BBB renders: <button><span (visual body)><i icon/><span sr-only label></span></button>
+   We override the visual span (first-child of button).
+   ----------------------------------------------------------------------- */
+
+/* Base: dark glass pill */
+#layout[data-skyroom-column="true"] #ActionsBar button > span:first-child {
+  background-color: rgba(255, 255, 255, 0.055) !important;
+  border: 1px solid rgba(218, 230, 245, 0.11) !important;
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease !important;
+}
+
+/* Hover — teal wash */
+#layout[data-skyroom-column="true"] #ActionsBar button:not([aria-disabled="true"]):hover > span:first-child {
+  background-color: var(--skyroom-accent-hover-bg, rgba(32, 199, 187, 0.14)) !important;
+  border-color: var(--skyroom-accent-border, rgba(32, 199, 187, 0.36)) !important;
+  box-shadow:
+    0 2px 12px rgba(32, 199, 187, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Active (pressed) — slight scale-down feel */
+#layout[data-skyroom-column="true"] #ActionsBar button:not([aria-disabled="true"]):active > span:first-child {
+  background-color: rgba(32, 199, 187, 0.20) !important;
+  border-color: rgba(32, 199, 187, 0.50) !important;
+  transform: scale(0.96) !important;
+}
+
+/* Icon color — soft white for legibility on dark glass */
+#layout[data-skyroom-column="true"] #ActionsBar button > span:first-child i,
+#layout[data-skyroom-column="true"] #ActionsBar button > span:first-child [class^="icon-bbb-"],
+#layout[data-skyroom-column="true"] #ActionsBar button > span:first-child svg {
+  color: rgba(220, 235, 248, 0.88) !important;
+  fill: rgba(220, 235, 248, 0.88) !important;
+}
+
+/* -----------------------------------------------------------------------
+   Enabled / active states (camera on, screenshare running, etc.)
+   Target: buttons where BBB applies a primary/success color
+   ----------------------------------------------------------------------- */
+
+/* Primary-colored spans (camera active, joined audio) → teal fill */
+#layout[data-skyroom-column="true"] #ActionsBar button[class*="primary"] > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[class*="success"] > span:first-child {
+  background: var(--skyroom-accent-active-bg,
+    linear-gradient(145deg, rgba(13, 136, 126, 0.88), rgba(10, 111, 103, 0.92))) !important;
+  border-color: rgba(32, 199, 187, 0.48) !important;
+  box-shadow:
+    0 2px 10px rgba(13, 136, 126, 0.28),
+    0 0 0 1px rgba(32, 199, 187, 0.14) inset !important;
+}
+
+#layout[data-skyroom-column="true"] #ActionsBar button[class*="primary"] > span:first-child i,
+#layout[data-skyroom-column="true"] #ActionsBar button[class*="success"] > span:first-child i,
+#layout[data-skyroom-column="true"] #ActionsBar button[class*="primary"] > span:first-child [class^="icon-bbb-"],
+#layout[data-skyroom-column="true"] #ActionsBar button[class*="success"] > span:first-child [class^="icon-bbb-"] {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+/* Danger-colored spans (muted mic indicator, etc.) → soft red */
+#layout[data-skyroom-column="true"] #ActionsBar button[class*="danger"] > span:first-child {
+  background: var(--skyroom-danger-soft, rgba(223, 39, 33, 0.16)) !important;
+  border-color: var(--skyroom-danger-border, rgba(223, 39, 33, 0.38)) !important;
+  box-shadow:
+    0 2px 8px rgba(223, 39, 33, 0.16) !important;
+}
+
+#layout[data-skyroom-column="true"] #ActionsBar button[class*="danger"] > span:first-child i,
+#layout[data-skyroom-column="true"] #ActionsBar button[class*="danger"] > span:first-child [class^="icon-bbb-"] {
+  color: #ffb4b4 !important;
+}
+
+/* -----------------------------------------------------------------------
+   Actions dropdown (+ button — left zone)
+   ----------------------------------------------------------------------- */
+#layout[data-skyroom-column="true"] #ActionsBar [data-test="actionsButton"] > span:first-child {
+  background-color: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(218, 230, 245, 0.14) !important;
+}
+
+/* -----------------------------------------------------------------------
+   Raise-hand button — ghost variant in BBB, needs visible border
+   ----------------------------------------------------------------------- */
+#layout[data-skyroom-column="true"] #ActionsBar [class*="RaiseHandButton"] > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar [data-test="raiseHandBtn"] > span:first-child {
+  background-color: rgba(255, 255, 255, 0.055) !important;
+  border-color: rgba(218, 230, 245, 0.16) !important;
+}
+
+/* -----------------------------------------------------------------------
+   Reactions button — wrapper alignment fix
+   ----------------------------------------------------------------------- */
+#layout[data-skyroom-column="true"] #ActionsBar [class*="ReactionsButton"] > span:first-child {
+  background-color: rgba(255, 255, 255, 0.055) !important;
+  border-color: rgba(218, 230, 245, 0.11) !important;
+}
+
+/* -----------------------------------------------------------------------
+   Remove default button box-shadow resets that can fight our overrides
+   ----------------------------------------------------------------------- */
+#layout[data-skyroom-column="true"] #ActionsBar button {
+  box-shadow: none !important;
+}
+
+/* -----------------------------------------------------------------------
+   Mobile — centered clusters, horizontal scroll if needed
+   ----------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  #layout[data-skyroom-column="true"] #ActionsBar {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(6, 9, 16, 0.99) !important;
+  }
+
+  #layout[data-skyroom-column="true"] #ActionsBar > div {
+    justify-content: flex-start !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 10px !important;
+  }
+
+  #layout[data-skyroom-column="true"] #ActionsBar > div::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* BBB sets display:contents on Right at small breakpoints — keep cluster */
+  #layout[data-skyroom-column="true"] #ActionsBar > div > div:last-child {
+    display: flex !important;
+  }
+
+  #layout[data-skyroom-column="true"] #ActionsBar > div > div:not(:last-child) {
+    margin-inline-end: 14px !important;
+  }
+
+  #layout[data-skyroom-column="true"] #ActionsBar > div > div:not(:last-child)::after {
+    height: 22px !important;
+    inset-inline-end: -8px !important;
+  }
+}

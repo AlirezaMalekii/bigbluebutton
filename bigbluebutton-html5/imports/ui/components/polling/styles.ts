@@ -1,119 +1,22 @@
 import styled from 'styled-components';
 import {
-  mdPaddingY,
-  smPaddingY,
-  jumboPaddingY,
-  smPaddingX,
-  borderRadius,
-  pollWidth,
-  pollSmMargin,
   overlayIndex,
   overlayOpacity,
   pollIndex,
-  lgPaddingY,
-  pollColAmount,
   borderSize,
 } from '/imports/ui/stylesheets/styled-components/general';
 import {
   fontSizeSmall,
-  fontSizeBase,
   fontSizeLarge,
 } from '/imports/ui/stylesheets/styled-components/typography';
 import {
-  colorText,
   colorBlueLight,
-  colorGrayLighter,
-  colorGrayDark,
   colorWhite,
-  colorPrimary,
 } from '/imports/ui/stylesheets/styled-components/palette';
 import { hasPhoneDimentions } from '/imports/ui/stylesheets/styled-components/breakpoints';
 import Button from '/imports/ui/components/common/button/component';
 
-const PollingTitle = styled.h1`
-  white-space: nowrap;
-  padding-bottom: ${mdPaddingY};
-  padding-top: ${mdPaddingY};
-  font-size: ${fontSizeSmall};
-  margin: 0;
-  padding: 0;
-  font-weight: 600;
-`;
-
-const PollButtonWrapper = styled.div`
-  text-align: center;
-  padding: ${smPaddingY};
-  width: 100%;
-`;
-
-// @ts-ignore Until everything in Typescript
-const PollingButton = styled(Button)`
-  width: 100%;
-  max-width: 9em;
-
-  @media ${hasPhoneDimentions} {
-    max-width: none;
-  }
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
-const Hidden = styled.div`
-  display: none;
-`;
-
-const TypedResponseWrapper = styled.div`
-  margin: ${jumboPaddingY} 0.5rem 0.5rem 0.5rem;
-  display: flex;
-  flex-flow: column;
-`;
-
-const TypedResponseInput = styled.input`
-  &:focus {
-    outline: none;
-    border-radius: ${borderSize};
-    box-shadow: 0 0 0 ${borderSize} ${colorBlueLight},
-      inset 0 0 0 1px ${colorPrimary};
-  }
-
-  color: ${colorText};
-  -webkit-appearance: none;
-  padding: calc(${smPaddingY} * 2.5) calc(${smPaddingX} * 1.25);
-  border-radius: ${borderRadius};
-  font-size: ${fontSizeBase};
-  border: 1px solid ${colorGrayLighter};
-  box-shadow: 0 0 0 1px ${colorGrayLighter};
-  margin-bottom: 1rem;
-`;
-
-// @ts-ignore Until everything in Typescript
-const SubmitVoteButton = styled(Button)`
-  font-size: ${fontSizeBase};
-`;
-
-const PollingSecret = styled.div`
-  font-size: ${fontSizeSmall};
-  max-width: ${pollWidth};
-`;
-
-const MultipleResponseAnswersTable = styled.table`
-  margin-left: auto;
-  margin-right: auto;
-`;
-
-const PollingCheckbox = styled.div`
-  display: inline-block;
-  margin-right: ${pollSmMargin};
-`;
-
-const CheckboxContainer = styled.tr`
-  margin-bottom: ${pollSmMargin};
-`;
-
-const MultipleResponseAnswersTableAnswerText = styled.td`
-  text-align: left;
-`;
+// ─── Overlay ────────────────────────────────────────────────────────────────
 
 const Overlay = styled.div`
   position: fixed;
@@ -121,94 +24,241 @@ const Overlay = styled.div`
   z-index: ${overlayIndex};
   pointer-events: auto;
   background-color: rgba(0, 0, 0, ${overlayOpacity});
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(4px);
 `;
 
-const QHeader = styled.span`
-  text-align: left;
-  position: relative;
-  left: ${smPaddingY};
-`;
-
-const QTitle = styled.h1`
-  font-size: ${fontSizeSmall};
-  margin: 0;
-  padding: 0;
-  font-weight: 600;
-`;
-
-const QText = styled.div`
-  color: ${colorText};
-  word-break: break-word;
-  white-space: pre-wrap;
-  font-size: ${fontSizeLarge};
-  max-width: ${pollWidth};
-  padding-right: ${smPaddingX};
-`;
+// ─── Main card ──────────────────────────────────────────────────────────────
 
 const PollingContainer = styled.aside<{ autoWidth: boolean }>`
   pointer-events: auto;
-  min-width: min(${pollWidth}, 90vw);
-  width: min(32rem, 90vw);
   position: fixed;
   z-index: ${pollIndex};
-  border: 1px solid ${colorGrayLighter};
-  border-radius: ${borderRadius};
-  box-shadow: ${colorGrayDark} 0 0 ${lgPaddingY};
-  align-items: center;
-  text-align: center;
-  font-weight: 600;
-  padding: ${mdPaddingY} ${smPaddingX};
-  background-color: ${colorWhite};
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  max-height: min(90vh, 46rem);
+
+  width: min(34rem, 92vw);
+  max-height: min(90vh, 48rem);
   overflow-y: auto;
 
+  background: var(--skyroom-surface-2, #1a2436);
+  border: 1px solid var(--skyroom-panel-border-token, rgba(20, 169, 158, 0.14));
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.40));
+
+  padding: var(--space-6, 24px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+
+  color: var(--skyroom-text-primary, #e6edf7);
+  text-align: center;
+
   &:focus {
-    border: 1px solid ${colorPrimary};
+    outline: none;
+    border-color: var(--skyroom-accent, #20c7bb);
   }
 
   @media ${hasPhoneDimentions} {
-    width: min(30rem, 94vw);
-    max-height: 94vh;
+    width: min(32rem, 96vw);
+    max-height: 96vh;
+    padding: var(--space-5, 20px) var(--space-4, 16px);
   }
 
-  ${({ autoWidth }) => autoWidth
-    && `
-    width: auto;
-  `}
+  ${({ autoWidth }) => autoWidth && 'width: auto;'}
 `;
+
+// ─── Question header ─────────────────────────────────────────────────────────
+
+const QHeader = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+  text-align: start;
+  padding-bottom: var(--space-2, 8px);
+  border-bottom: 1px solid var(--skyroom-panel-border-token, rgba(20, 169, 158, 0.14));
+`;
+
+const QTitle = styled.p`
+  margin: 0;
+  padding: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--skyroom-accent, #20c7bb);
+  line-height: 1;
+`;
+
+const QText = styled.div`
+  margin: 0;
+  color: var(--skyroom-text-primary, #e6edf7);
+  word-break: break-word;
+  white-space: pre-wrap;
+  font-size: ${fontSizeLarge};
+  font-weight: 500;
+  line-height: 1.55;
+`;
+
+// ─── Default title (when no custom question text) ────────────────────────────
+
+const PollingTitle = styled.p`
+  margin: 0;
+  padding: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--skyroom-accent, #20c7bb);
+  line-height: 1;
+  text-align: center;
+`;
+
+// ─── Button-answer grid ───────────────────────────────────────────────────────
 
 const PollingAnswers = styled.div<{ removeColumns: boolean; stacked: boolean }>`
   display: grid;
-  grid-template-columns: repeat(${pollColAmount}, 1fr);
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3, 12px);
 
   @media ${hasPhoneDimentions} {
-    grid-template-columns: repeat(1, 1fr);
-
-    & div button {
-      grid-column: 1;
-    }
+    grid-template-columns: 1fr;
   }
 
-  z-index: 1;
+  ${({ removeColumns }) => removeColumns && 'grid-template-columns: 1fr;'}
 
-  ${({ removeColumns }) => removeColumns
-    && `
-    grid-template-columns: auto;
-  `}
-
-  ${({ stacked }) => stacked
-    && `
-    grid-template-columns: repeat(1, 1fr);
-
-    & div button {
-      max-width: none !important;
-    }
+  ${({ stacked }) => stacked && `
+    grid-template-columns: 1fr;
   `}
 `;
+
+const PollButtonWrapper = styled.div`
+  width: 100%;
+`;
+
+// @ts-ignore Until everything in Typescript
+const PollingButton = styled(Button)`
+  width: 100%;
+  min-height: 44px;
+  border-radius: var(--radius-md, 12px) !important;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--skyroom-accent-soft, rgba(32, 199, 187, 0.12)) !important;
+  color: var(--skyroom-accent, #20c7bb) !important;
+  border: 1px solid var(--skyroom-accent-border, rgba(32, 199, 187, 0.36)) !important;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--skyroom-accent-hover-bg, rgba(32, 199, 187, 0.18)) !important;
+    border-color: var(--skyroom-accent, #20c7bb) !important;
+    color: ${colorWhite} !important;
+  }
+
+  &:active {
+    background: rgba(13, 136, 126, 0.55) !important;
+    border-color: var(--skyroom-brand-500, #0d887e) !important;
+  }
+`;
+
+// ─── Typed response ───────────────────────────────────────────────────────────
+
+const TypedResponseWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+`;
+
+const TypedResponseInput = styled.input`
+  color: var(--skyroom-text-primary, #e6edf7);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md, 12px);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  width: 100%;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &::placeholder {
+    color: var(--skyroom-text-muted, rgba(230, 237, 247, 0.4));
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--skyroom-accent, #20c7bb);
+    box-shadow: 0 0 0 ${borderSize} ${colorBlueLight},
+      0 0 0 1px var(--skyroom-accent, #20c7bb);
+    background: rgba(255, 255, 255, 0.09);
+  }
+`;
+
+// @ts-ignore Until everything in Typescript
+const SubmitVoteButton = styled(Button)`
+  width: 100%;
+  min-height: 44px;
+  border-radius: var(--radius-md, 12px) !important;
+  font-size: 0.9375rem;
+  font-weight: 600;
+`;
+
+// ─── Privacy/secret note ──────────────────────────────────────────────────────
+
+const PollingSecret = styled.div`
+  font-size: ${fontSizeSmall};
+  color: var(--skyroom-text-muted, rgba(230, 237, 247, 0.45));
+  padding-top: var(--space-2, 8px);
+  border-top: 1px solid var(--skyroom-panel-border-token, rgba(20, 169, 158, 0.14));
+  text-align: center;
+  line-height: 1.5;
+`;
+
+// ─── Multiple-response (checkbox) rows ────────────────────────────────────────
+
+const MultipleResponseAnswersTable = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+  width: 100%;
+`;
+
+const CheckboxContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  transition: background 0.12s ease;
+  text-align: start;
+
+  &:hover {
+    background: var(--skyroom-accent-soft, rgba(32, 199, 187, 0.10));
+  }
+`;
+
+const PollingCheckbox = styled.div`
+  flex-shrink: 0;
+`;
+
+const MultipleResponseAnswersTableAnswerText = styled.div`
+  text-align: start;
+  color: var(--skyroom-text-primary, #e6edf7);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  flex: 1;
+`;
+
+// ─── Hidden a11y helpers (unchanged) ────────────────────────────────────────
+
+const Hidden = styled.div`
+  display: none;
+`;
+
+// ─── Legacy export (keep all names intact for component.tsx) ────────────────
 
 export default {
   PollingTitle,

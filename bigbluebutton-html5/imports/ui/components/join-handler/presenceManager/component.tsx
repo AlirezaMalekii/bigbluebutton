@@ -17,6 +17,7 @@ import GuestWaitContainer, { GUEST_STATUSES } from '../guest-wait/component';
 import PluginTopLevelManager from '/imports/ui/components/plugin-top-level-manager/component';
 import meetingStaticData from '/imports/ui/core/singletons/meetingStaticData';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
+import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const connectionTimeout = 60000;
 const MESSAGE_TIMEOUT = 3000;
@@ -151,6 +152,9 @@ const PresenceManager: React.FC<PresenceManagerProps> = ({
     if (joined) {
       clearTimeout(timeoutRef.current);
       setAllowToRender(true);
+      if (isSkyroomTheme()) {
+        loadingContextInfo.setLoading(false);
+      }
     }
   }, [joined]);
 

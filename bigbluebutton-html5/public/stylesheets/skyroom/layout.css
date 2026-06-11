@@ -4,6 +4,8 @@
 
 :root {
   /* Layout-only; spacing/chrome tokens live in tokens.css */
+  --skyroom-presentation-toolbar-h: 36px;
+  --skyroom-wb-toolbar-gap: -2px;
   --skyroom-column-width: clamp(292px, 21vw, 328px);
   --skyroom-footer-safe: var(--skyroom-footer-h, 56px);
   /* Set at runtime by customLayout when column mode is active */
@@ -166,15 +168,17 @@
   box-shadow: var(--skyroom-stage-shadow-token) !important;
 }
 
-/* LTR: sidebar left — stage inset from column + outer edge */
+/* LTR: sidebar left — stage inset from column(s) + outer edge */
 [dir="ltr"] #layout[data-skyroom-column="true"] [data-test="screenshareArea"],
 [dir="ltr"] #layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"],
 [dir="ltr"] #layout[data-skyroom-column="true"] [data-test="presentationContainer"],
 [dir="ltr"] #layout[data-skyroom-column="true"] [class*="presentationContainer"],
 [dir="ltr"] #layout[data-skyroom-column="true"] [class*="PresentationContainer"] {
-  left: calc(var(--skyroom-column-width) + var(--skyroom-stage-gap) * 2) !important;
+  left: var(--skyroom-stage-left, calc(var(--skyroom-column-width) + var(--skyroom-stage-gap) * 2)) !important;
   right: auto !important;
-  width: calc(100% - var(--skyroom-column-width) - var(--skyroom-stage-gap) * 3) !important;
+  top: var(--skyroom-screenshare-top, auto) !important;
+  height: var(--skyroom-screenshare-height, auto) !important;
+  width: var(--skyroom-stage-width, calc(100% - var(--skyroom-column-width) - var(--skyroom-stage-gap) * 3)) !important;
   max-width: none !important;
 }
 
@@ -189,8 +193,8 @@
 }
 
 /* Viewer webcam strip above stage media (#cameraDock is inside .react-draggable, not a direct #layout child) */
-#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] .react-draggable:has(#cameraDock),
-#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock {
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-webcam-float="true"]) .react-draggable:has(#cameraDock),
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-webcam-float="true"]) #cameraDock {
   position: fixed !important;
   inset: auto !important;
   top: var(--skyroom-stage-webcam-top) !important;
@@ -202,6 +206,30 @@
   transform: translate3d(0, 0, 0) !important;
   z-index: 7 !important;
   margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+
+/* Presentation closed — BBB-style floating webcam dock (react-draggable) */
+#layout[data-skyroom-column="true"][data-skyroom-webcam-float="true"] .react-draggable:has(#cameraDock) {
+  z-index: 9 !important;
+}
+
+#layout[data-skyroom-column="true"][data-skyroom-webcam-float="true"] #cameraDock,
+#layout[data-skyroom-column="true"][data-skyroom-webcam-float="true"] #cameraDock video,
+#layout[data-skyroom-column="true"][data-skyroom-webcam-float="true"] #cameraDock [class*="videoContainer"] {
+  cursor: grab !important;
+}
+
+#layout[data-skyroom-column="true"][data-skyroom-webcam-float="true"][data-skyroom-sidebar-webcam="true"] .react-draggable:has(#cameraDock),
+#layout[data-skyroom-column="true"][data-skyroom-webcam-float="true"][data-skyroom-sidebar-webcam="true"] #cameraDock {
+  visibility: visible !important;
+  pointer-events: auto !important;
+  width: auto !important;
+  height: auto !important;
+  overflow: visible !important;
 }
 
 #layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] .react-draggable:has(#cameraDock) > div,
@@ -211,6 +239,9 @@
   left: 0 !important;
   width: 100% !important;
   height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 #layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock,
@@ -220,15 +251,90 @@
   z-index: 7 !important;
 }
 
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock .skyroom-stage-webcam-list {
+  width: max-content !important;
+  height: max-content !important;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
+  gap: var(--space-2, 8px);
+  flex: 0 0 auto;
+  justify-content: center;
+  justify-items: center;
+}
+
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock .skyroom-stage-webcam-list [data-test="webcamVideoItem"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock .skyroom-stage-webcam-list .skyroom-webcam-zone-drag {
+  width: var(--skyroom-webcam-tile-w) !important;
+  height: var(--skyroom-webcam-tile-h) !important;
+  max-width: var(--skyroom-webcam-tile-w) !important;
+  max-height: var(--skyroom-webcam-tile-h) !important;
+  min-width: 0;
+  min-height: 0;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--skyroom-panel-radius, 12px);
+  box-shadow: var(--skyroom-panel-shadow-token);
+}
+
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock .skyroom-stage-webcam-list [class*="videoContainer"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock .skyroom-stage-webcam-list video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: var(--skyroom-panel-radius, 12px);
+}
+
+#layout[data-skyroom-column="true"] #skyroom-sidebar-webcam-dock .skyroom-sidebar-webcam-list {
+  width: max-content !important;
+  height: max-content !important;
+  flex: 0 0 auto;
+  gap: var(--space-2, 8px);
+  justify-content: center;
+  justify-items: center;
+}
+
+#layout[data-skyroom-column="true"] #skyroom-sidebar-webcam-dock .skyroom-sidebar-webcam-list [data-test="webcamVideoItem"],
+#layout[data-skyroom-column="true"] #skyroom-sidebar-webcam-dock .skyroom-sidebar-webcam-list .skyroom-webcam-zone-drag {
+  width: var(--skyroom-webcam-tile-w) !important;
+  height: var(--skyroom-webcam-tile-h) !important;
+  max-width: var(--skyroom-webcam-tile-w) !important;
+  max-height: var(--skyroom-webcam-tile-h) !important;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--skyroom-panel-radius, 12px);
+  box-shadow: var(--skyroom-panel-shadow-token);
+}
+
+#layout[data-skyroom-column="true"] #skyroom-sidebar-webcam-dock .skyroom-sidebar-webcam-list [class*="videoContainer"],
+#layout[data-skyroom-column="true"] #skyroom-sidebar-webcam-dock .skyroom-sidebar-webcam-list video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: var(--skyroom-panel-radius, 12px);
+}
+
+#layout[data-skyroom-column="true"] #skyroom-center-webcam-dock .skyroom-center-webcam-list {
+  gap: var(--space-2, 8px);
+}
+
+#layout[data-skyroom-column="true"] #skyroom-center-webcam-dock [class*="videoContainer"],
+#layout[data-skyroom-column="true"] #skyroom-center-webcam-dock video {
+  border-radius: var(--skyroom-panel-radius, 12px);
+}
+
 /* RTL: sidebar right */
 [dir="rtl"] #layout[data-skyroom-column="true"] [data-test="screenshareArea"],
 [dir="rtl"] #layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"],
 [dir="rtl"] #layout[data-skyroom-column="true"] [data-test="presentationContainer"],
 [dir="rtl"] #layout[data-skyroom-column="true"] [class*="presentationContainer"],
 [dir="rtl"] #layout[data-skyroom-column="true"] [class*="PresentationContainer"] {
-  right: calc(var(--skyroom-column-width) + var(--skyroom-stage-gap) * 2) !important;
+  right: var(--skyroom-stage-left, calc(var(--skyroom-column-width) + var(--skyroom-stage-gap) * 2)) !important;
   left: var(--skyroom-stage-gap) !important;
-  width: calc(100% - var(--skyroom-column-width) - var(--skyroom-stage-gap) * 3) !important;
+  top: var(--skyroom-screenshare-top, auto) !important;
+  height: var(--skyroom-screenshare-height, auto) !important;
+  width: var(--skyroom-stage-width, calc(100% - var(--skyroom-column-width) - var(--skyroom-stage-gap) * 3)) !important;
   max-width: none !important;
 }
 
@@ -314,12 +420,12 @@
 
 #layout[data-skyroom-column="true"] #skyroom-sidebar-webcam-dock {
   box-sizing: border-box;
-  padding: 0 var(--skyroom-edge-gap) 0 0;
+  padding: 0;
   pointer-events: none;
 }
 
-/* Split layout: presenter webcams above users panel (direct child of #layout, not inside #cameraDock) */
-#layout[data-skyroom-column="true"][data-skyroom-split-cameras="true"] #skyroom-sidebar-webcam-dock {
+/* Moderator webcams above users panel (direct child of #layout, not inside #cameraDock) */
+#layout[data-skyroom-column="true"][data-skyroom-sidebar-webcam="true"] #skyroom-sidebar-webcam-dock {
   position: fixed !important;
   inset: auto !important;
   top: var(--skyroom-sidebar-webcam-top) !important;
@@ -331,6 +437,58 @@
   transform: none !important;
   z-index: 8 !important;
   margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#layout[data-skyroom-column="true"][data-skyroom-sidebar-webcam="true"]:not([data-skyroom-stage-webcams="true"]):not([data-skyroom-webcam-float="true"]) .react-draggable:has(#cameraDock),
+#layout[data-skyroom-column="true"][data-skyroom-sidebar-webcam="true"]:not([data-skyroom-stage-webcams="true"]):not([data-skyroom-webcam-float="true"]) #cameraDock {
+  visibility: hidden !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+#layout[data-skyroom-column="true"] #skyroom-center-webcam-dock .skyroom-webcam-zone-drag {
+  width: 100%;
+  height: 100%;
+}
+
+#layout[data-skyroom-column="true"] #skyroom-center-webcam-dock {
+  box-sizing: border-box;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: var(--skyroom-panel-radius);
+}
+
+#layout[data-skyroom-column="true"] #skyroom-center-webcam-dock .skyroom-center-webcam-list,
+#layout[data-skyroom-column="true"] #skyroom-center-webcam-dock [data-test="webcamVideoItem"] {
+  pointer-events: auto;
+  cursor: grab;
+}
+
+#layout[data-skyroom-column="true"] #skyroom-center-webcam-dock .skyroom-center-webcam-list {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0;
+  min-height: 0;
+}
+
+#layout[data-skyroom-column="true"] #skyroom-center-webcam-dock [data-test="webcamVideoItem"],
+#layout[data-skyroom-column="true"] #skyroom-center-webcam-dock .skyroom-webcam-zone-drag {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0;
+  min-height: 0;
+}
+
+#layout[data-skyroom-column="true"] #skyroom-center-webcam-dock [class*="videoContainer"],
+#layout[data-skyroom-column="true"] #skyroom-center-webcam-dock video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
 }
 
 #layout[data-skyroom-column="true"] #skyroom-sidebar-webcam-dock .skyroom-sidebar-webcam-list,
@@ -338,15 +496,39 @@
   pointer-events: auto;
 }
 
-[dir="rtl"] #layout[data-skyroom-column="true"] #skyroom-sidebar-webcam-dock {
-  padding: 0 0 0 var(--skyroom-edge-gap);
+.skyroom-webcam-drag-layer {
+  border-radius: var(--skyroom-panel-radius, 12px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  opacity: 0.96;
 }
 
-/* Webcam dock — fixed position, no drag / resize */
+.skyroom-webcam-drag-layer [data-test="webcamVideoItem"],
+.skyroom-webcam-drag-layer .skyroom-webcam-zone-drag {
+  width: 100% !important;
+  height: 100% !important;
+  cursor: grabbing !important;
+}
+
+.skyroom-webcam-drag-layer [class*="videoContainer"],
+.skyroom-webcam-drag-layer video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: var(--skyroom-panel-radius, 12px);
+}
+
+/* Webcam dock — zone drag on tiles; dock itself is not resizable */
 #layout[data-skyroom-column="true"] #cameraDock,
 #layout[data-skyroom-column="true"] #cameraDock video,
 #layout[data-skyroom-column="true"] #cameraDock [class*="videoContainer"] {
   cursor: default !important;
+}
+
+#layout[data-skyroom-column="true"] #skyroom-sidebar-webcam-dock [data-test="webcamVideoItem"],
+#layout[data-skyroom-column="true"] #skyroom-center-webcam-dock [data-test="webcamVideoItem"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock [data-test="webcamVideoItem"] {
+  cursor: grab !important;
 }
 
 #layout[data-skyroom-column="true"] #cameraDock .react-resizable-handle,
@@ -382,6 +564,86 @@
 #layout[data-skyroom-column="true"] [data-test="presentationDownload"] i,
 #layout[data-skyroom-column="true"] [data-test="presentationDownload"] i::before {
   color: #fff !important;
+}
+
+/* ---------------------------------------------------------------------
+   Presentation toolbar (slide navigation + zoom) — dark-glass override
+   The styled-components values use colorOffWhite / colorBlueLightest
+   which resolve to wrong colors in dark theme.
+   --------------------------------------------------------------------- */
+
+/* Toolbar wrapper — dark glass matching the panel aesthetic */
+#layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] {
+  background: rgba(8, 14, 26, 0.90) !important;
+  border-top: 1px solid rgba(20, 169, 158, 0.20) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.22) !important;
+}
+
+/* Slide-nav icon buttons — dark glass pill */
+#layout[data-skyroom-column="true"] [class*="PresentationSlideControls"] button > span,
+#layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] button > span,
+#layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] [class*="toolbarIconButton"] > span {
+  background-color: rgba(20, 32, 52, 0.85) !important;
+  border: 1px solid rgba(20, 169, 158, 0.22) !important;
+  color: rgba(220, 235, 248, 0.90) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22) !important;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease !important;
+}
+
+/* Hover — teal wash */
+#layout[data-skyroom-column="true"] [class*="PresentationSlideControls"] button:hover > span,
+#layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] button:hover > span,
+#layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] [class*="toolbarIconButton"]:hover > span {
+  background-color: rgba(32, 199, 187, 0.14) !important;
+  border-color: rgba(32, 199, 187, 0.40) !important;
+  box-shadow: 0 2px 10px rgba(32, 199, 187, 0.12) !important;
+}
+
+/* Slide page number / input */
+#layout[data-skyroom-column="true"] [class*="PresentationSlideControls"] input,
+#layout[data-skyroom-column="true"] [class*="PresentationSlideControls"] span[class*="CurrentPage"],
+#layout[data-skyroom-column="true"] [class*="PresentationSlideControls"] [class*="SlideLabel"] {
+  color: rgba(220, 235, 248, 0.88) !important;
+  background: transparent !important;
+  border-color: rgba(20, 169, 158, 0.22) !important;
+}
+
+/* Icon colors inside toolbar buttons */
+#layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] i,
+#layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] [class^="icon-bbb-"],
+#layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] svg {
+  color: rgba(220, 235, 248, 0.88) !important;
+  fill: rgba(220, 235, 248, 0.88) !important;
+}
+
+/* Zoom percentage text */
+#layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] span,
+#layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] [class*="ZoomValue"] {
+  color: rgba(220, 235, 248, 0.80) !important;
+  font-size: 0.75rem !important;
+}
+
+/* Presentation extra-tools (undo/redo strip above whiteboard) */
+#layout[data-skyroom-column="true"] [class*="ExtraTools"] > [class*="Button"],
+#layout[data-skyroom-column="true"] [class*="ExtraTools"] button {
+  background-color: rgba(18, 28, 46, 0.88) !important;
+  border: 1px solid rgba(20, 169, 158, 0.24) !important;
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
+  color: rgba(220, 235, 248, 0.88) !important;
+  transition: border-color 150ms ease, background-color 150ms ease !important;
+}
+
+#layout[data-skyroom-column="true"] [class*="ExtraTools"] > [class*="Button"]:hover,
+#layout[data-skyroom-column="true"] [class*="ExtraTools"] button:hover {
+  background-color: rgba(32, 199, 187, 0.16) !important;
+  border-color: rgba(32, 199, 187, 0.42) !important;
 }
 
 @media (max-width: 768px) {

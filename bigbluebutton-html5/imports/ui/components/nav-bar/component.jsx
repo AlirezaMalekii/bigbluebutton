@@ -19,8 +19,12 @@ import {
   isSkyroomColumnLayout,
   toggleSkyroomPublicChat,
   toggleSkyroomUserList,
+  toggleSkyroomSharedNotesGlobally,
+  toggleSkyroomSharedNotesLocally,
   isPublicChatOpen,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import SkyroomHeaderLogo from '/imports/ui/components/skyroom-layout/header-logo/SkyroomHeaderLogo';
+import SkyroomHeaderStatusCluster from '/imports/ui/components/skyroom-layout/active-poll-summary/SkyroomHeaderStatusCluster';
 import LeaveMeetingButtonContainer from './leave-meeting-button/container';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import Tooltip from '/imports/ui/components/common/tooltip/component';
@@ -42,6 +46,10 @@ const intlMessages = defineMessages({
   togglePublicChatLabel: {
     id: 'app.chat.titlePublic',
     description: 'Toggle public chat panel in Skyroom layout',
+  },
+  toggleSharedNotesLabel: {
+    id: 'app.notes.title',
+    description: 'Toggle shared notes panel in Skyroom layout',
   },
   newMessages: {
     id: 'app.navBar.toggleUserList.newMessages',
@@ -183,6 +191,7 @@ class NavBar extends Component {
 
     this.handleToggleUserList = this.handleToggleUserList.bind(this);
     this.handleTogglePublicChat = this.handleTogglePublicChat.bind(this);
+    this.handleToggleSharedNotes = this.handleToggleSharedNotes.bind(this);
     this.splitPluginItems = this.splitPluginItems.bind(this);
     this.setModalIsOpen = () => {};
   }
@@ -302,6 +311,17 @@ class NavBar extends Component {
     }
   }
 
+  handleToggleSharedNotes() {
+    if (!isSkyroomColumnLayout()) return;
+
+    const { amIModerator } = this.props;
+    if (amIModerator) {
+      toggleSkyroomSharedNotesGlobally();
+    } else {
+      toggleSkyroomSharedNotesLocally();
+    }
+  }
+
   splitPluginItems() {
     const { pluginNavBarItems } = this.props;
 
@@ -345,6 +365,8 @@ class NavBar extends Component {
     const {
       hasUnreadMessages,
       hasUnreadNotes,
+      isSharedNotesEnabled,
+      isSharedNotesExpanded,
       intl,
       shortcuts: TOGGLE_USERLIST_AK,
       togglePublicChatShortcut: TOGGLE_PUBLIC_CHAT_AK,
@@ -384,7 +406,11 @@ class NavBar extends Component {
 
     const APP_CONFIG = window.meetingClientSettings?.public?.app;
     const enableTalkingIndicator = APP_CONFIG?.enableTalkingIndicator;
-
+    const skyroomHeader = isSkyroomColumnLayout();
+    const notesEnabledInSettings = window.meetingClientSettings?.public?.notes?.enabled;
+    const showSharedNotesToggle = skyroomHeader
+      && shouldShowNavBarToggleButton
+      && (isSharedNotesEnabled || notesEnabledInSettings);
     return shouldShowNavbar && (
       <Styled.Navbar
         id="Navbar"
@@ -447,13 +473,30 @@ class NavBar extends Component {
                   hasNotification={hasUnreadMessages}
                 />
               )}
+              {showSharedNotesToggle && (
+                <Styled.NavbarToggleButton
+                  tooltipplacement="right"
+                  onClick={this.handleToggleSharedNotes}
+                  color={isPhone && isSharedNotesExpanded ? 'primary' : 'dark'}
+                  size="md"
+                  circle
+                  hideLabel
+                  data-test="toggleSharedNotesNav"
+                  label={intl.formatMessage(intlMessages.toggleSharedNotesLabel)}
+                  tooltipLabel={intl.formatMessage(intlMessages.toggleSharedNotesLabel)}
+                  aria-label={intl.formatMessage(intlMessages.toggleSharedNotesLabel)}
+                  icon="copy"
+                  aria-expanded={isSharedNotesExpanded}
+                  hasNotification={hasUnreadNotes}
+                />
+              )}
               {shouldShowNavBarToggleButton && !isUserListExpanded && document.dir === 'ltr'
                 && <Styled.ArrowRight iconName="right_arrow" />}
               {shouldShowNavBarToggleButton && isUserListExpanded && document.dir === 'rtl'
                 && <Styled.ArrowRight iconName="right_arrow" />}
               {renderPluginItems(leftPluginItems)}
             </Styled.Left>
-            <Styled.Center>
+            <Styled.Center data-test="skyroom-header-center">
               <Styled.PresentationTitle
                 data-test="presentationTitle"
                 id="presentationTitle"
@@ -492,25 +535,35 @@ class NavBar extends Component {
               />
               {renderPluginItems(centerPluginItems)}
             </Styled.Center>
-            <Styled.Right>
+            {skyroomHeader && enableTalkingIndicator && (
+              <Styled.SkyroomTalkingRail data-test="skyroom-talking-rail">
+                <h2 className="sr-only">{intl.formatMessage(intlMessages.speakersListLabel)}</h2>
+                <TalkingIndicator amIModerator={amIModerator} />
+              </Styled.SkyroomTalkingRail>
+            )}
+            <Styled.Right data-test="skyroom-header-controls">
               <h2 className="sr-only">{intl.formatMessage(intlMessages.sessionControlLabel)}</h2>
               {renderPluginItems(rightPluginItems)}
-              {ConnectionStatusService.isEnabled() ? <ConnectionStatusButton /> : null}
-              {ConnectionStatusService.isEnabled() ? <ConnectionStatus /> : null}
-              {isDirectLeaveButtonEnabled && isConnected
-                ? <LeaveMeetingButtonContainer amIModerator={amIModerator} /> : null}
               <OptionsDropdownContainer
                 amIModerator={amIModerator}
                 isDirectLeaveButtonEnabled={isDirectLeaveButtonEnabled}
               />
+              {isDirectLeaveButtonEnabled && isConnected
+                ? <LeaveMeetingButtonContainer amIModerator={amIModerator} /> : null}
+              {ConnectionStatusService.isEnabled() ? <ConnectionStatusButton /> : null}
+              {skyroomHeader ? <SkyroomHeaderLogo /> : null}
+              {skyroomHeader ? <SkyroomHeaderStatusCluster /> : null}
+              {ConnectionStatusService.isEnabled() ? <ConnectionStatus /> : null}
             </Styled.Right>
           </Styled.Top>
         )}
-        <Styled.Bottom>
-          <h2 className="sr-only">{intl.formatMessage(intlMessages.speakersListLabel)}</h2>
-          {enableTalkingIndicator ? <TalkingIndicator amIModerator={amIModerator} /> : null}
-          <TimerIndicatorContainer />
-        </Styled.Bottom>
+        {!skyroomHeader && (
+          <Styled.Bottom>
+            <h2 className="sr-only">{intl.formatMessage(intlMessages.speakersListLabel)}</h2>
+            {enableTalkingIndicator ? <TalkingIndicator amIModerator={amIModerator} /> : null}
+            <TimerIndicatorContainer />
+          </Styled.Bottom>
+        )}
       </Styled.Navbar>
     );
   }

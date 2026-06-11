@@ -4,6 +4,8 @@ import { setMeetingSettings } from '/imports/ui/core/local-states/useMeetingSett
 import MeetingClientSettings from '/imports/ui/Types/meetingClientSettings';
 import { ErrorScreen } from '/imports/ui/components/error-screen/component';
 import LoadingScreen from '/imports/ui/components/common/loading-screen/component';
+import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import useSkyroomLoadingSource from '/imports/ui/components/skyroom-layout/loading/useSkyroomLoadingSource';
 import Session from '/imports/ui/services/storage/in-memory';
 import BBBWeb from '/imports/api/bbb-web-api';
 import { applySkyroomWhiteLabelSettings } from '/imports/ui/components/skyroom-layout/white-label';
@@ -35,8 +37,11 @@ const SettingsLoader: React.FC<SettingsLoaderProps> = (props) => {
   const { children } = props;
   const [settingsFetched, setSettingsFetched] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [loading, setLoading] = React.useState<boolean>(false);
+  const [loading, setLoading] = React.useState<boolean>(true);
   const timeoutRef = React.useRef<ReturnType<typeof setTimeout>>();
+  const skyroomTheme = isSkyroomTheme();
+
+  useSkyroomLoadingSource('settings', skyroomTheme && loading);
 
   useEffect(() => {
     setLoading(true);
@@ -105,7 +110,7 @@ const SettingsLoader: React.FC<SettingsLoaderProps> = (props) => {
           endedReason={error}
         />
       ) : null}
-      {loading ? (
+      {loading && !skyroomTheme ? (
         <LoadingScreen />
       ) : null}
     </>

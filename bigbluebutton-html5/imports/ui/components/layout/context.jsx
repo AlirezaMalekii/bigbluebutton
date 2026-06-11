@@ -13,6 +13,7 @@ import { useIsPresentationEnabled } from '/imports/ui/services/features';
 import { usePrevious } from '../whiteboard/utils';
 import Session from '/imports/ui/services/storage/in-memory';
 import useMeeting from '../../core/hooks/useMeeting';
+import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 // variable to debug in console log
 const debug = false;
@@ -500,13 +501,15 @@ const reducer = (state, action) => {
       if (sidebarContent.isOpen === action.value) {
         return state;
       }
-      // When opening content sidebar, the navigation sidebar should be opened as well
-      if (action.value === true) sidebarNavigation.isOpen = true;
+      // Upstream BBB couples nav + content; Skyroom columns toggle independently.
+      const coupleNavigationWithContent = action.value === true && !isSkyroomColumnLayout();
       return {
         ...state,
         input: {
           ...state.input,
-          sidebarNavigation,
+          sidebarNavigation: coupleNavigationWithContent
+            ? { ...sidebarNavigation, isOpen: true }
+            : sidebarNavigation,
           sidebarContent: {
             ...sidebarContent,
             isOpen: action.value,

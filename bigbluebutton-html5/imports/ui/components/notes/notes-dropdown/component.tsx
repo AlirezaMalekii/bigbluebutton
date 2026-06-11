@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import BBBMenu from '/imports/ui/components/common/menu/component';
 import Trigger from '/imports/ui/components/common/control-header/right/component';
+import { PanelOptionsButton } from '/imports/ui/components/skyroom-layout/panel-chrome/styles';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import { uniqueId } from '/imports/utils/string-utils';
 import { layoutSelect } from '/imports/ui/components/layout/context';
@@ -38,6 +39,7 @@ interface NotesDropdownContainerGraphqlProps {
   presentationEnabled: boolean;
   padId: string;
   isEtherpadSharedNotes: boolean;
+  menuClassName?: string;
 }
 
 interface NotesDropdownGraphqlProps extends NotesDropdownContainerGraphqlProps {
@@ -46,11 +48,19 @@ interface NotesDropdownGraphqlProps extends NotesDropdownContainerGraphqlProps {
   presentations: any;
   isRTL: boolean;
   padId: string;
+  menuClassName?: string;
 }
 
 const NotesDropdownGraphql: React.FC<NotesDropdownGraphqlProps> = (props) => {
   const {
-    amIPresenter, presentations, handlePinSharedNotes, isRTL, padId, presentationEnabled, isEtherpadSharedNotes,
+    amIPresenter,
+    presentations,
+    handlePinSharedNotes,
+    isRTL,
+    padId,
+    presentationEnabled,
+    isEtherpadSharedNotes,
+    menuClassName,
   } = props;
   const [converterButtonDisabled, setConverterButtonDisabled] = useState(false);
   const intl = useIntl();
@@ -120,15 +130,21 @@ const NotesDropdownGraphql: React.FC<NotesDropdownGraphqlProps> = (props) => {
 
   if (actions.length === 0) return null;
 
+  const OptionsTrigger = menuClassName ? PanelOptionsButton : Trigger;
+
   return (
     <>
       <BBBMenu
         trigger={(
-          <Trigger
+          <OptionsTrigger
             data-test="notesOptionsMenu"
             icon="more"
             label={intl.formatMessage(intlMessages.options)}
             aria-label={intl.formatMessage(intlMessages.options)}
+            size={menuClassName ? 'sm' : undefined}
+            color={menuClassName ? 'light' : undefined}
+            hideLabel={Boolean(menuClassName)}
+            circle={!menuClassName}
             onClick={() => null}
           />
           )}
@@ -139,6 +155,7 @@ const NotesDropdownGraphql: React.FC<NotesDropdownGraphqlProps> = (props) => {
           elevation: 3,
           getcontentanchorel: null,
           fullwidth: 'true',
+          className: menuClassName,
           anchorOrigin: { vertical: 'bottom', horizontal: isRTL ? 'right' : 'left' },
           transformOrigin: { vertical: 'top', horizontal: isRTL ? 'right' : 'left' },
         }}
@@ -150,7 +167,11 @@ const NotesDropdownGraphql: React.FC<NotesDropdownGraphqlProps> = (props) => {
 
 const NotesDropdownContainerGraphql: React.FC<NotesDropdownContainerGraphqlProps> = (props) => {
   const {
-    handlePinSharedNotes, presentationEnabled, padId, isEtherpadSharedNotes,
+    handlePinSharedNotes,
+    presentationEnabled,
+    padId,
+    isEtherpadSharedNotes,
+    menuClassName,
   } = props;
   const { data: currentUserData } = useCurrentUser((user) => ({
     presenter: user.presenter,
@@ -175,6 +196,7 @@ const NotesDropdownContainerGraphql: React.FC<NotesDropdownContainerGraphqlProps
       presentationEnabled={presentationEnabled}
       padId={padId}
       isEtherpadSharedNotes={isEtherpadSharedNotes}
+      menuClassName={menuClassName}
     />
   );
 };

@@ -16,7 +16,7 @@ const FallbackModal = ({ error, intl }) => (
     priority="medium"
     shouldShowCloseButton={false}
     contentLabel={intl.formatMessage(intlMessages.ariaTitle)}
-    isOpen={!!error}
+    modalIsOpen={!!error}
   >
     <FallbackView {...{ error }} />
   </ModalSimple>

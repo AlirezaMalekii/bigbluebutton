@@ -22,16 +22,20 @@ export const CountBadge = styled.span`
     var(--skyroom-brand-500, ${colorPrimary}) 0%,
     var(--skyroom-brand-700, #075952) 100%
   );
-  border-radius: 999px;
+  border: 1px solid var(--skyroom-accent-border, rgba(32, 199, 187, 0.36));
+  border-radius: var(--radius-pill, 999px);
+  box-shadow: var(--shadow-glow-sm, 0 0 0 1px rgba(20, 169, 158, 0.10));
   color: ${colorWhite};
   display: inline-flex;
   flex-shrink: 0;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
   font-weight: 700;
+  height: 1.4rem;
   justify-content: center;
   line-height: 1;
-  min-width: 1.1rem;
-  padding: 0.14rem 0.32rem;
+  min-width: 1.4rem;
+  padding: 0 0.45rem;
 `;
 
 export default {

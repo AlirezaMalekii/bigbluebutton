@@ -154,13 +154,13 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
         {poll.type !== pollTypes.Response && (
           <span>
             {questionText.length === 0 && (
-              <Styled.PollingTitle>
+              <span data-skyroom-poll-badge="true">
                 {
                   poll.quiz
                     ? intl.formatMessage(intlMessages.quizTitleLabel)
                     : intl.formatMessage(intlMessages.pollingTitleLabel)
                 }
-              </Styled.PollingTitle>
+              </span>
             )}
             <Styled.PollingAnswers
               removeColumns={options.length === 1}
@@ -258,13 +258,13 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
     return (
       <div>
         {poll.questionText.length === 0 && (
-          <Styled.PollingTitle>
+          <span data-skyroom-poll-badge="true">
             {
               poll.quiz
                 ? intl.formatMessage(intlMessages.quizTitleLabel)
                 : intl.formatMessage(intlMessages.pollingTitleLabel)
             }
-          </Styled.PollingTitle>
+          </span>
         )}
         <Styled.MultipleResponseAnswersTable>
           {poll.options.map((option) => {
@@ -275,20 +275,22 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
             }
 
             return (
-              <Styled.CheckboxContainer key={option.optionId}>
-                {/* eslint-disable-next-line */}
-                <td>
-                  <Styled.PollingCheckbox data-test="optionsAnswers">
-                    <Checkbox
-                      id={`answerInput${option.optionDesc}`}
-                      onChange={() => handleCheckboxChange(option.optionId)}
-                      checked={checkedAnswers.includes(option.optionId)}
-                      ariaLabelledBy={`pollAnswerLabel${option.optionDesc}`}
-                      ariaDescribedBy={`pollAnswerDesc${option.optionDesc}`}
-                    />
-                  </Styled.PollingCheckbox>
-                </td>
+              <Styled.CheckboxContainer
+                key={option.optionId}
+                data-skyroom-poll-option="true"
+                data-selected={checkedAnswers.includes(option.optionId) ? 'true' : 'false'}
+              >
+                <Styled.PollingCheckbox data-test="optionsAnswers">
+                  <Checkbox
+                    id={`answerInput${option.optionDesc}`}
+                    onChange={() => handleCheckboxChange(option.optionId)}
+                    checked={checkedAnswers.includes(option.optionId)}
+                    ariaLabelledBy={`pollAnswerLabel${option.optionDesc}`}
+                    ariaDescribedBy={`pollAnswerDesc${option.optionDesc}`}
+                  />
+                </Styled.PollingCheckbox>
                 <Styled.MultipleResponseAnswersTableAnswerText>
+                  {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
                   <label
                     id={`pollAnswerLabel${option.optionDesc}`}
                     htmlFor={`answerInput${option.optionDesc}`}

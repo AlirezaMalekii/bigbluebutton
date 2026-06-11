@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { throttle } from '/imports/utils/throttle';
 import { layoutSelect, layoutSelectInput, layoutDispatch } from '/imports/ui/components/layout/context';
 import DEFAULT_VALUES from '/imports/ui/components/layout/defaultValues';
@@ -18,9 +18,15 @@ import {
   setSkyroomWebcamLayout,
   clearSkyroomWebcamLayout,
 } from '/imports/ui/components/skyroom-layout/webcam-bounds-store';
+import { SKYROOM_WEBCAM_LAYOUT_EVENT } from '/imports/ui/components/skyroom-layout/webcam-zone-store';
 import { useVideoStreams } from '/imports/ui/components/video-provider/hooks';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
+import {
+  getSkyroomNotesOpen,
+  subscribeSkyroomNotesOpen,
+} from '/imports/ui/components/skyroom-layout/notes-panel-state';
+import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const windowWidth = () => window.document.documentElement.clientWidth;
 const windowHeight = () => window.document.documentElement.clientHeight;
@@ -81,6 +87,25 @@ const CustomLayout = (props) => {
   const prevDeviceType = usePrevious(deviceType);
   const prevIsResizing = usePrevious(isResizing);
   const { isPresentationEnabled } = props;
+  const [skyroomNotesOpen, setSkyroomNotesOpen] = useState(getSkyroomNotesOpen);
+  const calculatesLayoutRef = useRef(() => {});
+  const calculatesLayoutPendingRef = useRef(false);
+
+  useEffect(() => subscribeSkyroomNotesOpen(setSkyroomNotesOpen), []);
+
+  useEffect(() => {
+    const refreshSkyroomWebcamLayout = () => {
+      if (document.getElementById('layout')?.hasAttribute('data-skyroom-column')) {
+        calculatesLayoutRef.current();
+      }
+    };
+
+    window.addEventListener(SKYROOM_WEBCAM_LAYOUT_EVENT, refreshSkyroomWebcamLayout);
+
+    return () => {
+      window.removeEventListener(SKYROOM_WEBCAM_LAYOUT_EVENT, refreshSkyroomWebcamLayout);
+    };
+  }, []);
 
   const throttledCalculatesLayout = throttle(() => calculatesLayout(),
     50, { trailing: true, leading: true });
@@ -108,7 +133,16 @@ const CustomLayout = (props) => {
       throttledCalculatesLayout();
     }
     return undefined;
-  }, [input, deviceType, isRTL, fontSize, fullscreen, isPresentationEnabled, videoStreams.length]);
+  }, [
+    input,
+    deviceType,
+    isRTL,
+    fontSize,
+    fullscreen,
+    isPresentationEnabled,
+    videoStreams.length,
+    skyroomNotesOpen,
+  ]);
 
   // Screenshare + new webcams: run layout immediately (throttle alone leaves full-height share)
   useEffect(() => {
@@ -195,11 +229,14 @@ const CustomLayout = (props) => {
             externalVideo, genericMainContent, screenShare, sharedNotes,
           } = prevInput;
           const { sidebarContentPanel } = sidebarContent;
+          const skyroomColumn = isSkyroomColumnLayout();
+          const keepUsersOpenWithContent = !skyroomColumn
+            && sidebarContentPanel !== PANELS.NONE;
           return defaultsDeep(
             {
               sidebarNavigation: {
                 isOpen:
-                  sidebarNavigation.isOpen || sidebarContentPanel !== PANELS.NONE || false,
+                  sidebarNavigation.isOpen || keepUsersOpenWithContent || false,
                 sidebarNavPanel: sidebarNavigation.sidebarNavPanel,
               },
               sidebarContent: {
@@ -245,10 +282,13 @@ const CustomLayout = (props) => {
             externalVideo, genericMainContent, screenShare, sharedNotes,
           } = prevInput;
           const { sidebarContentPanel } = sidebarContent;
+          const skyroomColumn = isSkyroomColumnLayout();
+          const keepUsersOpenWithContent = !skyroomColumn
+            && sidebarContentPanel !== PANELS.NONE;
           let sidebarContentPanelOverride = sidebarContentPanel;
           let overrideOpenSidebarPanel = sidebarContentPanel !== PANELS.NONE;
           let overrideOpenSidebarNavigation = sidebarNavigation.isOpen
-            || sidebarContentPanel !== PANELS.NONE || false;
+            || keepUsersOpenWithContent || false;
           if (prevLayout === LAYOUT_TYPE.CAMERAS_ONLY
             || prevLayout === LAYOUT_TYPE.PRESENTATION_ONLY
             || prevLayout === LAYOUT_TYPE.MEDIA_ONLY) {
@@ -589,7 +629,7 @@ const CustomLayout = (props) => {
     return mediaBounds;
   };
 
-  const calculatesLayout = () => {
+  const calculatesLayoutImmediate = () => {
     const {
       calculatesNavbarBounds,
       calculatesActionbarBounds,
@@ -689,9 +729,7 @@ const CustomLayout = (props) => {
       };
       layoutActionbarBounds = {
         ...actionbarBounds,
-        width: skyroomLayout.actionbarFullWidth.width,
-        left: skyroomLayout.actionbarFullWidth.left,
-        height: skyroomLayout.actionbarFullWidth.height ?? actionbarBounds.height,
+        ...skyroomLayout.actionbarFullWidth,
       };
       layoutMediaAreaBounds = skyroomLayout.mediaAreaBounds;
       if (skyroomLayout.cameraDockPosition) {
@@ -747,10 +785,29 @@ const CustomLayout = (props) => {
         layoutEl.style.setProperty('--skyroom-stage-left', `${stageLeft}px`);
         layoutEl.style.setProperty('--skyroom-stage-width', `${stageWidth}px`);
         layoutEl.style.setProperty('--skyroom-actionbar-top', `${actionbarTop}px`);
+
+        const notesBounds = skyroomLayout.notesColumnBounds;
+        if (notesBounds) {
+          layoutEl.style.setProperty('--skyroom-notes-top', `${notesBounds.top}px`);
+          layoutEl.style.setProperty('--skyroom-notes-width', `${notesBounds.width}px`);
+          layoutEl.style.setProperty('--skyroom-notes-height', `${notesBounds.height}px`);
+          if (notesBounds.left != null) {
+            layoutEl.style.setProperty('--skyroom-notes-left', `${notesBounds.left}px`);
+            layoutEl.style.removeProperty('--skyroom-notes-right');
+          } else if (notesBounds.right != null) {
+            layoutEl.style.setProperty('--skyroom-notes-right', `${notesBounds.right}px`);
+            layoutEl.style.removeProperty('--skyroom-notes-left');
+          }
+        } else {
+          layoutEl.style.removeProperty('--skyroom-notes-top');
+          layoutEl.style.removeProperty('--skyroom-notes-left');
+          layoutEl.style.removeProperty('--skyroom-notes-right');
+          layoutEl.style.removeProperty('--skyroom-notes-width');
+          layoutEl.style.removeProperty('--skyroom-notes-height');
+        }
       }
-      const hasStageWebcamStrip = (skyroomLayout.stageWebcamStripHeight ?? 0) > 0
-        || (skyroomLayout.useSplitCameras && skyroomLayout.cameraDockBounds);
-      if (layoutEl && (hasActiveScreenShare || hasStageWebcamStrip)) {
+      const hasStageWebcamStrip = (skyroomLayout.stageWebcamStripHeight ?? 0) > 0;
+      if (layoutEl) {
         const shareTop = layoutMediaBounds.top ?? 0;
         const shareHeight = layoutMediaBounds.height ?? 0;
         layoutEl.style.setProperty('--skyroom-screenshare-top', `${shareTop}px`);
@@ -759,8 +816,9 @@ const CustomLayout = (props) => {
           '--skyroom-stage-webcam-height',
           `${skyroomLayout.stageWebcamStripHeight ?? 0}px`,
         );
-        const stageDock = skyroomLayout.cameraDockBounds;
-        if (stageDock && hasStageWebcamStrip) {
+
+        const stageDock = hasStageWebcamStrip ? skyroomLayout.cameraDockBounds : null;
+        if (stageDock?.height > 0) {
           layoutEl.style.setProperty('--skyroom-stage-webcam-top', `${stageDock.top}px`);
           if (stageDock.left != null) {
             layoutEl.style.setProperty('--skyroom-stage-webcam-left', `${stageDock.left}px`);
@@ -778,19 +836,17 @@ const CustomLayout = (props) => {
           layoutEl.style.removeProperty('--skyroom-stage-webcam-width');
           layoutEl.removeAttribute('data-skyroom-stage-webcams');
         }
-      } else if (layoutEl) {
-        layoutEl.style.removeProperty('--skyroom-screenshare-top');
-        layoutEl.style.removeProperty('--skyroom-screenshare-height');
-        layoutEl.style.removeProperty('--skyroom-stage-webcam-height');
-        layoutEl.style.removeProperty('--skyroom-stage-webcam-top');
-        layoutEl.style.removeProperty('--skyroom-stage-webcam-left');
-        layoutEl.style.removeProperty('--skyroom-stage-webcam-right');
-        layoutEl.style.removeProperty('--skyroom-stage-webcam-width');
-        layoutEl.removeAttribute('data-skyroom-stage-webcams');
       }
 
-      if (skyroomLayout.useSplitCameras) {
-        layoutEl?.setAttribute('data-skyroom-split-cameras', 'true');
+      const hasSidebarWebcams = skyroomLayout.useSidebarWebcam;
+
+      if (hasSidebarWebcams) {
+        layoutEl?.setAttribute('data-skyroom-sidebar-webcam', 'true');
+        if (skyroomLayout.useSplitCameras) {
+          layoutEl?.setAttribute('data-skyroom-split-cameras', 'true');
+        } else {
+          layoutEl?.removeAttribute('data-skyroom-split-cameras');
+        }
         const sidebarDock = skyroomLayout.sidebarCameraDockBounds;
         if (layoutEl && sidebarDock) {
           layoutEl.style.setProperty('--skyroom-sidebar-webcam-top', `${sidebarDock.top}px`);
@@ -804,23 +860,48 @@ const CustomLayout = (props) => {
           layoutEl.style.setProperty('--skyroom-sidebar-webcam-width', `${sidebarDock.width}px`);
           layoutEl.style.setProperty('--skyroom-sidebar-webcam-height', `${sidebarDock.height}px`);
         }
-        setSkyroomWebcamLayout({
-          split: true,
-          sidebar: skyroomLayout.sidebarCameraDockBounds,
-          stage: skyroomLayout.cameraDockBounds,
-        });
       } else {
+        layoutEl?.removeAttribute('data-skyroom-sidebar-webcam');
         layoutEl?.removeAttribute('data-skyroom-split-cameras');
         layoutEl?.style.removeProperty('--skyroom-sidebar-webcam-top');
         layoutEl?.style.removeProperty('--skyroom-sidebar-webcam-left');
         layoutEl?.style.removeProperty('--skyroom-sidebar-webcam-right');
         layoutEl?.style.removeProperty('--skyroom-sidebar-webcam-width');
         layoutEl?.style.removeProperty('--skyroom-sidebar-webcam-height');
+      }
+
+      layoutEl?.removeAttribute('data-skyroom-webcam-float');
+
+      const hasWebcamLayout = Boolean(
+        skyroomLayout.cameraDockBounds
+        || skyroomLayout.centerWebcamBounds
+        || skyroomLayout.sidebarWebcamDropEnabled
+        || hasSidebarWebcams,
+      );
+
+      if (hasWebcamLayout) {
+        setSkyroomWebcamLayout({
+          hasSidebar: hasSidebarWebcams,
+          split: Boolean(skyroomLayout.useSplitCameras && hasSidebarWebcams),
+          sidebar: skyroomLayout.sidebarCameraDockBounds,
+          sidebarDrop: skyroomLayout.sidebarWebcamDropBounds,
+          sidebarDropEnabled: skyroomLayout.sidebarWebcamDropEnabled,
+          stage: skyroomLayout.cameraDockBounds,
+          stageStrip: skyroomLayout.stageStripBounds,
+          center: skyroomLayout.centerWebcamBounds,
+          centerDrop: skyroomLayout.centerDropBounds,
+          centerDropEnabled: skyroomLayout.centerDropEnabled,
+          stageMediaOpen: skyroomLayout.stageMediaOpen,
+          sidebarStackVisible: !skyroomLayout.stageFullWidth,
+        });
+      } else {
         clearSkyroomWebcamLayout();
       }
     } else {
       const layoutElOff = document.getElementById('layout');
+      layoutElOff?.removeAttribute('data-skyroom-sidebar-webcam');
       layoutElOff?.removeAttribute('data-skyroom-split-cameras');
+      layoutElOff?.removeAttribute('data-skyroom-webcam-float');
       layoutElOff?.style.removeProperty('--skyroom-stage-top');
       layoutElOff?.style.removeProperty('--skyroom-stage-bottom');
       layoutElOff?.style.removeProperty('--skyroom-stage-left');
@@ -1070,6 +1151,17 @@ const CustomLayout = (props) => {
       },
     });
   };
+
+  const calculatesLayout = () => {
+    if (calculatesLayoutPendingRef.current) return;
+    calculatesLayoutPendingRef.current = true;
+    queueMicrotask(() => {
+      calculatesLayoutPendingRef.current = false;
+      calculatesLayoutImmediate();
+    });
+  };
+
+  calculatesLayoutRef.current = calculatesLayout;
 
   /* eslint-enable no-use-before-define */
   return null;

@@ -44,6 +44,7 @@ import {
 import NoopTool from './custom-tools/noop-tool/component';
 import DeleteSelectedItemsTool from './custom-tools/delete-selected-items/component';
 import SessionStorage from '/imports/ui/services/storage/session';
+import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const CAMERA_TYPE = 'camera';
 const colorStyles = [
@@ -1018,9 +1019,20 @@ const Whiteboard = React.memo((props) => {
 
     if (!Number.isFinite(newSlideZoom) || !Number.isFinite(newContainerZoom)) return;
 
-    setCursorZoom((prev) => (prev.slideZoom === newSlideZoom && prev.containerZoom === newContainerZoom
-      ? prev
-      : { slideZoom: newSlideZoom, containerZoom: newContainerZoom }));
+    const nextCursorZoom = {
+      slideZoom: newSlideZoom,
+      containerZoom: newContainerZoom,
+    };
+
+    // Defer React state updates — store.listen can fire while tldraw is rendering.
+    queueMicrotask(() => {
+      setCursorZoom((prev) => (
+        prev.slideZoom === nextCursorZoom.slideZoom
+        && prev.containerZoom === nextCursorZoom.containerZoom
+          ? prev
+          : nextCursorZoom
+      ));
+    });
   };
   updateCursorZoomRef.current = updateCursorZoom;
 
@@ -2317,12 +2329,16 @@ const Whiteboard = React.memo((props) => {
   }, []);
 
   React.useEffect(() => {
-    if (isMounting) {
+    if (!isMounting) return undefined;
+
+    const frameId = window.requestAnimationFrame(() => {
       setIsMounting(false);
-      /// brings presentation toolbar back
+      // Defer parent state updates until after tldraw finishes its layout pass.
       setTldrawIsMounting(false);
-    }
-  }, [tlEditorRef?.current?.camera, presentationAreaWidth, presentationAreaHeight, presentationId]);
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [isMounting, presentationAreaWidth, presentationAreaHeight, presentationId, setTldrawIsMounting]);
 
   React.useEffect(() => {
     const baseName = window.meetingClientSettings.public.app.cdn
@@ -2433,6 +2449,7 @@ const Whiteboard = React.memo((props) => {
           pointerDiameter,
           hiddenGeoShapes,
           viewerCanPan,
+          isSkyroom: isSkyroomColumnLayout(),
         }}
       />
     </div>

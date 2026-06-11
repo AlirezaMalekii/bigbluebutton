@@ -31,8 +31,8 @@ const PresentationUploaderContainer = (props) => {
   const userIsPresenter = currentUserData?.presenter;
 
   const { data: presentationData } = useDeduplicatedSubscription(PRESENTATIONS_SUBSCRIPTION);
-  const presentations = presentationData?.pres_presentation || [];
-  const currentPresentation = presentations.find((p) => p.current)?.presentationId || '';
+  const presentations = (presentationData?.pres_presentation || []).filter(Boolean);
+  const currentPresentation = presentations.find((p) => p?.current)?.presentationId || '';
 
   const [presentationSetDownloadable] = useMutation(PRESENTATION_SET_DOWNLOADABLE);
   const [presentationExport] = useMutation(PRESENTATION_EXPORT);
@@ -97,6 +97,7 @@ const PresentationUploaderContainer = (props) => {
         presentationEnabled={presentationEnabled}
         externalUploadData={externalUploadData}
         handleSave={Service.handleSavePresentation}
+        handleUploadPending={Service.uploadPendingPresentations}
         handleDismissToast={PresUploaderToast.handleDismissToast}
         renderToastList={Service.renderToastList}
         renderPresentationItemStatus={PresUploaderToast.renderPresentationItemStatus}

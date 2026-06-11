@@ -363,7 +363,7 @@ class OptionsDropdown extends PureComponent {
       && selectedLayout !== LAYOUT_TYPE.PARTICIPANTS_AND_CHAT_ONLY
       && showLayoutButton;
 
-    if (shouldShowManageLayoutButton && isLayoutsEnabled) {
+    if (shouldShowManageLayoutButton && isLayoutsEnabled && !isSkyroomColumnLayout()) {
       this.menuItems.push({
         key: 'list-item-layout-modal',
         icon: 'manage_layout',

@@ -1,0 +1,130 @@
+/* =====================================================================
+   Skyroom loading — full-screen splash + inline spinners
+   ===================================================================== */
+
+:root {
+  --loader-bullet: #20c7bb;
+  --loader-ring: rgba(32, 199, 187, 0.18);
+  --loader-ring-active: rgba(32, 199, 187, 0.85);
+  --skyroom-skeleton-base: rgba(255, 255, 255, 0.06);
+  --skyroom-skeleton-highlight: rgba(32, 199, 187, 0.12);
+}
+
+@keyframes skyroom-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes skyroom-pulse {
+  0%, 100% { opacity: 0.45; transform: scale(0.92); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+/* Full-screen splash */
+.skyroom-loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 40%, rgba(20, 169, 158, 0.06) 0%, transparent 70%),
+    linear-gradient(180deg, #070b14 0%, #0e1828 100%);
+}
+
+.skyroom-loading-screen__spinner-wrap {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+
+.skyroom-loading-screen__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--loader-ring);
+  border-top-color: var(--loader-ring-active);
+  animation: skyroom-spin 0.9s linear infinite;
+}
+
+.skyroom-loading-screen__ring--inner {
+  inset: 8px;
+  border-width: 2px;
+  border-top-color: var(--loader-bullet);
+  animation: skyroom-spin 1.4s linear infinite reverse;
+  opacity: 0.7;
+}
+
+.skyroom-loading-screen__dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: var(--loader-bullet);
+  animation: skyroom-pulse 1.6s ease-in-out infinite;
+}
+
+.skyroom-loading-screen__label {
+  font-family: 'IRANYekan', 'Source Sans Pro', Tahoma, Arial, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: rgba(238, 244, 251, 0.72);
+  margin: 0;
+  direction: rtl;
+}
+
+html[data-skyroom="true"] .skyroom-loading-screen,
+html[data-skyroom="true"] .skyroom-loading-screen__label {
+  font-family: 'IRANYekan', 'Source Sans Pro', Tahoma, Arial, sans-serif;
+}
+
+/* Inline spinner sizes */
+.skyroom-spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.skyroom-spinner__ring {
+  border-radius: 50%;
+  border-style: solid;
+  border-color: var(--loader-ring);
+  border-top-color: var(--loader-ring-active);
+  animation: skyroom-spin 0.85s linear infinite;
+  box-sizing: border-box;
+}
+
+.skyroom-spinner--sm .skyroom-spinner__ring {
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
+}
+
+.skyroom-spinner--md .skyroom-spinner__ring {
+  width: 28px;
+  height: 28px;
+  border-width: 2.5px;
+}
+
+.skyroom-spinner--lg .skyroom-spinner__ring {
+  width: 40px;
+  height: 40px;
+  border-width: 3px;
+}
+
+/* Skeleton overrides in sidebar */
+#layout[data-skyroom-column="true"] .react-loading-skeleton {
+  --base-color: var(--skyroom-skeleton-base) !important;
+  --highlight-color: var(--skyroom-skeleton-highlight) !important;
+  border-radius: 8px !important;
+}

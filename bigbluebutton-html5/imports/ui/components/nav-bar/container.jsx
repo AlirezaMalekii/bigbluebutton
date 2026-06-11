@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import Auth from '/imports/ui/services/auth';
 import getFromUserSettings from '/imports/ui/services/users-settings';
@@ -14,6 +14,12 @@ import { useShortcut } from '../../core/hooks/useShortcut';
 import useMeeting from '../../core/hooks/useMeeting';
 import { registerTitleView } from '/imports/utils/dom-utils';
 import connectionStatus from '../../core/graphql/singletons/connectionStatus';
+import NotesService from '/imports/ui/components/notes/service';
+import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import {
+  subscribeSkyroomNotesOpen,
+  getSkyroomNotesOpen,
+} from '/imports/ui/components/skyroom-layout/notes-panel-state';
 
 const intlMessages = defineMessages({
   defaultViewLabel: {
@@ -40,7 +46,14 @@ const NavBarContainer = ({ children, ...props }) => {
   const toggleUserList = useShortcut('toggleUserList');
   const togglePublicChat = useShortcut('togglePublicChat');
 
-  const hasUnreadNotes = sidebarContentPanel !== PANELS.SHARED_NOTES && unread && !notesIsPinned;
+  const [skyroomNotesOpen, setSkyroomNotesOpen] = useState(getSkyroomNotesOpen);
+  const isSharedNotesEnabled = NotesService.useIsEnabled();
+  useEffect(() => subscribeSkyroomNotesOpen(setSkyroomNotesOpen), []);
+
+  const notesPanelOpen = isSkyroomColumnLayout()
+    ? skyroomNotesOpen
+    : sidebarContentPanel === PANELS.SHARED_NOTES;
+  const hasUnreadNotes = !notesPanelOpen && unread && !notesIsPinned;
 
   const { data: chats } = useChat((chat) => ({
     totalUnread: chat.totalUnread,
@@ -112,6 +125,8 @@ const NavBarContainer = ({ children, ...props }) => {
         amIModerator,
         hasUnreadMessages,
         hasUnreadNotes,
+        isSharedNotesEnabled,
+        isSharedNotesExpanded: skyroomNotesOpen,
         sidebarNavPanel,
         sidebarContentPanel,
         sidebarNavigation,

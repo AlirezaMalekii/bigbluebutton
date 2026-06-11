@@ -633,6 +633,12 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
     }
   }, [textareaRef, customInput]);
 
+  const handlePollStarted = () => {
+    Session.setItem('pollInitiated', true);
+    Session.setItem('forcePollOpen', false);
+    onRequestClose?.();
+  };
+
   const pollOptions = () => {
     if (hasPoll) return <LiveResultContainer />;
     return (
@@ -760,7 +766,7 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
           isQuiz={isQuiz}
           correctAnswer={correctAnswer}
           setCorrectAnswer={setCorrectAnswer}
-          onStartPoll={onRequestClose}
+          onStartPoll={handlePollStarted}
         />
       </>
     );

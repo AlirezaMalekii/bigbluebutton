@@ -1,0 +1,184 @@
+/* =====================================================================
+   Skyroom — Header status cluster (poll summary + countdown timer)
+   ===================================================================== */
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-header-status-cluster"] {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+}
+
+/* Poll summary pill — matches countdown timer visual language */
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary"] {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 13.2rem;
+  min-height: 2.22rem;
+  padding: 0.24rem 0.52rem;
+  margin: 0;
+  border: 1px solid rgba(13, 136, 126, 0.55);
+  border-radius: 1rem;
+  cursor: pointer;
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.875rem;
+  background: linear-gradient(
+    135deg,
+    rgba(13, 136, 126, 0.92) 0%,
+    rgba(20, 169, 158, 0.82) 45%,
+    rgba(6, 100, 247, 0.72) 100%
+  );
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+  transition: filter 0.15s ease, transform 0.12s ease;
+  animation: skyroom-poll-summary-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes skyroom-poll-summary-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary"]:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary"]:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 2px;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary-icon"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 0.75rem;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary-meta"] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+  min-width: 0;
+  flex: 1;
+  text-align: start;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary-primary"] {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary-pill"] {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.18);
+  padding: 0.1rem 0.44rem;
+  font-size: 0.69rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary-dot"] {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #df442a;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary-dot"][data-complete="true"] {
+  background: #1dbf73;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary-state"] {
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary-secondary"] {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  font-size: 0.74rem;
+  line-height: 1;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary-question"] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 6.5rem;
+  opacity: 0.92;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary-detail"] {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary-bar"] {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 3px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.22);
+  overflow: hidden;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary-bar-fill"] {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.92);
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Timer inside the same cluster — keep gradient pill from component styles */
+#layout[data-skyroom-column="true"] [data-test="skyroom-header-status-cluster"] [data-test="timeIndicator"] {
+  margin: 0 !important;
+  min-width: 13.2rem;
+}
+
+@media (max-width: 768px) {
+  #layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary"] {
+    min-width: 10rem;
+    min-height: 1.88rem;
+    padding: 0.12rem 0.35rem;
+    border-radius: 0.7rem;
+  }
+
+  #layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary-question"] {
+    display: none;
+  }
+}

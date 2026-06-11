@@ -30,6 +30,8 @@ import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import deviceInfo from '/imports/utils/deviceInfo';
 import { uniqueId } from '/imports/utils/string-utils';
 import Session from '/imports/ui/services/storage/in-memory';
+import SkyroomSpinner from '/imports/ui/components/skyroom-layout/loading/SkyroomSpinner';
+import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const MOBILE_HOVER_TIMEOUT = 5000;
 const MOBILE_HOVER_INTERVAL = 2000;
@@ -643,11 +645,15 @@ class ScreenshareComponent extends React.Component {
               key={uniqueId('screenshareArea-')}
               data-test="screenshareConnecting"
             >
-              <Styled.Spinner animations={animations}>
-                <Styled.Bounce1 animations={animations} />
-                <Styled.Bounce2 animations={animations} />
-                <div />
-              </Styled.Spinner>
+              {isSkyroomTheme()
+                ? <SkyroomSpinner size="lg" />
+                : (
+                  <Styled.Spinner animations={animations}>
+                    <Styled.Bounce1 animations={animations} />
+                    <Styled.Bounce2 animations={animations} />
+                    <div />
+                  </Styled.Spinner>
+                )}
             </Styled.SpinnerWrapper>
           )}
         {autoplayBlocked ? this.renderAutoplayOverlay() : null}

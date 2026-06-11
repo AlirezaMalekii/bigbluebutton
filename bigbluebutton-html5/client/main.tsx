@@ -10,6 +10,7 @@ import IntlLoaderContainer from '/imports/startup/client/intlLoader';
 import CustomUsersSettings from '/imports/ui/components/join-handler/custom-users-settings/component';
 import MeetingClient from '/client/meetingClient';
 import CustomStyles from '/imports/ui/components/custom-styles/component';
+import SkyroomGlobalLoading from '/imports/ui/components/skyroom-layout/loading/SkyroomGlobalLoading';
 import 'react-toastify/dist/ReactToastify.css';
 
 const STARTUP_CRASH_METADATA = { logCode: 'app_startup_crash', logMessage: 'Possible startup crash' };
@@ -37,28 +38,31 @@ if (
 
 const Main: React.FC = () => {
   return (
-    <SettingsLoader>
-      <CustomUsersSettings>
-        <IntlLoaderContainer>
-          <CustomStyles>
-            <ErrorBoundary
-              Fallback={ErrorScreen}
-              logMetadata={STARTUP_CRASH_METADATA}
-              isCritical
-              captureGlobalLogs
-            >
-              <LoadingScreenHOC>
-                <ConnectionManager>
-                  <PresenceManager>
-                    <MeetingClient />
-                  </PresenceManager>
-                </ConnectionManager>
-              </LoadingScreenHOC>
-            </ErrorBoundary>
-          </CustomStyles>
-        </IntlLoaderContainer>
-      </CustomUsersSettings>
-    </SettingsLoader>
+    <>
+      <SkyroomGlobalLoading />
+      <SettingsLoader>
+        <CustomUsersSettings>
+          <IntlLoaderContainer>
+            <CustomStyles>
+              <ErrorBoundary
+                Fallback={ErrorScreen}
+                logMetadata={STARTUP_CRASH_METADATA}
+                isCritical
+                captureGlobalLogs
+              >
+                <LoadingScreenHOC>
+                  <ConnectionManager>
+                    <PresenceManager>
+                      <MeetingClient />
+                    </PresenceManager>
+                  </ConnectionManager>
+                </LoadingScreenHOC>
+              </ErrorBoundary>
+            </CustomStyles>
+          </IntlLoaderContainer>
+        </CustomUsersSettings>
+      </SettingsLoader>
+    </>
   );
 };
 

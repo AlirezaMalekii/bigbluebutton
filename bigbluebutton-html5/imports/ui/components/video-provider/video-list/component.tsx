@@ -16,8 +16,29 @@ import { Output } from '/imports/ui/components/layout/layoutTypes';
 import { VideoItem } from '/imports/ui/components/video-provider/types';
 import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
 import { UserCameraHelperAreas } from '../../plugins-engine/extensible-areas/components/user-camera-helper/types';
-import { getSkyroomWebcamLayout } from '/imports/ui/components/skyroom-layout/webcam-bounds-store';
-import { partitionSkyroomStreams } from '/imports/ui/components/skyroom-layout/camera-placement';
+import {
+  getSkyroomWebcamLayout,
+  isSkyroomWebcamLayoutActive,
+} from '/imports/ui/components/skyroom-layout/webcam-bounds-store';
+import {
+  getSkyroomStreamKey,
+  partitionSkyroomStreams,
+  computeSkyroomStripGrid,
+  computeSkyroomSidebarGrid,
+  buildSkyroomFixedGridStyle,
+  SKYROOM_SIDEBAR_WEBCAM_H,
+  SKYROOM_WEBCAM_TILE_W,
+  SKYROOM_WEBCAM_TILE_H,
+} from '/imports/ui/components/skyroom-layout/camera-placement';
+import SkyroomWebcamDragLayer from '/imports/ui/components/skyroom-layout/webcam-zone-drag/SkyroomWebcamDragLayer';
+import SkyroomWebcamDropZones from '/imports/ui/components/skyroom-layout/webcam-zone-drag/SkyroomWebcamDropZones';
+import SkyroomWebcamZoneDrag from '/imports/ui/components/skyroom-layout/webcam-zone-drag/SkyroomWebcamZoneDrag';
+import {
+  getSkyroomWebcamDragPreview,
+  subscribeSkyroomWebcamZones,
+  SKYROOM_WEBCAM_ZONES,
+} from '/imports/ui/components/skyroom-layout/webcam-zone-store';
+import Auth from '/imports/ui/services/auth';
 
 const intlMessages = defineMessages({
   autoplayBlockedDesc: {
@@ -97,6 +118,8 @@ interface VideoListState {
     width: number;
     height: number;
     columns: number;
+    cellWidth?: number;
+    cellHeight?: number;
   },
   sidebarGrid: {
     rows: number,
@@ -104,8 +127,20 @@ interface VideoListState {
     width: number;
     height: number;
     columns: number;
+    cellWidth?: number;
+    cellHeight?: number;
+  },
+  centerGrid: {
+    rows: number,
+    filledArea: number,
+    width: number;
+    height: number;
+    columns: number;
+    cellWidth?: number;
+    cellHeight?: number;
   },
   autoplayBlocked: boolean,
+  skyroomZoneRevision: number,
 }
 
 class VideoList extends Component<VideoListProps, VideoListState> {
@@ -116,6 +151,10 @@ class VideoList extends Component<VideoListProps, VideoListState> {
   private canvas: HTMLDivElement | null;
 
   private sidebarGrid: HTMLDivElement | null;
+
+  private centerGrid: HTMLDivElement | null;
+
+  private unsubscribeSkyroomZones: (() => void) | null;
 
   private failedMediaElements: unknown[];
 
@@ -128,11 +167,22 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       optimalGrid: {
         rows: 1,
         filledArea: 0,
-        columns: 0,
-        height: 0,
-        width: 0,
+        columns: 1,
+        height: SKYROOM_WEBCAM_TILE_H,
+        width: SKYROOM_WEBCAM_TILE_W,
+        cellWidth: SKYROOM_WEBCAM_TILE_W,
+        cellHeight: SKYROOM_WEBCAM_TILE_H,
       },
       sidebarGrid: {
+        rows: 1,
+        filledArea: 0,
+        columns: 1,
+        height: SKYROOM_WEBCAM_TILE_H,
+        width: SKYROOM_WEBCAM_TILE_W,
+        cellWidth: SKYROOM_WEBCAM_TILE_W,
+        cellHeight: SKYROOM_WEBCAM_TILE_H,
+      },
+      centerGrid: {
         rows: 1,
         filledArea: 0,
         columns: 0,
@@ -140,12 +190,15 @@ class VideoList extends Component<VideoListProps, VideoListState> {
         width: 0,
       },
       autoplayBlocked: false,
+      skyroomZoneRevision: 0,
     };
 
     this.ticking = false;
     this.grid = null;
     this.canvas = null;
     this.sidebarGrid = null;
+    this.centerGrid = null;
+    this.unsubscribeSkyroomZones = null;
     this.failedMediaElements = [];
     this.handleCanvasResize = throttle(this.handleCanvasResize.bind(this), 66,
       {
@@ -162,6 +215,12 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     this.handleCanvasResize();
     window.addEventListener('resize', this.handleCanvasResize, false);
     window.addEventListener('videoPlayFailed', this.handlePlayElementFailed);
+    this.unsubscribeSkyroomZones = subscribeSkyroomWebcamZones(() => {
+      this.setState(
+        (prev) => ({ skyroomZoneRevision: prev.skyroomZoneRevision + 1 }),
+        () => this.handleCanvasResize(),
+      );
+    });
   }
 
   componentDidUpdate(prevProps: VideoListProps) {
@@ -189,6 +248,17 @@ class VideoList extends Component<VideoListProps, VideoListState> {
   componentWillUnmount() {
     window.removeEventListener('resize', this.handleCanvasResize, false);
     window.removeEventListener('videoPlayFailed', this.handlePlayElementFailed);
+    this.unsubscribeSkyroomZones?.();
+  }
+
+  getSkyroomPartition() {
+    const { streams } = this.props;
+    const skyroomLayout = getSkyroomWebcamLayout();
+    return partitionSkyroomStreams(streams, {
+      centerDropEnabled: skyroomLayout?.centerDropEnabled,
+      stageMediaOpen: skyroomLayout?.stageMediaOpen,
+      sidebarStackVisible: skyroomLayout?.sidebarStackVisible ?? true,
+    });
   }
 
   handleAllowAutoplay() {
@@ -289,20 +359,21 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     } = this.props;
     const skyroomLayout = getSkyroomWebcamLayout();
 
-    if (skyroomLayout?.split) {
-      const { sidebar, stage } = partitionSkyroomStreams(streams);
+    if (isSkyroomWebcamLayoutActive()) {
+      const { sidebar, stage, center } = this.getSkyroomPartition();
+      const dockStreams = stage;
       const sidebarBounds = skyroomLayout.sidebar;
-      let { sidebarGrid } = this.state;
+      const centerBounds = skyroomLayout.center;
+      let { sidebarGrid, centerGrid } = this.state;
 
       if (sidebar.length > 0 && sidebarBounds && this.sidebarGrid) {
         const sidebarGutter = parseInt(window.getComputedStyle(this.sidebarGrid)
           .getPropertyValue('grid-row-gap'), 10) || 2;
-        const computedSidebarGrid = VideoList.computeOptimalGrid(
-          sidebar,
+        const computedSidebarGrid = computeSkyroomSidebarGrid(
+          sidebar.length,
           sidebarBounds.width,
           sidebarBounds.height,
           sidebarGutter,
-          '',
         );
         if (computedSidebarGrid) {
           sidebarGrid = computedSidebarGrid;
@@ -310,33 +381,45 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       }
 
       let { optimalGrid } = this.state;
-      const visibleStage = stage.filter(
+      const visibleStage = dockStreams.filter(
         (item) => item.type === VIDEO_TYPES.GRID || !('render' in item) || item.render !== false,
       );
 
       if (visibleStage.length > 0 && this.canvas && this.grid) {
         const gridGutter = parseInt(window.getComputedStyle(this.grid)
-          .getPropertyValue('grid-row-gap'), 10);
-        const computedStageGrid = VideoList.computeOptimalGrid(
-          visibleStage,
-          cameraDock?.width,
-          cameraDock?.height,
+          .getPropertyValue('grid-row-gap'), 10) || 2;
+        const stageBoundsWidth = skyroomLayout.stage?.width ?? cameraDock?.width;
+        const computedStageGrid = computeSkyroomStripGrid(
+          visibleStage.length,
+          stageBoundsWidth,
+          SKYROOM_SIDEBAR_WEBCAM_H,
           gridGutter,
-          focusedId,
         );
         if (computedStageGrid) {
           optimalGrid = computedStageGrid;
-          layoutContextDispatch({
-            type: ACTIONS.SET_CAMERA_DOCK_OPTIMAL_GRID_SIZE,
-            value: {
-              width: optimalGrid.width,
-              height: optimalGrid.height,
-            },
-          });
         }
       }
 
-      this.setState({ optimalGrid, sidebarGrid });
+      const visibleCenter = center.filter(
+        (item) => item.type === VIDEO_TYPES.GRID || !('render' in item) || item.render !== false,
+      );
+
+      if (visibleCenter.length > 0 && centerBounds && this.centerGrid) {
+        const centerGutter = parseInt(window.getComputedStyle(this.centerGrid)
+          .getPropertyValue('grid-row-gap'), 10) || 2;
+        const computedCenterGrid = VideoList.computeOptimalGrid(
+          visibleCenter,
+          centerBounds.width,
+          centerBounds.height,
+          centerGutter,
+          focusedId,
+        );
+        if (computedCenterGrid) {
+          centerGrid = computedCenterGrid;
+        }
+      }
+
+      this.setState({ optimalGrid, sidebarGrid, centerGrid });
       return;
     }
 
@@ -445,7 +528,11 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     );
   }
 
-  renderVideoList(streamsToRender?: VideoItem[]) {
+  renderVideoList(
+    streamsToRender?: VideoItem[],
+    enableSkyroomZoneDrag = false,
+    sourceZone?: string,
+  ) {
     const {
       streams,
       onVirtualBgDrop,
@@ -458,7 +545,11 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       isGridEnabled,
       overflowCount,
     } = this.props;
-    const listStreams = streamsToRender ?? streams;
+    const dragPreview = getSkyroomWebcamDragPreview();
+    const listStreams = (streamsToRender ?? streams).filter((item) => {
+      if (!dragPreview?.streamKey) return true;
+      return getSkyroomStreamKey(item) !== dragPreview.streamKey;
+    });
     const numOfStreams = listStreams.filter(
       (item) => item.type === VIDEO_TYPES.GRID || !('render' in item) || item.render !== false,
     ).length;
@@ -487,9 +578,8 @@ class VideoList extends Component<VideoListProps, VideoListState> {
 
       if (!shouldRender) return null;
 
-      return (
+      const tile = (
         <Styled.VideoListItem
-          key={key}
           $focused={isFocused}
           data-test="webcamVideoItem"
         >
@@ -517,6 +607,22 @@ class VideoList extends Component<VideoListProps, VideoListState> {
           />
         </Styled.VideoListItem>
       );
+
+      if (!enableSkyroomZoneDrag || !sourceZone) {
+        return React.cloneElement(tile, { key });
+      }
+
+      return (
+        <SkyroomWebcamZoneDrag
+          key={key}
+          streamKey={getSkyroomStreamKey(item)}
+          sourceZone={sourceZone}
+          enabled={enableSkyroomZoneDrag}
+          isOwnStream={item.userId === Auth.userID}
+        >
+          {tile}
+        </SkyroomWebcamZoneDrag>
+      );
     });
 
     if (shouldShowOverflowTile) {
@@ -534,17 +640,27 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     return videoItems;
   }
 
-  renderSkyroomSplitLayout() {
+  renderFloatingWebcamTile(streamKey: string) {
+    const { streams } = this.props;
+    const item = streams.find((stream) => getSkyroomStreamKey(stream) === streamKey);
+    if (!item) return null;
+    return this.renderVideoList([item], false)[0];
+  }
+
+  renderSkyroomLayout() {
     const {
-      streams,
       intl,
       cameraDock,
       isGridEnabled,
     } = this.props;
-    const { optimalGrid, sidebarGrid, autoplayBlocked } = this.state;
+    const {
+      optimalGrid, sidebarGrid, centerGrid, autoplayBlocked,
+    } = this.state;
     const skyroomLayout = getSkyroomWebcamLayout();
-    const { sidebar, stage } = partitionSkyroomStreams(streams);
+    const { sidebar, stage, center } = this.getSkyroomPartition();
+    const dockStreams = stage;
     const sidebarBounds = skyroomLayout?.sidebar;
+    const centerBounds = skyroomLayout?.center;
     const { position } = cameraDock;
 
     const sidebarDockStyle: React.CSSProperties = sidebarBounds ? {
@@ -560,6 +676,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       justifyContent: 'center',
       pointerEvents: 'auto',
       margin: 0,
+      overflow: 'hidden',
     } : {};
 
     const layoutEl = typeof document !== 'undefined' ? document.getElementById('layout') : null;
@@ -575,23 +692,61 @@ class VideoList extends Component<VideoListProps, VideoListState> {
             this.sidebarGrid = ref;
           }}
           className="video-provider_list skyroom-sidebar-webcam-list"
+          style={buildSkyroomFixedGridStyle(sidebarGrid) ?? undefined}
+        >
+          {this.renderVideoList(sidebar, true, SKYROOM_WEBCAM_ZONES.SIDEBAR)}
+        </Styled.VideoList>
+      </div>
+    ) : null;
+
+    const centerDock = center.length > 0 && centerBounds ? (
+      <div
+        id="skyroom-center-webcam-dock"
+        data-test="skyroomCenterWebcamDock"
+        style={{
+          position: 'fixed',
+          top: centerBounds.top,
+          left: centerBounds.left ?? undefined,
+          right: centerBounds.right ?? undefined,
+          width: centerBounds.width,
+          height: centerBounds.height,
+          zIndex: centerBounds.zIndex ?? 7,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerEvents: 'auto',
+          margin: 0,
+        }}
+      >
+        <Styled.VideoList
+          ref={(ref) => {
+            this.centerGrid = ref;
+          }}
+          className="video-provider_list skyroom-center-webcam-list"
           style={{
-            width: `${sidebarGrid.width}px`,
-            height: `${sidebarGrid.height}px`,
-            gridTemplateColumns: `repeat(${sidebarGrid.columns}, 1fr)`,
-            gridTemplateRows: `repeat(${sidebarGrid.rows}, 1fr)`,
+            width: '100%',
+            height: '100%',
+            gridTemplateColumns: `repeat(${centerGrid.columns}, 1fr)`,
+            gridTemplateRows: `repeat(${centerGrid.rows}, 1fr)`,
           }}
         >
-          {this.renderVideoList(sidebar)}
+          {this.renderVideoList(center, true, SKYROOM_WEBCAM_ZONES.CENTER)}
         </Styled.VideoList>
       </div>
     ) : null;
 
     return (
       <>
+        <SkyroomWebcamDropZones />
+        <SkyroomWebcamDragLayer
+          renderFloatingTile={(streamKey) => this.renderFloatingWebcamTile(streamKey)}
+        />
         {layoutEl && sidebarDock
           ? createPortal(sidebarDock, layoutEl)
           : sidebarDock}
+        {layoutEl && centerDock
+          ? createPortal(centerDock, layoutEl)
+          : centerDock}
         <Styled.VideoCanvas
           $position={position}
           ref={(ref) => {
@@ -599,24 +754,20 @@ class VideoList extends Component<VideoListProps, VideoListState> {
           }}
           style={{
             minHeight: 'inherit',
+            visibility: dockStreams.length > 0 || isGridEnabled ? 'visible' : 'hidden',
           }}
         >
           {this.renderPreviousPageButton()}
 
-          {!stage.length && !isGridEnabled ? null : (
+          {!dockStreams.length && !isGridEnabled ? null : (
             <Styled.VideoList
               ref={(ref) => {
                 this.grid = ref;
               }}
-              style={{
-                width: `${optimalGrid.width}px`,
-                height: `${optimalGrid.height}px`,
-                gridTemplateColumns: `repeat(${optimalGrid.columns}, 1fr)`,
-                gridTemplateRows: `repeat(${optimalGrid.rows}, 1fr)`,
-              }}
-              className="video-provider_list"
+              style={buildSkyroomFixedGridStyle(optimalGrid) ?? undefined}
+              className="video-provider_list skyroom-stage-webcam-list"
             >
-              {this.renderVideoList(stage)}
+              {this.renderVideoList(dockStreams, true, SKYROOM_WEBCAM_ZONES.STAGE)}
             </Styled.VideoList>
           )}
           {!autoplayBlocked ? null : (
@@ -645,10 +796,9 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       cameraDock,
       isGridEnabled,
     } = this.props;
-    const skyroomLayout = getSkyroomWebcamLayout();
 
-    if (skyroomLayout?.split) {
-      return this.renderSkyroomSplitLayout();
+    if (isSkyroomWebcamLayoutActive()) {
+      return this.renderSkyroomLayout();
     }
 
     const { optimalGrid, autoplayBlocked } = this.state;

@@ -48,9 +48,9 @@
 }
 
 #WhiteboardOptionButton .skyroom-wb-action-btn:hover {
-  border-color: rgba(32, 199, 187, 0.55);
+  border-color: var(--skyroom-accent-border, rgba(32, 199, 187, 0.55));
   background:
-    linear-gradient(165deg, rgba(32, 199, 187, 0.22) 0%, rgba(16, 24, 40, 0.95) 100%);
+    linear-gradient(165deg, var(--skyroom-accent-hover-bg, rgba(32, 199, 187, 0.22)) 0%, rgba(16, 24, 40, 0.95) 100%);
   transform: translateY(-1px);
 }
 
@@ -78,4 +78,160 @@
   width: 18px;
   height: 18px;
   fill: currentColor;
+}
+
+/* TLDraw tools — small gap above presentation toolbar (whiteboard height already excludes it) */
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-layout__bottom {
+  top: auto !important;
+  bottom: var(--skyroom-wb-toolbar-gap, 8px) !important;
+}
+
+#layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] {
+  min-height: var(--skyroom-presentation-toolbar-h, 36px);
+}
+
+/* TLDraw theme tokens — teal selection instead of default blue */
+#layout[data-skyroom-column="true"] #whiteboard-element .tl-container {
+  --color-selected: rgba(32, 199, 187, 0.38) !important;
+  --color-selected-contrast: #ffffff !important;
+  --color-background: rgba(12, 20, 34, 0.94) !important;
+  --color-low: rgba(220, 230, 242, 0.82) !important;
+  --color-lowest: rgba(190, 204, 220, 0.55) !important;
+  --color-text: #e8edf4 !important;
+  --color-text-0: #f0f5fb !important;
+  --color-text-1: #dce6f2 !important;
+  --color-text-3: #aab6c7 !important;
+}
+
+/* Slide page only — PDF/image content stays readable; whiteboard chrome stays dark */
+#layout[data-skyroom-column="true"] #whiteboard-element .tl-background {
+  background-color: #ffffff !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tl-shapes img {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__tool[data-state="selected"],
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__tool[aria-pressed="true"] {
+  color: #fff !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__tool[data-state="selected"]:not(:disabled)::after,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__tool[aria-pressed="true"]:not(:disabled)::after {
+  background: rgba(32, 199, 187, 0.38) !important;
+  opacity: 1 !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__tool[data-state="selected"] .tlui-icon,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__tool[aria-pressed="true"] .tlui-icon {
+  color: #fff !important;
+  opacity: 1 !important;
+}
+
+/* Style panel popover — readable icons on dark glass */
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel__wrapper,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel,
+#layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-style-panel) {
+  background: rgba(10, 18, 30, 0.98) !important;
+  border: 1px solid rgba(32, 199, 187, 0.22) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42) !important;
+  color: #e8edf4 !important;
+}
+
+/* Icon / label chrome — never override color swatches (they use inline color on the button) */
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel .tlui-button:not([data-testid^="style.color."]),
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel button:not([data-testid^="style.color."]) {
+  color: #dce6f2 !important;
+  opacity: 1 !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel .tlui-button:not([data-testid^="style.color."]) .tlui-icon {
+  color: #dce6f2 !important;
+  opacity: 1 !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel .tlui-button-grid__button[data-testid^="style.color."] .tlui-icon {
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel label,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel span:not([class*="color"]) {
+  color: #e8edf4 !important;
+}
+
+/* Desktop style panel — anchor above toolbar, trailing edge (styles control side) */
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-layout {
+  position: relative !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-layout__top__right {
+  position: static !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel__wrapper {
+  position: absolute !important;
+  top: auto !important;
+  bottom: calc(var(--skyroom-wb-toolbar-gap, 8px) + 48px) !important;
+  margin: 0 !important;
+  z-index: 13 !important;
+  transform: none !important;
+}
+
+/* Trailing edge of centered toolbar (styles trigger sits here with row-reverse) */
+[dir="ltr"] #layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel__wrapper {
+  left: calc(50% + 92px) !important;
+  right: auto !important;
+}
+
+[dir="rtl"] #layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel__wrapper {
+  left: auto !important;
+  right: calc(50% + 92px) !important;
+}
+
+/* Mobile / popover style panel — keep Radix anchor on the styles trigger */
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content:has(.tlui-style-panel),
+#layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-style-panel) {
+  left: unset !important;
+  right: unset !important;
+  bottom: unset !important;
+  top: unset !important;
+  transform: none !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel [data-state="selected"],
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel [aria-pressed="true"] {
+  box-shadow: inset 0 0 0 2px rgba(32, 199, 187, 0.65) !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel input[type="range"] {
+  accent-color: #20c7bb !important;
+}
+
+/* Toolbar overflow menu (tools.more) — dark glass so light icons stay readable */
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) {
+  background: rgba(10, 18, 30, 0.98) !important;
+  border: 1px solid rgba(32, 199, 187, 0.22) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42) !important;
+  color: #e8edf4 !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-button,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-button-grid__button {
+  color: #dce6f2 !important;
+  opacity: 1 !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-icon {
+  color: #dce6f2 !important;
+  opacity: 1 !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-button:hover::after {
+  background-color: rgba(32, 199, 187, 0.18) !important;
+  opacity: 1 !important;
 }

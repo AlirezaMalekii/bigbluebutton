@@ -1,14 +1,14 @@
 import { PANELS, CAMERADOCK_POSITION } from '/imports/ui/components/layout/enums';
 import DEFAULT_VALUES from '/imports/ui/components/layout/defaultValues';
+import { getSkyroomNotesOpen } from './notes-panel-state';
 import {
   classifySkyroomCameras,
-  resolveSkyroomCameraPlacement,
   calcStageWebcamHeight,
-  countStageWebcamSlots,
-  PRIVILEGED_SIDEBAR_MAX,
+  partitionSkyroomStreams,
   SKYROOM_SIDEBAR_WEBCAM_H,
   SKYROOM_STAGE_WEBCAM_MIN_H,
 } from './camera-placement';
+import { getSkyroomWebcamDragPreview } from './webcam-zone-store';
 
 export const SKYROOM_COLUMN_ATTR = 'data-skyroom-column';
 
@@ -48,8 +48,8 @@ const buildSidebarCameraDockBounds = ({
 }) => ({
   ...cameraDockBounds,
   top: areaTop,
-  left: isRTL ? null : 0,
-  right: isRTL ? 0 : null,
+  left: isRTL ? null : STAGE_GAP,
+  right: isRTL ? STAGE_GAP : null,
   minWidth: columnW,
   width: columnW,
   maxWidth: columnW,
@@ -103,8 +103,6 @@ const adjustSkyroomColumnLayout = ({
   videoStreams = [],
   presentationIsOpen = true,
   hasScreenShare = false,
-  numCameras = 0,
-  localUserIsPrivileged = false,
 }) => {
   /* eslint-disable no-param-reassign -- layout engine mutates bound objects in place */
   if (isMobile || !isSkyroomColumnActive()) return null;
@@ -112,7 +110,8 @@ const adjustSkyroomColumnLayout = ({
   const usersOpen = sidebarNavigationInput.isOpen;
   const chatOpen = sidebarContentInput.isOpen
     && sidebarContentInput.sidebarContentPanel === PANELS.CHAT;
-  const columnVisible = usersOpen || chatOpen;
+  const notesOpen = getSkyroomNotesOpen();
+  const columnVisible = usersOpen || chatOpen || notesOpen;
   const screenshareMinimized = hasScreenShare && !presentationIsOpen;
 
   const viewportW = windowWidth();
@@ -128,65 +127,28 @@ const adjustSkyroomColumnLayout = ({
   const areaHeight = viewportH - areaTop - footerReserve;
   const columnBottom = areaTop + areaHeight;
 
-  const {
-    privilegedCount: classifiedPrivilegedCount,
-    viewerCount,
-    totalCount,
-  } = classifySkyroomCameras(videoStreams);
+  const { totalCount } = classifySkyroomCameras(videoStreams);
 
-  let privilegedCount = classifiedPrivilegedCount;
-  if (privilegedCount <= 0 && localUserIsPrivileged && numCameras > 0) {
-    privilegedCount = Math.min(numCameras, PRIVILEGED_SIDEBAR_MAX);
-  }
+  const stageMediaOpen = presentationIsOpen && !screenshareMinimized;
+  const centerDropEnabled = !stageMediaOpen;
+  const sidebarStackActive = usersOpen || chatOpen;
 
-  let useSidebar;
-  let useStage;
-  let useSplit;
-  let stageCameraCount;
+  const zonePartition = partitionSkyroomStreams(videoStreams, {
+    centerDropEnabled,
+    stageMediaOpen,
+    sidebarStackVisible: columnVisible,
+    dragPreview: getSkyroomWebcamDragPreview(),
+    applyDragPreview: true,
+  });
+  const sidebarCount = zonePartition.sidebar.length;
+  const stageCount = zonePartition.stage.length;
+  const centerCount = zonePartition.center.length;
 
-  const reserveStageWebcamStrip = hasScreenShare && !screenshareMinimized;
-
-  if (screenshareMinimized && totalCount > 0) {
-    useSidebar = false;
-    useStage = true;
-    useSplit = false;
-    stageCameraCount = totalCount;
-  } else if (reserveStageWebcamStrip) {
-    const stageSlotCount = countStageWebcamSlots({
-      privilegedCount,
-      viewerCount,
-      numCameras,
-      localUserIsPrivileged,
-    });
-    ({
-      useSidebar,
-      useStage,
-      useSplit,
-      stageCameraCount,
-    } = resolveSkyroomCameraPlacement({
-      privilegedCount,
-      viewerCount,
-    }));
-    if (stageSlotCount > 0) {
-      useStage = true;
-      stageCameraCount = Math.max(stageCameraCount, stageSlotCount);
-      useSidebar = privilegedCount > 0;
-      useSplit = useSidebar && useStage;
-    }
-  } else {
-    ({
-      useSidebar,
-      useStage,
-      useSplit,
-      stageCameraCount,
-    } = resolveSkyroomCameraPlacement({
-      privilegedCount,
-      viewerCount,
-    }));
-  }
-
-  const sidebarWebcamH = useSidebar ? SKYROOM_SIDEBAR_WEBCAM_H : 0;
-  let stageWebcamH = useStage ? calcStageWebcamHeight(stageCameraCount) : 0;
+  const sidebarWebcamReserved = sidebarStackActive && sidebarCount > 0;
+  const sidebarWebcamH = sidebarWebcamReserved ? SKYROOM_SIDEBAR_WEBCAM_H : 0;
+  let stageStripH = stageCount > 0
+    ? calcStageWebcamHeight(stageCount)
+    : 0;
 
   const sidebarPanelTop = areaTop + sidebarWebcamH + (sidebarWebcamH ? GAP : 0);
   const sidebarPanelAreaHeight = areaHeight - sidebarWebcamH - (sidebarWebcamH ? GAP : 0);
@@ -204,13 +166,13 @@ const adjustSkyroomColumnLayout = ({
     chatH = sidebarPanelAreaHeight;
   }
 
-  sidebarNavWidth.minWidth = columnVisible ? MIN_COLUMN : 0;
-  sidebarNavWidth.width = columnW;
-  sidebarNavWidth.maxWidth = columnVisible ? MAX_COLUMN : 0;
+  sidebarNavWidth.minWidth = usersOpen ? MIN_COLUMN : 0;
+  sidebarNavWidth.width = usersOpen ? columnW : 0;
+  sidebarNavWidth.maxWidth = usersOpen ? MAX_COLUMN : 0;
 
-  sidebarContentWidth.minWidth = columnVisible ? MIN_COLUMN : 0;
-  sidebarContentWidth.width = columnW;
-  sidebarContentWidth.maxWidth = columnVisible ? MAX_COLUMN : 0;
+  sidebarContentWidth.minWidth = chatOpen ? MIN_COLUMN : 0;
+  sidebarContentWidth.width = chatOpen ? columnW : 0;
+  sidebarContentWidth.maxWidth = chatOpen ? MAX_COLUMN : 0;
 
   const contentTop = sidebarPanelTop;
 
@@ -232,7 +194,7 @@ const adjustSkyroomColumnLayout = ({
   sidebarContentBounds.left = sidebarNavBounds.left;
   sidebarContentBounds.right = sidebarNavBounds.right;
 
-  if (columnVisible) {
+  if (sidebarStackActive) {
     if (isRTL) {
       sidebarNavBounds.right = STAGE_GAP;
       sidebarNavBounds.left = null;
@@ -248,19 +210,40 @@ const adjustSkyroomColumnLayout = ({
 
   const nextSidebarContentHeight = chatH;
 
+  const notesColumnW = notesOpen ? columnW : 0;
+  const notesColumnGap = notesOpen ? STAGE_GAP : 0;
+  const sidebarStackW = (usersOpen || chatOpen) ? columnW : 0;
+  const sidebarStackGap = sidebarStackW > 0 ? STAGE_GAP : 0;
+  const notesOffset = sidebarStackW + sidebarStackGap + notesColumnGap;
+  const totalLeftColumnsW = sidebarStackW + notesColumnW + (sidebarStackW > 0 ? sidebarStackGap : 0)
+    + (notesOpen ? notesColumnGap : 0);
+
   const stageWidth = columnVisible
-    ? viewportW - columnW - STAGE_GAP * 3
+    ? viewportW - totalLeftColumnsW - STAGE_GAP * 2
     : viewportW - STAGE_GAP * 2;
   mediaAreaBounds.width = stageWidth;
   if (isRTL) {
     mediaAreaBounds.left = STAGE_GAP;
-    mediaAreaBounds.right = columnVisible ? columnW + STAGE_GAP * 2 : STAGE_GAP;
+    mediaAreaBounds.right = columnVisible ? totalLeftColumnsW + STAGE_GAP : STAGE_GAP;
   } else {
-    mediaAreaBounds.left = columnVisible ? columnW + STAGE_GAP * 2 : STAGE_GAP;
+    mediaAreaBounds.left = columnVisible ? totalLeftColumnsW + STAGE_GAP : STAGE_GAP;
     mediaAreaBounds.right = null;
   }
 
-  let presentationTop = contentTop;
+  // Notes column is a full-height stack beside users/chat — not offset by sidebar webcams.
+  const notesColumnTop = areaTop;
+  const notesColumnHeight = areaHeight;
+  const notesColumnLeft = isRTL
+    ? null
+    : STAGE_GAP + sidebarStackW + sidebarStackGap;
+  const notesColumnRight = isRTL
+    ? STAGE_GAP + sidebarStackW + sidebarStackGap
+    : null;
+
+  // Bug fix: the presentation should start at areaTop regardless of whether
+  // sidebar webcams exist. Sidebar webcams sit above the *users panel*, not
+  // above the presentation, so presentationTop must not be offset by sidebarWebcamH.
+  let presentationTop = areaTop;
 
   let presentationHeight = columnVisible
     ? Math.max(120, panelStackBottom - presentationTop)
@@ -268,16 +251,21 @@ const adjustSkyroomColumnLayout = ({
   let stageWebcamStripTop = presentationTop;
 
   if (screenshareMinimized && totalCount > 0) {
-    stageWebcamH = Math.max(SKYROOM_STAGE_WEBCAM_MIN_H, presentationHeight);
+    if (stageCount > 0) {
+      stageStripH = calcStageWebcamHeight(stageCount);
+      stageWebcamStripTop = presentationTop;
+      presentationTop = stageWebcamStripTop + stageStripH + GAP;
+      presentationHeight = Math.max(120, panelStackBottom - presentationTop);
+    }
     mediaAreaBounds.top = presentationTop;
     mediaAreaBounds.height = presentationHeight;
   } else if (screenshareMinimized) {
     mediaAreaBounds.top = presentationTop;
     mediaAreaBounds.height = 0;
-    stageWebcamH = 0;
-  } else if (useStage && stageWebcamH > 0) {
+    stageStripH = 0;
+  } else if (stageStripH > 0) {
     stageWebcamStripTop = presentationTop;
-    presentationTop = stageWebcamStripTop + stageWebcamH + GAP;
+    presentationTop = stageWebcamStripTop + stageStripH + GAP;
     presentationHeight = Math.max(
       120,
       panelStackBottom - presentationTop,
@@ -292,31 +280,103 @@ const adjustSkyroomColumnLayout = ({
   let skyroomCameraDockBounds = null;
   let sidebarCameraDockBounds = null;
   let cameraDockPosition = cameraDockInput.position;
-
-  if (useSidebar && columnVisible) {
-    sidebarCameraDockBounds = buildSidebarCameraDockBounds({
+  const useSidebarWebcam = sidebarCount > 0 && sidebarStackActive;
+  const sidebarWebcamDropBounds = sidebarStackActive
+    ? buildSidebarCameraDockBounds({
       areaTop,
       columnW,
       isRTL,
       cameraDockBounds,
-    });
+    })
+    : null;
+
+  if (useSidebarWebcam) {
+    sidebarCameraDockBounds = sidebarWebcamDropBounds;
   }
 
-  if (useStage && stageWebcamH > 0) {
-    const stageWebcamTop = screenshareMinimized ? presentationTop : stageWebcamStripTop;
+  const stageLeft = !isRTL ? mediaAreaBounds.left : null;
+  const stageRight = isRTL ? mediaAreaBounds.right : null;
+
+  const needsStageStripDock = stageCount > 0 && stageStripH > 0;
+
+  if (needsStageStripDock) {
+    const stageWebcamTop = stageStripH > 0 ? stageWebcamStripTop : areaTop;
     skyroomCameraDockBounds = buildStageCameraDockBounds({
       stageWebcamTop,
-      stageWebcamH,
-      stageLeft: !isRTL ? mediaAreaBounds.left : null,
-      stageRight: isRTL ? mediaAreaBounds.right : null,
+      stageWebcamH: stageStripH,
+      stageLeft,
+      stageRight,
       stageWidth,
       cameraDockBounds,
     });
     cameraDockPosition = CAMERADOCK_POSITION.CONTENT_TOP;
-  } else if (useSidebar && columnVisible && !useSplit) {
-    skyroomCameraDockBounds = sidebarCameraDockBounds;
-    cameraDockPosition = CAMERADOCK_POSITION.SIDEBAR_CONTENT_BOTTOM;
+  } else if (useSidebarWebcam || centerCount > 0 || totalCount > 0) {
+    // Keep provider mounted but hide the main dock — zone portals render webcams.
+    skyroomCameraDockBounds = {
+      ...cameraDockBounds,
+      top: areaTop,
+      left: isRTL ? null : STAGE_GAP,
+      right: isRTL ? STAGE_GAP : null,
+      minWidth: 0,
+      width: 0,
+      maxWidth: 0,
+      minHeight: 0,
+      height: 0,
+      maxHeight: 0,
+      zIndex: 1,
+    };
+    cameraDockPosition = CAMERADOCK_POSITION.CONTENT_TOP;
   }
+  const mediaTop = mediaAreaBounds.top ?? areaTop;
+  const mediaHeight = mediaAreaBounds.height ?? 0;
+  const mediaLeft = mediaAreaBounds.left ?? null;
+  const mediaRight = mediaAreaBounds.right ?? null;
+  const mediaWidth = mediaAreaBounds.width ?? stageWidth;
+
+  let stageStripBounds = null;
+  if (stageMediaOpen || stageCount > 0) {
+    const dropStripH = stageCount > 0
+      ? stageStripH
+      : SKYROOM_STAGE_WEBCAM_MIN_H;
+    stageStripBounds = buildStageCameraDockBounds({
+      stageWebcamTop: areaTop,
+      stageWebcamH: dropStripH,
+      stageLeft,
+      stageRight,
+      stageWidth,
+      cameraDockBounds,
+    });
+  }
+
+  let centerWebcamBounds = null;
+  let centerDropBounds = null;
+  let centerZoneHeight = 0;
+
+  if (!stageMediaOpen && (centerCount > 0 || totalCount > 0)) {
+    const layoutStripBottom = stageCount > 0 && stageStripH > 0
+      ? areaTop + stageStripH
+      : null;
+    const centerZoneTop = layoutStripBottom != null ? layoutStripBottom + GAP : mediaTop;
+    const mediaBottom = mediaTop + mediaHeight;
+    centerZoneHeight = Math.max(0, mediaBottom - centerZoneTop);
+
+    if (centerZoneHeight > 0) {
+      const bounds = {
+        top: centerZoneTop,
+        left: mediaLeft,
+        right: mediaRight,
+        width: mediaWidth,
+        height: centerZoneHeight,
+        zIndex: SKYROOM_STAGE_WEBCAM_Z_INDEX,
+      };
+      centerDropBounds = bounds;
+      if (centerCount > 0) {
+        centerWebcamBounds = bounds;
+      }
+    }
+  }
+
+  const centerDropAllowed = !stageMediaOpen && centerZoneHeight > 0;
 
   return {
     sidebarNavWidth,
@@ -329,12 +389,29 @@ const adjustSkyroomColumnLayout = ({
     cameraDockBounds: skyroomCameraDockBounds,
     sidebarCameraDockBounds,
     cameraDockPosition,
-    useSplitCameras: useSplit,
+    useSplitCameras: zonePartition.split,
+    useSidebarWebcam,
+    sidebarWebcamDropBounds,
+    sidebarWebcamDropEnabled: Boolean(sidebarStackActive && sidebarWebcamDropBounds),
+    centerWebcamBounds,
+    centerDropBounds,
+    stageStripBounds,
+    stageMediaOpen,
+    centerDropEnabled: centerDropAllowed,
     screenshareMinimized,
-    stageWebcamStripHeight: useStage ? stageWebcamH : 0,
+    stageWebcamStripHeight: needsStageStripDock ? stageStripH : 0,
     sidebarSize: columnW,
     usersOpen,
     chatOpen,
+    notesOpen,
+    notesColumnBounds: notesOpen ? {
+      top: notesColumnTop,
+      left: notesColumnLeft,
+      right: notesColumnRight,
+      width: notesColumnW,
+      height: notesColumnHeight,
+    } : null,
+    notesOffset,
     stageFullWidth: !columnVisible,
     navbarFullWidth: {
       width: viewportW,

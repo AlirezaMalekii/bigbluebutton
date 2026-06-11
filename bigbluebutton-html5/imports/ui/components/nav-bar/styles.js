@@ -126,6 +126,16 @@ const Bottom = styled.div`
   }
 `;
 
+const SkyroomTalkingRail = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  margin-inline: 10px 6px;
+`;
+
 const NavbarToggleButton = styled(Button)`
   margin: 0;
   z-index: 3;
@@ -157,6 +167,7 @@ export default {
   PresentationTitle,
   Right,
   Bottom,
+  SkyroomTalkingRail,
   NavbarToggleButton,
   PluginInfoComponent,
   PluginComponentWrapper,

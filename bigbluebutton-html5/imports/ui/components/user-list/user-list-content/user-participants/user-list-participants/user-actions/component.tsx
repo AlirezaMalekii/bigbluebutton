@@ -38,6 +38,8 @@ import Icon from '/imports/ui/components/common/icon/icon-ts/component';
 import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import { setPendingChat } from '/imports/ui/core/local-states/usePendingChat';
 import Styled from './styles';
+import BBBMenu from '/imports/ui/components/common/menu/component';
+import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import { useMutation } from '@apollo/client';
 import { USER_SET_WHITEBOARD_WRITE_ACCESS } from '/imports/ui/components/presentation/mutations';
 import useToggleVoice from '/imports/ui/components/audio/audio-graphql/hooks/useToggleVoice';
@@ -156,6 +158,11 @@ const messages = defineMessages({
   lowerUserHand: {
     id: 'app.actionsBar.reactions.lowUserHand',
     description: 'Label for lowering a user raised hand',
+  },
+  userActionsMenu: {
+    id: 'app.userList.userActions.menu',
+    description: 'Open user actions menu',
+    defaultMessage: 'User actions',
   },
 });
 const makeDropdownPluginItem: (
@@ -648,17 +655,80 @@ const UserActions: React.FC<UserActionsProps> = ({
     );
   }
 
+  const skyroomMenuActions = iconActions.map((action) => {
+    const {
+      icon: rawIcon, key, label, dataTest,
+    } = action;
+    let icon: PluginIconType | undefined = rawIcon;
+    if (typeof rawIcon === 'object' && rawIcon && 'iconName' in rawIcon) {
+      const { iconName } = rawIcon;
+      icon = iconName;
+    }
+    return {
+      key,
+      label,
+      icon,
+      dataTest,
+      onClick: () => {
+        action.onClick?.();
+        setOpenUserAction(null);
+      },
+    };
+  });
+
+  const isRTL = document.documentElement.getAttribute('dir') === 'rtl';
+  const useSkyroomActionsMenu = isSkyroomColumnLayout();
+
   return (
     <Styled.UserRow>
       <Styled.UserRowMain>
         {children}
       </Styled.UserRowMain>
-      <Styled.ActionIconBar
-        aria-hidden={!open}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {iconActions.map(renderActionIcon)}
-      </Styled.ActionIconBar>
+      {useSkyroomActionsMenu ? (
+        <Styled.ActionMenuWrap onClick={(e) => e.stopPropagation()}>
+          <BBBMenu
+            dataTest={`userActionsMenu-${user.userId}`}
+            trigger={(
+              <Styled.SkyroomActionsTrigger
+                size="sm"
+                color="light"
+                hideLabel
+                icon="more"
+                label={intl.formatMessage(messages.userActionsMenu)}
+                aria-label={intl.formatMessage(messages.userActionsMenu)}
+                data-test="userActionsMenuTrigger"
+                className="skyroom-user-actions-trigger"
+              />
+            )}
+            actions={skyroomMenuActions}
+            customStyles={{ zIndex: 1010 }}
+            opts={{
+              id: `user-actions-menu-${user.userId}`,
+              keepMounted: false,
+              transitionDuration: 0,
+              elevation: 8,
+              disableScrollLock: true,
+              className: 'skyroom-user-actions-menu',
+              BackdropProps: { invisible: true },
+              anchorOrigin: {
+                vertical: 'bottom',
+                horizontal: isRTL ? 'left' : 'right',
+              },
+              transformOrigin: {
+                vertical: 'top',
+                horizontal: isRTL ? 'left' : 'right',
+              },
+            }}
+          />
+        </Styled.ActionMenuWrap>
+      ) : (
+        <Styled.ActionIconBar
+          aria-hidden={!open}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {iconActions.map(renderActionIcon)}
+        </Styled.ActionIconBar>
+      )}
       {isConfirmationModalOpen ? (
         <ConfirmationModal
           intl={intl}

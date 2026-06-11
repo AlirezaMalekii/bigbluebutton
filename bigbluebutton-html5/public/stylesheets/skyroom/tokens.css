@@ -83,6 +83,16 @@
   --skyroom-brand-100: #d1f2ee;
   --skyroom-brand-50: #e9f8f6;
 
+  /* Unified interactive accent — replaces scattered hardcoded rgba(32,199,187,…) */
+  --skyroom-accent: #20c7bb;
+  --skyroom-accent-soft: rgba(32, 199, 187, 0.12);
+  --skyroom-accent-border: rgba(32, 199, 187, 0.36);
+  --skyroom-accent-glow: rgba(32, 199, 187, 0.10);
+  --skyroom-accent-hover-bg: rgba(32, 199, 187, 0.14);
+  --skyroom-accent-active-bg: linear-gradient(145deg, rgba(13, 136, 126, 0.88), rgba(10, 111, 103, 0.92));
+  --skyroom-danger-soft: rgba(223, 39, 33, 0.16);
+  --skyroom-danger-border: rgba(223, 39, 33, 0.38);
+
   /* Legacy aliases */
   --skyroom-radius-sm: var(--radius-sm);
   --skyroom-radius: var(--radius-md);
@@ -94,6 +104,8 @@
   --skyroom-block-gap: var(--space-page);
   --skyroom-chat-footer-gap: var(--space-page);
   --skyroom-panel-radius: var(--radius-panel);
+  --skyroom-webcam-tile-h: 100px;
+  --skyroom-webcam-tile-w: 133px;
   --skyroom-navbar-h: var(--skyroom-header-height);
   --skyroom-footer-h: var(--skyroom-footer-height);
   --skyroom-chrome-h: var(--skyroom-footer-height);

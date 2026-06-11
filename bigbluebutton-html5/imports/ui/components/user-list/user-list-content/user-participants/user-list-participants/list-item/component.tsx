@@ -19,6 +19,9 @@ import { useIsReactionsEnabled } from '/imports/ui/services/features';
 import useWhoIsTalking from '/imports/ui/core/hooks/useWhoIsTalking';
 import useWhoIsUnmuted from '/imports/ui/core/hooks/useWhoIsUnmuted';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
+import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import SkyroomModeratorBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomModeratorBadge';
+import SkyroomViewerBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomViewerBadge';
 
 const messages = defineMessages({
   moderator: {
@@ -221,6 +224,14 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, lockSettings, index }
       return user.reactionEmoji;
     }
     if (user.name && userAvatarFiltered.length === 0) {
+      if (isSkyroomColumnLayout()) {
+        if (user.isModerator || user.role === 'MODERATOR') {
+          return <SkyroomModeratorBadge color={user.color} />;
+        }
+        if (!user.presenter && !user.bot) {
+          return <SkyroomViewerBadge color={user.color} />;
+        }
+      }
       if (user.isModerator || user.role === 'MODERATOR') {
         return <i className="icon-bbb-star_filled" aria-hidden />;
       }

@@ -166,6 +166,7 @@ function getSizeWithUnit(size) {
 }
 
 function renderPresentationItemStatus(item, intl) {
+  if (!item) return null;
   if ((('progress' in item) && item.progress === 0) || (('upload' in item) && item.upload.progress === 0 && !item.upload.error)) {
     return intl.formatMessage(intlMessages.fileToUpload);
   }
@@ -241,6 +242,8 @@ function renderPresentationItemStatus(item, intl) {
 }
 
 function renderToastItem(item, intl) {
+  if (!item) return null;
+
   const isUploading = ('totalPages' in item) && ('totalPagesUploaded' in item)
     && item.totalPages > 0 && item.totalPages > item.totalPagesUploaded;
   const uploadInProgress = ('uploadCompleted' in item) && !item.uploadCompleted;
@@ -288,8 +291,9 @@ function renderToastItem(item, intl) {
 const renderToastList = (presentations, intl) => {
   let converted = 0;
 
-  const presentationsSorted = presentations
-    .sort((a, b) => a.uploadCompleted - b.uploadCompleted);
+  const presentationsSorted = (Array.isArray(presentations) ? presentations : [])
+    .filter(Boolean)
+    .sort((a, b) => Number(a.uploadCompleted) - Number(b.uploadCompleted));
 
   presentationsSorted
     .forEach((p) => {
@@ -531,7 +535,7 @@ export const PresentationUploaderToast = ({
   useEffect(() => {
     if (showToast) return;
     presentationsToBeShowed.filter(
-      (p) => (p.uploadCompleted || p.uploadErrorMsgKey),
+      (p) => p && (p.uploadCompleted || p.uploadErrorMsgKey),
     ).forEach(
       (p) => setPresentationUploadCompletionNotified(
         { variables: { presentationId: p.presentationId } },
@@ -541,7 +545,7 @@ export const PresentationUploaderToast = ({
 
   useEffect(() => {
     const allPresentationsDone = presentationsToBeShowed.every(
-      (p) => (p.uploadCompleted && !p.uploadErrorMsgKey),
+      (p) => p && p.uploadCompleted && !p.uploadErrorMsgKey,
     );
     // Forcing to show toast will only work if there are any presentations to show
     setShowToast(presentationsToBeShowed.length > 0 && (!allPresentationsDone || forceShowToast));

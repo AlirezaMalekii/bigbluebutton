@@ -12,6 +12,7 @@ import Styled from './styles';
 import ErrorBoundary from '/imports/ui/components/common/error-boundary/component';
 import FallbackView from '/imports/ui/components/common/fallback-errors/fallback-view/component';
 import GenericContentSidekickContainer from '/imports/ui/components/generic-content/generic-sidekick-content/container';
+import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const propTypes = {
   top: PropTypes.number.isRequired,
@@ -143,7 +144,7 @@ const SidebarContent = (props) => {
             <ChatContainer width={width} />
           </ErrorBoundary>
         )}
-      {!isSharedNotesPinned && (
+      {!isSkyroomColumnLayout() && !isSharedNotesPinned && (
         <NotesContainer
           isToSharedNotesBeShow={sidebarContentPanel === PANELS.SHARED_NOTES}
         />

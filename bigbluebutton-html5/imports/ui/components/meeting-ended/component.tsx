@@ -206,60 +206,56 @@ const MeetingEnded: React.FC<MeetingEndedProps> = ({
 
   const logoutButton = useMemo(() => {
     const { locale } = intl;
+    const hasValidLogoutUrl = isURL(logoutUrl, {
+      // This option is merged with isFQDN
+      // @ts-ignore
+      allow_numeric_tld: true,
+    });
 
     return (
-      (
-        <Styled.Wrapper>
-          {
-            learningDashboardAccessToken && isModerator
-            // Always set cookie in case Dashboard is already opened
-            && setLearningDashboardCookie(learningDashboardAccessToken, meetingId, learningDashboardBase) === true
-              ? (
-                <>
-                  <Styled.Text>
-                    {intl.formatMessage(intlMessage.open_activity_report_btn)}
-                  </Styled.Text>
-
-                  <Styled.MeetingEndedButton
-                    color="default"
-                    onClick={() => openLearningDashboardUrl(learningDashboardAccessToken,
-                      meetingId,
-                      authToken,
-                      learningDashboardBase,
-                      locale)}
-                    aria-details={intl.formatMessage(intlMessage.open_activity_report_btn)}
-                  >
-                    <Icon
-                      iconName="multi_whiteboard"
-                    />
-                  </Styled.MeetingEndedButton>
-                </>
-              ) : null
-          }
-          <Styled.Text>
-            {intl.formatMessage(intlMessage.messageEnded)}
-          </Styled.Text>
-          {
-            isURL(logoutUrl, {
-              // This option is merged with isFQDN
-              // so it's not a valid ts error /validator/lib/isURL.js line 153
-              // @ts-ignore
-              allow_numeric_tld: true,
-            }) ? (
-              <Styled.MeetingEndedButton
-                color="primary"
-                onClick={() => confirmRedirect(isBreakout, allowRedirect)}
-                /* @eslint-disable-next-line */
-                aria-details={intl.formatMessage(intlMessage.confirmDesc)}
-                data-test="redirectButton"
-              >
-                {intl.formatMessage(intlMessage.buttonOkay)}
-              </Styled.MeetingEndedButton>
-              ) : null
-          }
-
-        </Styled.Wrapper>
-      )
+      <Styled.Wrapper data-skyroom-meeting-ended-actions="true">
+        {
+          learningDashboardAccessToken && isModerator
+          && setLearningDashboardCookie(learningDashboardAccessToken, meetingId, learningDashboardBase) === true
+            ? (
+              <Styled.DashboardBlock data-skyroom-meeting-ended-dashboard="true">
+                <Styled.Text data-skyroom-meeting-ended-text="true">
+                  {intl.formatMessage(intlMessage.open_activity_report_btn)}
+                </Styled.Text>
+                <Styled.MeetingEndedButton
+                  data-skyroom-meeting-ended-btn="true"
+                  data-variant="secondary"
+                  type="button"
+                  onClick={() => openLearningDashboardUrl(
+                    learningDashboardAccessToken,
+                    meetingId,
+                    authToken,
+                    learningDashboardBase,
+                    locale,
+                  )}
+                  aria-details={intl.formatMessage(intlMessage.open_activity_report_btn)}
+                >
+                  <Icon iconName="multi_whiteboard" />
+                </Styled.MeetingEndedButton>
+              </Styled.DashboardBlock>
+            ) : null
+        }
+        <Styled.Text data-skyroom-meeting-ended-text="true">
+          {intl.formatMessage(intlMessage.messageEnded)}
+        </Styled.Text>
+        {hasValidLogoutUrl ? (
+          <Styled.MeetingEndedButton
+            data-skyroom-meeting-ended-btn="true"
+            data-variant="primary"
+            type="button"
+            onClick={() => confirmRedirect(isBreakout, allowRedirect)}
+            aria-details={intl.formatMessage(intlMessage.confirmDesc)}
+            data-test="redirectButton"
+          >
+            {intl.formatMessage(intlMessage.buttonOkay)}
+          </Styled.MeetingEndedButton>
+        ) : null}
+      </Styled.Wrapper>
     );
   }, [learningDashboardAccessToken, isModerator, meetingId, authToken, learningDashboardBase, logoutUrl]);
 
@@ -314,10 +310,13 @@ const MeetingEnded: React.FC<MeetingEndedProps> = ({
   }
 
   return (
-    <Styled.Parent>
+    <Styled.Parent data-skyroom-meeting-ended="true">
       <Styled.Modal data-test="meetingEndedModal">
-        <Styled.Content>
-          <Styled.Title>
+        <Styled.Content data-skyroom-meeting-ended-content="true">
+          <Styled.IconRing data-skyroom-meeting-ended-icon="true" aria-hidden="true">
+            <Icon iconName="logout" />
+          </Styled.IconRing>
+          <Styled.Title data-skyroom-meeting-ended-title="true">
             {generateEndMessage(joinErrorCode, meetingEndedCode, endedBy)}
           </Styled.Title>
           {allowRedirect ? logoutButton : null}

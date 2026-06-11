@@ -139,6 +139,52 @@ const removePresentations = (
   removePresentation,
 ) => Promise.all(presentationsToRemove.map((p) => removePresentation(p.presentationId)));
 
+const isPresentationEligibleForUpload = (p) => {
+  if (!p?.file || p.uploadCompleted) return false;
+  if (!p.uploadStarted) return true;
+  // Retry when auto-upload was marked but never actually progressed
+  return !(p.upload?.done || p.uploadInProgress);
+};
+
+const getPresentationsPendingUpload = (presentations, presentationIds = null) => {
+  const pending = presentations.filter(isPresentationEligibleForUpload);
+
+  if (presentationIds?.length) {
+    return pending.filter((p) => presentationIds.includes(p.presentationId));
+  }
+
+  return pending;
+};
+
+const uploadPendingPresentations = (
+  presentations = [],
+  uploadEndpoint,
+  presentationIds = null,
+) => {
+  const presentationsToUpload = getPresentationsPendingUpload(
+    presentations,
+    presentationIds,
+  ).map((p) => ({
+    ...p,
+    current: false,
+  }));
+
+  if (!presentationsToUpload.length) return Promise.resolve();
+
+  return uploadAndConvertPresentations(
+    presentationsToUpload,
+    Auth.meetingID,
+    uploadEndpoint,
+  ).then((results) => {
+    results.forEach((result, i) => {
+      if (result?.presentationId) {
+        presentationsToUpload[i].onDone(result.presentationId);
+      }
+    });
+    return results;
+  });
+};
+
 const persistPresentationChanges = (
   oldState,
   newState,
@@ -146,12 +192,15 @@ const persistPresentationChanges = (
   setPresentation,
   removePresentation,
 ) => {
-  const presentationsToUpload = newState.filter((p) => !p.uploadCompleted);
+  const presentationsToUpload = getPresentationsPendingUpload(newState).map((p) => ({
+    ...p,
+    current: p.current ?? false,
+  }));
   const presentationsToRemove = oldState.filter((p) => !newState.find(
     (u) => u.presentationId === p.presentationId,
   ));
 
-  let currentPresentation = newState.find((p) => p.current);
+  let currentPresentation = newState.find((p) => p?.current);
   return uploadAndConvertPresentations(presentationsToUpload, Auth.meetingID, uploadEndpoint)
     .then((presentations) => {
       if (!presentations.length && !currentPresentation) return Promise.resolve();
@@ -291,15 +340,23 @@ function handleFiledrop(files, files2, that, intl, intlMessages) {
       };
     });
 
-    that.setState(({ presentations }) => ({
-      presentations: presentations.concat(presentationsToUpload),
-      toUploadCount: (toUploadCount + presentationsToUpload.length),
-      shouldDisableExportButtonForAllDocuments: true,
-    }), () => {
+    that.setState(({ presentations: rawPresentations }) => {
+      const presentations = Array.isArray(rawPresentations)
+        ? rawPresentations.filter(Boolean)
+        : [];
+      return {
+        presentations: presentations.concat(presentationsToUpload),
+        toUploadCount: (toUploadCount + presentationsToUpload.length),
+        shouldDisableExportButtonForAllDocuments: true,
+      };
+    }, () => {
       // after the state is set (files have been dropped),
       // make the first of the new presentations current
       if (presentationsToUpload && presentationsToUpload.length) {
         that.handleCurrentChange(presentationsToUpload[0].presentationId);
+        if (typeof that.triggerAutoUpload === 'function') {
+          that.triggerAutoUpload(presentationsToUpload.map((p) => p.presentationId));
+        }
       }
     });
 
@@ -314,6 +371,7 @@ export default {
   persistPresentationChanges,
   requestPresentationUploadToken,
   uploadAndConvertPresentation,
+  uploadPendingPresentations,
   handleFiledrop,
   useExternalUploadData,
 };

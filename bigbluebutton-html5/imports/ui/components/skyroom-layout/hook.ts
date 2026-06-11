@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { layoutDispatch, layoutSelectInput } from '/imports/ui/components/layout/context';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import { Input } from '/imports/ui/components/layout/layoutTypes';
@@ -7,7 +7,9 @@ import Session from '/imports/ui/services/storage/in-memory';
 import deviceInfo from '/imports/utils/deviceInfo';
 import { SKYROOM_COLUMN_ATTR } from './column-layout';
 import { clearSkyroomWebcamLayout } from './webcam-bounds-store';
-import { isPublicChatOpen } from './panel-toggles';
+import { clearSkyroomWebcamZones } from './webcam-zone-store';
+import { isPublicChatOpen, isSkyroomNotesOpen } from './panel-toggles';
+import { subscribeSkyroomNotesOpen } from './notes-panel-state';
 import {
   applySkyroomWhiteLabelSettings,
   startSkyroomWhiteLabelDomWatch,
@@ -18,12 +20,17 @@ const syncSkyroomLayoutAttributes = (
   layoutEl: HTMLElement | null,
   usersOpen: boolean,
   chatOpen: boolean,
+  notesOpen: boolean,
 ) => {
   if (!layoutEl) return;
 
   layoutEl.setAttribute('data-skyroom-users-visible', usersOpen ? 'true' : 'false');
   layoutEl.setAttribute('data-skyroom-chat-visible', chatOpen ? 'true' : 'false');
-  layoutEl.setAttribute('data-skyroom-stage-full', (!usersOpen && !chatOpen) ? 'true' : 'false');
+  layoutEl.setAttribute('data-skyroom-notes-visible', notesOpen ? 'true' : 'false');
+  layoutEl.setAttribute(
+    'data-skyroom-stage-full',
+    (!usersOpen && !chatOpen && !notesOpen) ? 'true' : 'false',
+  );
 };
 
 export const useSkyroomColumnLayout = () => {
@@ -41,7 +48,10 @@ export const useSkyroomColumnLayout = () => {
 
   const usersOpen = sidebarNavigation.isOpen;
   const chatOpen = isPublicChatOpen(sidebarContent);
+  const [notesOpen, setNotesOpen] = useState(isSkyroomNotesOpen);
   const screenshareMinimized = hasActiveScreenShare && !presentationIsOpen;
+
+  useEffect(() => subscribeSkyroomNotesOpen(setNotesOpen), []);
 
   useEffect(() => {
     applySkyroomWhiteLabelSettings();
@@ -87,10 +97,6 @@ export const useSkyroomColumnLayout = () => {
         type: ACTIONS.SET_CAMERA_DOCK_POSITION,
         value: CAMERADOCK_POSITION.SIDEBAR_CONTENT_BOTTOM,
       });
-      layoutContextDispatch({
-        type: ACTIONS.SET_CAMERA_DOCK_IS_DRAGGABLE,
-        value: false,
-      });
     };
 
     openSkyroomColumn();
@@ -110,10 +116,13 @@ export const useSkyroomColumnLayout = () => {
         layoutEl.removeAttribute(SKYROOM_COLUMN_ATTR);
         layoutEl.removeAttribute('data-skyroom-users-visible');
         layoutEl.removeAttribute('data-skyroom-chat-visible');
+        layoutEl.removeAttribute('data-skyroom-notes-visible');
         layoutEl.removeAttribute('data-skyroom-stage-full');
         layoutEl.removeAttribute('data-skyroom-presentation-minimized');
         layoutEl.removeAttribute('data-skyroom-stage-webcams');
+        layoutEl.removeAttribute('data-skyroom-sidebar-webcam');
         layoutEl.removeAttribute('data-skyroom-split-cameras');
+        layoutEl.removeAttribute('data-skyroom-webcam-float');
         layoutEl.style.removeProperty('--skyroom-sidebar-webcam-top');
         layoutEl.style.removeProperty('--skyroom-sidebar-webcam-left');
         layoutEl.style.removeProperty('--skyroom-sidebar-webcam-right');
@@ -127,6 +136,7 @@ export const useSkyroomColumnLayout = () => {
         layoutEl.style.removeProperty('--skyroom-stage-webcam-right');
         layoutEl.style.removeProperty('--skyroom-stage-webcam-width');
         clearSkyroomWebcamLayout();
+        clearSkyroomWebcamZones();
         layoutEl.style.removeProperty('--user-list-bg');
         layoutEl.style.removeProperty('--color-content-background');
         layoutEl.style.removeProperty('--list-item-bg-hover');
@@ -140,7 +150,7 @@ export const useSkyroomColumnLayout = () => {
 
   useEffect(() => {
     const layoutEl = document.getElementById('layout');
-    syncSkyroomLayoutAttributes(layoutEl, usersOpen, chatOpen);
+    syncSkyroomLayoutAttributes(layoutEl, usersOpen, chatOpen, notesOpen);
     if (layoutEl) {
       if (hasActiveScreenShare) {
         layoutEl.setAttribute('data-skyroom-screen-share', 'true');
@@ -154,7 +164,7 @@ export const useSkyroomColumnLayout = () => {
       }
     }
     window.dispatchEvent(new Event('resize'));
-  }, [usersOpen, chatOpen, hasActiveScreenShare, screenshareMinimized, numCameras, presentationIsOpen]);
+  }, [usersOpen, chatOpen, notesOpen, hasActiveScreenShare, screenshareMinimized, numCameras, presentationIsOpen]);
 };
 
 export default useSkyroomColumnLayout;

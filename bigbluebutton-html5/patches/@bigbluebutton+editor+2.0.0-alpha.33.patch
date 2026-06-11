@@ -1,0 +1,45 @@
+diff --git a/node_modules/@bigbluebutton/editor/dist-cjs/lib/TldrawEditor.js b/node_modules/@bigbluebutton/editor/dist-cjs/lib/TldrawEditor.js
+index 3dccc68..91f79b5 100644
+--- a/node_modules/@bigbluebutton/editor/dist-cjs/lib/TldrawEditor.js
++++ b/node_modules/@bigbluebutton/editor/dist-cjs/lib/TldrawEditor.js
+@@ -226,7 +226,9 @@ function Layout({
+   useOnMount(onMount);
+   (0, import_useDPRMultiple.useDPRMultiple)();
+   const editor = (0, import_useEditor.useEditor)();
+-  editor.updateViewportScreenBounds();
++  import_react.default.useLayoutEffect(() => {
++    editor.updateViewportScreenBounds();
++  });
+   return children ?? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_Canvas.Canvas, {});
+ }
+ function Crash({ crashingError }) {
+diff --git a/node_modules/@bigbluebutton/editor/dist-esm/lib/TldrawEditor.mjs b/node_modules/@bigbluebutton/editor/dist-esm/lib/TldrawEditor.mjs
+index e31bae3..8ca491b 100644
+--- a/node_modules/@bigbluebutton/editor/dist-esm/lib/TldrawEditor.mjs
++++ b/node_modules/@bigbluebutton/editor/dist-esm/lib/TldrawEditor.mjs
+@@ -200,7 +200,9 @@ function Layout({
+   useOnMount(onMount);
+   useDPRMultiple();
+   const editor = useEditor();
+-  editor.updateViewportScreenBounds();
++  useLayoutEffect(() => {
++    editor.updateViewportScreenBounds();
++  });
+   return children ?? /* @__PURE__ */ jsx(Canvas, {});
+ }
+ function Crash({ crashingError }) {
+diff --git a/node_modules/@bigbluebutton/editor/src/lib/TldrawEditor.tsx b/node_modules/@bigbluebutton/editor/src/lib/TldrawEditor.tsx
+index 26b89c8..2e718fb 100644
+--- a/node_modules/@bigbluebutton/editor/src/lib/TldrawEditor.tsx
++++ b/node_modules/@bigbluebutton/editor/src/lib/TldrawEditor.tsx
+@@ -359,7 +359,9 @@ function Layout({
+ 	useDPRMultiple()
+ 
+ 	const editor = useEditor()
+-	editor.updateViewportScreenBounds()
++	useLayoutEffect(() => {
++		editor.updateViewportScreenBounds()
++	})
+ 
+ 	return children ?? <Canvas />
+ }

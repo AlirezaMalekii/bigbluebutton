@@ -1,13 +1,17 @@
 import React from 'react';
 import useSkyroomColumnLayout from './hook';
+import SkyroomSharedNotesColumn from './shared-notes-column/component';
+import useSkyroomWebcamZoneSync from './webcam-zone-sync/useSkyroomWebcamZoneSync';
+import useSkyroomNotesPanelSync from './notes-panel-sync/useSkyroomNotesPanelSync';
 
 /**
- * Mounts Skyroom single-column layout behaviour (no visible UI).
- * Sets data-skyroom-column on #layout and keeps users + chat stacked in one column.
+ * Mounts Skyroom column layout behaviour and optional shared-notes column.
  */
 const SkyroomColumnController: React.FC = () => {
   useSkyroomColumnLayout();
-  return null;
+  useSkyroomWebcamZoneSync();
+  useSkyroomNotesPanelSync();
+  return <SkyroomSharedNotesColumn />;
 };
 
 export default SkyroomColumnController;

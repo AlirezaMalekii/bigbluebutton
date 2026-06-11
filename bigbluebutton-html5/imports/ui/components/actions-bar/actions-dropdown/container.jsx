@@ -26,6 +26,7 @@ import { PRESENTATION_SET_CURRENT } from '../../presentation/mutations';
 import { useStorageKey } from '/imports/ui/services/storage/hooks';
 import { useMeetingIsBreakout } from '/imports/ui/components/app/service';
 import { useIsQuizEnabled } from '../../../services/features';
+import useMeeting from '/imports/ui/core/hooks/useMeeting';
 
 const ActionsDropdownContainer = (props) => {
   const sidebarContent = layoutSelectInput((i) => i.sidebarContent);
@@ -103,9 +104,14 @@ const ActionsDropdownContainer = (props) => {
   const isCameraAsContentEnabled = useIsCameraAsContentEnabled();
   const isQuizEnabled = useIsQuizEnabled();
 
+  const { data: meetingData } = useMeeting((m) => ({
+    hasPoll: m?.componentsFlags?.hasPoll,
+  }));
+
   return (
     <ActionsDropdown
       {...{
+        hasActivePoll: meetingData?.hasPoll ?? false,
         layoutContextDispatch,
         sidebarContent,
         sidebarNavigation,

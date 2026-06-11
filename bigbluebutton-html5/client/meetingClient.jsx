@@ -27,6 +27,7 @@ import ContextProviders from '/imports/ui/components/context-providers/component
 import adapter from 'webrtc-adapter';
 
 import { LoadingContext } from '/imports/ui/components/common/loading-screen/loading-screen-HOC/component';
+import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import IntlAdapter from '/imports/startup/client/intlAdapter';
 import PresenceAdapter from '../imports/ui/components/presence-adapter/component';
 import CustomUsersSettings from '/imports/ui/components/join-handler/custom-users-settings/component';
@@ -37,7 +38,10 @@ import PLUGIN_CONFIGURATION_QUERY from '/imports/ui/components/plugins-engine/qu
 const Startup = () => {
   const loadingContextInfo = useContext(LoadingContext);
   useEffect(() => {
-    loadingContextInfo.setLoading(false);
+    // Skyroom dismisses loading only after the user has joined (see PresenceManager).
+    if (!isSkyroomTheme()) {
+      loadingContextInfo.setLoading(false);
+    }
   }, []);
   // Logs all uncaught exceptions to the client logger
   window.addEventListener('error', (e) => {

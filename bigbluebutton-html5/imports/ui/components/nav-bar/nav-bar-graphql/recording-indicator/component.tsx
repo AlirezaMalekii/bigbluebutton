@@ -17,6 +17,8 @@ import Tooltip from '/imports/ui/components/common/tooltip/component';
 import humanizeSeconds from '/imports/utils/humanizeSeconds';
 import { notify } from '/imports/ui/services/notification';
 import Styled from './styles';
+import SkyroomSpinner from '/imports/ui/components/skyroom-layout/loading/SkyroomSpinner';
+import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import { User } from '/imports/ui/Types/user';
 import useTimeSync from '/imports/ui/core/local-states/useTimeSync';
 import RecordingNotify from './notify/component';
@@ -276,7 +278,7 @@ const RecordingIndicator: React.FC<RecordingIndicatorProps> = ({
   if (!record) return null;
   return (
     <>
-      {record && !isMobile ? (
+      {record && !isMobile && !isSkyroomTheme() ? (
         <Styled.PresentationTitleSeparator aria-hidden="true">|</Styled.PresentationTitleSeparator>
       ) : null}
       <Styled.RecordingIndicator
@@ -373,12 +375,18 @@ const RecordingIndicatorContainer: React.FC = () => {
   if (meetingRecordingLoading) {
     return (
       <>
-        <Styled.PresentationTitleSeparator aria-hidden="true">|</Styled.PresentationTitleSeparator>
+        {!isSkyroomTheme() ? (
+          <Styled.PresentationTitleSeparator aria-hidden="true">|</Styled.PresentationTitleSeparator>
+        ) : null}
         <div>
-          <Styled.SpinnerOverlay animations={animations}>
-            <Styled.Bounce1 animations={animations} />
-            <Styled.Bounce2 animations={animations} />
-          </Styled.SpinnerOverlay>
+          {isSkyroomTheme()
+            ? <SkyroomSpinner size="sm" />
+            : (
+              <Styled.SpinnerOverlay animations={animations}>
+                <Styled.Bounce1 animations={animations} />
+                <Styled.Bounce2 animations={animations} />
+              </Styled.SpinnerOverlay>
+            )}
         </div>
       </>
     );

@@ -2,6 +2,8 @@ import React, { useCallback, useContext, useEffect } from 'react';
 import { IntlProvider } from 'react-intl';
 import { LoadingContext } from '/imports/ui/components/common/loading-screen/loading-screen-HOC/component';
 import useCurrentLocale from '/imports/ui/core/local-states/useCurrentLocale';
+import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import useSkyroomLoadingSource from '/imports/ui/components/skyroom-layout/loading/useSkyroomLoadingSource';
 import logger from './logger';
 
 interface LocaleJson {
@@ -93,12 +95,16 @@ const IntlLoader: React.FC<IntlLoaderProps> = ({
   setCurrentLocale,
 }) => {
   const loadingContextInfo = useContext(LoadingContext);
+  const skyroomTheme = isSkyroomTheme();
 
   const [fetching, setFetching] = React.useState(false);
   const [normalizedLocale, setNormalizedLocale] = React.useState(navigator.language.replace('_', '-'));
   const [messages, setMessages] = React.useState<LocaleJson>({});
   const [fallbackOnEmptyLocaleString, setFallbackOnEmptyLocaleString] = React.useState(false);
   const skipInitialLocaleFetch = React.useRef(true);
+  const isBlockingFetch = fetching && Object.keys(messages).length === 0;
+
+  useSkyroomLoadingSource('intl', skyroomTheme && isBlockingFetch);
 
   const fetchLocalizedMessages = useCallback((locale: string, init: boolean) => {
     setFetching(true);

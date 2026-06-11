@@ -1,5 +1,7 @@
 import React from 'react';
 import LoadingScreen from '../component';
+import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import useSkyroomLoadingSource from '/imports/ui/components/skyroom-layout/loading/useSkyroomLoadingSource';
 
 interface LoadingContent {
   isLoading: boolean;
@@ -21,9 +23,13 @@ interface LoadingScreenHOCProps {
 const LoadingScreenHOC: React.FC<LoadingScreenHOCProps> = ({
   children,
 }) => {
+  const skyroomTheme = isSkyroomTheme();
   const [loading, setLoading] = React.useState<LoadingContent>({
-    isLoading: false,
+    // Skyroom keeps the overlay up until join completes; connection starts immediately.
+    isLoading: skyroomTheme,
   });
+
+  useSkyroomLoadingSource('connection', skyroomTheme && loading.isLoading);
 
   return (
     <LoadingContext.Provider value={{
@@ -35,13 +41,9 @@ const LoadingScreenHOC: React.FC<LoadingScreenHOCProps> = ({
       },
     }}
     >
-      {
-        loading.isLoading
-          ? (
-            <LoadingScreen />
-          )
-          : null
-      }
+      {loading.isLoading && !skyroomTheme ? (
+        <LoadingScreen />
+      ) : null}
       {children}
     </LoadingContext.Provider>
   );
