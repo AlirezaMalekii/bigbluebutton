@@ -2,12 +2,17 @@ type NotesPanelListener = (open: boolean) => void;
 
 let skyroomNotesGlobalOpen = false;
 let skyroomNotesLocallyDismissed = false;
+/** Viewer-only: panel open while moderator has not shared notes globally. */
+let skyroomNotesLocallyOpen = false;
 let skyroomNotesSyncEntryId: string | null = null;
 const listeners = new Set<NotesPanelListener>();
 
-const getVisibleNotesOpen = (): boolean => (
-  skyroomNotesGlobalOpen && !skyroomNotesLocallyDismissed
-);
+const getVisibleNotesOpen = (): boolean => {
+  if (skyroomNotesGlobalOpen) {
+    return !skyroomNotesLocallyDismissed;
+  }
+  return skyroomNotesLocallyOpen;
+};
 
 const notifyListeners = (): void => {
   const visible = getVisibleNotesOpen();
@@ -20,6 +25,8 @@ export const getSkyroomNotesOpen = (): boolean => getVisibleNotesOpen();
 export const getSkyroomNotesGlobalOpen = (): boolean => skyroomNotesGlobalOpen;
 
 export const getSkyroomNotesLocallyDismissed = (): boolean => skyroomNotesLocallyDismissed;
+
+export const getSkyroomNotesLocallyOpen = (): boolean => skyroomNotesLocallyOpen;
 
 export const getSkyroomNotesSyncEntryId = (): string | null => skyroomNotesSyncEntryId;
 
@@ -38,9 +45,16 @@ export const setSkyroomNotesGlobalOpen = (
   if (!changed) return;
 
   skyroomNotesGlobalOpen = open;
+  skyroomNotesLocallyOpen = false;
   if (clearDismiss) {
     skyroomNotesLocallyDismissed = false;
   }
+  notifyListeners();
+};
+
+export const setSkyroomNotesLocallyOpen = (open: boolean): void => {
+  if (skyroomNotesGlobalOpen || skyroomNotesLocallyOpen === open) return;
+  skyroomNotesLocallyOpen = open;
   notifyListeners();
 };
 

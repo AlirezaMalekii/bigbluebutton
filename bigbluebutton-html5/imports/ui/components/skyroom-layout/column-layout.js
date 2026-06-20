@@ -136,7 +136,8 @@ const adjustSkyroomColumnLayout = ({
   const zonePartition = partitionSkyroomStreams(videoStreams, {
     centerDropEnabled,
     stageMediaOpen,
-    sidebarStackVisible: columnVisible,
+    // Notes column alone does not host sidebar webcams — only users/chat stack does.
+    sidebarStackVisible: sidebarStackActive,
     dragPreview: getSkyroomWebcamDragPreview(),
     applyDragPreview: true,
   });
@@ -404,6 +405,7 @@ const adjustSkyroomColumnLayout = ({
     usersOpen,
     chatOpen,
     notesOpen,
+    sidebarStackActive,
     notesColumnBounds: notesOpen ? {
       top: notesColumnTop,
       left: notesColumnLeft,

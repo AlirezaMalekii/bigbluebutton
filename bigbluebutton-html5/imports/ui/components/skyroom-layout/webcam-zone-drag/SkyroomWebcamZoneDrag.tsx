@@ -33,7 +33,6 @@ interface SkyroomWebcamZoneDragProps {
   streamKey: string;
   sourceZone: string;
   enabled: boolean;
-  isOwnStream: boolean;
   children: React.ReactNode;
 }
 
@@ -41,14 +40,14 @@ const SkyroomWebcamZoneDrag: React.FC<SkyroomWebcamZoneDragProps> = ({
   streamKey,
   sourceZone,
   enabled,
-  isOwnStream,
   children,
 }) => {
   const { data: currentUser } = useCurrentUser((user) => ({
     isModerator: user.isModerator,
   }));
   const isModerator = Boolean(currentUser?.isModerator);
-  const canDrag = enabled && (isModerator || isOwnStream);
+  // Moderators broadcast layout; viewers rearrange any webcam locally on their screen.
+  const canDrag = enabled;
   const dragStateRef = useRef({
     startX: 0,
     startY: 0,

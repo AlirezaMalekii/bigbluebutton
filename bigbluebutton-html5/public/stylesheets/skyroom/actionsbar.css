@@ -50,6 +50,22 @@
   box-sizing: border-box !important;
 }
 
+/* Hide empty footer clusters (e.g. viewer without presenter/actions access) */
+#layout[data-skyroom-column="true"] #ActionsBar > div > div:first-child:not(:has(button)),
+#layout[data-skyroom-column="true"] #ActionsBar > div > div:last-child:not(:has(button)) {
+  display: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#layout[data-skyroom-column="true"] #ActionsBar > div > div:first-child:not(:has(button))::after,
+#layout[data-skyroom-column="true"] #ActionsBar > div > div:last-child:not(:has(button))::after {
+  display: none !important;
+}
+
 /* Shared cluster shell — items in the same category sit tight together */
 #layout[data-skyroom-column="true"] #ActionsBar > div > div:first-child,
 #layout[data-skyroom-column="true"] #ActionsBar > div > div:nth-child(2),

@@ -5,8 +5,10 @@ import {
   dismissSkyroomNotesLocally,
   getSkyroomNotesGlobalOpen,
   getSkyroomNotesLocallyDismissed,
+  getSkyroomNotesLocallyOpen,
   getSkyroomNotesOpen,
   setSkyroomNotesGlobalOpen,
+  setSkyroomNotesLocallyOpen,
 } from './notes-panel-state';
 import { broadcastSkyroomNotesGlobalOpen } from './notes-panel-sync/useSkyroomNotesPanelSync';
 
@@ -101,15 +103,18 @@ export const toggleSkyroomSharedNotesGlobally = () => {
   broadcastSkyroomNotesGlobalOpen(next);
 };
 
-/** Per-user close/reopen when the panel is globally shared. */
+/** Viewer nav-bar toggle — local open/close; follows moderator global state when shared. */
 export const toggleSkyroomSharedNotesLocally = () => {
-  if (getSkyroomNotesLocallyDismissed()) {
-    clearSkyroomNotesLocalDismiss();
+  if (getSkyroomNotesGlobalOpen()) {
+    if (getSkyroomNotesLocallyDismissed()) {
+      clearSkyroomNotesLocalDismiss();
+    } else {
+      dismissSkyroomNotesLocally();
+    }
     return;
   }
-  if (getSkyroomNotesGlobalOpen()) {
-    dismissSkyroomNotesLocally();
-  }
+
+  setSkyroomNotesLocallyOpen(!getSkyroomNotesLocallyOpen());
 };
 
 /** Panel header close button — hides notes only for the current user. */
