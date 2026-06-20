@@ -33,6 +33,7 @@ import { useMeetingLayoutUpdater, usePushLayoutUpdater } from './hooks';
 import { setEnforcedLayout } from '/imports/ui/components/plugins-engine/ui-commands/layout/handler';
 import { useIsChatEnabled } from '/imports/ui/services/features';
 import DEFAULT_VALUES from '/imports/ui/components/layout/defaultValues';
+import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const equalDouble = (n1, n2) => {
   const precision = 0.01;
@@ -121,7 +122,9 @@ const PushLayoutEngine = (props) => {
       || meetingLayout;
 
     let { selectedLayout: actualLayout } = Settings.application;
-    if (isMobile()) {
+    // Skyroom owns the phone layout via its own CustomLayout mobile split engine, so it
+    // must stay on `custom` (vanilla BBB still downgrades custom→smart on mobile).
+    if (isMobile() && !isSkyroomTheme()) {
       actualLayout = actualLayout === 'custom' ? 'smart' : actualLayout;
       Settings.application.selectedLayout = actualLayout;
     }
@@ -215,7 +218,8 @@ const PushLayoutEngine = (props) => {
 
     const replicateLayoutType = () => {
       let contextLayout = LAYOUT_TYPE[enforceLayoutResult] || meetingLayout;
-      if (isMobile()) {
+      // Keep Skyroom on custom for the phone split engine (see note above).
+      if (isMobile() && !isSkyroomTheme()) {
         if (contextLayout === LAYOUT_TYPE.CUSTOM_LAYOUT) {
           contextLayout = LAYOUT_TYPE.SMART_LAYOUT;
         }

@@ -5,7 +5,8 @@
 :root {
   /* Layout-only; spacing/chrome tokens live in tokens.css */
   --skyroom-presentation-toolbar-h: 36px;
-  --skyroom-wb-toolbar-gap: -2px;
+  /* Small positive gap so the tldraw floating toolbar sits just above the slide-nav bar. */
+  --skyroom-wb-toolbar-gap: 1px;
   --skyroom-column-width: clamp(292px, 21vw, 328px);
   --skyroom-footer-safe: var(--skyroom-footer-h, 56px);
   /* Set at runtime by customLayout when column mode is active */
@@ -169,11 +170,11 @@
 }
 
 /* LTR: sidebar left — stage inset from column(s) + outer edge */
-[dir="ltr"] #layout[data-skyroom-column="true"] [data-test="screenshareArea"],
-[dir="ltr"] #layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"],
-[dir="ltr"] #layout[data-skyroom-column="true"] [data-test="presentationContainer"],
-[dir="ltr"] #layout[data-skyroom-column="true"] [class*="presentationContainer"],
-[dir="ltr"] #layout[data-skyroom-column="true"] [class*="PresentationContainer"] {
+[dir="ltr"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="screenshareArea"],
+[dir="ltr"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-skyroom-stage-media="true"],
+[dir="ltr"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="presentationContainer"],
+[dir="ltr"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [class*="presentationContainer"],
+[dir="ltr"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [class*="PresentationContainer"] {
   left: var(--skyroom-stage-left, calc(var(--skyroom-column-width) + var(--skyroom-stage-gap) * 2)) !important;
   right: auto !important;
   top: var(--skyroom-screenshare-top, auto) !important;
@@ -193,8 +194,8 @@
 }
 
 /* Viewer webcam strip above stage media (#cameraDock is inside .react-draggable, not a direct #layout child) */
-#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-webcam-float="true"]) .react-draggable:has(#cameraDock),
-#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-webcam-float="true"]) #cameraDock {
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-mobile="true"]):not([data-skyroom-webcam-float="true"]) .react-draggable:has(#cameraDock),
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-mobile="true"]):not([data-skyroom-webcam-float="true"]) #cameraDock {
   position: fixed !important;
   inset: auto !important;
   top: var(--skyroom-stage-webcam-top) !important;
@@ -325,11 +326,11 @@
 }
 
 /* RTL: sidebar right */
-[dir="rtl"] #layout[data-skyroom-column="true"] [data-test="screenshareArea"],
-[dir="rtl"] #layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"],
-[dir="rtl"] #layout[data-skyroom-column="true"] [data-test="presentationContainer"],
-[dir="rtl"] #layout[data-skyroom-column="true"] [class*="presentationContainer"],
-[dir="rtl"] #layout[data-skyroom-column="true"] [class*="PresentationContainer"] {
+[dir="rtl"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="screenshareArea"],
+[dir="rtl"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-skyroom-stage-media="true"],
+[dir="rtl"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="presentationContainer"],
+[dir="rtl"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [class*="presentationContainer"],
+[dir="rtl"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [class*="PresentationContainer"] {
   right: var(--skyroom-stage-left, calc(var(--skyroom-column-width) + var(--skyroom-stage-gap) * 2)) !important;
   left: var(--skyroom-stage-gap) !important;
   top: var(--skyroom-screenshare-top, auto) !important;
@@ -373,14 +374,14 @@
 }
 
 /* Both panels hidden — presentation fills the stage */
-#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] [data-test="screenshareArea"],
-#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] [data-skyroom-stage-media="true"],
-#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] [data-test="presentationContainer"],
-#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] [class*="presentationContainer"],
-#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] [class*="PresentationContainer"],
-#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] [data-test="whiteboard"],
-#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] [class*="Whiteboard"],
-#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"] [class*="whiteboard"] {
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"]:not([data-skyroom-mobile="true"]) [data-test="screenshareArea"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"]:not([data-skyroom-mobile="true"]) [data-skyroom-stage-media="true"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"]:not([data-skyroom-mobile="true"]) [data-test="presentationContainer"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"]:not([data-skyroom-mobile="true"]) [class*="presentationContainer"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"]:not([data-skyroom-mobile="true"]) [class*="PresentationContainer"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"]:not([data-skyroom-mobile="true"]) [data-test="whiteboard"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"]:not([data-skyroom-mobile="true"]) [class*="Whiteboard"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-full="true"]:not([data-skyroom-mobile="true"]) [class*="whiteboard"] {
   left: var(--skyroom-stage-gap) !important;
   right: var(--skyroom-stage-gap) !important;
   width: calc(100% - var(--skyroom-stage-gap) * 2) !important;
@@ -646,14 +647,15 @@
   border-color: rgba(32, 199, 187, 0.42) !important;
 }
 
-@media (max-width: 768px) {
-  :root {
-    --skyroom-footer-safe: 112px;
-  }
-
-  #layout[data-skyroom-column="true"] .resizeSidebarNavWrapper,
-  #layout[data-skyroom-column="true"] .resizeSidebarContentWrapper {
+/* Phone (<600px): the Skyroom CustomLayout mobile split engine now drives geometry
+   and tags #layout with data-skyroom-mobile="true". Let its inline bounds (edge-inset
+   width + bottom-zone top/height) win there. The full-width fallback below only applies
+   if the engine is somehow inactive. Aligned with utils.js phoneUpperBoundary (600). */
+@media (max-width: 599.98px) {
+  #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) .resizeSidebarNavWrapper,
+  #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) .resizeSidebarContentWrapper {
     width: 100% !important;
+    min-width: 0 !important;
     max-width: none !important;
   }
 }

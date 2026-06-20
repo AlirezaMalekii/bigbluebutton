@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { defineMessages, injectIntl } from 'react-intl';
@@ -17,6 +18,9 @@ import { PANELS, ACTIONS, LAYOUT_TYPE } from '../layout/enums';
 import Button from '/imports/ui/components/common/button/component';
 import {
   isSkyroomColumnLayout,
+  isSkyroomMobileViewport,
+  isSkyroomNotesOpen,
+  openSkyroomMobileBox,
   toggleSkyroomPublicChat,
   toggleSkyroomUserList,
   toggleSkyroomSharedNotesGlobally,
@@ -314,11 +318,18 @@ class NavBar extends Component {
   handleToggleSharedNotes() {
     if (!isSkyroomColumnLayout()) return;
 
-    const { amIModerator } = this.props;
+    const { amIModerator, layoutContextDispatch } = this.props;
     if (amIModerator) {
       toggleSkyroomSharedNotesGlobally();
     } else {
       toggleSkyroomSharedNotesLocally();
+    }
+
+    if (isSkyroomMobileViewport()) {
+      openSkyroomMobileBox(
+        layoutContextDispatch,
+        isSkyroomNotesOpen() ? 'notes' : null,
+      );
     }
   }
 
@@ -407,6 +418,7 @@ class NavBar extends Component {
     const APP_CONFIG = window.meetingClientSettings?.public?.app;
     const enableTalkingIndicator = APP_CONFIG?.enableTalkingIndicator;
     const skyroomHeader = isSkyroomColumnLayout();
+    const skyroomMobileTalkingInRail = skyroomHeader && isSkyroomMobileViewport();
     const notesEnabledInSettings = window.meetingClientSettings?.public?.notes?.enabled;
     const showSharedNotesToggle = skyroomHeader
       && shouldShowNavBarToggleButton
@@ -535,7 +547,7 @@ class NavBar extends Component {
               />
               {renderPluginItems(centerPluginItems)}
             </Styled.Center>
-            {skyroomHeader && enableTalkingIndicator && (
+            {skyroomHeader && enableTalkingIndicator && !skyroomMobileTalkingInRail && (
               <Styled.SkyroomTalkingRail data-test="skyroom-talking-rail">
                 <h2 className="sr-only">{intl.formatMessage(intlMessages.speakersListLabel)}</h2>
                 <TalkingIndicator amIModerator={amIModerator} />

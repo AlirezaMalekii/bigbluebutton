@@ -688,6 +688,7 @@ const UserActions: React.FC<UserActionsProps> = ({
         <Styled.ActionMenuWrap onClick={(e) => e.stopPropagation()}>
           <BBBMenu
             dataTest={`userActionsMenu-${user.userId}`}
+            overrideMobileStyles
             trigger={(
               <Styled.SkyroomActionsTrigger
                 size="sm"

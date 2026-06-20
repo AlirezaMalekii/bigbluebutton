@@ -187,6 +187,12 @@ export const SendButton = styled(Button)`
     transform: none !important;
   }
 
+  /* RTL: mirror the paper-plane icon so it points left (toward the start). */
+  [dir='rtl'] & i,
+  [dir='rtl'] & [class^='icon-bbb-'] {
+    transform: scaleX(-1) !important;
+  }
+
   &:hover,
   &:focus-visible {
     background: linear-gradient(180deg, rgba(96, 230, 230, 0.42), rgba(60, 198, 198, 0.28)) !important;

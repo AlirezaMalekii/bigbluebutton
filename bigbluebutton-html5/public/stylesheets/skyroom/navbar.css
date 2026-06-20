@@ -461,9 +461,27 @@
   background-color: transparent !important;
 }
 
+.MuiModal-root:has(.skyroom-leave-meeting-menu) .MuiBackdrop-root {
+  background-color: transparent !important;
+}
+
+.MuiModal-root:has(.skyroom-actions-menu) .MuiBackdrop-root {
+  background-color: transparent !important;
+}
+
+.MuiModal-root:has(.skyroom-audio-settings-menu) .MuiBackdrop-root {
+  background-color: transparent !important;
+}
+
 /* Never use fullscreen mobile sheet for features menu */
 .MuiModal-root:has(.skyroom-app-settings-menu) .override-mobile-styles,
-.MuiModal-root:has(.skyroom-app-settings-menu) .MuiPaper-root.override-mobile-styles {
+.MuiModal-root:has(.skyroom-app-settings-menu) .MuiPaper-root.override-mobile-styles,
+.MuiModal-root:has(.skyroom-leave-meeting-menu) .override-mobile-styles,
+.MuiModal-root:has(.skyroom-leave-meeting-menu) .MuiPaper-root.override-mobile-styles,
+.MuiModal-root:has(.skyroom-actions-menu) .override-mobile-styles,
+.MuiModal-root:has(.skyroom-actions-menu) .MuiPaper-root.override-mobile-styles,
+.MuiModal-root:has(.skyroom-audio-settings-menu) .override-mobile-styles,
+.MuiModal-root:has(.skyroom-audio-settings-menu) .MuiPaper-root.override-mobile-styles {
   position: absolute !important;
   top: auto !important;
   left: auto !important;
@@ -474,19 +492,32 @@
 }
 
 @media (max-width: 899px) {
-  .MuiModal-root:has(.skyroom-app-settings-menu) .MuiPopover-root {
+  .MuiModal-root:has(.skyroom-app-settings-menu) .MuiPopover-root,
+  .MuiModal-root:has(.skyroom-leave-meeting-menu) .MuiPopover-root,
+  .MuiModal-root:has(.skyroom-actions-menu) .MuiPopover-root,
+  .MuiModal-root:has(.skyroom-audio-settings-menu) .MuiPopover-root {
     top: auto !important;
   }
 }
 
 #layout[data-skyroom-column="true"] #app-settings-dropdown-menu .MuiPaper-root,
 #layout[data-skyroom-column="true"] .skyroom-app-settings-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] #app-leave-meeting-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] .skyroom-leave-meeting-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] #actions-dropdown-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] .skyroom-actions-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] #audio-selector-dropdown-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] .skyroom-audio-settings-menu .MuiPaper-root,
 #layout[data-skyroom-column="true"] .skyroom-options-menu-list {
   padding: 6px !important;
 }
 
 #layout[data-skyroom-column="true"] #app-settings-dropdown-menu .MuiPaper-root,
 #layout[data-skyroom-column="true"] .skyroom-app-settings-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] #app-leave-meeting-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] .skyroom-leave-meeting-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] #actions-dropdown-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] .skyroom-actions-menu .MuiPaper-root,
 #layout[data-skyroom-column="true"] .MuiMenu-paper:has([data-key^="menuItem-"]) {
   min-width: 220px !important;
   max-width: min(300px, 92vw) !important;
@@ -502,7 +533,13 @@
 }
 
 #layout[data-skyroom-column="true"] #app-settings-dropdown-menu [data-key^="menuItem-"],
-#layout[data-skyroom-column="true"] .skyroom-options-menu-list [data-key^="menuItem-"] {
+#layout[data-skyroom-column="true"] .skyroom-options-menu-list [data-key^="menuItem-"],
+#layout[data-skyroom-column="true"] #app-leave-meeting-menu [data-key^="menuItem-"],
+#layout[data-skyroom-column="true"] .skyroom-leave-meeting-menu [data-key^="menuItem-"],
+#layout[data-skyroom-column="true"] #actions-dropdown-menu [data-key^="menuItem-"],
+#layout[data-skyroom-column="true"] .skyroom-actions-menu [data-key^="menuItem-"],
+#layout[data-skyroom-column="true"] #audio-selector-dropdown-menu [data-key^="menuItem-"],
+#layout[data-skyroom-column="true"] .skyroom-audio-settings-menu [data-key^="menuItem-"] {
   border-radius: 8px !important;
   margin: 2px 0 !important;
   min-height: 38px !important;
@@ -511,7 +548,13 @@
 }
 
 #layout[data-skyroom-column="true"] #app-settings-dropdown-menu [data-key^="menuItem-"]:hover,
-#layout[data-skyroom-column="true"] .skyroom-options-menu-list [data-key^="menuItem-"]:hover {
+#layout[data-skyroom-column="true"] .skyroom-options-menu-list [data-key^="menuItem-"]:hover,
+#layout[data-skyroom-column="true"] #app-leave-meeting-menu [data-key^="menuItem-"]:hover,
+#layout[data-skyroom-column="true"] .skyroom-leave-meeting-menu [data-key^="menuItem-"]:hover,
+#layout[data-skyroom-column="true"] #actions-dropdown-menu [data-key^="menuItem-"]:hover,
+#layout[data-skyroom-column="true"] .skyroom-actions-menu [data-key^="menuItem-"]:hover,
+#layout[data-skyroom-column="true"] #audio-selector-dropdown-menu [data-key^="menuItem-"]:hover,
+#layout[data-skyroom-column="true"] .skyroom-audio-settings-menu [data-key^="menuItem-"]:hover {
   background: var(--skyroom-accent-soft, rgba(32, 199, 187, 0.12)) !important;
 }
 

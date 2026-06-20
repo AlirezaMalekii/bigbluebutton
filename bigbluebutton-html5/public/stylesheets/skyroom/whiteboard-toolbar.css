@@ -2,16 +2,34 @@
    Skyroom — whiteboard top toolbar (replaces options dropdown)
    ===================================================================== */
 
+/* Proportional chrome scale — tracks the live whiteboard width published by
+   customLayout.jsx as the unitless --skyroom-stage-width-num. 1.0 at ~820px of
+   stage, floored at 0.6. Recomputes on resize and on panel open/close. Defined
+   on #layout (same element that holds --skyroom-stage-width-num) so it inherits
+   to the tldraw bottom toolbar AND both top corner groups (undo/redo + action
+   buttons), which are siblings of #whiteboard-element — making them shrink
+   together with the whiteboard. */
+#layout[data-skyroom-column="true"] {
+  --skyroom-wb-scale: clamp(0.55, calc(var(--skyroom-stage-width-num, 820) / 820), 1);
+  --skyroom-wb-btn-size: 30px;
+}
+
+#layout[data-skyroom-column="true"] #presentationInnerWrapper [class*="ExtraTools"],
+#layout[data-skyroom-column="true"] #presentationInnerWrapper #WhiteboardOptionButton[data-skyroom-wb-toolbar="true"] {
+  z-index: 1002 !important;
+}
+
 #WhiteboardOptionButton[data-skyroom-wb-toolbar="true"] {
   position: absolute;
+  /* Below tldraw style/color popovers (1100+) so pen options cover corner actions on phone. */
   z-index: 1001;
-  top: 14px;
-  left: 14px;
-  right: auto;
+  top: calc(10px * var(--skyroom-wb-scale, 1));
+  left: auto;
+  right: calc(10px * var(--skyroom-wb-scale, 1));
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: calc(6px * var(--skyroom-wb-scale, 1));
   padding: 0;
   margin: 0;
   background: transparent;
@@ -20,8 +38,9 @@
 }
 
 [dir="rtl"] #WhiteboardOptionButton[data-skyroom-wb-toolbar="true"] {
+  /* Black action chips stay on the physical right in RTL too. */
   left: auto;
-  right: 14px;
+  right: calc(10px * var(--skyroom-wb-scale, 1));
 }
 
 #WhiteboardOptionButton[data-skyroom-wb-toolbar="true"] > * {
@@ -32,10 +51,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  border-radius: 12px;
+  width: var(--skyroom-wb-btn-size, 30px) !important;
+  height: var(--skyroom-wb-btn-size, 30px) !important;
+  min-width: var(--skyroom-wb-btn-size, 30px) !important;
+  min-height: var(--skyroom-wb-btn-size, 30px) !important;
+  padding: 0 !important;
+  border-radius: calc(10px * var(--skyroom-wb-scale, 1));
   cursor: pointer;
   color: #e8edf4;
   background:
@@ -70,20 +91,88 @@
 
 #WhiteboardOptionButton .skyroom-wb-action-btn i,
 #WhiteboardOptionButton .skyroom-wb-action-btn [class^="icon-bbb-"] {
-  font-size: 1.05rem;
+  font-size: calc(0.68rem * var(--skyroom-wb-scale, 1));
   color: inherit;
 }
 
 #WhiteboardOptionButton .skyroom-wb-action-btn svg {
-  width: 18px;
-  height: 18px;
+  width: calc(13px * var(--skyroom-wb-scale, 1));
+  height: calc(13px * var(--skyroom-wb-scale, 1));
   fill: currentColor;
 }
 
-/* TLDraw tools — small gap above presentation toolbar (whiteboard height already excludes it) */
+/* Top-left undo/redo — physical left corner on the slide surface (same in LTR and RTL). */
+#layout[data-skyroom-column="true"] #presentationInnerWrapper [class*="ExtraTools"] {
+  position: absolute !important;
+  top: calc(10px * var(--skyroom-wb-scale, 1)) !important;
+  left: calc(10px * var(--skyroom-wb-scale, 1)) !important;
+  right: auto !important;
+  z-index: 1001 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  height: auto !important;
+  align-items: center !important;
+  gap: calc(5px * var(--skyroom-wb-scale, 1)) !important;
+}
+
+[dir="rtl"] #layout[data-skyroom-column="true"] #presentationInnerWrapper [class*="ExtraTools"] {
+  left: calc(10px * var(--skyroom-wb-scale, 1)) !important;
+  right: auto !important;
+}
+
+#layout[data-skyroom-column="true"] #presentationInnerWrapper [class*="ExtraTools"] > [class*="Button"],
+#layout[data-skyroom-column="true"] #presentationInnerWrapper [class*="ExtraTools"] button,
+#layout[data-skyroom-column="true"] #presentationInnerWrapper [class*="ExtraTools"] .skyroom-wb-action-btn {
+  width: var(--skyroom-wb-btn-size, 30px) !important;
+  height: var(--skyroom-wb-btn-size, 30px) !important;
+  min-width: var(--skyroom-wb-btn-size, 30px) !important;
+  min-height: var(--skyroom-wb-btn-size, 30px) !important;
+  padding: 0 !important;
+  border-radius: calc(10px * var(--skyroom-wb-scale, 1)) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background:
+    linear-gradient(165deg, rgba(28, 40, 62, 0.95) 0%, rgba(16, 24, 40, 0.92) 100%) !important;
+  border: 1px solid rgba(20, 169, 158, 0.32) !important;
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  color: #e8edf4 !important;
+}
+
+#layout[data-skyroom-column="true"] #presentationInnerWrapper [class*="ExtraTools"] .tlui-icon {
+  width: calc(13px * var(--skyroom-wb-scale, 1)) !important;
+  height: calc(13px * var(--skyroom-wb-scale, 1)) !important;
+}
+
+/* TLDraw tools — drop the floating toolbar down so it hugs the slide-nav bar with a
+   small gap (the whiteboard height excludes the slide-nav, so bottom is measured from
+   the slide-nav top). Kill tldraw's default bottom padding that otherwise floats it up. */
 #layout[data-skyroom-column="true"] #whiteboard-element .tlui-layout__bottom {
   top: auto !important;
-  bottom: var(--skyroom-wb-toolbar-gap, 8px) !important;
+  bottom: var(--skyroom-wb-toolbar-gap, 4px) !important;
+  padding-bottom: 0 !important;
+}
+
+/* Show/hide pen toolbar — the top-right "toolVisibility" toggle sets
+   data-skyroom-toolbar-hidden on #layout (presentation/component.jsx). Desktop + mobile. */
+#layout[data-skyroom-column="true"][data-skyroom-toolbar-hidden="true"] #whiteboard-element .tlui-layout__bottom {
+  display: none !important;
+}
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-layout__bottom .tlui-toolbar {
+  padding-bottom: 1px !important;
+}
+
+/* Compact the tldraw bottom toolbar, scaled proportionally with the whiteboard via
+   --skyroom-wb-scale (set on #layout from the live stage width). The 0.8 base keeps it
+   noticeably smaller; on a narrow stage the scale floor (0.6) keeps it usable. Scaling the
+   toolbar only — the style panel is a separate wrapper, so its anchoring is unaffected. */
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-toolbar__inner {
+  transform: scale(calc(0.8 * var(--skyroom-wb-scale, 1)));
+  transform-origin: bottom center;
+  margin-bottom: 0 !important;
 }
 
 #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] {
@@ -172,7 +261,9 @@
   position: static !important;
 }
 
-#layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel__wrapper {
+/* DESKTOP only — fixed anchor above the centered toolbar. JS portal handles
+   open popovers on mobile; this is a resting-state hint for the wrapper shell. */
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #whiteboard-element .tlui-style-panel__wrapper:not(:has([data-state="open"])) {
   position: absolute !important;
   top: auto !important;
   bottom: calc(var(--skyroom-wb-toolbar-gap, 8px) + 48px) !important;
@@ -182,23 +273,32 @@
 }
 
 /* Trailing edge of centered toolbar (styles trigger sits here with row-reverse) */
-[dir="ltr"] #layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel__wrapper {
+[dir="ltr"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #whiteboard-element .tlui-style-panel__wrapper {
   left: calc(50% + 92px) !important;
   right: auto !important;
 }
 
-[dir="rtl"] #layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel__wrapper {
+[dir="rtl"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #whiteboard-element .tlui-style-panel__wrapper {
   left: auto !important;
   right: calc(50% + 92px) !important;
 }
 
-/* Mobile / popover style panel — keep Radix anchor on the styles trigger */
+/* Skyroom toolbar popovers — portaled above the slide by useSkyroomToolbarPopoverAnchor */
+#skyroom-wb-popover-portal [role="dialog"],
+#skyroom-wb-popover-portal .tlui-popover__content {
+  pointer-events: auto !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content,
+#layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-style-panel),
+#layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-buttons__grid) {
+  left: auto !important;
+  right: auto !important;
+}
+
+/* Style / shape / color popovers — position is applied by useSkyroomToolbarPopoverAnchor. */
 #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content:has(.tlui-style-panel),
 #layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-style-panel) {
-  left: unset !important;
-  right: unset !important;
-  bottom: unset !important;
-  top: unset !important;
   transform: none !important;
 }
 
@@ -211,7 +311,12 @@
   accent-color: #20c7bb !important;
 }
 
-/* Toolbar overflow menu (tools.more) — dark glass so light icons stay readable */
+/* Toolbar overflow / shape menus — position is applied by useSkyroomToolbarPopoverAnchor. */
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content:has(.tlui-buttons__grid),
+#layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-buttons__grid):not(:has(.tlui-style-panel)) {
+  transform: none !important;
+}
+
 #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) {
   background: rgba(10, 18, 30, 0.98) !important;
   border: 1px solid rgba(32, 199, 187, 0.22) !important;

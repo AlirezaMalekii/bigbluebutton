@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types, no-console */
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { defineMessages, injectIntl } from 'react-intl';
@@ -539,7 +540,7 @@ const PresentationMenu = (props) => {
             <TooltipContainer key={item.key} title={item.label}>
               <Styled.ActionButton
                 type="button"
-                className={isDanger ? 'danger' : undefined}
+                className={`skyroom-wb-action-btn${isDanger ? ' skyroom-wb-action-btn--danger' : ''}`}
                 aria-label={item.label}
                 data-test={item.dataTest}
                 onClick={item.onClick}

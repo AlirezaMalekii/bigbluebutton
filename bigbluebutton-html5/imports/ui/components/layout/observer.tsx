@@ -19,6 +19,11 @@ import { useIsChatEnabled, useIsPresentationEnabled, useIsScreenSharingEnabled }
 import useUserChangedLocalSettings from '/imports/ui/services/settings/hooks/useUserChangedLocalSettings';
 import Session from '/imports/ui/services/storage/in-memory';
 import deviceInfo from '/imports/utils/deviceInfo';
+import {
+  isSkyroomMobileViewport,
+  isSkyroomTheme,
+  openSkyroomMobileBox,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const MOBILE_MEDIA = 'only screen and (max-width: 40em)';
 
@@ -219,7 +224,13 @@ const LayoutObserver: React.FC = () => {
 
   useEffect(() => {
     if (layoutIsReady) {
-      if (isChatEnabled && getFromUserSettings('bbb_show_public_chat_on_login', !window.meetingClientSettings.public.chat.startClosed) && !deviceInfo.isPhone) {
+      const showPublicChatOnLogin = isChatEnabled
+        && getFromUserSettings(
+          'bbb_show_public_chat_on_login',
+          !window.meetingClientSettings.public.chat.startClosed,
+        );
+
+      if (showPublicChatOnLogin && !deviceInfo.isPhone) {
         const PUBLIC_CHAT_ID = window.meetingClientSettings.public.chat.public_group_id;
         layoutContextDispatch({
           type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
@@ -233,6 +244,14 @@ const LayoutObserver: React.FC = () => {
           type: ACTIONS.SET_ID_CHAT_OPEN,
           value: PUBLIC_CHAT_ID,
         });
+      } else if (
+        deviceInfo.isPhone
+        && isSkyroomTheme()
+        && isSkyroomMobileViewport()
+        && isChatEnabled
+      ) {
+        // Stock BBB closes sidebar content on phones; Skyroom mobile defaults to public chat.
+        openSkyroomMobileBox(layoutContextDispatch, 'chat');
       } else {
         layoutContextDispatch({
           type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,

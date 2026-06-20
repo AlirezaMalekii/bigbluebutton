@@ -135,6 +135,7 @@ const NotesDropdownGraphql: React.FC<NotesDropdownGraphqlProps> = (props) => {
   return (
     <>
       <BBBMenu
+        overrideMobileStyles={Boolean(menuClassName)}
         trigger={(
           <OptionsTrigger
             data-test="notesOptionsMenu"

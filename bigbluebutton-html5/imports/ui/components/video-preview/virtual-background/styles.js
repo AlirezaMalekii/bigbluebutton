@@ -71,6 +71,13 @@ const BgWrapper = styled.div`
     max-height: min(240px, 28vh);
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  @media ${smallOnly} {
+    max-height: min(160px, 22vh);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
+    padding: 6px;
+  }
 `;
 
 const tileBase = css`
@@ -81,6 +88,10 @@ const tileBase = css`
   width: 100%;
   aspect-ratio: 1;
   min-height: 68px;
+
+  @media ${smallOnly} {
+    min-height: 44px;
+  }
   border-radius: 12px;
   border: 1px solid rgba(218, 230, 245, 0.14);
   background: rgba(255, 255, 255, 0.04);
@@ -173,6 +184,11 @@ const Label = styled.label`
   letter-spacing: 0.02em;
   text-transform: uppercase;
   color: rgba(170, 182, 199, 0.95);
+
+  @media ${smallOnly} {
+    margin: 0 0 4px;
+    font-size: 0.65rem;
+  }
 `;
 
 const ThumbnailButtonWrapper = styled.div`

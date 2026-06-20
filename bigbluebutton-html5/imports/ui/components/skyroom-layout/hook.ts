@@ -1,15 +1,26 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { layoutDispatch, layoutSelectInput } from '/imports/ui/components/layout/context';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import { Input } from '/imports/ui/components/layout/layoutTypes';
 import { ACTIONS, CAMERADOCK_POSITION, PANELS } from '/imports/ui/components/layout/enums';
 import Session from '/imports/ui/services/storage/in-memory';
-import deviceInfo from '/imports/utils/deviceInfo';
 import { SKYROOM_COLUMN_ATTR } from './column-layout';
 import { clearSkyroomWebcamLayout } from './webcam-bounds-store';
 import { clearSkyroomWebcamZones } from './webcam-zone-store';
-import { isPublicChatOpen, isSkyroomNotesOpen } from './panel-toggles';
+import {
+  isPublicChatOpen,
+  isSkyroomNotesOpen,
+  isSkyroomMobileViewport,
+  openSkyroomMobileBox,
+} from './panel-toggles';
 import { subscribeSkyroomNotesOpen } from './notes-panel-state';
+import {
+  getSkyroomMobileActiveBox,
+  setSkyroomMobileActiveBox,
+} from './mobile-bottom-state';
+import { setSkyroomMobileZoneFullscreen } from './mobile-zone-fullscreen-state';
+import { resetSkyroomMobileStatusRail } from './mobile-status-rail-state';
+import { resetSkyroomMobileTalkingRail } from './mobile-talking-rail-state';
 import {
   applySkyroomWhiteLabelSettings,
   startSkyroomWhiteLabelDomWatch,
@@ -67,12 +78,20 @@ export const useSkyroomColumnLayout = () => {
       layoutEl.style.setProperty('--color-gray', '#aab6c7');
       layoutEl.style.setProperty('--color-gray-dark', '#eef4fb');
       layoutEl.style.setProperty('--color-text', '#d6dfeb');
+      // Force a layout pass now that the column engine is active (avoids a phone
+      // loading deadlock where layoutReady flips before data-skyroom-mobile is set).
+      window.dispatchEvent(new Event('resize'));
     }
 
     document.documentElement.setAttribute('data-theme', 'dark');
 
     const openSkyroomColumn = () => {
-      if (deviceInfo.isPhone) return;
+      // Phone: default to Chat as the single bottom box (sets the explicit active box
+      // too); the engine handles the top/bottom split and webcam placement.
+      if (isSkyroomMobileViewport()) {
+        openSkyroomMobileBox(layoutContextDispatch, 'chat');
+        return;
+      }
 
       layoutContextDispatch({
         type: ACTIONS.SET_SIDEBAR_NAVIGATION_IS_OPEN,
@@ -106,6 +125,11 @@ export const useSkyroomColumnLayout = () => {
         openSkyroomColumn();
         window.dispatchEvent(new Event('resize'));
         window.clearInterval(interval);
+        // LayoutObserver closes sidebar content on phones once layoutIsReady flips;
+        // re-apply the mobile default after that effect so first join shows chat.
+        if (isSkyroomMobileViewport()) {
+          window.setTimeout(() => openSkyroomMobileBox(layoutContextDispatch, 'chat'), 0);
+        }
       }
     }, 100);
 
@@ -118,6 +142,15 @@ export const useSkyroomColumnLayout = () => {
         layoutEl.removeAttribute('data-skyroom-chat-visible');
         layoutEl.removeAttribute('data-skyroom-notes-visible');
         layoutEl.removeAttribute('data-skyroom-stage-full');
+        layoutEl.removeAttribute('data-skyroom-mobile');
+        layoutEl.removeAttribute('data-skyroom-mobile-has-top');
+        layoutEl.removeAttribute('data-skyroom-mobile-has-bottom');
+        layoutEl.removeAttribute('data-skyroom-mobile-zone-fs');
+        layoutEl.removeAttribute('data-skyroom-mobile-bottom-webcams');
+        layoutEl.removeAttribute('data-skyroom-mobile-top-webcams');
+        layoutEl.style.removeProperty('--skyroom-mobile-bottom-width');
+        layoutEl.style.removeProperty('--skyroom-mobile-bottom-left');
+        layoutEl.style.removeProperty('--skyroom-mobile-bottom-right');
         layoutEl.removeAttribute('data-skyroom-presentation-minimized');
         layoutEl.removeAttribute('data-skyroom-stage-webcams');
         layoutEl.removeAttribute('data-skyroom-sidebar-webcam');
@@ -137,6 +170,9 @@ export const useSkyroomColumnLayout = () => {
         layoutEl.style.removeProperty('--skyroom-stage-webcam-width');
         clearSkyroomWebcamLayout();
         clearSkyroomWebcamZones();
+        setSkyroomMobileZoneFullscreen(null);
+        resetSkyroomMobileStatusRail();
+        resetSkyroomMobileTalkingRail();
         layoutEl.style.removeProperty('--user-list-bg');
         layoutEl.style.removeProperty('--color-content-background');
         layoutEl.style.removeProperty('--list-item-bg-hover');
@@ -165,6 +201,53 @@ export const useSkyroomColumnLayout = () => {
     }
     window.dispatchEvent(new Event('resize'));
   }, [usersOpen, chatOpen, notesOpen, hasActiveScreenShare, screenshareMinimized, numCameras, presentationIsOpen]);
+
+  // Phone: sync navbar-opened notes with the bottom zone. Tab-bar switches go through
+  // openSkyroomMobileBox first (activeBox is updated synchronously); while notesOpen
+  // is still true for a frame we must NOT yank back to notes — that caused the
+  // notes→chat/users "needs two taps" bug.
+  useEffect(() => {
+    if (!isSkyroomMobileViewport()) return;
+    const explicit = getSkyroomMobileActiveBox();
+
+    if (notesOpen) {
+      if (explicit === 'notes') return;
+      if (explicit === 'chat' || explicit === 'users' || explicit === 'webcams') return;
+
+      layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_NAVIGATION_IS_OPEN, value: false });
+      layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_NAVIGATION_PANEL, value: PANELS.NONE });
+      layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN, value: false });
+      layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL, value: PANELS.NONE });
+      layoutContextDispatch({ type: ACTIONS.SET_ID_CHAT_OPEN, value: '' });
+      setSkyroomMobileActiveBox('notes');
+    } else if (explicit === 'notes') {
+      setSkyroomMobileActiveBox(null);
+    }
+  }, [notesOpen, layoutContextDispatch]);
+
+  // Phone: when a camera turns on (0 → >0) while something is shared on the stage,
+  // auto-select the Webcams bottom box so the user sees it. (With nothing shared the
+  // engine already fills the top zone with cameras, so no tab switch is needed.)
+  const prevNumCamerasRef = useRef(numCameras);
+  useEffect(() => {
+    const prev = prevNumCamerasRef.current;
+    prevNumCamerasRef.current = numCameras;
+    if (!isSkyroomMobileViewport()) return;
+    const stageActive = presentationIsOpen || hasActiveScreenShare;
+    if (prev === 0 && numCameras > 0 && stageActive) {
+      openSkyroomMobileBox(layoutContextDispatch, 'webcams');
+    }
+  }, [numCameras, presentationIsOpen, hasActiveScreenShare, layoutContextDispatch]);
+
+  useEffect(() => {
+    const onResize = () => {
+      if (!isSkyroomMobileViewport()) {
+        setSkyroomMobileZoneFullscreen(null);
+      }
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 };
 
 export default useSkyroomColumnLayout;

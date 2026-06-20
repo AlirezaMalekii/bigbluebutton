@@ -139,10 +139,20 @@
 /* ---------------------------------------------------------------------
    3) Settings — content area: 1rem 30px (overrides fullscreen Content 1rem 0)
    --------------------------------------------------------------------- */
-#fsmodal > div:last-of-type,
-#fsmodal [class*="Content"] {
+#fsmodal > header + div:not([hidden]),
+#fsmodal [data-test="fullscreenModalBody"] {
   padding: 1rem 30px !important;
   box-sizing: border-box !important;
+}
+
+#fsmodal header [class*="Actions"] {
+  gap: 12px !important;
+  justify-content: flex-end !important;
+}
+
+#fsmodal button[data-test="modalDismissButton"],
+#fsmodal button[data-test="modalConfirmButton"] {
+  flex: 0 1 auto !important;
 }
 
 #fsmodal [class*="SettingsTabs"] {
@@ -153,7 +163,7 @@
   padding: 16px 20px 12px 24px !important;
 }
 
-/* Horizontal inset comes from #fsmodal [class*="Content"] { padding: 1rem 30px } */
+/* Horizontal inset comes from #fsmodal [data-test="fullscreenModalBody"] { padding: 1rem 30px } */
 #fsmodal [class*="SettingsTabPanel"],
 #fsmodal [class*="SettingsTabPanel"].is-selected {
   padding: 0 0 1rem 0 !important;
@@ -666,13 +676,16 @@
   box-sizing: border-box;
 }
 
-#fsmodal[data-test="managePresentationsModal"] > div:last-of-type,
-#fsmodal[data-test="managePresentationsModal"] [class*="Content"] {
+#fsmodal[data-test="managePresentationsModal"] > header + div:not([hidden]),
+#fsmodal[data-test="managePresentationsModal"] [data-test="fullscreenModalBody"] {
   padding: 1rem 0 0.5rem !important;
   display: flex !important;
   flex-direction: column !important;
+  flex: 1 1 auto !important;
   min-height: 0 !important;
+  overflow-x: hidden !important;
   overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: rgba(32, 199, 187, 0.35) transparent;
 }
@@ -899,6 +912,28 @@
   max-height: min(88vh, 760px) !important;
   margin: 0 !important;
   overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.poll-creation-modal > div,
+[data-test="pollCreationModal"] > div {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: 100% !important;
+}
+
+.poll-creation-modal > div > header + div,
+[data-test="pollCreationModal"] > div > header + div,
+.poll-creation-modal [data-test="modalSimpleBody"],
+[data-test="pollCreationModal"] [data-test="modalSimpleBody"] {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 .poll-creation-modal.ReactModal__Content--after-open,

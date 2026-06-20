@@ -22,6 +22,7 @@ import {
 } from '/imports/ui/components/skyroom-layout/webcam-bounds-store';
 import { SKYROOM_MOBILE_ZONE_FS_EVENT } from '/imports/ui/components/skyroom-layout/mobile-zone-fullscreen-state';
 import { SKYROOM_MOBILE_STATUS_RAIL_EVENT } from '/imports/ui/components/skyroom-layout/mobile-status-rail-state';
+import { SKYROOM_MOBILE_TALKING_RAIL_EVENT } from '/imports/ui/components/skyroom-layout/mobile-talking-rail-state';
 import { SKYROOM_WEBCAM_LAYOUT_EVENT } from '/imports/ui/components/skyroom-layout/webcam-zone-store';
 import { useVideoStreams } from '/imports/ui/components/video-provider/hooks';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
@@ -107,6 +108,7 @@ const CustomLayout = (props) => {
     window.addEventListener(SKYROOM_WEBCAM_LAYOUT_EVENT, refreshSkyroomLayout);
     window.addEventListener(SKYROOM_MOBILE_ZONE_FS_EVENT, refreshSkyroomLayout);
     window.addEventListener(SKYROOM_MOBILE_STATUS_RAIL_EVENT, refreshSkyroomLayout);
+    window.addEventListener(SKYROOM_MOBILE_TALKING_RAIL_EVENT, refreshSkyroomLayout);
 
     const layoutEl = document.getElementById('layout');
     const columnObserver = layoutEl
@@ -127,6 +129,7 @@ const CustomLayout = (props) => {
       window.removeEventListener(SKYROOM_WEBCAM_LAYOUT_EVENT, refreshSkyroomLayout);
       window.removeEventListener(SKYROOM_MOBILE_ZONE_FS_EVENT, refreshSkyroomLayout);
       window.removeEventListener(SKYROOM_MOBILE_STATUS_RAIL_EVENT, refreshSkyroomLayout);
+      window.removeEventListener(SKYROOM_MOBILE_TALKING_RAIL_EVENT, refreshSkyroomLayout);
       columnObserver?.disconnect();
     };
   }, []);
@@ -851,6 +854,21 @@ const CustomLayout = (props) => {
           layoutEl.style.removeProperty('--skyroom-mobile-top-left');
           layoutEl.style.removeProperty('--skyroom-mobile-top-right');
         }
+        if (skyroomLayout.mobileTalkingRailOffset > 0) {
+          layoutEl.setAttribute('data-skyroom-mobile-talking-rail', 'true');
+          layoutEl.style.setProperty(
+            '--skyroom-mobile-talking-rail-top',
+            `${skyroomLayout.mobileTalkingRailTop}px`,
+          );
+          layoutEl.style.setProperty(
+            '--skyroom-mobile-talking-rail-offset',
+            `${skyroomLayout.mobileTalkingRailOffset}px`,
+          );
+        } else {
+          layoutEl.removeAttribute('data-skyroom-mobile-talking-rail');
+          layoutEl.style.removeProperty('--skyroom-mobile-talking-rail-top');
+          layoutEl.style.removeProperty('--skyroom-mobile-talking-rail-offset');
+        }
         if (skyroomLayout.mobileStatusRailOffset > 0) {
           layoutEl.setAttribute('data-skyroom-mobile-status-rail', 'true');
           layoutEl.style.setProperty(
@@ -884,6 +902,9 @@ const CustomLayout = (props) => {
         layoutEl?.style.removeProperty('--skyroom-mobile-top-width');
         layoutEl?.style.removeProperty('--skyroom-mobile-top-left');
         layoutEl?.style.removeProperty('--skyroom-mobile-top-right');
+        layoutEl?.removeAttribute('data-skyroom-mobile-talking-rail');
+        layoutEl?.style.removeProperty('--skyroom-mobile-talking-rail-top');
+        layoutEl?.style.removeProperty('--skyroom-mobile-talking-rail-offset');
         layoutEl?.removeAttribute('data-skyroom-mobile-status-rail');
         layoutEl?.style.removeProperty('--skyroom-mobile-status-rail-top');
         layoutEl?.style.removeProperty('--skyroom-mobile-status-rail-offset');
@@ -1037,6 +1058,9 @@ const CustomLayout = (props) => {
       layoutElOff?.style.removeProperty('--skyroom-mobile-edge');
       layoutElOff?.style.removeProperty('--skyroom-mobile-bottom-top');
       layoutElOff?.style.removeProperty('--skyroom-mobile-bottom-height');
+      layoutElOff?.removeAttribute('data-skyroom-mobile-talking-rail');
+      layoutElOff?.style.removeProperty('--skyroom-mobile-talking-rail-top');
+      layoutElOff?.style.removeProperty('--skyroom-mobile-talking-rail-offset');
       layoutElOff?.removeAttribute('data-skyroom-mobile-status-rail');
       layoutElOff?.style.removeProperty('--skyroom-mobile-status-rail-top');
       layoutElOff?.style.removeProperty('--skyroom-mobile-status-rail-offset');

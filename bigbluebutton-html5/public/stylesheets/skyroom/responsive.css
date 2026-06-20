@@ -1,0 +1,2048 @@
+/* =====================================================================
+   Skyroom — Responsive / phone skin
+   ---------------------------------------------------------------------
+   ALL rules here are gated to phone widths (<600px) — the exact point
+   where utils.js flips deviceType to MOBILE and the Skyroom column
+   engine bows out (column-layout.js returns null), letting stock BBB
+   drive the geometry. Nothing in this file may apply at >=600px, so
+   desktop & tablet stay byte-for-byte unchanged.
+
+   Loaded LAST in client/main.html so it wins at equal specificity.
+
+   Scope conventions:
+   - In-#layout chrome (navbar, action bar, stage, sidebar) →
+     `#layout[data-skyroom-column="true"]` inside the media query.
+   - Body-level portals (modals, MUI menus) →
+     `html[data-skyroom="true"]` inside the media query.
+   ===================================================================== */
+
+@media (max-width: 599.98px) {
+  /* Hide mis-positioned desktop geometry until the mobile split engine tags #layout. */
+  html[data-skyroom="true"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) {
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* ===================================================================
+     1) Stage / presentation — top zone card
+     The Skyroom mobile engine positions the stage into the TOP zone via
+     mediaAreaBounds (edge-inset). Here we just give it a rounded-card look
+     to match the bottom-zone box; desktop geometry stays gated in layout.css.
+     =================================================================== */
+  #layout[data-skyroom-column="true"] [data-test="presentationContainer"],
+  #layout[data-skyroom-column="true"] [class*="PresentationContainer"],
+  #layout[data-skyroom-column="true"] [data-test="screenshareArea"],
+  #layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"] {
+    border-radius: 12px !important;
+    margin: 0 !important;
+  }
+
+  /* Stage content fills the top card — no letterboxing above/below the slide. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="Presentation"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationContainer"] [class*="Presentation"] {
+    align-items: stretch !important;
+    justify-content: stretch !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationInnerWrapper {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tl-container,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tl-background {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Mute hint pill — desktop pins it via stage CSS vars that no longer
+     reflect a real stage on phone. Let it flow inside the action bar. */
+  #layout[data-skyroom-column="true"] #ActionsBar [data-debug="live-watcher"] {
+    position: static !important;
+    inset: auto !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    max-width: none !important;
+    width: auto !important;
+  }
+
+  /* ===================================================================
+     2) Navbar (top) — single strip that fits ~360px
+     Flow the centered title into the flex row (instead of absolute
+     centering) so it can never overlap the edge controls; truncate it.
+     =================================================================== */
+  #layout[data-skyroom-column="true"] #Navbar {
+    padding: 0 8px !important;
+    gap: 0 4px !important;
+  }
+
+  /* Decorative logo — drop on phone to free horizontal space */
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomHeaderLogo"] {
+    display: none !important;
+  }
+
+  /* Talking rail stays hidden in navbar on phone — shown above top box instead. */
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroom-talking-rail"] {
+    display: none !important;
+  }
+
+  /* Active-speaker rail — between navbar and poll/timer status rail. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-talking-rail {
+    position: fixed;
+    z-index: 51;
+    top: var(--skyroom-mobile-talking-rail-top, 56px);
+    left: var(--skyroom-mobile-edge, 8px);
+    right: var(--skyroom-mobile-edge, 8px);
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 1.75rem;
+    pointer-events: auto;
+    overflow: hidden;
+  }
+
+  html[data-skyroom="true"]:has(.ReactModal__Overlay--after-open) .skyroom-mobile-talking-rail,
+  html[data-skyroom="true"]:has(.fullscreenModalOverlay) .skyroom-mobile-talking-rail {
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-talking-rail [data-test="skyroom-talking-rail"] {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-talking-rail [class*="IsTalkingWrapper"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-talking-rail [data-test="talkingIndicator"] {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+    margin: 0 !important;
+    max-height: 1.75rem !important;
+    display: flex !important;
+    align-items: center !important;
+    overflow: hidden !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-talking-rail [class*="Speaking"] {
+    max-height: 1.65rem !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    gap: 4px !important;
+    padding-inline: 2px !important;
+    width: 100% !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-talking-rail [class*="Speaking"]::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-talking-rail [class*="TalkingIndicatorButton"] {
+    min-height: 1.5rem !important;
+    height: 1.5rem !important;
+    padding: 0 0.5rem !important;
+    font-size: 0.625rem !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(218, 230, 245, 0.1) !important;
+    flex-shrink: 0 !important;
+    max-width: 7.5rem !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-talking-rail [class*="TalkingIndicatorButton"] span {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 6rem !important;
+  }
+
+  /* Center cluster: participate in the flex row, truncate gracefully */
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroom-header-center"] {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    transform: none !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    gap: 6px !important;
+    overflow: hidden !important;
+  }
+
+  #layout[data-skyroom-column="true"] [data-test="presentationTitle"] {
+    max-width: 100% !important;
+    font-size: 0.78rem !important;
+    overflow: hidden !important;
+  }
+
+  #layout[data-skyroom-column="true"] [data-test="presentationTitle"] span {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  /* Edge control chips — slightly smaller, tighter */
+  #layout[data-skyroom-column="true"] #Navbar > div:first-child > div:first-child,
+  #layout[data-skyroom-column="true"] #Navbar > div:first-child > div:last-child,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroom-header-controls"] {
+    gap: 4px !important;
+  }
+
+  /* Poll summary + timer — hide from header on phone; shown above top box instead. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #Navbar [data-test="skyroom-header-status-cluster"] {
+    display: none !important;
+  }
+
+  /* Status rail — poll/timer pills between navbar and top stage box. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail {
+    position: fixed;
+    z-index: 50;
+    top: var(--skyroom-mobile-status-rail-top, 56px);
+    left: var(--skyroom-mobile-edge, 8px);
+    right: var(--skyroom-mobile-edge, 8px);
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: center;
+    gap: 6px;
+    pointer-events: auto;
+  }
+
+  /* Hide only for true modals — not MUI dropdown menus (they also use MuiModal-root). */
+  html[data-skyroom="true"]:has(.ReactModal__Overlay--after-open) .skyroom-mobile-status-rail,
+  html[data-skyroom="true"]:has(.fullscreenModalOverlay) .skyroom-mobile-status-rail {
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="skyroom-header-status-cluster"] {
+    display: flex !important;
+    flex: 1 1 auto;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+    margin: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="skyroom-poll-summary"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="timeIndicator"] {
+    flex: 1 1 0;
+    min-width: 0 !important;
+    max-width: none;
+    height: 2.22rem !important;
+    min-height: 2.22rem !important;
+    max-height: 2.22rem !important;
+    padding: 0.12rem 0.35rem !important;
+    border-radius: 0.7rem !important;
+    box-sizing: border-box !important;
+    align-self: stretch !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="skyroom-poll-summary"] {
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="skyroom-poll-summary-meta"] {
+    justify-content: center !important;
+  }
+
+  /* Single pill — use full row width. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="skyroom-header-status-cluster"] > :only-child {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="skyroom-poll-summary-question"] {
+    display: none !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="timeIndicator"] > div {
+    margin: 0 !important;
+    min-width: 0 !important;
+    width: 100%;
+    height: 100% !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="timeIndicator"] > div > div {
+    margin: 0 !important;
+    min-width: 0 !important;
+    width: 100%;
+    height: 100% !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="timeIndicator"] [class*="TimerButton"] {
+    min-width: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0.12rem 0.35rem !important;
+    visibility: visible !important;
+    box-sizing: border-box !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="toggleUserList"],
+  #layout[data-skyroom-column="true"] #Navbar [data-test="togglePublicChatNav"],
+  #layout[data-skyroom-column="true"] #Navbar [data-test="toggleSharedNotesNav"],
+  #layout[data-skyroom-column="true"] #Navbar [data-test="hasUnreadMessages"],
+  #layout[data-skyroom-column="true"] #Navbar [data-test="optionsButton"] {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="connectionStatusButton"] {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    display: grid !important;
+    place-items: center !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="connectionStatusButton"] > * {
+    grid-area: 1 / 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Center every header icon inside its chip (panel toggles, options, connection). */
+  #layout[data-skyroom-column="true"] #Navbar [data-test="toggleUserList"] > span:first-child,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="togglePublicChatNav"] > span:first-child,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="toggleSharedNotesNav"] > span:first-child,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="hasUnreadMessages"] > span:first-child,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="optionsButton"] > span:first-child,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="connectionStatusButton"] > span:first-child {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="toggleUserList"] i,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="togglePublicChatNav"] i,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="toggleSharedNotesNav"] i,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="hasUnreadMessages"] i,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="optionsButton"] i,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="connectionStatusButton"] i,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="toggleUserList"] [class^="icon-bbb-"],
+  #layout[data-skyroom-column="true"] #Navbar [data-test="togglePublicChatNav"] [class^="icon-bbb-"],
+  #layout[data-skyroom-column="true"] #Navbar [data-test="toggleSharedNotesNav"] [class^="icon-bbb-"],
+  #layout[data-skyroom-column="true"] #Navbar [data-test="hasUnreadMessages"] [class^="icon-bbb-"],
+  #layout[data-skyroom-column="true"] #Navbar [data-test="optionsButton"] [class^="icon-bbb-"],
+  #layout[data-skyroom-column="true"] #Navbar [data-test="connectionStatusButton"] [class^="icon-bbb-"] {
+    margin: 0 !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [class*="ButtonWrapper"]:has([data-test="connectionStatusButton"]) {
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="connectionStatusButton"] [class*="IconWrapper"],
+  #layout[data-skyroom-column="true"] #Navbar [data-test="connectionStatusButton"] .skyroom-conn-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 20px !important;
+    height: 20px !important;
+    margin: 0 !important;
+    line-height: 0 !important;
+    transform: translateY(-1px);
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="connectionStatusButton"] svg {
+    display: block !important;
+    margin: 0 auto !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="leaveMeetingButton"],
+  #layout[data-skyroom-column="true"] #Navbar [data-test="leaveMeetingDropdown"] {
+    height: 30px !important;
+    min-height: 30px !important;
+    padding-inline: 8px !important;
+    font-size: 0.68rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+  }
+
+  /* Center the logout glyph inside the button (the inner visual span). */
+  #layout[data-skyroom-column="true"] #Navbar [data-test="leaveMeetingButton"] > span:first-child,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="leaveMeetingDropdown"] > span:first-child {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="leaveMeetingButton"] i,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="leaveMeetingDropdown"] i {
+    margin: 0 !important;
+    line-height: 1 !important;
+  }
+
+  /* ===================================================================
+     3) Bottom action bar — keep every control visible, centered
+     Lighten the heavy desktop glass; allow horizontal scroll only as a
+     graceful fallback. Supersedes the actionsbar.css 768px block.
+     =================================================================== */
+  #layout[data-skyroom-column="true"] #ActionsBar {
+    padding: 6px 0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(6, 9, 16, 0.99) !important;
+  }
+
+  #layout[data-skyroom-column="true"] #ActionsBar > div {
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 10px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 8px !important;
+  }
+
+  /* Each cluster is its own fixed-size group — never grow into a neighbour. */
+  #layout[data-skyroom-column="true"] #ActionsBar > div > div {
+    flex: 0 0 auto !important;
+  }
+
+  #layout[data-skyroom-column="true"] #ActionsBar > div::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Stock BBB on phone floats the Left cluster (the "+" actions button) with
+     position:absolute and collapses the Right cluster with display:contents,
+     which is what made the footer look scattered. Pull them back into the single
+     centered flex row, all on one baseline. */
+  #layout[data-skyroom-column="true"] #ActionsBar > div > div:first-child {
+    position: static !important;
+    inset: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    margin: 0 !important;
+    align-self: center !important;
+  }
+
+  #layout[data-skyroom-column="true"] #ActionsBar > div > div:last-child {
+    display: flex !important;
+    align-items: center !important;
+    align-self: center !important;
+  }
+
+  /* Lighter clusters, tighter gaps/padding */
+  #layout[data-skyroom-column="true"] #ActionsBar > div > div:first-child,
+  #layout[data-skyroom-column="true"] #ActionsBar > div > div:nth-child(2),
+  #layout[data-skyroom-column="true"] #ActionsBar > div > div:last-child {
+    gap: 4px !important;
+    padding: 2px 6px !important;
+    border-radius: 12px !important;
+  }
+
+  /* One clean, evenly-spaced row — drop the desktop inter-cluster dividers and give the
+     three groups clear breathing room so the "+" (Left) never overlaps the center group. */
+  #layout[data-skyroom-column="true"] #ActionsBar > div > div:not(:last-child) {
+    margin-inline-end: 10px !important;
+  }
+
+  /* Presenter "+" — standalone chip, no cluster box; tighter gap to the media group. */
+  #layout[data-skyroom-column="true"] #ActionsBar > div > div:first-child:has([data-test="actionsButton"]) {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    margin-inline-end: 6px !important;
+  }
+
+  #layout[data-skyroom-column="true"] #ActionsBar > div > div:first-child:has([data-test="actionsButton"])::after {
+    display: none !important;
+  }
+
+  #layout[data-skyroom-column="true"] #ActionsBar > div > div:not(:last-child)::after {
+    display: none !important;
+  }
+
+  /* Neutralize any raised/translated state so buttons sit on one baseline. */
+  #layout[data-skyroom-column="true"] #ActionsBar button {
+    transform: none !important;
+  }
+
+  /* ===================================================================
+     4) Whiteboard slide-nav toolbar — fit the narrow stage, no clipping.
+     In RTL the zoom cluster (fit-width) lands in column 1 visually; keep
+     all three clusters inside the stage with minmax columns + safe inset.
+     =================================================================== */
+  #layout[data-skyroom-column="true"] [class*="PresentationToolbar"] {
+    overflow: visible !important;
+  }
+
+  #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] {
+    overflow: visible !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-inline: 10px !important;
+    gap: 2px !important;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+  }
+
+  #layout[data-skyroom-column="true"] [class*="QuickPollButtonWrapper"],
+  #layout[data-skyroom-column="true"] [class*="PresentationSlideControls"],
+  #layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] {
+    min-width: 0 !important;
+    overflow: visible !important;
+  }
+
+  #layout[data-skyroom-column="true"] [class*="QuickPollButtonWrapper"] {
+    gap: 0 !important;
+  }
+
+  /* Compact slide/zoom control buttons so the three clusters fit ~360px */
+  #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] button > span:first-child {
+    min-width: 26px !important;
+    min-height: 26px !important;
+    width: 26px !important;
+    height: 26px !important;
+    padding: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"] [data-test="fitToWidthButton"] {
+    margin-inline: 0 !important;
+    flex-shrink: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"] [class*="PresentationSlideControls"],
+  #layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] {
+    gap: 1px !important;
+  }
+
+  #layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] {
+    justify-content: flex-end !important;
+    padding-inline: 0 !important;
+    padding-inline-start: 4px !important;
+  }
+
+  [dir="rtl"] #layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] {
+    justify-content: flex-start !important;
+    padding-inline-start: 8px !important;
+    padding-inline-end: 0 !important;
+  }
+
+  [dir="ltr"] #layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] {
+    padding-inline-end: 4px !important;
+  }
+
+  /* The tldraw floating toolbar uses the shared --skyroom-wb-toolbar-gap (4px). */
+
+  /* tldraw popovers on phone — portaled above toolbar via useSkyroomToolbarPopoverAnchor */
+  #skyroom-wb-popover-portal [role="dialog"],
+  #skyroom-wb-popover-portal .tlui-popover__content,
+  #skyroom-wb-popover-portal .tlui-menu {
+    pointer-events: auto !important;
+    left: auto !important;
+    right: auto !important;
+  }
+
+  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content,
+  #layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-style-panel),
+  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) {
+    left: auto !important;
+    right: auto !important;
+  }
+
+  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content,
+  #layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-style-panel),
+  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) {
+    max-width: 92vw !important;
+    max-height: 60vh !important;
+    overflow: auto !important;
+    padding: 4px !important;
+  }
+
+  /* Shrink the buttons/icons inside those popovers so the boxes are compact on phone. */
+  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content .tlui-button,
+  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-button,
+  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content .tlui-button-grid__button,
+  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-button-grid__button {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    padding: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content .tlui-icon,
+  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-icon {
+    width: 15px !important;
+    height: 15px !important;
+  }
+
+  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-buttons__grid {
+    gap: 2px !important;
+  }
+
+  /* ===================================================================
+     5) Bottom-zone box (userlist / chat / shared notes)
+     The Skyroom engine sizes this to the bottom rect (fixed height = bottomH);
+     it no longer reaches the screen bottom (the tab bar + footer sit below it),
+     so it must NOT carry the home-indicator safe-area padding. Instead let its
+     inner content (messages list / list) flex and scroll inside the card.
+     =================================================================== */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .resizeSidebarNavWrapper > *,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .resizeSidebarContentWrapper > * {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  /* Safe-area only for the fallback (engine-off) full-overlay case. */
+  #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) .resizeSidebarNavWrapper,
+  #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) .resizeSidebarContentWrapper {
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+  }
+
+  /* Users box: now uses the clean column structure on phone (component.jsx switch).
+     Make the content fill the card and let the participants list scroll inside it. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [class*="UserListColumn"] {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+  }
+
+  /* Denser participant rows on phone — fit more users at a glance, content centered. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="moderatorAvatar"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="viewerAvatar"] {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    font-size: 0.5rem !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [class*="UserItemContents"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [class*="UserRow"] {
+    min-height: 26px !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [role="button"] {
+    min-height: 24px !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [class*="UserName"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [class*="UserName"] span {
+    font-size: 0.75rem !important;
+    line-height: 1.25 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [class*="UserNameSub"] {
+    font-size: 0.62rem !important;
+  }
+
+  /* Avatar voice/presenter badges use desktop rem offsets — on a 20–24px avatar
+     they spill into the name column. Pin badges to the avatar corner and reserve
+     space so "تلفن همراه" never sits under the mic circle. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="moderatorAvatar"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="viewerAvatar"] {
+    margin-inline-end: 4px !important;
+    align-self: flex-start !important;
+    margin-top: 1px !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::after,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::after {
+    top: auto !important;
+    left: auto !important;
+    bottom: -2px !important;
+    right: -2px !important;
+    width: 0.7rem !important;
+    height: 0.7rem !important;
+    min-width: 0.7rem !important;
+    font-size: 0.38rem !important;
+    letter-spacing: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    border-width: 1px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::before,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::before {
+    top: -2px !important;
+    left: auto !important;
+    bottom: auto !important;
+    right: -2px !important;
+    width: 0.7rem !important;
+    height: 0.7rem !important;
+    min-width: 0.7rem !important;
+    font-size: 0.38rem !important;
+    letter-spacing: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    border-width: 1px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  [dir="rtl"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::after,
+  [dir="rtl"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::after {
+    right: auto !important;
+    left: -2px !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  [dir="rtl"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::before,
+  [dir="rtl"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::before {
+    right: auto !important;
+    left: -2px !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [class*="UserNameContainer"] {
+    margin-inline-start: 2px !important;
+    align-self: center !important;
+  }
+
+  /* Keep each row a clean single flex line so the name/status never slide under the
+     avatar or the trailing presenter/status icon. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [class*="UserItemContents"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [class*="UserRow"] {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [class*="UserNameContainer"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [class*="UserRowMain"] {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [class*="UserName"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [class*="UserName"] span,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [class*="UserNameSub"] {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  /* Chat box: messages scroll, composer pinned to bottom edge. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="publicChatPanel"] {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    justify-content: flex-start !important;
+    padding: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="publicChatPanel"] form[data-skyroom-composer="true"] {
+    flex-shrink: 0 !important;
+    margin-top: auto !important;
+    margin-bottom: 0 !important;
+    padding: 4px 8px 1px !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="publicChatPanel"] [class*="TypingIndicatorWrapper"] {
+    flex-shrink: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    padding: 0 8px 2px !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="publicChatPanel"] [data-test="chatMessages"] {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+  }
+
+  /* ===================================================================
+     6) Modals → bottom-sheet on phone
+     One pattern for every dialog: anchored to the bottom edge, full
+     width, rounded top, scrollable body, safe-area padding. Higher
+     specificity (html[...] .ReactModal__Content) beats per-modal rules.
+     =================================================================== */
+  html[data-skyroom="true"] .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]),
+  html[data-skyroom="true"] #modals-container .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]) {
+    position: fixed !important;
+    top: auto !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    transform: none !important;
+    width: 100vw !important;
+    min-width: 0 !important;
+    max-width: 100vw !important;
+    height: auto !important;
+    max-height: 92vh !important;
+    max-height: 92dvh !important;
+    margin: 0 !important;
+    border-radius: 18px 18px 0 0 !important;
+    padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Cancel ReactModal open/close transform animations (we anchor to bottom) */
+  html[data-skyroom="true"] .ReactModal__Content--after-open,
+  html[data-skyroom="true"] .ReactModal__Content--before-close {
+    transform: none !important;
+  }
+
+  /* Grab handle at the top of every sheet (Telegram/iOS style) */
+  html[data-skyroom="true"] .ReactModal__Content::before {
+    content: '' !important;
+    position: sticky !important;
+    top: 0 !important;
+    display: block !important;
+    width: 38px !important;
+    height: 4px !important;
+    margin: -6px auto 10px !important;
+    border-radius: 999px !important;
+    background: rgba(220, 230, 242, 0.28) !important;
+  }
+
+  /* Inputs/selects: full width + 16px to stop iOS auto-zoom */
+  html[data-skyroom="true"] .ReactModal__Content input,
+  html[data-skyroom="true"] .ReactModal__Content select,
+  html[data-skyroom="true"] .ReactModal__Content textarea,
+  html[data-skyroom="true"] .ReactModal__Content .MuiInputBase-root {
+    font-size: 16px !important;
+    max-width: 100% !important;
+  }
+
+  html[data-skyroom="true"] .ReactModal__Content select,
+  html[data-skyroom="true"] .ReactModal__Content [class*="Select"] {
+    width: 100% !important;
+  }
+
+  /* Comfortable tap targets for modal buttons */
+  html[data-skyroom="true"] .ReactModal__Content button[data-test="modalConfirmButton"],
+  html[data-skyroom="true"] .ReactModal__Content button[data-test="modalDismissButton"],
+  html[data-skyroom="true"] .ReactModal__Content .buttonWrapper > button {
+    min-height: 44px !important;
+  }
+
+  /* Webcam settings modal — compact bottom sheet; fits camera tab without scroll on ~667px phones. */
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"].ReactModal__Content {
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+    max-height: min(88dvh, 520px) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"].ReactModal__Content::before {
+    width: 32px !important;
+    margin: -2px auto 6px !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="WebcamTabSelector"] {
+    min-height: 0 !important;
+    padding: 5px 4px !important;
+    font-size: 0.62rem !important;
+    gap: 3px !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="WebcamTabList"] {
+    gap: 4px !important;
+    padding: 3px !important;
+    border-radius: 10px !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="Header"] {
+    margin-bottom: 0.5rem !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="Content"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    padding: 0 !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="VideoCol"],
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="ContentCol"],
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="BgnCol"] {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="VideoPreviewFrame"] {
+    width: 100% !important;
+    max-width: none !important;
+    aspect-ratio: 16 / 10 !important;
+    max-height: min(30dvh, 200px) !important;
+    margin: 0 !important;
+    border-radius: 12px !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] video[data-test="videoPreview"],
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] video[data-test="mirroredVideoPreview"] {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="Select"] {
+    min-height: 32px !important;
+    height: 32px !important;
+    padding: 4px 8px !important;
+    font-size: 0.8rem !important;
+    border-radius: 10px !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="Label"] {
+    font-size: 0.65rem !important;
+    margin: 0 0 2px !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="Col"] {
+    gap: 6px !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="InternCol"] {
+    margin: 0 !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="BottomSeparator"] {
+    display: none !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="Footer"] {
+    flex-shrink: 0 !important;
+    padding-top: 6px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="SharingButton"],
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="CancelButton"] {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    min-height: 36px !important;
+    height: 36px !important;
+    font-size: 0.82rem !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="SharingButton"] .buttonWrapper,
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="CancelButton"] .buttonWrapper,
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="SharingButton"] > button,
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="CancelButton"] > button {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [data-test="virtualBackground"] [class*="BgWrapper"] {
+    max-height: min(140px, 20dvh) !important;
+    padding: 6px !important;
+    gap: 5px !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] input[type="range"] {
+    margin: 2px 0 !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="MarkerDynamicWrapper"] {
+    height: 0.65rem !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="MarkerWrapper"] {
+    font-size: 0.65rem !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] label[class*="Checkbox"] {
+    font-size: 0.75rem !important;
+  }
+
+  /* Webcam settings modal compact mobile layout also in video-preview/styles.js @media smallOnly. */
+
+  /* External video share — taller compact sheet; note must not overlap the start button. */
+  html[data-skyroom="true"] [data-test="externalVideoModal"].ReactModal__Content {
+    padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+    max-height: min(82dvh, 460px) !important;
+    min-height: min(72dvh, 380px) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  html[data-skyroom="true"] [data-test="externalVideoModal"].ReactModal__Content::before {
+    width: 32px !important;
+    margin: -2px auto 8px !important;
+  }
+
+  html[data-skyroom="true"] [data-test="externalVideoModal"] [class*="Header"],
+  html[data-skyroom="true"] [data-test="externalVideoModal"] header {
+    margin-bottom: 8px !important;
+    padding-bottom: 8px !important;
+  }
+
+  html[data-skyroom="true"] [data-test="externalVideoModal"] [class*="Content"] {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px !important;
+  }
+
+  html[data-skyroom="true"] [data-test="externalVideoModal"] [data-test="externalVideoNote"] {
+    font-size: 0.78rem !important;
+    line-height: 1.45 !important;
+    padding-top: 4px !important;
+    padding-bottom: 6px !important;
+    margin-bottom: 4px !important;
+  }
+
+  html[data-skyroom="true"] [data-test="externalVideoModal"] input#video-modal-input {
+    min-height: 44px !important;
+    margin: 6px 0 0 !important;
+  }
+
+  html[data-skyroom="true"] [data-test="externalVideoModal"] [data-test="startNewVideo"] {
+    width: 100% !important;
+    min-height: 44px !important;
+    margin-top: auto !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Present camera as content — same compact bottom sheet as webcam join (no scroll). */
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"][data-camera-as-content="true"].ReactModal__Content {
+    max-height: min(86dvh, 460px) !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"][data-camera-as-content="true"] [class*="Content"] {
+    overflow-y: hidden !important;
+    flex: 0 1 auto !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"][data-camera-as-content="true"] [class*="VideoPreviewFrame"] {
+    max-height: min(28dvh, 180px) !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"][data-camera-as-content="true"] [class*="WebcamTabList"],
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"][data-camera-as-content="true"] [class*="WebcamTabSelector"] {
+    display: none !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"][data-camera-as-content="true"] #camera-as-content-title {
+    font-size: 0.88rem !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+  }
+
+  /* Camera-as-content in the mobile top stage — fill full width of the box. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="screenshareArea"][data-camera-as-content="true"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="screenshareArea"][data-camera-as-content="true"] #screenshareContainer,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="screenshareArea"][data-camera-as-content="true"] video {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="screenshareArea"][data-camera-as-content="true"] [class*="ScreenshareContainerDefault"] {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding-top: 0 !important;
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: center !important;
+  }
+
+  /* Connection status (Skyroom custom modal) — let metric grid stack */
+  html[data-skyroom="true"] [data-test="connectionStatusModal"] [class*="MetricGrid"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ---- Mic / audio settings modal: compact so it fits without scrolling ---- */
+  html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="Form"] {
+    grid-template-columns: 1fr !important;
+    row-gap: 10px !important;
+    column-gap: 0 !important;
+  }
+
+  html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="LabelSmall"],
+  html[data-skyroom="true"] [data-test="audioSettingsModal"] label {
+    font-size: 0.78rem !important;
+    margin-bottom: 2px !important;
+  }
+
+  html[data-skyroom="true"] [data-test="audioSettingsModal"] select,
+  html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="Select"] {
+    min-height: 38px !important;
+    padding: 6px 10px !important;
+  }
+
+  /* Audio choice modal (mic vs listen-only) — shrink the big choice buttons so the
+     two options + descriptions fit one sheet without scrolling. */
+  html[data-skyroom="true"] [class*="AudioModalButton"] i,
+  html[data-skyroom="true"] [class*="audioModalButton"] i {
+    font-size: 2rem !important;
+  }
+
+  html[data-skyroom="true"] [class*="AudioOptions"] {
+    gap: 1rem 1.25rem !important;
+  }
+
+  html[data-skyroom="true"] [class*="AudioOptionDesc"] {
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
+  }
+
+  /* ===================================================================
+     7) MUI dropdown menus → fullscreen sheets (stock makes them inset:0
+     at <=640; we just re-skin to the dark Skyroom language + big rows)
+     =================================================================== */
+  html[data-skyroom="true"] .MuiPaper-root-mobile {
+    background:
+      linear-gradient(165deg, rgba(22, 34, 54, 0.99) 0%, rgba(12, 18, 30, 1) 100%) !important;
+    color: var(--skyroom-panel-text, #eef4fb) !important;
+    padding-bottom: 5rem !important; /* room for the fixed close button */
+  }
+
+  html[data-skyroom="true"] .MuiPaper-root-mobile li,
+  html[data-skyroom="true"] .MuiPaper-root-mobile [role="menuitem"],
+  html[data-skyroom="true"] .MuiPaper-root-mobile .MuiMenuItem-root {
+    min-height: 48px !important;
+    font-size: 0.95rem !important;
+    color: var(--skyroom-panel-text, #eef4fb) !important;
+  }
+
+  html[data-skyroom="true"] .MuiPaper-root-mobile li:hover,
+  html[data-skyroom="true"] .MuiPaper-root-mobile .MuiMenuItem-root:hover {
+    background: var(--skyroom-accent-soft, rgba(32, 199, 187, 0.12)) !important;
+  }
+
+  /* Fullscreen mobile sheets (+ menu, etc.) — dark footer with a visible pill button */
+  html[data-skyroom="true"] .MuiPaper-root-mobile [class*="CloseButton"],
+  html[data-skyroom="true"] [class*="CloseButton"] {
+    position: sticky !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background:
+      linear-gradient(180deg, rgba(12, 18, 30, 0) 0%, rgba(12, 18, 30, 0.96) 28%, rgba(10, 16, 28, 1) 100%) !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-top: 1px solid rgba(32, 199, 187, 0.18) !important;
+    color: var(--skyroom-panel-text, #eef4fb) !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    z-index: 1012 !important;
+    cursor: pointer !important;
+  }
+
+  html[data-skyroom="true"] .MuiPaper-root-mobile [class*="CloseButton"] > span:first-child,
+  html[data-skyroom="true"] [class*="CloseButton"] > span:first-child {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    min-height: 44px !important;
+    margin: 0 !important;
+    padding: 0 16px !important;
+    border-radius: 12px !important;
+    background:
+      linear-gradient(145deg, rgba(32, 199, 187, 0.22) 0%, rgba(20, 169, 158, 0.14) 100%) !important;
+    border: 1px solid rgba(32, 199, 187, 0.42) !important;
+    color: #20c7bb !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28) !important;
+  }
+
+  html[data-skyroom="true"] .MuiPaper-root-mobile [class*="CloseButton"]:active > span:first-child,
+  html[data-skyroom="true"] [class*="CloseButton"]:active > span:first-child {
+    background: rgba(32, 199, 187, 0.32) !important;
+    transform: scale(0.98);
+  }
+
+  /* Users ⋯ menu — anchored dropdown on phone (not the fullscreen sheet). */
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-user-options-menu) .override-mobile-styles {
+    max-width: min(320px, 94vw) !important;
+  }
+
+  /* Skyroom features ("ویژگی‌ها") menu uses override-mobile-styles (a small
+     popover, not fullscreen). Keep it on screen and comfortably sized. */
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-app-settings-menu) .override-mobile-styles {
+    max-width: min(320px, 94vw) !important;
+  }
+
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-leave-meeting-menu) .override-mobile-styles {
+    max-width: min(280px, 94vw) !important;
+  }
+
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) .override-mobile-styles,
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) .MuiPaper-root.override-mobile-styles {
+    max-width: min(320px, 94vw) !important;
+    max-height: min(72dvh, 480px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-audio-settings-menu) .override-mobile-styles,
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-audio-settings-menu) .MuiPaper-root.override-mobile-styles {
+    max-width: min(320px, 94vw) !important;
+    max-height: min(72dvh, 480px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ===================================================================
+     8) Modal sticky header + full-width footer buttons (C1)
+     Improves the bottom-sheet in section 6: sticky grab-rail header so
+     the title stays visible while the body scrolls; action buttons
+     expand to full-width for comfortable one-thumb taps.
+     =================================================================== */
+  html[data-skyroom="true"] .ReactModal__Content [class*="ModalHeader"],
+  html[data-skyroom="true"] .ReactModal__Content [class*="modalHeader"],
+  html[data-skyroom="true"] .ReactModal__Content header {
+    position: sticky !important;
+    top: -18px !important;
+    z-index: 2 !important;
+    background: #0c121e !important;
+    margin: -18px -16px 12px !important;
+    padding: 16px 16px 12px !important;
+    border-bottom: 1px solid rgba(32, 199, 187, 0.13) !important;
+    border-radius: 18px 18px 0 0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  html[data-skyroom="true"] .ReactModal__Content [class*="ModalFooter"],
+  html[data-skyroom="true"] .ReactModal__Content [class*="modalFooter"],
+  html[data-skyroom="true"] .ReactModal__Content [class*="ModalActions"],
+  html[data-skyroom="true"] .ReactModal__Content footer,
+  /* Confirmation modal + any styled footer row with action buttons */
+  html[data-skyroom="true"] .ReactModal__Content [class*="Footer"]:has(.buttonWrapper),
+  html[data-skyroom="true"] .ReactModal__Content [class*="Footer"]:has(button[data-test="modalConfirmButton"]),
+  html[data-skyroom="true"] .ReactModal__Content [class*="Footer"]:has(button[data-test="modalDismissButton"]) {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    margin-top: 16px !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal header [class*="Actions"] {
+    gap: 10px !important;
+    justify-content: stretch !important;
+    flex-wrap: nowrap !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal header [class*="Actions"] .buttonWrapper {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal button[data-test="modalDismissButton"],
+  html[data-skyroom="true"] #fsmodal button[data-test="modalConfirmButton"] {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  html[data-skyroom="true"] .ReactModal__Content [class*="ModalFooter"] > *,
+  html[data-skyroom="true"] .ReactModal__Content [class*="modalFooter"] > *,
+  html[data-skyroom="true"] .ReactModal__Content [class*="ModalActions"] > *,
+  html[data-skyroom="true"] .ReactModal__Content footer > *,
+  html[data-skyroom="true"] .ReactModal__Content [class*="Footer"] > *,
+  html[data-skyroom="true"] .ReactModal__Content [class*="Footer"] .buttonWrapper {
+    width: 100% !important;
+    margin: 0 !important;
+    flex: 1 1 auto !important;
+  }
+
+  html[data-skyroom="true"] .ReactModal__Content [class*="ModalFooter"] button,
+  html[data-skyroom="true"] .ReactModal__Content [class*="modalFooter"] button,
+  html[data-skyroom="true"] .ReactModal__Content [class*="ModalActions"] button,
+  html[data-skyroom="true"] .ReactModal__Content footer button,
+  html[data-skyroom="true"] .ReactModal__Content [class*="Footer"] .buttonWrapper > button {
+    width: 100% !important;
+    min-height: 44px !important;
+    margin: 0 !important;
+    justify-content: center !important;
+    border-radius: 12px !important;
+  }
+
+  html[data-skyroom="true"] .ReactModal__Content [class*="Footer"] .buttonWrapper > button > span {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* ===================================================================
+     9) Action bar — compact icon buttons (C2)
+     Shrinks the BBB button icon surface to ~36px so all controls fit on
+     360px without scrolling. Works with section 3's existing centering.
+     =================================================================== */
+  #layout[data-skyroom-column="true"] #ActionsBar button > span:first-child,
+  #layout[data-skyroom-column="true"] #ActionsBar [class*="ButtonEmoji"] > span:first-child {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    font-size: 0.9rem !important;
+    border-radius: 12px !important;
+  }
+
+  /* ===================================================================
+     10) Whiteboard corner buttons on mobile (C3)
+     Smaller top-left undo/redo + top-right action chips — still
+     tap-able without dominating the compact phone stage.
+     =================================================================== */
+  #layout[data-skyroom-column="true"] {
+    --skyroom-wb-btn-size: 30px;
+  }
+
+  /* Top-left: undo/redo — physical left in RTL too. */
+  #layout[data-skyroom-column="true"] [class*="ExtraTools"] {
+    top: calc(6px * var(--skyroom-wb-scale, 1)) !important;
+    left: calc(6px * var(--skyroom-wb-scale, 1)) !important;
+    right: auto !important;
+    height: auto !important;
+    gap: calc(4px * var(--skyroom-wb-scale, 1)) !important;
+    z-index: 1002 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+  }
+
+  [dir="rtl"] #layout[data-skyroom-column="true"] [class*="ExtraTools"] {
+    left: calc(6px * var(--skyroom-wb-scale, 1)) !important;
+    right: auto !important;
+  }
+
+  /* Top-right: black action chips — physical right in RTL too. */
+  #layout[data-skyroom-column="true"] #WhiteboardOptionButton[data-skyroom-wb-toolbar="true"] {
+    top: calc(6px * var(--skyroom-wb-scale, 1)) !important;
+    left: auto !important;
+    right: calc(6px * var(--skyroom-wb-scale, 1)) !important;
+    gap: calc(4px * var(--skyroom-wb-scale, 1)) !important;
+    z-index: 1002 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+  }
+
+  [dir="rtl"] #layout[data-skyroom-column="true"] #WhiteboardOptionButton[data-skyroom-wb-toolbar="true"] {
+    left: auto !important;
+    right: calc(6px * var(--skyroom-wb-scale, 1)) !important;
+  }
+
+  #layout[data-skyroom-column="true"] #WhiteboardOptionButton .skyroom-wb-action-btn,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #WhiteboardOptionButton .skyroom-wb-action-btn,
+  #layout[data-skyroom-column="true"] #WhiteboardOptionButton button {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28) !important;
+  }
+
+  #layout[data-skyroom-column="true"] #WhiteboardOptionButton .skyroom-wb-action-btn i,
+  #layout[data-skyroom-column="true"] #WhiteboardOptionButton .skyroom-wb-action-btn svg,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #WhiteboardOptionButton .skyroom-wb-action-btn i,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #WhiteboardOptionButton .skyroom-wb-action-btn svg,
+  #layout[data-skyroom-column="true"] #WhiteboardOptionButton button i,
+  #layout[data-skyroom-column="true"] #WhiteboardOptionButton button svg {
+    font-size: 0.78rem !important;
+    width: 13px !important;
+    height: 13px !important;
+  }
+
+  #layout[data-skyroom-column="true"] [class*="ExtraTools"] > [class*="Button"],
+  #layout[data-skyroom-column="true"] [class*="ExtraTools"] button,
+  #layout[data-skyroom-column="true"] [class*="ExtraTools"] .skyroom-wb-action-btn,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="ExtraTools"] > [class*="Button"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="ExtraTools"] button,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="ExtraTools"] .skyroom-wb-action-btn {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28) !important;
+  }
+
+  #layout[data-skyroom-column="true"] [class*="ExtraTools"] .tlui-icon,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="ExtraTools"] .tlui-icon {
+    width: 13px !important;
+    height: 13px !important;
+  }
+
+  /* Mobile zone expand — stage: bottom-left for non-presenters; panel: in header row. */
+  #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn {
+    position: fixed;
+    z-index: 4;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    padding: 0;
+    margin: 0;
+    border: 1px solid rgba(218, 230, 245, 0.22);
+    border-radius: 10px;
+    background: rgba(16, 24, 36, 0.88);
+    color: #eef4fb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn i,
+  #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn svg {
+    font-size: 0.78rem;
+    width: 13px;
+    height: 13px;
+    color: #eef4fb;
+  }
+
+  #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn:active {
+    background: rgba(32, 199, 187, 0.22);
+    border-color: rgba(32, 199, 187, 0.45);
+  }
+
+  #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn.is-expanded {
+    background: rgba(32, 199, 187, 0.28);
+    border-color: rgba(32, 199, 187, 0.55);
+  }
+
+  /* Non-presenter — physical bottom-left of the top stage box. */
+  #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn--top {
+    top: calc(var(--skyroom-stage-bottom, 0px) - 34px);
+    left: calc(var(--skyroom-mobile-edge, 8px) + 6px);
+    right: auto;
+  }
+
+  [dir="rtl"] #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn--top {
+    left: calc(var(--skyroom-mobile-edge, 8px) + 6px);
+    right: auto;
+  }
+
+  /* Bottom panel — inline next to the ⋯ options trigger in the header row. */
+  #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn--in-header {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    flex: 0 0 auto;
+    order: -1;
+  }
+
+  #layout[data-skyroom-mobile="true"] [data-test="skyroom-chat-header-options"],
+  #layout[data-skyroom-mobile="true"] [data-test="user-management-options"],
+  #layout[data-skyroom-mobile="true"] [data-test="sharedNotesHeaderOptions"],
+  #layout[data-skyroom-mobile="true"] [data-test="sharedNotesPanelTitle"] > div:last-child {
+    gap: 6px !important;
+  }
+
+  /* Webcams (no header row) — physical top-left of the bottom zone. */
+  #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn--bottom:not(.skyroom-mobile-zone-fs-btn--in-header) {
+    top: calc(var(--skyroom-mobile-bottom-top, 0px) + 8px);
+    left: calc(var(--skyroom-mobile-edge, 8px) + 6px);
+    right: auto;
+  }
+
+  [dir="rtl"] #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn--bottom:not(.skyroom-mobile-zone-fs-btn--in-header) {
+    left: calc(var(--skyroom-mobile-edge, 8px) + 6px);
+    right: auto;
+  }
+
+  /* Stay below modals / overlays (#app ≈ 1000, modal-low ≈ 1001). */
+  html[data-skyroom="true"]:has(.ReactModal__Overlay--after-open) .skyroom-mobile-zone-fs-btn,
+  html[data-skyroom="true"]:has(.fullscreenModalOverlay) .skyroom-mobile-zone-fs-btn,
+  html[data-skyroom="true"]:has(.MuiModal-root:not([aria-hidden="true"])) .skyroom-mobile-zone-fs-btn {
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* Reclaim tab-bar space while a zone is expanded. */
+  #layout[data-skyroom-mobile-zone-fs] .skyroom-mobile-zone-tabs {
+    display: none !important;
+  }
+
+  /* Style/color popovers stay above corner buttons without burying them under the canvas. */
+  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel__wrapper,
+  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content:has(.tlui-style-panel),
+  #layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-style-panel),
+  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) {
+    z-index: 1105 !important;
+  }
+
+  /* ===================================================================
+     11) Zone chrome — rounded panel cards + safe-area (C4)
+     =================================================================== */
+  /* Sidebar panel boxes get a rounded-card look inside the bottom zone so the
+     TOP stage and BOTTOM box read as two distinct panels. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .resizeSidebarContentWrapper,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .resizeSidebarNavWrapper {
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(32, 199, 187, 0.12) !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.32) !important;
+  }
+
+  /* Safe-area bottom padding for the action bar / home indicator */
+  #layout[data-skyroom-column="true"] #ActionsBar {
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* ===================================================================
+     12) Bottom-zone tab bar (C4)
+     .skyroom-mobile-zone-tabs is a fixed portal; inline styles handle
+     position/size. CSS drives all visual styling below.
+     =================================================================== */
+  .skyroom-mobile-zone-tabs {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    gap: 3px !important;
+    background:
+      linear-gradient(165deg, rgba(22, 34, 54, 0.97) 0%, rgba(10, 16, 28, 0.99) 100%) !important;
+    border: 1px solid rgba(32, 199, 187, 0.18) !important;
+    border-radius: 12px !important;
+    padding: 3px !important;
+    box-shadow:
+      0 4px 20px rgba(0, 0, 0, 0.40),
+      inset 0 1px 0 rgba(32, 199, 187, 0.08) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+  }
+
+  .skyroom-mobile-zone-tab {
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    border: none !important;
+    border-radius: 9px !important;
+    background: transparent !important;
+    color: rgba(170, 182, 199, 0.70) !important;
+    cursor: pointer !important;
+    transition: background 130ms ease, color 130ms ease !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-width: 0 !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  .skyroom-mobile-zone-tab i,
+  .skyroom-mobile-zone-tab [class^="icon-bbb-"] {
+    font-size: 1rem !important;
+    pointer-events: none !important;
+    line-height: 1 !important;
+  }
+
+  .skyroom-mobile-zone-tab:active {
+    background: rgba(32, 199, 187, 0.10) !important;
+    color: rgba(220, 230, 242, 0.90) !important;
+  }
+
+  .skyroom-mobile-zone-tab.is-active {
+    background:
+      linear-gradient(165deg, rgba(32, 199, 187, 0.20) 0%, rgba(20, 169, 158, 0.12) 100%) !important;
+    color: #20c7bb !important;
+    box-shadow: inset 0 0 0 1px rgba(32, 199, 187, 0.32) !important;
+  }
+
+  /* ===================================================================
+     13) Webcam tiles — mobile (B4)
+     The Skyroom engine puts the cameraDock in the TOP zone (nothing shared)
+     or the BOTTOM zone (stage active + webcams tab). Pin the draggable dock
+     to the computed zone rect so webcams live *inside* the bottom/top box
+     (same card chrome as chat/users), not as a free-floating overlay.
+     =================================================================== */
+
+  /* Bottom-zone webcams — lock react-draggable to the bottom box bounds. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"][data-skyroom-mobile-bottom-webcams="true"] .react-draggable:has(#cameraDock) {
+    position: fixed !important;
+    inset: auto !important;
+    top: var(--skyroom-mobile-bottom-top) !important;
+    left: var(--skyroom-mobile-bottom-left, var(--skyroom-mobile-edge, 8px)) !important;
+    right: var(--skyroom-mobile-bottom-right, var(--skyroom-mobile-edge, 8px)) !important;
+    width: var(--skyroom-mobile-bottom-width, auto) !important;
+    height: var(--skyroom-mobile-bottom-height) !important;
+    transform: translate3d(0, 0, 0) !important;
+    z-index: 5 !important;
+    margin: 0 !important;
+    pointer-events: auto !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"][data-skyroom-mobile-top-webcams="true"]:not([data-skyroom-mobile-bottom-webcams="true"]) .react-draggable:has(#cameraDock) {
+    position: fixed !important;
+    inset: auto !important;
+    top: var(--skyroom-mobile-top-top) !important;
+    left: var(--skyroom-mobile-top-left, var(--skyroom-mobile-edge, 8px)) !important;
+    right: var(--skyroom-mobile-top-right, var(--skyroom-mobile-edge, 8px)) !important;
+    width: var(--skyroom-mobile-top-width, auto) !important;
+    height: var(--skyroom-mobile-top-height) !important;
+    transform: translate3d(0, 0, 0) !important;
+    z-index: 6 !important;
+    margin: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .react-draggable:has(#cameraDock) > div,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .react-draggable:has(#cameraDock) #cameraDock {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #WebcamContainer,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="webcamContainer"] {
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] {
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    background: rgba(10, 16, 26, 0.82) !important;
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 1px solid rgba(32, 199, 187, 0.12) !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.32) !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="VideoCanvas"] {
+    position: relative !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    align-items: stretch !important;
+    align-content: stretch !important;
+    justify-content: stretch !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="VideoList"] {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    align-self: stretch !important;
+    align-content: stretch !important;
+    justify-content: stretch !important;
+    justify-items: stretch !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: 1fr !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="VideoList"]:has([data-test="cameraListItem"]:only-child) {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 1fr !important;
+    height: 100% !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] > div,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="VideoCanvas"] > div {
+    margin: 0 !important;
+    align-self: stretch !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [data-test="cameraListItem"]:only-child {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: unset !important;
+    max-height: 100% !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [data-test="cameraListItem"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: unset !important;
+    min-height: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="VideoList"]:has([data-test="cameraListItem"]:nth-child(3)) {
+    grid-auto-rows: minmax(0, 1fr) !important;
+    overflow-y: auto !important;
+    max-height: 100% !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraListItem"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="videoContainer"] {
+    border-radius: 10px !important;
+    overflow: hidden !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraListItem"] video,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="videoContainer"] video {
+    object-fit: cover !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="videoContainer"] {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Pagination prev/next arrows — tap-sized for >4 cams */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="prevPageBtn"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="nextPageBtn"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraPaginationPrev"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraPaginationNext"] {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  /* ===================================================================
+     14) Full-screen modals on phone — settings, presentations, poll
+     These must NOT use the bottom-sheet pattern (section 6). Header stays
+     fixed/opaque; only the body scrolls to the bottom with safe-area pad.
+     =================================================================== */
+  html[data-skyroom="true"] .fullscreenModalOverlay {
+    padding: 0 !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal.ReactModal__Content,
+  html[data-skyroom="true"] .ReactModal__Content#fsmodal,
+  html[data-skyroom="true"] [data-test="pollCreationModal"].ReactModal__Content,
+  html[data-skyroom="true"] .poll-creation-modal.ReactModal__Content {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    transform: none !important;
+    width: 100vw !important;
+    min-width: 0 !important;
+    max-width: 100vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background:
+      radial-gradient(620px 320px at 12% -20%, rgba(20, 169, 158, 0.14), transparent 62%),
+      linear-gradient(165deg, #1a2234 0%, #121a28 55%, #0e1522 100%) !important;
+    color: #eef4fb !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal.ReactModal__Content::before,
+  html[data-skyroom="true"] [data-test="pollCreationModal"].ReactModal__Content::before,
+  html[data-skyroom="true"] .poll-creation-modal.ReactModal__Content::before {
+    display: none !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal header,
+  html[data-skyroom="true"] [data-test="pollCreationModal"] [class*="ModalHeader"],
+  html[data-skyroom="true"] [data-test="pollCreationModal"] header {
+    position: sticky !important;
+    top: 0 !important;
+    flex-shrink: 0 !important;
+    z-index: 3 !important;
+    margin: 0 !important;
+    padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    background: #0c121e !important;
+    border-bottom: 1px solid rgba(32, 199, 187, 0.13) !important;
+    border-radius: 0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal > header + div:not([hidden]),
+  html[data-skyroom="true"] #fsmodal [data-test="fullscreenModalBody"],
+  html[data-skyroom="true"] [data-test="pollCreationModal"] > div > header + div,
+  html[data-skyroom="true"] [data-test="pollCreationModal"] [data-test="modalSimpleBody"],
+  html[data-skyroom="true"] .poll-creation-modal > div > header + div,
+  html[data-skyroom="true"] .poll-creation-modal [data-test="modalSimpleBody"] {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+    box-sizing: border-box !important;
+  }
+
+  html[data-skyroom="true"] [data-test="pollCreationModal"] [data-test="pollModalBody"],
+  html[data-skyroom="true"] .poll-creation-modal [data-test="pollModalBody"] {
+    flex: none !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  html[data-skyroom="true"] [data-test="pollCreationModal"] > div {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: 100% !important;
+  }
+
+  html[data-skyroom="true"] [data-test="managePresentationsModalBody"] {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Full-screen modal actions — Skyroom dark theme (settings / presentations / poll). */
+  html[data-skyroom="true"] #fsmodal header h1,
+  html[data-skyroom="true"] #fsmodal header [class*="Title"] {
+    color: #eef4fb !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal header {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 10px 12px !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal header [class*="Actions"] {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 10px !important;
+    justify-content: stretch !important;
+    align-items: stretch !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal header [class*="Actions"] .buttonWrapper {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal button[data-test="modalDismissButton"],
+  html[data-skyroom="true"] #fsmodal button[data-test="modalConfirmButton"] {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    min-height: 44px !important;
+    margin: 0 !important;
+    border-radius: 12px !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    box-shadow: none !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal button[data-test="modalDismissButton"] {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #eef4fb !important;
+    border: 1px solid rgba(218, 230, 245, 0.22) !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal button[data-test="modalConfirmButton"] {
+    background: var(--skyroom-gradient-primary, linear-gradient(145deg, #14a99e 0%, #0d887e 100%)) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(32, 199, 187, 0.45) !important;
+    box-shadow: 0 4px 14px rgba(13, 136, 126, 0.28) !important;
+  }
+
+  html[data-skyroom="true"] [data-test="pollCreationModal"] [class*="Title"],
+  html[data-skyroom="true"] [data-test="pollCreationModal"] header h2,
+  html[data-skyroom="true"] .poll-creation-modal [class*="Title"] {
+    color: #eef4fb !important;
+    text-align: start !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+  }
+
+  html[data-skyroom="true"] [data-test="pollCreationModal"] header,
+  html[data-skyroom="true"] [data-test="pollCreationModal"] [class*="ModalHeader"] {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-rows: auto auto !important;
+    align-items: center !important;
+    column-gap: 10px !important;
+  }
+
+  html[data-skyroom="true"] [data-test="pollCreationModal"] button[data-test="closeModal"] {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    align-self: start !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  html[data-skyroom="true"] [data-test="pollCreationModal"] button[data-test="closeModal"] > span:first-child {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(218, 230, 245, 0.18) !important;
+    color: #eef4fb !important;
+    box-shadow: none !important;
+  }
+
+  html[data-skyroom="true"] [data-test="pollCreationModal"] button[data-test="closeModal"] i,
+  html[data-skyroom="true"] [data-test="pollCreationModal"] button[data-test="closeModal"] i::before {
+    color: #eef4fb !important;
+  }
+
+  html[data-skyroom="true"] [data-test="pollCreationModal"] button[data-test="closeModal"]:active > span:first-child {
+    background: rgba(255, 255, 255, 0.14) !important;
+    border-color: rgba(32, 199, 187, 0.35) !important;
+  }
+
+  /* Participant poll/quiz answer overlay — full viewport on phone */
+  #polling-container [data-test="pollingContainer"] {
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    transform: none !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    padding:
+      calc(16px + env(safe-area-inset-top, 0px))
+      16px
+      calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+    box-sizing: border-box !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+}

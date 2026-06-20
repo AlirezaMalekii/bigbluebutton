@@ -61,8 +61,21 @@ const TldrawV2GlobalStyle = createGlobalStyle`
   }
 
   .tlui-popover__content {
-    left: -50px !important;
+    left: auto !important;
   }
+
+  ${({ isSkyroom }) => isSkyroom && `
+    .tlui-popover__content {
+      left: auto !important;
+      right: auto !important;
+    }
+
+    .tlui-style-panel__wrapper {
+      position: static !important;
+      right: auto !important;
+      top: auto !important;
+    }
+  `}
 
   ${({ isPresenter, isMultiUserActive, pointerDiameter = 5 }) => {
     const numericDiameter = Number(pointerDiameter);
@@ -224,16 +237,19 @@ const TldrawV2GlobalStyle = createGlobalStyle`
       opacity: 1 !important;
     }
 
-    .tlui-popover__content:has(.tlui-style-panel) {
-      left: unset !important;
+    .tlui-popover__content:has(.tlui-style-panel),
+    .tlui-popover__content:has(.tlui-buttons__grid) {
+      transform: none !important;
     }
 
     [data-side="top"][role="dialog"]:has(.tlui-style-panel),
     [data-side="bottom"][role="dialog"]:has(.tlui-style-panel) {
-      left: unset !important;
-      right: unset !important;
-      bottom: unset !important;
-      top: unset !important;
+      transform: none !important;
+    }
+
+    /* Toolbar popovers — position is set in useSkyroomToolbarPopoverAnchor. */
+    [data-side="bottom"][data-state="open"][role="dialog"]:has(.tlui-buttons__grid),
+    [data-side="bottom"][data-state="open"].tlui-popover__content:has(.tlui-buttons__grid) {
       transform: none !important;
     }
   ` : `
@@ -260,10 +276,12 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     font-family: 'Arial', sans-serif !important;
   }
 
+  ${({ isSkyroom }) => !isSkyroom && `
   [data-side="bottom"][data-align="end"][data-state="open"][role="dialog"]:not(:has(.tlui-style-panel)) {
     right: 3.5rem !important;
     bottom: 9.5rem !important;
   }
+  `}
 
   [id*="shape:poll-result"] {
     background-color: white !important;

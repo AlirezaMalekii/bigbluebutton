@@ -95,6 +95,7 @@ const ExternalVideoPlayerModal: React.FC<ExternalVideoPlayerModalProps> = ({
       isOpen={isOpen}
       setIsOpen={setIsOpen}
       priority={priority}
+      data-test="externalVideoModal"
     >
       <Styled.Content>
         <Styled.VideoUrl animations={animations}>
@@ -111,7 +112,7 @@ const ExternalVideoPlayerModal: React.FC<ExternalVideoPlayerModalProps> = ({
               onCopy={(e) => { e.stopPropagation(); }}
             />
           </label>
-          <Styled.ExternalVideoNote id="external-video-note">
+          <Styled.ExternalVideoNote id="external-video-note" data-test="externalVideoNote">
             {intl.formatMessage(intlMessages.note)}
           </Styled.ExternalVideoNote>
         </Styled.VideoUrl>

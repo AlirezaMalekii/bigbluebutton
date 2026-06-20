@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { defineMessages, injectIntl } from 'react-intl';
@@ -133,7 +134,7 @@ class ModalFullscreen extends PureComponent {
             />
           </Styled.Actions>
         </Styled.Header>
-        <Styled.Content>
+        <Styled.Content data-test="fullscreenModalBody">
           {children}
         </Styled.Content>
         <div id="modalDismissDescription" hidden>{intl.formatMessage(intlMessages.modalCloseDescription)}</div>

@@ -33,6 +33,8 @@ import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import ChatOfflineIndicator from './chat-offline-indicator/component';
 import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import SkyroomComposer from '/imports/ui/components/skyroom-layout/chat-composer/styles';
+import SkyroomStickerStyled from '/imports/ui/components/skyroom-layout/chat-stickers/styles';
+import SkyroomStickerPanel from '/imports/ui/components/skyroom-layout/chat-stickers/component';
 import { ChatEvents } from '/imports/ui/core/enums/chat';
 import { CHAT_SEND_MESSAGE, CHAT_SET_TYPING } from './mutations';
 import Storage from '/imports/ui/services/storage/session';
@@ -144,6 +146,9 @@ const ChatMessageForm: React.FC<ChatMessageFormProps> = ({
   const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const emojiPickerButtonRef = useRef<HTMLDivElement>(null);
+  // Skyroom sticker (popular-emoji) quick-pick — mutually exclusive with the emoji picker.
+  const [showStickerPicker, setShowStickerPicker] = React.useState(false);
+  const stickerButtonRef = useRef<HTMLButtonElement>(null);
   const [isTextAreaFocused, setIsTextAreaFocused] = React.useState(false);
   const [repliedMessageId, setRepliedMessageId] = React.useState<string | null>(null);
   const [emojisToExclude, setEmojisToExclude] = React.useState<string[]>([]);
@@ -696,7 +701,7 @@ const ChatMessageForm: React.FC<ChatMessageFormProps> = ({
       <div ref={emojiPickerButtonRef}>
         {skyroomComposer ? (
           <SkyroomComposer.EmojiButton
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowStickerPicker(false); }}
             icon="happy"
             color="light"
             ghost
@@ -709,7 +714,7 @@ const ChatMessageForm: React.FC<ChatMessageFormProps> = ({
           />
         ) : (
           <Styled.EmojiButton
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowStickerPicker(false); }}
             icon="happy"
             color="light"
             ghost
@@ -722,6 +727,29 @@ const ChatMessageForm: React.FC<ChatMessageFormProps> = ({
           />
         )}
       </div>
+    ) : null;
+
+    // Skyroom sticker quick-pick — popular emoji inserted via the same path as the
+    // emoji picker (handleEmojiSelect). Skyroom composer only.
+    const stickerPickerNode = (skyroomComposer && showStickerPicker) ? (
+      <SkyroomStickerPanel
+        onSelect={(native: string) => handleEmojiSelect({ native })}
+        onClose={() => setShowStickerPicker(false)}
+        triggerRef={stickerButtonRef}
+      />
+    ) : null;
+
+    const stickerButtonNode = skyroomComposer ? (
+      <SkyroomStickerStyled.StickerButton
+        ref={stickerButtonRef}
+        type="button"
+        aria-label={intl.formatMessage(messages.emojiButtonLabel)}
+        data-test="stickerPickerButton"
+        disabled={disabled || partnerIsLoggedOut || chatSendMessageLoading}
+        onClick={() => { setShowStickerPicker((v) => !v); setShowEmojiPicker(false); }}
+      >
+        😊
+      </SkyroomStickerStyled.StickerButton>
     ) : null;
 
     const sendButtonNode = skyroomComposer ? (
@@ -760,6 +788,7 @@ const ChatMessageForm: React.FC<ChatMessageFormProps> = ({
           data-skyroom-composer="true"
         >
           {emojiPickerNode}
+          {stickerPickerNode}
           <SkyroomComposer.Row data-test="skyroomChatComposer">
             <SkyroomComposer.InputWrapper>
               <SkyroomComposer.Textarea
@@ -783,6 +812,7 @@ const ChatMessageForm: React.FC<ChatMessageFormProps> = ({
                 onCopy={messageInputProps.onCopy}
                 async={messageInputProps.async}
               />
+              {stickerButtonNode}
               {emojiButtonNode}
             </SkyroomComposer.InputWrapper>
             {sendButtonNode}

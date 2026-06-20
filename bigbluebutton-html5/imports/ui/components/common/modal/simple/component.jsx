@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { defineMessages, injectIntl } from 'react-intl';
@@ -166,7 +167,7 @@ class ModalSimple extends Component {
             >
               {title || ''}
             </Styled.Header>
-            <Styled.Content>
+            <Styled.Content data-test="modalSimpleBody">
               {children}
               <div id="fallback-element" tabIndex="-1" />
             </Styled.Content>

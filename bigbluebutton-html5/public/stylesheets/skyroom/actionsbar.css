@@ -111,6 +111,20 @@
   gap: 5px !important;
 }
 
+/* Presenter "+" — no cluster shell; sits tight against the media group. */
+#layout[data-skyroom-column="true"] #ActionsBar > div > div:first-child:has([data-test="actionsButton"]) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  margin-inline-end: 10px !important;
+}
+
+#layout[data-skyroom-column="true"] #ActionsBar > div > div:first-child:has([data-test="actionsButton"])::after {
+  display: none !important;
+}
+
 /* Elegant dividers between category clusters */
 #layout[data-skyroom-column="true"] #ActionsBar > div > div:not(:last-child) {
   margin-inline-end: 20px !important;

@@ -2,6 +2,13 @@
    Skyroom panel chrome — shared Users + Public chat headers & search
    ===================================================================== */
 
+/* Shorter unified header for all panels (Users / Public / Private chat / Notes).
+   One variable drives every header (each resolves var(--skyroom-header-height));
+   reduced from 56px to free vertical space inside the boxes. */
+#layout[data-skyroom-column="true"] {
+  --skyroom-header-height: 44px;
+}
+
 /* --- Header row --- */
 #layout[data-skyroom-column="true"] [data-test="userListContainer"] [class*="Container"]:has([data-test-users-count]),
 #layout[data-skyroom-column="true"] [data-test="userListContent"] > div:first-child,
@@ -34,7 +41,7 @@
 #layout[data-skyroom-column="true"] [data-test="publicChatPanel"] [data-test="hidePublicChat"],
 #layout[data-skyroom-column="true"] [data-test="publicChatPanel"] [data-test="hidePublicChat"] span {
   color: var(--skyroom-panel-text) !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
   font-weight: 700 !important;
   text-transform: none !important;
   letter-spacing: -0.2px;
@@ -47,6 +54,7 @@
 
 #layout[data-skyroom-column="true"] [data-test="user-management-options"],
 #layout[data-skyroom-column="true"] [data-test="skyroom-chat-header-options"],
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"],
 #layout[data-skyroom-column="true"] [data-test="sharedNotesPanelTitle"] [class*="OptionsGroup"] {
   flex: 0 0 auto !important;
   margin-inline-start: auto !important;
@@ -64,13 +72,13 @@
   color: var(--skyroom-panel-text-muted) !important;
   display: inline-flex !important;
   flex: 0 0 auto !important;
-  height: 32px !important;
+  height: 28px !important;
   justify-content: center !important;
   line-height: 1 !important;
-  min-height: 32px !important;
-  min-width: 32px !important;
+  min-height: 28px !important;
+  min-width: 28px !important;
   padding: 0 !important;
-  width: 32px !important;
+  width: 28px !important;
   transition:
     background-color 130ms ease,
     border-color 130ms ease,
@@ -126,7 +134,7 @@
 
 #layout[data-skyroom-column="true"] [data-test="skyroomUserSearch"] label,
 #layout[data-skyroom-column="true"] [data-test="skyroomChatUserSearch"] label {
-  min-height: 40px !important;
+  min-height: 34px !important;
   border-radius: 12px !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   background: rgba(0, 0, 0, 0.2) !important;
@@ -178,12 +186,35 @@
 
 /* --- Dropdown menus (light card) --- */
 .MuiModal-root:has(#user-options-dropdown-menu) .MuiBackdrop-root,
-.MuiModal-root:has(.skyroom-chat-options-menu) .MuiBackdrop-root {
+.MuiModal-root:has(.skyroom-user-options-menu) .MuiBackdrop-root,
+.MuiModal-root:has(.skyroom-chat-options-menu) .MuiBackdrop-root,
+.MuiModal-root:has(.skyroom-notes-options-menu) .MuiBackdrop-root,
+.MuiModal-root:has(.skyroom-user-actions-menu) .MuiBackdrop-root,
+.MuiModal-root:has(.skyroom-leave-meeting-menu) .MuiBackdrop-root,
+.MuiModal-root:has(.skyroom-actions-menu) .MuiBackdrop-root {
   background-color: transparent !important;
 }
 
+.MuiModal-root:has(.skyroom-audio-settings-menu) .MuiBackdrop-root {
+  background-color: transparent !important;
+}
+
+/* Users ⋯ / shared-notes ⋯ / user-row ⋯ open as small anchored dropdowns on mobile
+   (like chat), not full-screen sheets (BBBMenu overrideMobileStyles). */
+.MuiModal-root:has(.skyroom-user-options-menu) .override-mobile-styles,
+.MuiModal-root:has(.skyroom-user-options-menu) .MuiPaper-root.override-mobile-styles,
 .MuiModal-root:has(.skyroom-chat-options-menu) .override-mobile-styles,
-.MuiModal-root:has(.skyroom-chat-options-menu) .MuiPaper-root.override-mobile-styles {
+.MuiModal-root:has(.skyroom-chat-options-menu) .MuiPaper-root.override-mobile-styles,
+.MuiModal-root:has(.skyroom-notes-options-menu) .override-mobile-styles,
+.MuiModal-root:has(.skyroom-notes-options-menu) .MuiPaper-root.override-mobile-styles,
+.MuiModal-root:has(.skyroom-user-actions-menu) .override-mobile-styles,
+.MuiModal-root:has(.skyroom-user-actions-menu) .MuiPaper-root.override-mobile-styles,
+.MuiModal-root:has(.skyroom-leave-meeting-menu) .override-mobile-styles,
+.MuiModal-root:has(.skyroom-leave-meeting-menu) .MuiPaper-root.override-mobile-styles,
+.MuiModal-root:has(.skyroom-actions-menu) .override-mobile-styles,
+.MuiModal-root:has(.skyroom-actions-menu) .MuiPaper-root.override-mobile-styles,
+.MuiModal-root:has(.skyroom-audio-settings-menu) .override-mobile-styles,
+.MuiModal-root:has(.skyroom-audio-settings-menu) .MuiPaper-root.override-mobile-styles {
   position: absolute !important;
   top: auto !important;
   left: auto !important;
@@ -195,8 +226,11 @@
 
 #layout[data-skyroom-column="true"] #user-options-dropdown-menu .MuiPaper-root,
 #layout[data-skyroom-column="true"] [data-test="user-options-dropdown-menu"] .MuiPaper-root,
+#layout[data-skyroom-column="true"] .skyroom-user-options-menu .MuiPaper-root,
 #layout[data-skyroom-column="true"] #chat-options-dropdown-menu .MuiPaper-root,
-#layout[data-skyroom-column="true"] .skyroom-chat-options-menu .MuiPaper-root {
+#layout[data-skyroom-column="true"] .skyroom-chat-options-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] .skyroom-notes-options-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] .skyroom-user-actions-menu .MuiPaper-root {
   background: #ffffff !important;
   border: 1px solid rgba(15, 23, 42, 0.08) !important;
   border-radius: 12px !important;
@@ -213,15 +247,20 @@
 }
 
 #layout[data-skyroom-column="true"] #chat-options-dropdown-menu .MuiPaper-root,
-#layout[data-skyroom-column="true"] .skyroom-chat-options-menu .MuiPaper-root {
+#layout[data-skyroom-column="true"] .skyroom-chat-options-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] .skyroom-notes-options-menu .MuiPaper-root,
+#layout[data-skyroom-column="true"] .skyroom-user-actions-menu .MuiPaper-root {
   min-width: min(260px, calc(100vw - 24px)) !important;
   max-width: min(300px, calc(100vw - 24px)) !important;
 }
 
 #layout[data-skyroom-column="true"] #user-options-dropdown-menu .MuiMenuItem-root,
 #layout[data-skyroom-column="true"] [data-test="user-options-dropdown-menu"] .MuiMenuItem-root,
+#layout[data-skyroom-column="true"] .skyroom-user-options-menu .MuiMenuItem-root,
 #layout[data-skyroom-column="true"] #chat-options-dropdown-menu .MuiMenuItem-root,
-#layout[data-skyroom-column="true"] .skyroom-chat-options-menu .MuiMenuItem-root {
+#layout[data-skyroom-column="true"] .skyroom-chat-options-menu .MuiMenuItem-root,
+#layout[data-skyroom-column="true"] .skyroom-notes-options-menu .MuiMenuItem-root,
+#layout[data-skyroom-column="true"] .skyroom-user-actions-menu .MuiMenuItem-root {
   color: #1e293b !important;
   font-size: 0.8125rem !important;
   font-weight: 500 !important;
@@ -231,7 +270,10 @@
 
 #layout[data-skyroom-column="true"] #user-options-dropdown-menu .MuiMenuItem-root:hover,
 #layout[data-skyroom-column="true"] [data-test="user-options-dropdown-menu"] .MuiMenuItem-root:hover,
+#layout[data-skyroom-column="true"] .skyroom-user-options-menu .MuiMenuItem-root:hover,
 #layout[data-skyroom-column="true"] #chat-options-dropdown-menu .MuiMenuItem-root:hover,
-#layout[data-skyroom-column="true"] .skyroom-chat-options-menu .MuiMenuItem-root:hover {
+#layout[data-skyroom-column="true"] .skyroom-chat-options-menu .MuiMenuItem-root:hover,
+#layout[data-skyroom-column="true"] .skyroom-notes-options-menu .MuiMenuItem-root:hover,
+#layout[data-skyroom-column="true"] .skyroom-user-actions-menu .MuiMenuItem-root:hover {
   background: var(--skyroom-accent-soft, rgba(32, 199, 187, 0.10)) !important;
 }

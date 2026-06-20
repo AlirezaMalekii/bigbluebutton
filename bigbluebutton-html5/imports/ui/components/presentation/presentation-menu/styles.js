@@ -16,7 +16,8 @@ import ToastStyles from '/imports/ui/components/common/toast/styles';
 const ToolbarDock = styled.div`
   cursor: default;
   position: absolute;
-  left: 14px;
+  left: auto;
+  right: 14px;
   top: 14px;
   z-index: 1001;
   display: flex;

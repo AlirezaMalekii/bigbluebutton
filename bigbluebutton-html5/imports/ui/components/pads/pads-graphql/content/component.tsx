@@ -12,10 +12,16 @@ interface PadContentContainerProps {
   externalId: string;
 }
 
+/** Viewing mode must not run Etherpad JS (ace2/require-kernel) inside srcDoc. */
+const stripEtherpadScripts = (html: string): string => html
+  .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+  .replace(/<script\b[^>]*\/>/gi, '');
+
 const PadContent: React.FC<PadContentProps> = ({
   content,
 }) => {
-  const contentSplit = content.split('<body>');
+  const safeContent = stripEtherpadScripts(content);
+  const contentSplit = safeContent.split('<body>');
   const contentStyle = `
   <body>
   <base target="_blank">
@@ -25,12 +31,15 @@ const PadContent: React.FC<PadContentProps> = ({
     }
   </style>
   `;
-  const contentWithStyle = [contentSplit[0], contentStyle, contentSplit[1]].join('');
+  const contentWithStyle = contentSplit.length > 1
+    ? [contentSplit[0], contentStyle, contentSplit.slice(1).join('<body>')].join('')
+    : safeContent;
   return (
     <Styled.Wrapper>
       <Styled.Iframe
         title="shared notes viewing mode"
         srcDoc={contentWithStyle}
+        sandbox=""
         data-test="sharedNotesViewingMode"
       />
     </Styled.Wrapper>

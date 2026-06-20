@@ -1,6 +1,10 @@
 import { PANELS, CAMERADOCK_POSITION } from '/imports/ui/components/layout/enums';
 import DEFAULT_VALUES from '/imports/ui/components/layout/defaultValues';
 import { getSkyroomNotesOpen } from './notes-panel-state';
+import { resolveSkyroomMobileBox } from './mobile-bottom-state';
+import { getSkyroomMobileZoneFullscreen, setSkyroomMobileZoneFullscreen } from './mobile-zone-fullscreen-state';
+import { getSkyroomMobileStatusRailOffset } from './mobile-status-rail-state';
+import { getSkyroomMobileTalkingRailOffset } from './mobile-talking-rail-state';
 import {
   classifySkyroomCameras,
   calcStageWebcamHeight,
@@ -30,10 +34,10 @@ export const SKYROOM_STAGE_Z_INDEX = 6;
 export const SKYROOM_STAGE_WEBCAM_Z_INDEX = 7;
 const MIN_COLUMN = 292;
 const MAX_COLUMN = 328;
-const MIN_USERS = 180;
+const MIN_USERS = 160;
 const MIN_CHAT = 160;
-/** When users + chat are both open, chat gets the larger share */
-const CHAT_PANEL_HEIGHT_RATIO = 0.5;
+/** When users + chat are both open, chat gets the larger share (compact users, taller chat) */
+const CHAT_PANEL_HEIGHT_RATIO = 0.62;
 
 const isSkyroomColumnActive = () => {
   const layoutEl = document.getElementById('layout');
@@ -80,6 +84,256 @@ const buildStageCameraDockBounds = ({
   zIndex: SKYROOM_STAGE_WEBCAM_Z_INDEX,
 });
 
+/* Mobile (<600px): edge gap, gap between stacked zones, and the bottom tab-bar height.
+   Exported so the tab-bar component can self-position with the same metrics. */
+export const SKYROOM_MOBILE_EDGE = 8;
+const SKYROOM_MOBILE_GAP = 8;
+export const SKYROOM_MOBILE_TAB_H = 36;
+/* The phone navbar is a single compact row (~48px), shorter than the desktop
+   two-row navbar (SKYROOM_NAVBAR_H=60). Use this for both the reserved top space
+   and the navbar bounds so the stage sits right under the navbar with no empty band. */
+export const SKYROOM_MOBILE_NAVBAR_H = 48;
+
+/**
+ * Phone layout — a vertical split: a top "stage" zone (presentation / whiteboard /
+ * screenshare / camera-as-content, or webcams when nothing is shared) and a bottom
+ * zone that shows exactly ONE box at a time (webcams / chat / users / notes).
+ * The split is dynamic: stage goes full-height when the bottom is empty, and the
+ * bottom grows when nothing is actually shared on the stage.
+ *
+ * Returns the same shape adjustSkyroomColumnLayout returns (so customLayout's branch
+ * consumes it unchanged), with webcam-zone features disabled — mobile uses BBB's
+ * default webcam grid positioned via cameraDock bounds (isMobileSplit tells
+ * customLayout to clear the Skyroom webcam zones).
+ */
+const buildSkyroomMobileLayout = ({
+  isRTL,
+  bannerAreaHeight,
+  windowWidth,
+  windowHeight,
+  sidebarNavigationInput,
+  sidebarContentInput,
+  cameraDockInput,
+  sidebarNavWidth,
+  sidebarNavBounds,
+  sidebarContentWidth,
+  sidebarContentBounds,
+  mediaAreaBounds,
+  cameraDockBounds,
+  videoStreams = [],
+  presentationIsOpen = true,
+  hasScreenShare = false,
+}) => {
+  /* eslint-disable no-param-reassign -- layout engine mutates bound objects in place */
+  const viewportW = windowWidth();
+  const viewportH = windowHeight();
+  const banner = bannerAreaHeight();
+
+  const usersOpen = sidebarNavigationInput.isOpen;
+  const chatOpen = sidebarContentInput.isOpen
+    && sidebarContentInput.sidebarContentPanel === PANELS.CHAT;
+  const notesOpen = getSkyroomNotesOpen();
+  const activeBox = resolveSkyroomMobileBox({ usersOpen, chatOpen, notesOpen });
+  const panelBox = activeBox === 'users' || activeBox === 'chat' || activeBox === 'notes';
+  const webcamsBox = activeBox === 'webcams';
+
+  const { totalCount } = classifySkyroomCameras(videoStreams);
+  const hasCameras = totalCount > 0 || cameraDockInput.numCameras > 0;
+  const hasStage = Boolean(presentationIsOpen || hasScreenShare);
+
+  const edge = SKYROOM_MOBILE_EDGE;
+  const gap = SKYROOM_MOBILE_GAP;
+  const tabBarH = SKYROOM_MOBILE_TAB_H;
+  const areaTop = SKYROOM_MOBILE_NAVBAR_H + banner + edge;
+  const areaBottom = viewportH - SKYROOM_FOOTER_H - edge;
+  const availH = Math.max(120, areaBottom - areaTop);
+
+  const talkingOffset = getSkyroomMobileTalkingRailOffset();
+  const statusOffset = getSkyroomMobileStatusRailOffset();
+  const areaContentTop = areaTop + talkingOffset + statusOffset;
+  const availAfterRail = Math.max(120, areaBottom - areaContentTop);
+  // Reserve the persistent bottom tab bar (it self-positions just above the action bar).
+  const contentH = Math.max(80, availAfterRail - tabBarH - gap);
+  // Top-box height is computed as if the status rail were absent; bottom absorbs the offset.
+  const splitHPreserveTop = Math.max(80, availH - tabBarH - gap);
+  const fullW = viewportW - edge * 2;
+  const zoneLeft = isRTL ? null : edge;
+  const zoneRight = isRTL ? edge : null;
+
+  // Cameras follow what's shared: top when nothing is shared, bottom when shared.
+  const camerasInTop = hasCameras && !hasStage;
+  const camerasInBottom = hasCameras && hasStage && webcamsBox;
+  const bottomActive = panelBox || camerasInBottom;
+  const topHasContent = hasStage || camerasInTop;
+
+  let fsZone = getSkyroomMobileZoneFullscreen();
+  if ((fsZone === 'top' && !topHasContent) || (fsZone === 'bottom' && !bottomActive)) {
+    setSkyroomMobileZoneFullscreen(null);
+    fsZone = null;
+  }
+
+  const expandH = availAfterRail;
+
+  let topH;
+  if (fsZone === 'top' && topHasContent) {
+    topH = expandH;
+  } else if (fsZone === 'bottom' && bottomActive) {
+    topH = 0;
+  } else if (topHasContent && bottomActive) {
+    // Stage gets ~55% with a panel below; give webcams a more even 50/50 so a single
+    // cam reads at a usable size. No stage (cameras-only top) → bottom grows.
+    let topRatio = 0.46;
+    if (!hasStage) topRatio = 0.35;
+    else if (camerasInBottom) topRatio = 0.48;
+    topH = Math.round((splitHPreserveTop - gap) * topRatio);
+    const maxTopH = Math.max(0, contentH - gap);
+    topH = Math.min(topH, maxTopH);
+  } else if (topHasContent) {
+    topH = contentH;
+  } else if (bottomActive) {
+    topH = 0;
+  } else {
+    topH = contentH;
+  }
+
+  let bottomH;
+  if (fsZone === 'top' && topHasContent) {
+    bottomH = 0;
+  } else if (fsZone === 'bottom' && bottomActive) {
+    bottomH = expandH;
+  } else {
+    bottomH = bottomActive ? contentH - topH - (topH > 0 ? gap : 0) : 0;
+  }
+
+  const topRect = {
+    top: areaContentTop, left: zoneLeft, right: zoneRight, width: fullW, height: topH,
+  };
+  const bottomRect = {
+    top: areaContentTop + (topH > 0 ? topH + gap : 0),
+    left: zoneLeft,
+    right: zoneRight,
+    width: fullW,
+    height: bottomH,
+  };
+
+  // Stage (presentation / screenshare) occupies the top zone when something is shared.
+  mediaAreaBounds.top = topRect.top;
+  mediaAreaBounds.left = topRect.left;
+  mediaAreaBounds.right = topRect.right;
+  mediaAreaBounds.width = topRect.width;
+  mediaAreaBounds.height = hasStage ? topH : 0;
+
+  // Only the active panel occupies the bottom zone; the others collapse to 0.
+  const setPanel = (widthObj, boundsObj, isActive) => {
+    widthObj.minWidth = isActive ? fullW : 0;
+    widthObj.width = isActive ? fullW : 0;
+    widthObj.maxWidth = isActive ? fullW : 0;
+    boundsObj.top = bottomRect.top;
+    boundsObj.left = bottomRect.left;
+    boundsObj.right = bottomRect.right;
+  };
+  setPanel(sidebarNavWidth, sidebarNavBounds, activeBox === 'users');
+  setPanel(sidebarContentWidth, sidebarContentBounds, activeBox === 'chat');
+  const sidebarNavHeightOut = activeBox === 'users' ? bottomH : 0;
+  const sidebarContentHeightOut = activeBox === 'chat' ? bottomH : 0;
+
+  const notesColumnBounds = activeBox === 'notes' ? {
+    top: bottomRect.top,
+    left: bottomRect.left,
+    right: bottomRect.right,
+    width: fullW,
+    height: bottomH,
+  } : null;
+
+  // Cameras render in the default BBB grid, positioned into the chosen zone.
+  let camRect = null;
+  if (camerasInTop) camRect = topRect;
+  else if (camerasInBottom) camRect = bottomRect;
+
+  const cameraDockOut = camRect ? {
+    ...cameraDockBounds,
+    top: camRect.top,
+    left: camRect.left,
+    right: camRect.right,
+    minWidth: camRect.width,
+    width: camRect.width,
+    maxWidth: camRect.width,
+    minHeight: camRect.height,
+    height: camRect.height,
+    maxHeight: camRect.height,
+    zIndex: camerasInBottom ? 5 : SKYROOM_STAGE_Z_INDEX,
+  } : {
+    ...cameraDockBounds,
+    top: areaTop,
+    left: zoneLeft,
+    right: zoneRight,
+    minWidth: 0,
+    width: 0,
+    maxWidth: 0,
+    minHeight: 0,
+    height: 0,
+    maxHeight: 0,
+    zIndex: 1,
+  };
+
+  return {
+    isMobileSplit: true,
+    sidebarNavHeight: sidebarNavHeightOut,
+    sidebarContentHeight: sidebarContentHeightOut,
+    sidebarSize: 0,
+    mediaAreaBounds,
+    cameraDockBounds: cameraDockOut,
+    cameraDockPosition: CAMERADOCK_POSITION.CONTENT_TOP,
+    screenshareMinimized: false,
+    useSplitCameras: false,
+    useSidebarWebcam: false,
+    sidebarCameraDockBounds: null,
+    sidebarWebcamDropBounds: null,
+    sidebarWebcamDropEnabled: false,
+    centerWebcamBounds: null,
+    centerDropBounds: null,
+    stageStripBounds: null,
+    stageMediaOpen: hasStage,
+    centerDropEnabled: false,
+    stageWebcamStripHeight: 0,
+    usersOpen,
+    chatOpen,
+    notesOpen,
+    sidebarStackActive: false,
+    notesColumnBounds,
+    notesOffset: 0,
+    stageFullWidth: true,
+    mobileActiveBox: activeBox,
+    mobileCamerasInBottom: camerasInBottom,
+    mobileCamerasInTop: camerasInTop,
+    mobileHasStage: hasStage,
+    mobileHasCameras: hasCameras,
+    mobileHasTopZone: topHasContent && topH > 0,
+    mobileHasBottomZone: bottomActive && bottomH > 0,
+    mobileBottomRect: bottomActive && bottomH > 0 ? bottomRect : null,
+    mobileTopRect: camerasInTop && topH > 0 ? topRect : null,
+    mobileZoneFullscreen: fsZone,
+    mobileTalkingRailOffset: talkingOffset,
+    mobileTalkingRailTop: areaTop,
+    mobileStatusRailOffset: statusOffset,
+    mobileStatusRailTop: areaTop + talkingOffset,
+    navbarFullWidth: {
+      width: viewportW,
+      left: 0,
+      right: isRTL ? 0 : null,
+      top: DEFAULT_VALUES.navBarTop + banner,
+      height: SKYROOM_MOBILE_NAVBAR_H,
+    },
+    actionbarFullWidth: {
+      width: viewportW,
+      left: 0,
+      right: isRTL ? 0 : null,
+      height: SKYROOM_FOOTER_H,
+    },
+  };
+  /* eslint-enable no-param-reassign */
+};
+
 /**
  * Stacks webcam + users + chat in a single sidebar column (Skyroom-style).
  * Users and chat can be toggled independently; both hidden = full-width stage.
@@ -105,7 +359,29 @@ const adjustSkyroomColumnLayout = ({
   hasScreenShare = false,
 }) => {
   /* eslint-disable no-param-reassign -- layout engine mutates bound objects in place */
-  if (isMobile || !isSkyroomColumnActive()) return null;
+  if (!isSkyroomColumnActive()) return null;
+
+  // Phones get a dedicated top/bottom split instead of the desktop column.
+  if (isMobile) {
+    return buildSkyroomMobileLayout({
+      isRTL,
+      bannerAreaHeight,
+      windowWidth,
+      windowHeight,
+      sidebarNavigationInput,
+      sidebarContentInput,
+      cameraDockInput,
+      sidebarNavWidth,
+      sidebarNavBounds,
+      sidebarContentWidth,
+      sidebarContentBounds,
+      mediaAreaBounds,
+      cameraDockBounds,
+      videoStreams,
+      presentationIsOpen,
+      hasScreenShare,
+    });
+  }
 
   const usersOpen = sidebarNavigationInput.isOpen;
   const chatOpen = sidebarContentInput.isOpen

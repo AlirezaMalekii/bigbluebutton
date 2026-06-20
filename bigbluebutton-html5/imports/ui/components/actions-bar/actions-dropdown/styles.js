@@ -1,14 +1,8 @@
 import styled from 'styled-components';
-import { smallOnly } from '/imports/ui/stylesheets/styled-components/breakpoints';
 import Button from '/imports/ui/components/common/button/component';
+import { smallOnly } from '/imports/ui/stylesheets/styled-components/breakpoints';
 
-const HideDropdownButton = styled(Button)`
-  ${({ open }) => open && `
-      @media ${smallOnly} {
-        display:none;
-      }
-   `}
-`;
+const HideDropdownButton = styled(Button)``;
 
 const PollModalBody = styled.div`
   width: 100%;
@@ -19,6 +13,14 @@ const PollModalBody = styled.div`
   overflow-y: auto;
   overflow-x: hidden;
   padding: 0.35rem 0.5rem 0.5rem;
+
+  @media ${smallOnly} {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+    padding: 0.35rem 0.5rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  }
 `;
 
 const TimerModalBody = styled.div`

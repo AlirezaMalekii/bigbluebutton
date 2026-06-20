@@ -33,7 +33,7 @@ export const PanelHeaderContainer = styled.div`
 `;
 
 export const PanelTitle = styled.h2`
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   text-transform: none;
   letter-spacing: -0.2px;
@@ -104,14 +104,14 @@ export const PanelOptionsButton = styled(Button)`
   color: var(--skyroom-panel-text-muted, #aab6c7) !important;
   display: inline-flex !important;
   flex: 0 0 auto;
-  height: 32px !important;
+  height: 28px !important;
   justify-content: center !important;
   line-height: 1 !important;
   margin: 0;
-  min-height: 32px !important;
-  min-width: 32px !important;
+  min-height: 28px !important;
+  min-width: 28px !important;
   padding: 0 !important;
-  width: 32px !important;
+  width: 28px !important;
   transition:
     background-color 130ms ease,
     border-color 130ms ease,
@@ -169,7 +169,7 @@ export const PanelSearchField = styled.label`
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 40px;
+  min-height: 34px;
   padding: 0 12px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -240,7 +240,7 @@ export const PanelSearchInput = styled.input`
   font-size: 13px;
   font-weight: 400;
   line-height: 1.35;
-  padding: 9px 0;
+  padding: 6px 0;
 
   &::placeholder {
     color: rgba(198, 208, 220, 0.62);

@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import WhiteboardContainer from '/imports/ui/components/whiteboard/container';
@@ -21,6 +22,10 @@ import { throttle } from '/imports/utils/throttle';
 import LocatedErrorBoundary from '/imports/ui/components/common/error-boundary/located-error-boundary/component';
 import FallbackView from '/imports/ui/components/common/fallback-errors/fallback-view/component';
 import TooltipContainer from '/imports/ui/components/common/tooltip/container';
+import {
+  isSkyroomColumnLayout,
+  isSkyroomMobileViewport,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const intlMessages = defineMessages({
   presentationLabel: {
@@ -417,6 +422,12 @@ class Presentation extends PureComponent {
     this.setState({
       isToolbarVisible: isVisible,
     });
+    // Skyroom: also hide/show the tldraw pen toolbar via a CSS hook on #layout (the
+    // top-right "toolVisibility" button is the toggle; works desktop + mobile).
+    const layoutEl = document.getElementById('layout');
+    if (layoutEl) {
+      layoutEl.setAttribute('data-skyroom-toolbar-hidden', String(!isVisible));
+    }
   }
 
   setPresentationRef(ref) {
@@ -544,6 +555,19 @@ class Presentation extends PureComponent {
 
     if (typeof svgHeight !== 'number' || typeof svgWidth !== 'number') {
       return { width: 0, height: 0 };
+    }
+
+    if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
+      const baseWidth = userIsPresenter ? originalWidth : viewBoxWidth;
+      const baseHeight = userIsPresenter ? originalHeight : viewBoxHeight;
+      const coverScale = Math.max(
+        presentationWidth / baseWidth,
+        presentationHeight / baseHeight,
+      );
+      return {
+        width: baseWidth * coverScale,
+        height: baseHeight * coverScale,
+      };
     }
 
     return {
@@ -807,10 +831,6 @@ class Presentation extends PureComponent {
                 }}
                 id="presentationInnerWrapper"
               >
-                {this.renderPresentationDownload()}
-                <Styled.VisuallyHidden id="currentSlideText">
-                  {slideContent}
-                </Styled.VisuallyHidden>
                 {((userIsPresenter || hasWBAccess)
                   && (!tldrawIsMounting && presentationWidth > 0 && currentSlide)) && (
                   <Styled.ExtraTools {...{ isToolbarVisible }}>
@@ -818,7 +838,7 @@ class Presentation extends PureComponent {
                       <Styled.Button
                         aria-label={intl?.messages['app.shortcut-help.undo']}
                         onClick={() => tldrawAPI?.undo()}
-                        className="tlui-undo"
+                        className="tlui-undo skyroom-wb-action-btn"
                       >
                         <Styled.IconWithMask mask={`${window.meetingClientSettings.public.app.basename}/svgs/tldraw/undo.svg`} />
                       </Styled.Button>
@@ -827,7 +847,7 @@ class Presentation extends PureComponent {
                       <Styled.Button
                         aria-label={intl?.messages['app.shortcut-help.redo']}
                         onClick={() => tldrawAPI?.redo()}
-                        className="tlui-redo"
+                        className="tlui-redo skyroom-wb-action-btn"
                       >
                         <Styled.IconWithMask mask={`${window.meetingClientSettings.public.app.basename}/svgs/tldraw/redo.svg`} />
                       </Styled.Button>
@@ -838,6 +858,10 @@ class Presentation extends PureComponent {
                   && presentationWidth > 0
                   && currentSlide
                   && this.renderPresentationMenu()}
+                {this.renderPresentationDownload()}
+                <Styled.VisuallyHidden id="currentSlideText">
+                  {slideContent}
+                </Styled.VisuallyHidden>
                 <LocatedErrorBoundary Fallback={FallbackView} logMetadata={APP_CRASH_METADATA}>
                   <WhiteboardContainer
                     whiteboardId={currentSlide?.id}

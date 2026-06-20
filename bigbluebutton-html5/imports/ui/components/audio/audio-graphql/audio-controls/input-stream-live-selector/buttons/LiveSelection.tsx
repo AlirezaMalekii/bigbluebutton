@@ -330,6 +330,8 @@ export const LiveSelection: React.FC<LiveSelectionProps> = ({
   const customStyles = { top: '-1rem' };
   const { isMobile } = deviceInfo;
   const noInputDevice = inputDeviceId === 'listen-only';
+  const isRTL = typeof document !== 'undefined'
+    && document.documentElement.getAttribute('dir') === 'rtl';
 
   return (
     <>
@@ -356,6 +358,7 @@ export const LiveSelection: React.FC<LiveSelectionProps> = ({
       )}
       <BBBMenu
         customStyles={!isMobile ? customStyles : null}
+        overrideMobileStyles
         trigger={(
           <>
             {shouldTreatAsMicrophone() && !isMobile
@@ -392,13 +395,18 @@ export const LiveSelection: React.FC<LiveSelectionProps> = ({
         actions={!isAudioLocked ? dropdownListComplete : [leaveAudioOption]}
         opts={{
           id: 'audio-selector-dropdown-menu',
+          className: 'skyroom-audio-settings-menu',
           keepMounted: true,
           transitionDuration: 0,
-          elevation: 3,
+          elevation: 8,
           getcontentanchorel: null,
           fullwidth: 'true',
-          anchorOrigin: { vertical: 'top', horizontal: 'center' },
-          transformOrigin: { vertical: 'bottom', horizontal: 'center' },
+          disableScrollLock: true,
+          BackdropProps: {
+            invisible: true,
+          },
+          anchorOrigin: { vertical: 'top', horizontal: isRTL ? 'right' : 'left' },
+          transformOrigin: { vertical: 'bottom', horizontal: isRTL ? 'right' : 'left' },
         }}
       />
     </>

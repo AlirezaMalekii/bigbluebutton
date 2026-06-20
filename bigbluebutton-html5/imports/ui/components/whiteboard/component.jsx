@@ -1,4 +1,4 @@
-/* eslint-disable max-len */
+/* eslint-disable max-len, react/prop-types, import/no-extraneous-dependencies */
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import { useRef, useCallback, useState } from 'react';
@@ -36,7 +36,7 @@ import {
   usePrevious,
   getDifferences,
 } from './utils';
-import { useMouseEvents, useCursor } from './hooks';
+import { useMouseEvents, useCursor, useSkyroomMoreToolsPopoverFlip } from './hooks';
 import {
   notifyShapeNumberExceeded, getCustomEditorAssetUrls, getCustomAssetUrls,
   debouncedUpdateShapes, sanitizeShape,
@@ -1990,6 +1990,8 @@ const Whiteboard = React.memo((props) => {
       isInfiniteWhiteboard,
     },
   );
+
+  useSkyroomMoreToolsPopoverFlip(isSkyroomColumnLayout());
 
   React.useEffect(() => {
     const handleArrowPress = (event) => {

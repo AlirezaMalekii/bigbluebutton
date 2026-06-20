@@ -13,7 +13,6 @@ import ChatMessageListContainer from './chat-message-list/component';
 import ChatMessageFormContainer from './chat-message-form/component';
 import ChatTypingIndicatorContainer from './chat-typing-indicator/component';
 import { SkyroomChatMessageFilterProvider } from '/imports/ui/components/skyroom-layout/chat-message-filter/context';
-import SkyroomChatUserSearch from '/imports/ui/components/skyroom-layout/chat-user-search/component';
 import { PANELS, ACTIONS } from '/imports/ui/components/layout/enums';
 import usePendingChat from '/imports/ui/core/local-states/usePendingChat';
 import useChat from '/imports/ui/core/hooks/useChat';
@@ -80,10 +79,9 @@ const Chat: React.FC<ChatProps> = ({ isRTL }) => {
   const chatBody = (
     <>
       <ChatHeader />
-      {skyroomColumn ? <SkyroomChatUserSearch /> : null}
       <ChatMessageListContainer />
-      <ChatMessageFormContainer />
       <ChatTypingIndicatorContainer />
+      <ChatMessageFormContainer />
     </>
   );
 

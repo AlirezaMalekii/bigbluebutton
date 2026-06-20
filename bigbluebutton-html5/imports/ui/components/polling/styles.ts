@@ -60,9 +60,20 @@ const PollingContainer = styled.aside<{ autoWidth: boolean }>`
   }
 
   @media ${hasPhoneDimentions} {
-    width: min(32rem, 96vw);
-    max-height: 96vh;
-    padding: var(--space-5, 20px) var(--space-4, 16px);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+    width: 100vw;
+    max-width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    padding: var(--space-5, 20px) var(--space-4, 16px)
+      calc(var(--space-5, 20px) + env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   ${({ autoWidth }) => autoWidth && 'width: auto;'}

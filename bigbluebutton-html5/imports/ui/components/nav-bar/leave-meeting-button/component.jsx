@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { PureComponent } from 'react';
 import { defineMessages, injectIntl } from 'react-intl';
 import PropTypes from 'prop-types';
@@ -171,6 +172,7 @@ class LeaveMeetingButton extends PureComponent {
         <Styled.LeaveMeetingWrapper $isMobile={ismobile}>
           <BBBMenu
             customStyles={!ismobile ? customStyles : null}
+            overrideMobileStyles
             trigger={(
               <Styled.LeaveButton
                 state={isDropdownOpen ? 'open' : 'closed'}
@@ -195,11 +197,16 @@ class LeaveMeetingButton extends PureComponent {
             disabled={isDisabled}
             opts={{
               id: 'app-leave-meeting-menu',
+              className: 'skyroom-leave-meeting-menu',
               keepMounted: true,
               transitionDuration: 0,
-              elevation: 3,
+              elevation: 8,
               getcontentanchorel: null,
               fullwidth: 'true',
+              disableScrollLock: true,
+              BackdropProps: {
+                invisible: true,
+              },
               anchorOrigin: { vertical: 'bottom', horizontal: isRTL ? 'left' : 'right' },
               transformorigin: { vertical: 'top', horizontal: isRTL ? 'left' : 'right' },
             }}

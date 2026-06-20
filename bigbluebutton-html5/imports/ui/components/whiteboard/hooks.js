@@ -1,5 +1,9 @@
 import React, { useEffect } from 'react';
 import { throttle } from 'radash';
+import {
+  cleanupSkyroomWbPopoverPortal,
+  getSkyroomWbPopoverPortal,
+} from './skyroom-toolbar-popover-portal';
 
 const hasBackgroundImageUrl = (el) => {
   const style = window.getComputedStyle(el);
@@ -414,7 +418,187 @@ const useMouseEvents = ({
   ]);
 };
 
+const SKYROOM_WB_TOOLBAR = '.tlui-toolbar, .tlui-layout__bottom, .tlui-toolbar__tools, .tlui-toolbar__inner';
+
+const STYLE_TRIGGER_SELECTORS = [
+  'button[data-testid="tools.style"]',
+  'button[data-testid="mobile.styles"]',
+].join(', ');
+
+const findWhiteboardRoot = () => document.getElementById('whiteboard-element');
+
+const findOpenToolbarPopovers = () => {
+  const candidates = document.querySelectorAll(
+    '[role="dialog"][data-state="open"], .tlui-popover__content[data-state="open"], .tlui-menu[data-state="open"]',
+  );
+
+  return Array.from(candidates).filter((el) => (
+    el.querySelector('.tlui-style-panel') || el.querySelector('.tlui-buttons__grid')
+  ));
+};
+
+const resolveSkyroomToolbarPopoverTrigger = (root, popover) => {
+  const popoverId = popover.getAttribute('id');
+  if (popoverId) {
+    const byControls = root.querySelector(`button[aria-controls="${popoverId}"]`);
+    if (byControls) return byControls;
+  }
+
+  const hasStyle = Boolean(popover.querySelector('.tlui-style-panel'));
+  const hasGrid = Boolean(popover.querySelector('.tlui-buttons__grid'));
+  const expanded = Array.from(
+    root.querySelectorAll(`${SKYROOM_WB_TOOLBAR} button[aria-expanded="true"]`),
+  );
+
+  if (hasStyle) {
+    return root.querySelector(STYLE_TRIGGER_SELECTORS)
+      || expanded.find((btn) => btn.dataset.testid?.includes('style'))
+      || expanded[0]
+      || null;
+  }
+
+  if (hasGrid) {
+    const more = root.querySelector('button[data-testid="tools.more"]');
+    const geo = root.querySelector('button[data-testid="tools.geo"]');
+    const match = expanded.find((btn) => btn === more || btn === geo);
+    if (match) return match;
+    if (geo?.getAttribute('aria-expanded') === 'true') return geo;
+    if (more?.getAttribute('aria-expanded') === 'true') return more;
+    return geo || more || expanded[0] || null;
+  }
+
+  return expanded[0] || null;
+};
+
+/* eslint-disable no-param-reassign -- mutates live TLDraw popover DOM for Skyroom positioning */
+const repositionSkyroomToolbarPopover = (root, popover, trigger) => {
+  if (!trigger || !popover) return;
+
+  const portal = getSkyroomWbPopoverPortal();
+  if (!portal) return;
+
+  if (popover.parentElement !== portal) {
+    portal.appendChild(popover);
+  }
+
+  const gap = 8;
+  const isRTL = document.documentElement.dir === 'rtl';
+  const triggerRect = trigger.getBoundingClientRect();
+  const popRect = popover.getBoundingClientRect();
+  const wbRect = root.getBoundingClientRect();
+
+  const popHeight = popRect.height > 0 ? popRect.height : popover.scrollHeight;
+  const popWidth = popRect.width > 0 ? popRect.width : popover.offsetWidth;
+
+  let top = triggerRect.top - popHeight - gap;
+  top = Math.max(wbRect.top + gap, top);
+  top = Math.min(top, wbRect.bottom - popHeight - gap);
+
+  let left;
+  if (isRTL) {
+    left = triggerRect.right - popWidth;
+    left = Math.max(wbRect.left + gap, left);
+    left = Math.min(left, wbRect.right - popWidth - gap);
+  } else {
+    left = triggerRect.left;
+    left = Math.max(wbRect.left + gap, left);
+    left = Math.min(left, wbRect.right - popWidth - gap);
+  }
+
+  popover.style.setProperty('position', 'fixed', 'important');
+  popover.style.setProperty('top', `${Math.round(top)}px`, 'important');
+  popover.style.setProperty('left', `${Math.round(left)}px`, 'important');
+  popover.style.setProperty('right', 'auto', 'important');
+  popover.style.setProperty('bottom', 'auto', 'important');
+  popover.style.setProperty('transform', 'none', 'important');
+  popover.style.setProperty('margin', '0', 'important');
+  popover.style.setProperty('visibility', 'visible', 'important');
+  popover.style.setProperty('opacity', '1', 'important');
+  popover.style.setProperty('pointer-events', 'auto', 'important');
+  popover.style.setProperty('z-index', '1105', 'important');
+  popover.dataset.skyroomPopoverAnchored = 'true';
+};
+/* eslint-enable no-param-reassign */
+
+const useSkyroomToolbarPopoverAnchor = (enabled) => {
+  React.useEffect(() => {
+    if (!enabled) return undefined;
+
+    let lastToolbarButton = null;
+
+    const onToolbarClick = (event) => {
+      const root = findWhiteboardRoot();
+      if (!root) return;
+      const btn = event.target?.closest?.('button[data-testid^="tools."]');
+      if (btn && root.contains(btn)) {
+        lastToolbarButton = btn;
+      }
+    };
+
+    const repositionAll = () => {
+      const root = findWhiteboardRoot();
+      if (!root) return;
+
+      const openPopovers = findOpenToolbarPopovers();
+      if (openPopovers.length === 0) {
+        cleanupSkyroomWbPopoverPortal();
+        return;
+      }
+
+      openPopovers.forEach((popover) => {
+        let trigger = resolveSkyroomToolbarPopoverTrigger(root, popover);
+        if (!trigger && lastToolbarButton && root.contains(lastToolbarButton)) {
+          trigger = lastToolbarButton;
+        }
+        repositionSkyroomToolbarPopover(root, popover, trigger);
+      });
+    };
+
+    const schedule = () => {
+      requestAnimationFrame(() => {
+        repositionAll();
+        requestAnimationFrame(repositionAll);
+      });
+    };
+
+    const observer = new MutationObserver(schedule);
+    const root = findWhiteboardRoot();
+    if (root) {
+      root.addEventListener('click', onToolbarClick, true);
+      observer.observe(root, {
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['data-state', 'aria-expanded', 'style', 'class'],
+        childList: true,
+      });
+    }
+    observer.observe(document.body, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-state', 'aria-expanded', 'style', 'class'],
+      childList: true,
+    });
+
+    window.addEventListener('resize', schedule);
+    window.addEventListener('scroll', schedule, true);
+
+    schedule();
+
+    return () => {
+      root?.removeEventListener('click', onToolbarClick, true);
+      observer.disconnect();
+      window.removeEventListener('resize', schedule);
+      window.removeEventListener('scroll', schedule, true);
+      cleanupSkyroomWbPopoverPortal();
+    };
+  }, [enabled]);
+};
+
+const useSkyroomMoreToolsPopoverFlip = useSkyroomToolbarPopoverAnchor;
+
 export {
   useMouseEvents,
   useCursor,
+  useSkyroomToolbarPopoverAnchor,
+  useSkyroomMoreToolsPopoverFlip,
 };

@@ -127,6 +127,7 @@ const PresentationContainer = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
+  overflow: hidden;
 `;
 
 const Presentation = styled.div`
@@ -204,9 +205,13 @@ const ExtraTools = styled.div`
   right: auto;
   z-index: 399;
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
   gap: 5px;
-  height: 35px;
+  height: auto;
 
+  /* Undo/redo stays on the physical left in RTL meetings. */
   [dir="rtl"] & {
     left: 10px;
     right: auto;

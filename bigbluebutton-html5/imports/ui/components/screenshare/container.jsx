@@ -205,6 +205,7 @@ const ScreenshareContainer = (props) => {
           isPresenter,
           streamId,
           shouldShowScreenshare,
+          isCameraAsContent: isCameraAsContentBroadcasting,
         }
         }
       />

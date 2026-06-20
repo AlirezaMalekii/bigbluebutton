@@ -1153,9 +1153,15 @@ textarea::placeholder {
 #fsmodal header {
   padding: 1rem 30px !important;
   border-bottom: 1px solid var(--skyroom-border) !important;
-  background: rgba(255, 255, 255, 0.045) !important;
+  background: #0c121e !important;
   gap: 16px;
   flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+#fsmodal header [class*="Actions"] {
+  gap: 12px !important;
+  justify-content: flex-end !important;
 }
 
 #fsmodal header h1 {
@@ -1164,10 +1170,13 @@ textarea::placeholder {
   font-weight: 700 !important;
 }
 
-#fsmodal > div:last-of-type,
-#fsmodal [class*="Content"] {
-  flex: 1;
-  overflow: auto;
+#fsmodal > header + div:not([hidden]),
+#fsmodal [data-test="fullscreenModalBody"] {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 1rem 30px !important;
   color: var(--skyroom-text-primary) !important;
   box-sizing: border-box;

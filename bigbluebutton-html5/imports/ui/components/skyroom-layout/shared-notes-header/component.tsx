@@ -40,7 +40,7 @@ const SkyroomSharedNotesHeader: React.FC<SkyroomSharedNotesHeaderProps> = ({
         </Styled.TitleButton>
       </Styled.SmallTitle>
       {padId ? (
-        <Styled.OptionsGroup>
+        <Styled.OptionsGroup data-test="sharedNotesHeaderOptions">
           <NotesDropdown
             padId={padId}
             isEtherpadSharedNotes={Boolean(isEtherpadSharedNotes)}

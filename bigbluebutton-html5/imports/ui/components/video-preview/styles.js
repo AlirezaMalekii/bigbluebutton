@@ -53,6 +53,10 @@ const Col = styled.div`
     overflow: visible;
     margin: 0;
   }
+
+  @media ${smallOnly} {
+    gap: 8px;
+  }
 `;
 
 const BgnCol = styled.div`
@@ -77,7 +81,8 @@ const InternCol = styled.div`
   margin: 0 0.5rem 0 0.5rem;
 
   @media ${smallOnly} {
-    width: 90%;
+    width: 100%;
+    margin: 0;
   }
 `;
 
@@ -88,6 +93,8 @@ const ContentCol = styled.div`
 
   @media ${smallOnly} {
     width: 100%;
+    min-height: 0;
+    flex: 1 1 auto;
   }
 `;
 
@@ -106,7 +113,11 @@ const VideoCol = styled(Col)`
   }
 
   @media ${smallOnly} {
-    max-width: 100%;
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    align-items: stretch;
   }
 `;
 
@@ -118,6 +129,11 @@ const Label = styled.label`
   letter-spacing: 0.02em;
   text-transform: uppercase;
   color: rgba(170, 182, 199, 0.95);
+
+  @media ${smallOnly} {
+    font-size: 0.7rem;
+    margin: 0 0 3px;
+  }
 `;
 
 const Select = styled.select`
@@ -134,6 +150,11 @@ const Select = styled.select`
     box-shadow: 0 0 0 3px rgba(13, 136, 126, 0.22);
     border-color: rgba(20, 169, 158, 0.5);
   }
+
+  @media ${smallOnly} {
+    min-height: 34px;
+    padding: 5px 8px;
+  }
 `;
 
 const Content = styled.div`
@@ -146,10 +167,14 @@ const Content = styled.div`
   padding: 4px 0 8px;
 
   @media ${smallOnly} {
-    flex-wrap: wrap;
     flex-direction: column;
     margin: 0;
-    gap: 16px;
+    gap: 8px;
+    padding: 0;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 `;
 
@@ -165,6 +190,11 @@ const BrowserWarning = styled.p`
 const Footer = styled.div`
   display: flex;
   flex-direction: column;
+
+  @media ${smallOnly} {
+    flex-shrink: 0;
+    padding-top: 6px;
+  }
 `;
 
 const FooterContainer = styled.div`
@@ -172,9 +202,10 @@ const FooterContainer = styled.div`
   align-items: center;
   justify-content: ${({ showStopAllButton }) => (showStopAllButton ? 'flex-start' : 'flex-end')};
 
+  /* Phone: keep the actions on ONE row (stacking them made the modal scroll). */
   @media ${smallOnly} {
-    display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    gap: 8px;
   }
 `;
 
@@ -184,7 +215,6 @@ const Actions = styled.div`
 
   [dir="rtl"] & {
     margin-right: auto;
-    background:red;
     margin-left: ${borderSizeLarge};
   }
 
@@ -227,11 +257,22 @@ const VideoPreviewModal = styled(ModalSimple)`
   max-width: 720px !important;
 
   @media ${smallOnly} {
-    height: unset;
-    min-height: 22.5rem;
+    height: auto;
+    min-height: 0;
+    max-height: min(88dvh, 520px);
     width: 100% !important;
     max-width: 100% !important;
+    padding: 0.65rem 0.85rem 0.75rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
+
+  ${({ $cameraAsContent }) => $cameraAsContent && `
+    @media ${smallOnly} {
+      max-height: min(86dvh, 480px);
+    }
+  `}
 
   ${({ isPhone }) => isPhone && `
     min-height: 100%;
@@ -290,7 +331,8 @@ const VideoPreview = styled.video`
   border-radius: 14px;
 
   @media ${smallOnly} {
-    height: 10rem;
+    height: 100%;
+    min-height: 0;
   }
 
   ${({ mirroredVideo }) => mirroredVideo && `
@@ -311,7 +353,12 @@ const VideoPreviewFrame = styled.div`
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
   @media ${smallOnly} {
-    max-width: 100%;
+    max-width: none;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    max-height: min(30dvh, 200px);
+    margin: 0;
+    border-radius: 12px;
   }
 `;
 
@@ -339,6 +386,15 @@ const MarkerDynamicWrapper = styled.div`
 
 const Container = styled.div`
   padding: 0 calc(${mdPaddingX} / 2 + ${borderSize});
+
+  @media ${smallOnly} {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
 `;
 
 const Header = styled.div`
@@ -346,6 +402,24 @@ const Header = styled.div`
   padding: 0;
   border: none;
   line-height: ${titlePositionLeft};
+
+  @media ${smallOnly} {
+    margin: 0 0 0.5rem;
+    flex-shrink: 0;
+  }
+`;
+
+const CameraAsContentTitle = styled.h2`
+  margin: 0;
+  padding: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #eef4fb;
+
+  @media ${smallOnly} {
+    font-size: 0.88rem;
+  }
 `;
 
 const WebcamTabs = styled(Tabs)`
@@ -364,6 +438,12 @@ const WebcamTabList = styled(TabList)`
   border: 1px solid rgba(218, 230, 245, 0.08);
   border-radius: 14px;
   box-sizing: border-box;
+
+  @media ${smallOnly} {
+    gap: 4px;
+    padding: 3px;
+    border-radius: 10px;
+  }
 `;
 
 const WebcamTabSelector = styled(Tab)`
@@ -395,6 +475,30 @@ const WebcamTabSelector = styled(Tab)`
     outline: 2px solid rgba(20, 169, 158, 0.65);
     outline-offset: 2px;
   }
+
+  span {
+    line-height: 1.2;
+  }
+
+  @media ${smallOnly} {
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    padding: 5px 4px;
+    font-size: 0.62rem;
+    gap: 3px;
+    border-radius: 8px;
+    line-height: 1.15;
+
+    span {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: break-word;
+      max-width: 100%;
+    }
+  }
 `;
 
 const HeaderSeparator = styled.div`
@@ -408,6 +512,10 @@ const BottomSeparator = styled.div`
   background: rgba(218, 230, 245, 0.1);
   margin-top: 1rem;
   margin-bottom: 1rem;
+
+  @media ${smallOnly} {
+    display: none;
+  }
 `;
 
 const IconSvg = styled.img`
@@ -417,6 +525,11 @@ const IconSvg = styled.img`
   margin: 0;
   flex-shrink: 0;
   opacity: 0.9;
+
+  @media ${smallOnly} {
+    height: 0.85rem;
+    width: 0.85rem;
+  }
 
   ${({ darkThemeState }) => darkThemeState && css`
     filter: brightness(0) invert(1);
@@ -431,11 +544,27 @@ const IconSvg = styled.img`
 const SharingButton = styled(Button)`
   margin: 0 0.5rem;
   height: 2.5rem;
+
+  @media ${smallOnly} {
+    flex: 1 1 0;
+    margin: 0;
+    height: 2.125rem;
+    min-height: 36px;
+    font-size: 0.82rem;
+  }
 `;
 
 const CancelButton = styled(Button)`
   margin: 0 0.5rem;
   height: 2.5rem;
+
+  @media ${smallOnly} {
+    flex: 1 1 0;
+    margin: 0;
+    height: 2.125rem;
+    min-height: 36px;
+    font-size: 0.82rem;
+  }
 `;
 
 const StopAllButton = styled(Button)`
@@ -453,6 +582,7 @@ export default {
   InternCol,
   Container,
   Header,
+  CameraAsContentTitle,
   WebcamTabs,
   WebcamTabList,
   WebcamTabSelector,

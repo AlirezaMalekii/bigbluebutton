@@ -38,7 +38,10 @@ import {
   subscribeSkyroomWebcamZones,
   SKYROOM_WEBCAM_ZONES,
 } from '/imports/ui/components/skyroom-layout/webcam-zone-store';
-import Auth from '/imports/ui/services/auth';
+import {
+  isSkyroomColumnLayout,
+  isSkyroomMobileViewport,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const intlMessages = defineMessages({
   autoplayBlockedDesc: {
@@ -433,13 +436,44 @@ class VideoList extends Component<VideoListProps, VideoListState> {
 
     const gridGutter = parseInt(window.getComputedStyle(this.grid)
       .getPropertyValue('grid-row-gap'), 10);
-    const optimalGrid = VideoList.computeOptimalGrid(
+    let optimalGrid = VideoList.computeOptimalGrid(
       visibleStreams,
       cameraDock?.width,
       cameraDock?.height,
       gridGutter,
       focusedId,
     );
+
+    if (
+      isSkyroomColumnLayout()
+      && isSkyroomMobileViewport()
+      && cameraDock?.width > 0
+      && cameraDock?.height > 0
+      && visibleStreams.length > 0
+    ) {
+      if (visibleStreams.length === 1) {
+        optimalGrid = {
+          columns: 1,
+          rows: 1,
+          width: cameraDock.width,
+          height: cameraDock.height,
+          filledArea: cameraDock.width * cameraDock.height,
+        };
+      } else {
+        const mobileColumns = Math.min(2, visibleStreams.length);
+        const mobileGrid = findOptimalGrid(
+          cameraDock.width,
+          cameraDock.height,
+          gridGutter,
+          ASPECT_RATIO,
+          visibleStreams.length,
+          mobileColumns,
+        );
+        if (mobileGrid.filledArea > 0) {
+          optimalGrid = mobileGrid;
+        }
+      }
+    }
 
     if (!optimalGrid) return;
 
@@ -618,7 +652,6 @@ class VideoList extends Component<VideoListProps, VideoListState> {
           streamKey={getSkyroomStreamKey(item)}
           sourceZone={sourceZone}
           enabled={enableSkyroomZoneDrag}
-          isOwnStream={item.userId === Auth.userID}
         >
           {tile}
         </SkyroomWebcamZoneDrag>
@@ -803,6 +836,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
 
     const { optimalGrid, autoplayBlocked } = this.state;
     const { position } = cameraDock;
+    const fillMobileDock = isSkyroomColumnLayout() && isSkyroomMobileViewport();
 
     return (
       <Styled.VideoCanvas
@@ -811,7 +845,9 @@ class VideoList extends Component<VideoListProps, VideoListState> {
           this.canvas = ref;
         }}
         style={{
-          minHeight: 'inherit',
+          minHeight: fillMobileDock ? 0 : undefined,
+          alignItems: fillMobileDock ? 'stretch' : undefined,
+          justifyContent: fillMobileDock ? 'stretch' : undefined,
         }}
       >
         {this.renderPreviousPageButton()}
@@ -822,8 +858,8 @@ class VideoList extends Component<VideoListProps, VideoListState> {
               this.grid = ref;
             }}
             style={{
-              width: `${optimalGrid.width}px`,
-              height: `${optimalGrid.height}px`,
+              width: fillMobileDock ? '100%' : `${optimalGrid.width}px`,
+              height: fillMobileDock ? '100%' : `${optimalGrid.height}px`,
               gridTemplateColumns: `repeat(${optimalGrid.columns}, 1fr)`,
               gridTemplateRows: `repeat(${optimalGrid.rows}, 1fr)`,
             }}

@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { defineMessages } from 'react-intl';
@@ -420,6 +421,7 @@ class ActionsDropdown extends PureComponent {
       <>
         <BBBMenu
           customStyles={!isMobile ? customStyles : null}
+          overrideMobileStyles
           accessKey={OPEN_ACTIONS_AK}
           trigger={(
             <Styled.HideDropdownButton
@@ -438,11 +440,16 @@ class ActionsDropdown extends PureComponent {
           actions={children}
           opts={{
             id: 'actions-dropdown-menu',
+            className: 'skyroom-actions-menu',
             keepMounted: true,
             transitionDuration: 0,
-            elevation: 3,
+            elevation: 8,
             getcontentanchorel: null,
             fullwidth: 'true',
+            disableScrollLock: true,
+            BackdropProps: {
+              invisible: true,
+            },
             anchorOrigin: { vertical: 'top', horizontal: isRTL ? 'right' : 'left' },
             transformOrigin: { vertical: 'bottom', horizontal: isRTL ? 'right' : 'left' },
           }}
@@ -522,7 +529,7 @@ class ActionsDropdown extends PureComponent {
                 }}
                 title={intl.formatMessage(intlMessages.pollPaneTitle)}
               >
-                <Styled.PollModalBody>
+                <Styled.PollModalBody data-test="pollModalBody">
                   <PollContainer
                     isEmbeddedInModal
                     onRequestClose={() => {

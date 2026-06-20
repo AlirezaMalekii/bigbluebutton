@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React from 'react';
 import { injectIntl } from 'react-intl';
 import PropTypes from 'prop-types';
@@ -444,15 +445,17 @@ class ScreenshareComponent extends React.Component {
   }
 
   renderVideo(switched) {
-    const { isGloballyBroadcasting } = this.props;
+    const { isGloballyBroadcasting, isCameraAsContent } = this.props;
     const { videoTagRef } = this.state;
+
+    const useFullSize = switched || (deviceInfo.isMobile && isCameraAsContent);
 
     return (
       <Styled.ScreenshareVideo
         id={SCREENSHARE_MEDIA_ELEMENT_NAME}
         key={SCREENSHARE_MEDIA_ELEMENT_NAME}
         unhealthyStream={!isGloballyBroadcasting}
-        style={switched
+        style={useFullSize
           ? { maxHeight: '100%', width: '100%', height: '100%' }
           : { maxHeight: '25%', width: '25%', height: '25%' }}
         playsInline
@@ -602,6 +605,7 @@ class ScreenshareComponent extends React.Component {
       zIndex,
       fullscreenContext,
       shouldShowScreenshare,
+      isCameraAsContent,
     } = this.props;
 
     // Conditions to render the connecting animation
@@ -622,6 +626,7 @@ class ScreenshareComponent extends React.Component {
       <div
         data-test="screenshareArea"
         data-skyroom-stage-media={isSkyroomStage ? 'true' : undefined}
+        data-camera-as-content={isCameraAsContent ? 'true' : undefined}
         style={
           {
             position: 'absolute',

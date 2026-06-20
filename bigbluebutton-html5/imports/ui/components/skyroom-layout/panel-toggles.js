@@ -1,4 +1,5 @@
 import { ACTIONS, PANELS } from '/imports/ui/components/layout/enums';
+import { isMobile as layoutIsMobile } from '/imports/ui/components/layout/utils';
 import { SKYROOM_COLUMN_ATTR } from './column-layout';
 import {
   clearSkyroomNotesLocalDismiss,
@@ -11,6 +12,11 @@ import {
   setSkyroomNotesLocallyOpen,
 } from './notes-panel-state';
 import { broadcastSkyroomNotesGlobalOpen } from './notes-panel-sync/useSkyroomNotesPanelSync';
+import { setSkyroomMobileActiveBox } from './mobile-bottom-state';
+
+/** Phone breakpoint — matches layout/utils.js isMobile (clientWidth <= 599). */
+export const isSkyroomMobileViewport = () => typeof window !== 'undefined'
+  && layoutIsMobile();
 
 export const isSkyroomColumnLayout = () => {
   const layoutEl = document.getElementById('layout');
@@ -66,7 +72,65 @@ export const restoreSkyroomSplitLayout = (layoutContextDispatch) => {
   openSkyroomPublicChat(layoutContextDispatch);
 };
 
+/* ---------------------------------------------------------------------------
+   Mobile bottom zone — exactly one box at a time {webcams|chat|users|notes}.
+   Used by the bottom tab bar and by the navbar toggles when on a phone.
+   --------------------------------------------------------------------------- */
+const closeSkyroomUsers = (dispatch) => {
+  dispatch({ type: ACTIONS.SET_SIDEBAR_NAVIGATION_IS_OPEN, value: false });
+  dispatch({ type: ACTIONS.SET_SIDEBAR_NAVIGATION_PANEL, value: PANELS.NONE });
+};
+
+const closeSkyroomChat = (dispatch) => {
+  dispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN, value: false });
+  dispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL, value: PANELS.NONE });
+  dispatch({ type: ACTIONS.SET_ID_CHAT_OPEN, value: '' });
+};
+
+const closeSkyroomNotes = () => {
+  if (getSkyroomNotesGlobalOpen()) {
+    if (!getSkyroomNotesLocallyDismissed()) dismissSkyroomNotesLocally();
+  } else {
+    setSkyroomNotesLocallyOpen(false);
+  }
+};
+
+const openSkyroomNotes = () => {
+  if (getSkyroomNotesGlobalOpen()) {
+    if (getSkyroomNotesLocallyDismissed()) clearSkyroomNotesLocalDismiss();
+  } else {
+    setSkyroomNotesLocallyOpen(true);
+  }
+};
+
+/** Show one box in the mobile bottom zone; `null` closes everything. */
+export const openSkyroomMobileBox = (layoutContextDispatch, box) => {
+  // Explicit single source of truth — set first so the resolver/tab bar reflect the
+  // choice immediately, before the per-panel state settles.
+  setSkyroomMobileActiveBox(box);
+
+  if (box !== 'users') closeSkyroomUsers(layoutContextDispatch);
+  if (box !== 'chat') closeSkyroomChat(layoutContextDispatch);
+  if (box !== 'notes') closeSkyroomNotes();
+
+  if (box === 'users') openSkyroomUserList(layoutContextDispatch);
+  else if (box === 'chat') openSkyroomPublicChat(layoutContextDispatch);
+  else if (box === 'notes') openSkyroomNotes();
+
+  // The layout engine gates each panel's OUTPUT display on the BBB sidebar isOpen
+  // flags, which update asynchronously. The synchronous recompute fires too early
+  // (before React applies the open dispatch), so force one more recompute on the next
+  // frame — this is what makes the FIRST tab tap reliably reveal the new box.
+  if (typeof window !== 'undefined') {
+    window.requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+  }
+};
+
 export const toggleSkyroomUserList = (layoutContextDispatch, sidebarNavigation) => {
+  if (isSkyroomMobileViewport()) {
+    openSkyroomMobileBox(layoutContextDispatch, sidebarNavigation.isOpen ? null : 'users');
+    return;
+  }
   if (sidebarNavigation.isOpen) {
     layoutContextDispatch({
       type: ACTIONS.SET_SIDEBAR_NAVIGATION_IS_OPEN,
@@ -123,6 +187,10 @@ export const dismissSkyroomSharedNotes = () => {
 };
 
 export const toggleSkyroomPublicChat = (layoutContextDispatch, sidebarContent) => {
+  if (isSkyroomMobileViewport()) {
+    openSkyroomMobileBox(layoutContextDispatch, isPublicChatOpen(sidebarContent) ? null : 'chat');
+    return;
+  }
   if (isPublicChatOpen(sidebarContent)) {
     layoutContextDispatch({
       type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,

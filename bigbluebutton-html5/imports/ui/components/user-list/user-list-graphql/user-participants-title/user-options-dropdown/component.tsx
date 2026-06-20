@@ -388,6 +388,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
     <Styled.OptionsGroup data-test="user-management-options">
       <BBBMenu
         dataTest="user-options-dropdown-menu"
+        overrideMobileStyles
         trigger={(
           <Styled.OptionsButton
             label={intl.formatMessage(intlMessages.optionsLabel)}
@@ -404,6 +405,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         customStyles={{ zIndex: 1005 }}
         opts={{
           id: 'user-options-dropdown-menu',
+          className: 'skyroom-user-options-menu',
           keepMounted: true,
           transitionDuration: 0,
           elevation: 8,

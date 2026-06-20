@@ -1213,7 +1213,7 @@ class VideoPreview extends Component {
         {tabNumber === 0 && (
           <Styled.Col>
             {this.renderDeviceSelectors()}
-            {isVirtualBackgroundSupported() && this.renderBrightnessInput()}
+            {!cameraAsContent && isVirtualBackgroundSupported() && this.renderBrightnessInput()}
           </Styled.Col>
         )}
         {tabNumber === 1 && shouldShowVirtualBackgrounds && (
@@ -1438,17 +1438,26 @@ class VideoPreview extends Component {
         shouldShowCloseButton={allowCloseModal}
         shouldCloseOnOverlayClick={allowCloseModal}
         isPhone={deviceInfo.isPhone}
+        $cameraAsContent={cameraAsContent}
         data-test="webcamSettingsModal"
+        data-camera-as-content={cameraAsContent ? 'true' : undefined}
         {...{
           isOpen,
           priority,
         }}
       >
         <Styled.Container>
-    <Styled.Header>
-      <Styled.WebcamTabs
-        onSelect={this.handleSelectTab}
-        selectedIndex={selectedTab}
+          {cameraAsContent ? (
+            <Styled.Header>
+              <Styled.CameraAsContentTitle id="camera-as-content-title">
+                {this.getModalTitle()}
+              </Styled.CameraAsContentTitle>
+            </Styled.Header>
+          ) : (
+            <Styled.Header>
+              <Styled.WebcamTabs
+                onSelect={this.handleSelectTab}
+                selectedIndex={selectedTab}
               >
                 <Styled.WebcamTabList>
                   <Styled.WebcamTabSelector selectedClassName="is-selected">
@@ -1456,7 +1465,7 @@ class VideoPreview extends Component {
                       src={WebcamSettingsImg}
                       darkThemeState={darkThemeState}
                     />
-                    <span 
+                    <span
                       id="webcam-settings-title">{this.getModalTitle()}
                     </span>
                   </Styled.WebcamTabSelector>
@@ -1470,17 +1479,17 @@ class VideoPreview extends Component {
                     </Styled.WebcamTabSelector>
                   )}
                 </Styled.WebcamTabList>
-                
               </Styled.WebcamTabs>
             </Styled.Header>
+          )}
 
-            {deviceInfo.hasMediaDevices
-                ? this.renderModalContent(selectedTab)
-                : this.supportWarning()
-              }
+          {deviceInfo.hasMediaDevices
+            ? this.renderModalContent(selectedTab)
+            : this.supportWarning()
+          }
 
-          </Styled.Container>
-        </Styled.VideoPreviewModal>
+        </Styled.Container>
+      </Styled.VideoPreviewModal>
     );
   }
 }

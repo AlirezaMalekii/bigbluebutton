@@ -12,6 +12,7 @@ import UserTitleContainer from '../user-list-graphql/user-participants-title/com
 import SkyroomUserSearch from '../../skyroom-layout/user-search/component';
 import RaisedHandsContainer from './raised-hands/component';
 import GenericSidekickContentNavButtonContainer from './generic-sidekick-content-button/container';
+import { isSkyroomColumnLayout } from '../../skyroom-layout/panel-toggles';
 import deviceInfo from '/imports/utils/deviceInfo';
 
 const { isMobile, isPortrait } = deviceInfo;
@@ -45,9 +46,14 @@ class UserContent extends PureComponent {
 
     const ROLE_MODERATOR = window.meetingClientSettings.public.user.role_moderator;
 
+    // Skyroom drives its own mobile bottom-zone layout (one box at a time), so use the
+    // clean column structure even on phones — not the stock crammed mobile scroll list.
+    const useMobileScrollList = (isMobile || (isMobile && isPortrait))
+      && !isSkyroomColumnLayout();
+
     return (
       <Styled.Content data-test="userListContent">
-        {isMobile || (isMobile && isPortrait) ? (
+        {useMobileScrollList ? (
           <Styled.ScrollableList role="tabpanel" tabIndex={0}>
             <Styled.List>
               <ChatList />

@@ -3,7 +3,6 @@ import {
   borderSize,
   borderRadius,
   smPaddingY,
-  mdPaddingX,
 } from '/imports/ui/stylesheets/styled-components/general';
 import {
   colorText,
@@ -13,6 +12,7 @@ import {
   colorPrimary,
 } from '/imports/ui/stylesheets/styled-components/palette';
 import { fontSizeSmall } from '/imports/ui/stylesheets/styled-components/typography';
+import { smallOnly } from '/imports/ui/stylesheets/styled-components/breakpoints';
 import ModalSimple from '/imports/ui/components/common/modal/simple/component';
 import Button from '/imports/ui/components/common/button/component';
 
@@ -32,16 +32,24 @@ const UrlError = styled.div<urlProps>`
 const ExternalVideoModal = styled(ModalSimple)`
   padding: 1rem;
   min-height: 23rem;
+
+  @media ${smallOnly} {
+    min-height: 0;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+  }
 `;
 
 const Content = styled.div`
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  gap: 12px;
   padding: 0;
-  margin-right: auto;
-  margin-left: auto;
+  margin: 0;
   width: 100%;
+  box-sizing: border-box;
 `;
 
 const VideoUrl = styled.div<urlProps>`
@@ -84,12 +92,15 @@ const ExternalVideoNote = styled.div`
   font-size: ${fontSizeSmall};
   font-style: italic;
   padding-top: ${smPaddingY};
+  line-height: 1.45;
 `;
 
 // @ts-ignore - Button is JSX element
 const StartButton = styled(Button)`
   display: flex;
-  align-self: center;
+  align-self: stretch;
+  width: 100%;
+  margin: 4px 0 0;
 
   &:focus {
     outline: none !important;
@@ -99,10 +110,10 @@ const StartButton = styled(Button)`
     color: #3c5764;
   }
 
-  margin: 0;
-  display: block;
-  position: absolute;
-  bottom: ${mdPaddingX};
+  @media ${smallOnly} {
+    min-height: 44px;
+    margin-top: 8px;
+  }
 `;
 
 export default {
