@@ -5,7 +5,7 @@
 
 export const SKYROOM_MOBILE_TALKING_RAIL_GAP = 1;
 /** Fallback until the rail mounts and reports its measured height. */
-export const SKYROOM_MOBILE_TALKING_RAIL_FALLBACK = 32;
+export const SKYROOM_MOBILE_TALKING_RAIL_FALLBACK = 28;
 
 export const SKYROOM_MOBILE_TALKING_RAIL_EVENT = 'skyroom-mobile-talking-rail';
 

@@ -1,10 +1,72 @@
 import styled from 'styled-components';
 
+const Group = styled.div`
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 6px;
+  margin-inline-end: 2px;
+`;
+
+const PlatformWrap = styled.div`
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+`;
+
+const PlatformLink = styled.a`
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 42px;
+  max-width: min(240px, 38vw);
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-sizing: border-box;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.18s ease;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:active {
+    opacity: 1;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--skyroom-accent, #20c7bb);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+`;
+
+const platformLogoSizing = `
+  display: block;
+  flex: 0 0 auto;
+  height: 42px;
+  width: auto;
+  max-width: min(172px, 38vw);
+  aspect-ratio: 1832 / 448;
+  object-fit: contain;
+  object-position: left center;
+  user-select: none;
+  -webkit-user-drag: none;
+`;
+
+const PlatformLogoObject = styled.object`
+  ${platformLogoSizing}
+  pointer-events: none;
+`;
+
 const Wrap = styled.div`
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-  margin-inline-end: 2px;
+  padding-inline-start: 6px;
+  border-inline-start: 1px solid rgba(218, 230, 245, 0.12);
 `;
 
 const Plate = styled.span`
@@ -76,6 +138,10 @@ const LogoImage = styled.img`
 `;
 
 export default {
+  Group,
+  PlatformWrap,
+  PlatformLink,
+  PlatformLogoObject,
   Wrap,
   Plate,
   Link,

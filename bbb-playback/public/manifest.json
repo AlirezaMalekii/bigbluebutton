@@ -1,0 +1,15 @@
+{
+  "short_name": "سیف میت",
+  "name": "سیف میت — پخش ضبط جلسه",
+  "icons": [
+    {
+      "src": "safemeet-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#070B14",
+  "background_color": "#070B14"
+}

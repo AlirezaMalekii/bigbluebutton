@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import { isDarkThemeEnabled } from '/imports/ui/components/app/service';
-import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import Styled from './styles';
 
 const intlMessages = defineMessages({
@@ -35,8 +34,6 @@ const SkyroomHeaderLogo: React.FC = () => {
     customDarkLogoUrl: m.customDarkLogoUrl,
     loginUrl: m.loginUrl,
   }));
-
-  if (!isSkyroomColumnLayout()) return null;
 
   const customLogoUrl = meeting?.customLogoUrl?.trim() ?? '';
   const customDarkLogoUrl = meeting?.customDarkLogoUrl?.trim() ?? '';

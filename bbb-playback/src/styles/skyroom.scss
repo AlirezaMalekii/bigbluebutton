@@ -1,0 +1,35 @@
+@import 'src/styles/sizes';
+
+html[data-skyroom='true'] {
+  color-scheme: dark;
+}
+
+.video-js .vjs-volume-level,
+.video-js .vjs-play-progress {
+  background-color: var(--skyroom-brand-400) !important;
+}
+
+.video-js .vjs-control-bar {
+  background: linear-gradient(180deg, transparent, rgba(7, 11, 20, 0.92));
+}
+
+.top-bar {
+  border-bottom: 1px solid rgba(218, 230, 245, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.32);
+}
+
+.application,
+.chat-wrapper,
+.notes-wrapper {
+  border-inline-start: 1px solid rgba(20, 169, 158, 0.14);
+}
+
+.message-wrapper .message {
+  border-radius: 8px;
+}
+
+.tl-container {
+  .tl-background {
+    background-color: var(--skyroom-surface-3) !important;
+  }
+}

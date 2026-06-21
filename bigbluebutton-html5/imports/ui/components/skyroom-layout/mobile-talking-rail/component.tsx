@@ -71,8 +71,7 @@ const SkyroomMobileTalkingRail: React.FC = () => {
     if (!rail) return undefined;
 
     const apply = () => {
-      const { height } = rail.getBoundingClientRect();
-      setSkyroomMobileTalkingRailMeasuredHeight(Math.ceil(height));
+      setSkyroomMobileTalkingRailMeasuredHeight(28);
     };
 
     apply();

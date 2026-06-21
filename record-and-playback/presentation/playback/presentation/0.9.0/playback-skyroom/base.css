@@ -1,0 +1,154 @@
+/* Skyroom playback skin — shared overrides for legacy HTML players */
+
+@import url('tokens.css');
+@import url('iranyekan.css');
+
+html[data-skyroom="true"],
+html.skyroom-playback {
+  color-scheme: dark;
+}
+
+html[data-skyroom="true"],
+html.skyroom-playback,
+body.skyroom-playback {
+  background-color: var(--playback-body-bg);
+  color: var(--skyroom-text-primary);
+}
+
+/* Header / footer chrome (video, screenshare, slides) */
+body.skyroom-playback header,
+html[data-skyroom="true"] header {
+  background: var(--playback-header-bg);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+body.skyroom-playback header > h1,
+html[data-skyroom="true"] header > h1 {
+  color: var(--skyroom-text-primary);
+}
+
+body.skyroom-playback footer,
+html[data-skyroom="true"] footer,
+#footer,
+#copyright {
+  background: var(--playback-footer-bg) !important;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--skyroom-text-secondary) !important;
+}
+
+body.skyroom-playback footer a,
+html[data-skyroom="true"] footer a,
+#footer a,
+#copyright a {
+  color: var(--playback-accent-bright);
+}
+
+/* Main areas */
+body.skyroom-playback #main-area,
+html[data-skyroom="true"] #main-area {
+  background: var(--playback-body-bg);
+}
+
+body.skyroom-playback #chat-area,
+html[data-skyroom="true"] #chat-area {
+  background: var(--playback-panel-bg);
+  border-color: var(--border-subtle) !important;
+}
+
+body.skyroom-playback #chat,
+html[data-skyroom="true"] #chat {
+  background: var(--playback-panel-bg);
+  color: var(--skyroom-text-secondary);
+  border-color: var(--playback-panel-bg) !important;
+}
+
+body.skyroom-playback .chat-header,
+html[data-skyroom="true"] .chat-header {
+  color: var(--skyroom-text-primary);
+}
+
+body.skyroom-playback .chat-text,
+html[data-skyroom="true"] .chat-text {
+  background-color: var(--skyroom-bubble-bg);
+  color: var(--skyroom-bubble-text);
+  border: 1px solid var(--skyroom-bubble-border);
+  border-radius: var(--radius-sm);
+}
+
+body.skyroom-playback .chat-reply::after,
+html[data-skyroom="true"] .chat-reply::after {
+  background-color: var(--playback-accent);
+}
+
+body.skyroom-playback .chat-reaction,
+html[data-skyroom="true"] .chat-reaction {
+  background-color: var(--skyroom-surface-4);
+  color: var(--skyroom-text-primary);
+}
+
+/* Video.js */
+body.skyroom-playback .video-js,
+html[data-skyroom="true"] .video-js {
+  background-color: #050811;
+}
+
+body.skyroom-playback .video-js .vjs-volume-level,
+body.skyroom-playback .video-js .vjs-play-progress,
+html[data-skyroom="true"] .video-js .vjs-volume-level,
+html[data-skyroom="true"] .video-js .vjs-play-progress {
+  background-color: var(--playback-accent-bright);
+}
+
+body.skyroom-playback .video-js .vjs-control-bar,
+html[data-skyroom="true"] .video-js .vjs-control-bar {
+  background: linear-gradient(180deg, transparent, rgba(7, 11, 20, 0.92));
+}
+
+/* Legacy presentation players */
+html[data-skyroom="true"] #navbar,
+html[data-skyroom="true"] #playback-content {
+  background: var(--playback-body-bg);
+  color: var(--skyroom-text-primary);
+}
+
+html[data-skyroom="true"] #recording-title {
+  color: var(--skyroom-text-primary);
+}
+
+html[data-skyroom="true"] #side-section,
+html[data-skyroom="true"] .left-off-canvas-menu,
+html[data-skyroom="true"] #chat-area {
+  background: var(--playback-panel-bg);
+}
+
+html[data-skyroom="true"] #main-section {
+  background: var(--playback-body-bg);
+}
+
+/* Legacy presentation players — SafeMeet logo placeholder */
+html[data-skyroom="true"] #slide,
+html[data-skyroom="true"] #loading-error {
+  background-image: url('playback-skyroom/logo.svg') !important;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+html[data-skyroom="true"] .acorn-player.bigbluebutton .acorn-seek-bar span,
+html[data-skyroom="true"] .acorn-player.darkglass .acorn-seek-bar span {
+  background: var(--playback-accent-bright) !important;
+}
+
+html[data-skyroom="true"] .acorn-player.bigbluebutton,
+html[data-skyroom="true"] .acorn-player.darkglass {
+  background: var(--skyroom-surface-3) !important;
+}
+
+/* Slides-only player */
+html[data-skyroom="true"] body {
+  background: var(--playback-body-bg);
+}
+
+html[data-skyroom="true"] #playbackArea {
+  background: var(--playback-body-bg);
+}

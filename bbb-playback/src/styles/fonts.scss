@@ -1,0 +1,32 @@
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(./assets/fonts/iranyekan/woff/iranyekanwebregularfanum.woff) format('woff');
+}
+
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(./assets/fonts/iranyekan/woff/iranyekanwebmediumfanum.woff) format('woff');
+}
+
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(./assets/fonts/iranyekan/woff/iranyekanwebboldfanum.woff) format('woff');
+}
+
+:root {
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-semi-bold: 600;
+  --font-weight-bold: 700;
+
+  --font-family: 'IRANYekan', Tahoma, system-ui, sans-serif;
+}

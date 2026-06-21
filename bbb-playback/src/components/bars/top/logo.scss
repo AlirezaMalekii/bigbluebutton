@@ -1,0 +1,16 @@
+.platform-logo {
+  align-items: center;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 100%;
+  margin-inline-end: 8px;
+  text-decoration: none;
+}
+
+.platform-logo-image {
+  display: block;
+  height: 28px;
+  max-width: 120px;
+  object-fit: contain;
+  width: auto;
+}

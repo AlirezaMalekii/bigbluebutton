@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="dark" data-skyroom="true">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/safemeet-logo.svg" type="image/svg+xml" />
+    <link href="%PUBLIC_URL%/styles/video-js.min.css" rel="stylesheet" />
+    <link href="%PUBLIC_URL%/styles/videojs-seek-buttons.css" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#070B14" />
+    <meta
+      name="description"
+      content="پخش ضبط جلسه — سیف میت"
+    />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>سیف میت — پخش ضبط</title>
+    <script>
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.setAttribute('data-skyroom', 'true');
+      document.documentElement.setAttribute('dir', 'rtl');
+      document.documentElement.setAttribute('lang', 'fa');
+      document.addEventListener('DOMContentLoaded', function () {
+        if (document.body) document.body.classList.add('lang-fa');
+      });
+    </script>
+  </head>
+  <body class="lang-fa skyroom-playback">
+    <noscript>برای پخش ضبط جلسه باید جاوااسکریپت را فعال کنید.</noscript>
+    <div id="root"></div>
+  </body>
+</html>

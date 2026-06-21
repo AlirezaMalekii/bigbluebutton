@@ -1,0 +1,64 @@
+/* IRANYekan for Skyroom playback players */
+
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 100;
+  font-display: swap;
+  src: url('fonts/iranyekan/woff/iranyekanwebthinfanum.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('fonts/iranyekan/woff/iranyekanweblightfanum.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/iranyekan/woff/iranyekanwebregularfanum.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('fonts/iranyekan/woff/iranyekanwebmediumfanum.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('fonts/iranyekan/woff/iranyekanwebboldfanum.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('fonts/iranyekan/woff/iranyekanwebextraboldfanum.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('fonts/iranyekan/woff/iranyekanwebextrablackfanum.woff') format('woff');
+}
+
+html[lang="fa"],
+html[dir="rtl"],
+body.lang-fa,
+body.skyroom-playback {
+  font-family: 'IRANYekan', Tahoma, system-ui, sans-serif;
+}

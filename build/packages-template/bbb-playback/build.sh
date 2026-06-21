@@ -23,9 +23,8 @@ BBB_PLAYBACK=$BBB_PLAYBACK_BASE/$BBB_PLAYBACK_VERSION
 if ! which sponge ; then
     apt-get -y install moreutils
 fi
-jq '.styles.url = "/playback/presentation/2.3"' src/config.json | sponge src/config.json
 
-export REACT_APP_BBB_PLAYBACK_BUILD=$(git rev-parse --short HEAD)
+export REACT_APP_BBB_PLAYBACK_BUILD=$(git rev-parse --short HEAD 2>/dev/null || echo skyroom)
 
 npm install
 npm run-script build
@@ -47,6 +46,6 @@ cp playback.nginx staging/usr/share/bigbluebutton/nginx
 fpm -s dir -C ./staging -n $PACKAGE \
     --version $VERSION --epoch $EPOCH \
     --after-install after-install.sh \
-    --description "Player for BigBlueButton presentation format recordings" \
+    --description "SafeMeet / Skyroom player for presentation format recordings" \
     $DIRECTORIES \
     $OPTS

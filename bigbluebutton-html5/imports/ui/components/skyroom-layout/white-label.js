@@ -1,6 +1,8 @@
 /** Product name shown instead of BigBlueButton in the meeting UI. */
 export const SKYROOM_PRODUCT_NAME = 'سیف میت';
 export const SKYROOM_PRODUCT_NAME_EN = 'SafeMeet';
+export const SKYROOM_PLATFORM_URL = 'https://safemeet.ir';
+export const SKYROOM_PLATFORM_LOGO_PATH = '/resources/images/skyroom/SafeMeet.ir.svg';
 
 const BBB_TEXT_REPLACEMENTS = [
   [/BigBlueButton\s*Inc\.?/gi, ''],

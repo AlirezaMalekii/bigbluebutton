@@ -1,0 +1,37 @@
+/* Skyroom playback design tokens (subset of bigbluebutton-html5 skyroom tokens) */
+
+:root,
+:root[data-theme="dark"] {
+  --skyroom-brand-500: #0d887e;
+  --skyroom-brand-600: #0a6f67;
+  --skyroom-brand-400: #14a99e;
+  --skyroom-brand-300: #3fc2b8;
+
+  --skyroom-surface: #070b14;
+  --skyroom-surface-2: #0f1520;
+  --skyroom-surface-3: #141c28;
+  --skyroom-surface-4: #1a2436;
+
+  --skyroom-text-primary: #e6edf7;
+  --skyroom-text-secondary: #b5c0ce;
+  --skyroom-text-muted: #8b95a5;
+
+  --border-subtle: rgba(218, 230, 245, 0.08);
+  --border-emphasis: rgba(20, 169, 158, 0.14);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-panel: var(--radius-lg);
+
+  --skyroom-bubble-bg: var(--skyroom-surface-4);
+  --skyroom-bubble-text: var(--skyroom-text-primary);
+  --skyroom-bubble-border: var(--border-subtle);
+
+  --playback-header-bg: var(--skyroom-surface-2);
+  --playback-footer-bg: var(--skyroom-surface-2);
+  --playback-body-bg: var(--skyroom-surface);
+  --playback-panel-bg: var(--skyroom-surface-3);
+  --playback-accent: var(--skyroom-brand-500);
+  --playback-accent-bright: var(--skyroom-brand-400);
+}

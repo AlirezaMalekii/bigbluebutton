@@ -1305,6 +1305,8 @@
     "app.video.dropZoneLabel": "Drop here",
     "app.skyroom.headerLogo.alt": "Meeting logo",
     "app.skyroom.headerLogo.linkAria": "Open meeting website",
+    "app.skyroom.platformLogo.alt": "SafeMeet platform logo",
+    "app.skyroom.platformLogo.linkAria": "Open SafeMeet website",
     "app.skyroom.webcamZone.sidebar": "Above users",
     "app.skyroom.webcamZone.stage": "Top of page",
     "app.skyroom.webcamZone.center": "Central section",

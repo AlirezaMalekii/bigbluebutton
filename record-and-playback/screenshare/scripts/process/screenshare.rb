@@ -211,6 +211,8 @@ logger.info "Copying css and js support files"
 FileUtils.cp_r("#{playback_dir}/css", process_dir)
 FileUtils.cp_r("#{playback_dir}/js", process_dir)
 FileUtils.cp_r("#{playback_dir}/video-js", process_dir)
+skyroom_assets = "#{playback_dir}/playback-skyroom"
+FileUtils.cp_r(skyroom_assets, process_dir) if File.directory?(skyroom_assets)
 
 logger.info "Processing successfully completed, writing done file"
 

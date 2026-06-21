@@ -12,7 +12,10 @@ WITH_GRAPHQL="${WITH_GRAPHQL:-0}"
 WITH_SHARED_NOTES="${WITH_SHARED_NOTES:-1}"
 WITH_RECORDING="${WITH_RECORDING:-1}"
 SKIP_AKKA_FSESL="${SKIP_AKKA_FSESL:-0}"
+DEPLOY_MODE="${DEPLOY_MODE:-full}"
+DEPLOY_COMPONENTS="${DEPLOY_COMPONENTS:-}"
 ONLY=""
+NEEDS_NPM_INSTALL="${NEEDS_NPM_INSTALL:-0}"
 
 log() {
   printf '\n[%s] %s\n' "$(date '+%H:%M:%S')" "$*"
@@ -23,7 +26,9 @@ usage() {
 Usage: deploy-remote.sh [--only NAME]
 
   --only html5 | web | libs | akka | fsesl | graphql | middleware | actions |
-        dashboard | export | notes | recording | imex
+        dashboard | export | notes | playback | recording | imex
+
+Smart mode (from ./deploy.sh): DEPLOY_MODE=smart DEPLOY_COMPONENTS="html5 playback"
 EOF
 }
 
@@ -55,7 +60,6 @@ run_deploy() {
   (cd "$BBB_ROOT/$dir" && bash ./deploy.sh)
 }
 
-# Akka reads meeting settings from html5-client on disk (not from dist/ alone).
 deploy_html5() {
   run_deploy bigbluebutton-html5
   local settings="${BBB_ROOT}/bigbluebutton-html5/private/config/settings.yml"
@@ -100,6 +104,26 @@ deploy_akka_fsesl() {
   log "bbb-fsesl-akka updated"
 }
 
+deploy_bbb_playback() {
+  if [[ ! -f "$BBB_ROOT/bbb-playback/deploy.sh" ]]; then
+    log "SKIP bbb-playback (deploy.sh missing)"
+    return 0
+  fi
+  log "Deploying bbb-playback (presentation 2.3 player) ..."
+  (
+    cd "$BBB_ROOT/bbb-playback"
+    if [[ "$NEEDS_NPM_INSTALL" == "1" ]] || [[ ! -d node_modules ]]; then
+      npm install
+    fi
+    bash ./deploy.sh
+  )
+}
+
+deploy_playback() {
+  run_deploy record-and-playback
+  deploy_bbb_playback
+}
+
 ensure_toolchain() {
   if command -v sbt >/dev/null && command -v go >/dev/null; then
     return 0
@@ -118,18 +142,65 @@ ensure_toolchain() {
   fi
 }
 
+needs_heavy_toolchain() {
+  local comp
+  for comp in "$@"; do
+    case "$comp" in
+      libs|web|akka|fsesl|graphql|middleware|actions|dashboard|export|notes|imex)
+        return 0
+        ;;
+    esac
+  done
+  return 1
+}
+
 preflight() {
   log "Preflight in $BBB_ROOT"
   command -v java >/dev/null || { echo "java not found"; exit 1; }
   command -v npm >/dev/null || { echo "npm not found"; exit 1; }
   [[ -d "$BBB_ROOT" ]] || { echo "BBB_ROOT missing: $BBB_ROOT"; exit 1; }
-  # HTML5-only deploy does not need sbt/go on the server
-  if [[ "$ONLY" == "html5" ]]; then
+
+  local light_only=0
+  if [[ -n "$ONLY" ]]; then
+    case "$ONLY" in
+      html5|playback|recording) light_only=1 ;;
+    esac
+  elif [[ "$DEPLOY_MODE" == "smart" && -n "$DEPLOY_COMPONENTS" ]]; then
+    if ! needs_heavy_toolchain $DEPLOY_COMPONENTS; then
+      light_only=1
+    fi
+  fi
+
+  if [[ "$light_only" == "1" ]]; then
     return 0
   fi
+
   ensure_toolchain
   command -v sbt >/dev/null || { echo "sbt still not available after prerequisites"; exit 1; }
   command -v go >/dev/null || { echo "go still not available after prerequisites"; exit 1; }
+}
+
+deploy_component() {
+  local name="$1"
+  case "$name" in
+    libs) deploy_libs ;;
+    web) deploy_web ;;
+    akka) run_deploy akka-bbb-apps ;;
+    fsesl) run_deploy bbb-fsesl-client; deploy_akka_fsesl ;;
+    graphql) run_deploy bbb-graphql-server ;;
+    middleware) run_deploy bbb-graphql-middleware ;;
+    actions) run_deploy bbb-graphql-actions ;;
+    html5) deploy_html5 ;;
+    dashboard) run_deploy bbb-learning-dashboard ;;
+    export) run_deploy bbb-export-annotations ;;
+    notes) run_deploy bbb-shared-notes-server ;;
+    playback|recording) deploy_playback ;;
+    imex) run_deploy bbb-recording-imex ;;
+    *)
+      log "Unknown component: $name"
+      return 1
+      ;;
+  esac
 }
 
 deploy_only() {
@@ -139,7 +210,6 @@ deploy_only() {
     akka) deploy_libs; run_deploy akka-bbb-apps ;;
     fsesl) run_deploy bbb-fsesl-client; deploy_akka_fsesl ;;
     graphql)
-      WITH_GRAPHQL=1
       run_deploy bbb-graphql-server
       ;;
     middleware) run_deploy bbb-graphql-middleware ;;
@@ -148,7 +218,7 @@ deploy_only() {
     dashboard) run_deploy bbb-learning-dashboard ;;
     export) run_deploy bbb-export-annotations ;;
     notes) run_deploy bbb-shared-notes-server ;;
-    recording) run_deploy record-and-playback ;;
+    playback|recording) deploy_playback ;;
     imex) run_deploy bbb-recording-imex ;;
     *)
       echo "Unknown --only: $ONLY"
@@ -156,6 +226,28 @@ deploy_only() {
       exit 2
       ;;
   esac
+}
+
+deploy_selected() {
+  local comp
+  for comp in $DEPLOY_COMPONENTS; do
+    if [[ "$comp" == "graphql" && "$WITH_GRAPHQL" != "1" ]]; then
+      log "SKIP graphql (pass --with-graphql from laptop)"
+      continue
+    fi
+    if [[ "$comp" == "notes" && "$WITH_SHARED_NOTES" != "1" ]]; then
+      log "SKIP notes (--no-shared-notes)"
+      continue
+    fi
+    if [[ "$comp" == "playback" || "$comp" == "imex" ]]; then
+      if [[ "$WITH_RECORDING" != "1" ]]; then
+        log "SKIP $comp (--no-recording)"
+        continue
+      fi
+    fi
+    log "=== Component: $comp ==="
+    deploy_component "$comp"
+  done
 }
 
 deploy_full() {
@@ -193,8 +285,8 @@ deploy_full() {
   fi
 
   if [[ "$WITH_RECORDING" == "1" ]]; then
-    log "=== Phase 8: recording ==="
-    run_deploy record-and-playback
+    log "=== Phase 8: playback & recording ==="
+    deploy_playback
     run_deploy bbb-recording-imex
   fi
 
@@ -209,6 +301,9 @@ main() {
   cd "$BBB_ROOT"
   if [[ -n "$ONLY" ]]; then
     deploy_only
+  elif [[ "$DEPLOY_MODE" == "smart" && -n "$DEPLOY_COMPONENTS" ]]; then
+    log "Smart deploy — components: $DEPLOY_COMPONENTS"
+    deploy_selected
   else
     deploy_full
   fi

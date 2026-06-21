@@ -1319,6 +1319,8 @@
     "app.video.dropZoneLabel": "اینجا رها کنید",
     "app.skyroom.headerLogo.alt": "لوگوی جلسه",
     "app.skyroom.headerLogo.linkAria": "باز کردن وب‌سایت جلسه",
+    "app.skyroom.platformLogo.alt": "لوگوی پلتفرم سیف‌میت",
+    "app.skyroom.platformLogo.linkAria": "باز کردن وب‌سایت سیف‌میت",
     "app.skyroom.webcamZone.sidebar": "بالای کاربران",
     "app.skyroom.webcamZone.stage": "بالای صفحه",
     "app.skyroom.webcamZone.center": "بخش مرکزی",

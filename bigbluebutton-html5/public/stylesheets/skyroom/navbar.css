@@ -324,10 +324,54 @@
   font-size: 0.9rem !important;
 }
 
-/* Custom meeting logo — glass chip beside connection status */
+/* Header logos — platform (fixed) + organization (per meeting) */
+#layout[data-skyroom-column="true"] #Navbar [data-test="skyroomHeaderLogos"] {
+  flex: 0 0 auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin: 0 !important;
+}
+
+#layout[data-skyroom-column="true"] #Navbar [data-test="skyroomPlatformLogo"] {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+}
+
+#layout[data-skyroom-column="true"] #Navbar [data-test="skyroomPlatformLogo"] a {
+  height: 42px !important;
+  max-width: min(240px, 38vw) !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#layout[data-skyroom-column="true"] #Navbar [data-test="skyroomPlatformLogo"] object {
+  height: 42px !important;
+  width: auto !important;
+  min-width: 120px !important;
+  max-width: min(172px, 38vw) !important;
+  aspect-ratio: 1832 / 448 !important;
+  object-fit: contain !important;
+  object-position: left center !important;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.28)) !important;
+  pointer-events: none !important;
+}
+
+#layout[data-skyroom-column="true"] #Navbar [data-test="skyroomPlatformLogo"] a:hover {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  opacity: 0.9 !important;
+}
+
 #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomHeaderLogo"] {
   flex: 0 0 auto !important;
   margin: 0 !important;
+  padding-inline-start: 6px !important;
+  border-inline-start: 1px solid rgba(218, 230, 245, 0.12) !important;
 }
 
 #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomHeaderLogo"] a,

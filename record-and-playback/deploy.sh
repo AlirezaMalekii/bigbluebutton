@@ -19,6 +19,9 @@
 
 set -xe
 
+# Keep shared Skyroom playback assets in sync with legacy player templates.
+"$(dirname "$0")/sync-playback-skyroom.sh"
+
 sudo cp core/Gemfile /usr/local/bigbluebutton/core/Gemfile
 sudo rm -rf /usr/local/bigbluebutton/core/lib
 sudo cp -r core/lib /usr/local/bigbluebutton/core/

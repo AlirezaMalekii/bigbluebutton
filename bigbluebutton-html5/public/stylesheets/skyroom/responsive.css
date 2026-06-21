@@ -86,8 +86,8 @@
     gap: 0 4px !important;
   }
 
-  /* Decorative logo — drop on phone to free horizontal space */
-  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomHeaderLogo"] {
+  /* Decorative logos — drop on phone to free horizontal space */
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomHeaderLogos"] {
     display: none !important;
   }
 
@@ -96,7 +96,7 @@
     display: none !important;
   }
 
-  /* Active-speaker rail — between navbar and poll/timer status rail. */
+  /* Active-speaker rail — fixed single-line height, horizontal scroll when crowded. */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-talking-rail {
     position: fixed;
     z-index: 51;
@@ -108,7 +108,9 @@
     flex-wrap: nowrap;
     align-items: center;
     justify-content: flex-start;
-    min-height: 1.75rem;
+    height: 1.75rem !important;
+    min-height: 1.75rem !important;
+    max-height: 1.75rem !important;
     pointer-events: auto;
     overflow: hidden;
   }
@@ -123,9 +125,18 @@
     flex: 1 1 auto;
     min-width: 0;
     width: 100%;
+    height: 100% !important;
+    max-height: 1.75rem !important;
     display: flex;
     align-items: center;
-    overflow: hidden;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-talking-rail [data-test="skyroom-talking-rail"]::-webkit-scrollbar {
+    display: none !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-talking-rail [class*="IsTalkingWrapper"],
@@ -134,14 +145,18 @@
     min-width: 0;
     max-width: none;
     width: 100%;
-    margin: 0 !important;
+    height: 1.75rem !important;
+    min-height: 1.75rem !important;
     max-height: 1.75rem !important;
+    margin: 0 !important;
     display: flex !important;
     align-items: center !important;
     overflow: hidden !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-talking-rail [class*="Speaking"] {
+    height: 1.65rem !important;
+    min-height: 1.65rem !important;
     max-height: 1.65rem !important;
     align-items: center !important;
     flex-wrap: nowrap !important;
@@ -151,6 +166,7 @@
     gap: 4px !important;
     padding-inline: 2px !important;
     width: 100% !important;
+    -webkit-overflow-scrolling: touch;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-talking-rail [class*="Speaking"]::-webkit-scrollbar {
@@ -593,51 +609,105 @@
 
   /* The tldraw floating toolbar uses the shared --skyroom-wb-toolbar-gap (4px). */
 
-  /* tldraw popovers on phone — portaled above toolbar via useSkyroomToolbarPopoverAnchor */
-  #skyroom-wb-popover-portal [role="dialog"],
-  #skyroom-wb-popover-portal .tlui-popover__content,
-  #skyroom-wb-popover-portal .tlui-menu {
+  /* Let fixed-position toolbar popovers escape the presentation clip on phone. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationInnerWrapper,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout {
+    overflow: visible !important;
+  }
+
+  /*
+   * TLDraw canvas must not steal taps from the bottom toolbar on phone.
+   * The passive-listener warnings come from canvas touch handlers when hits
+   * land on the canvas layer instead of toolbar buttons.
+   */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tl-canvas,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tl-overlays {
+    z-index: 1 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__bottom,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-style-panel__wrapper {
+    z-index: 1002 !important;
     pointer-events: auto !important;
-    left: auto !important;
-    right: auto !important;
+    touch-action: manipulation !important;
   }
 
-  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content,
-  #layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-style-panel),
-  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) {
-    left: auto !important;
-    right: auto !important;
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__bottom .tlui-toolbar,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__bottom button,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element button[data-testid="mobile.styles"] {
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
   }
 
-  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content,
-  #layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-style-panel),
-  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) {
-    max-width: 92vw !important;
-    max-height: 60vh !important;
+  /* TLDraw/Radix popovers — native side=top placement above bottom toolbar. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tl-container {
+    overflow: visible !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element [role="dialog"][data-state="open"]:has(.tlui-style-panel),
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content[data-state="open"]:has(.tlui-style-panel),
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu[data-state="open"]:has(.tlui-buttons__grid),
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu[data-skyroom-more-menu-anchored="true"] {
+    z-index: 1105 !important;
+    max-width: min(13.5rem, 78vw) !important;
+    max-height: 34vh !important;
     overflow: auto !important;
-    padding: 4px !important;
+    padding: 3px !important;
+    background: rgba(10, 18, 30, 0.98) !important;
+    border: 1px solid rgba(32, 199, 187, 0.22) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.42) !important;
+    color: #e8edf4 !important;
   }
 
-  /* Shrink the buttons/icons inside those popovers so the boxes are compact on phone. */
-  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content .tlui-button,
-  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-button,
-  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content .tlui-button-grid__button,
-  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-button-grid__button {
-    width: 30px !important;
-    height: 30px !important;
-    min-width: 30px !important;
-    min-height: 30px !important;
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-style-panel {
+    gap: 3px !important;
+    padding: 2px !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-style-panel label,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-style-panel span:not([class*="color"]) {
+    font-size: 0.58rem !important;
+    line-height: 1.1 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content .tlui-button,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-button,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content .tlui-button-grid__button,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-button-grid__button {
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    min-height: 22px !important;
     padding: 0 !important;
   }
 
-  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content .tlui-icon,
-  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-icon {
-    width: 15px !important;
-    height: 15px !important;
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content .tlui-icon,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-icon {
+    width: 11px !important;
+    height: 11px !important;
   }
 
-  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-buttons__grid {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-buttons__grid,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button-grid {
     gap: 2px !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-style-panel input[type="range"] {
+    width: 100% !important;
+    max-width: 7.5rem !important;
+    height: 0.3rem !important;
+  }
+
+  html[data-skyroom="true"]:has(.ReactModal__Overlay--after-open) #layout[data-skyroom-mobile="true"] #whiteboard-element [role="dialog"][data-state="open"]:has(.tlui-style-panel),
+  html[data-skyroom="true"]:has(.ReactModal__Overlay--after-open) #layout[data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content[data-state="open"]:has(.tlui-style-panel),
+  html[data-skyroom="true"]:has(.ReactModal__Overlay--after-open) #layout[data-skyroom-mobile="true"] #whiteboard-element .tlui-menu[data-state="open"]:has(.tlui-buttons__grid),
+  html[data-skyroom="true"]:has(.fullscreenModalOverlay) #layout[data-skyroom-mobile="true"] #whiteboard-element [role="dialog"][data-state="open"]:has(.tlui-style-panel),
+  html[data-skyroom="true"]:has(.fullscreenModalOverlay) #layout[data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content[data-state="open"]:has(.tlui-style-panel),
+  html[data-skyroom="true"]:has(.fullscreenModalOverlay) #layout[data-skyroom-mobile="true"] #whiteboard-element .tlui-menu[data-state="open"]:has(.tlui-buttons__grid) {
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
 
   /* ===================================================================
@@ -1389,12 +1459,18 @@
   }
 
   /* ===================================================================
-     10) Whiteboard corner buttons on mobile (C3)
-     Smaller top-left undo/redo + top-right action chips — still
-     tap-able without dominating the compact phone stage.
+     10) Whiteboard corner buttons + bottom toolbar on mobile (C3)
+     Compact top chrome on phone; bottom toolbar stays touch-friendly.
      =================================================================== */
-  #layout[data-skyroom-column="true"] {
-    --skyroom-wb-btn-size: 30px;
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] {
+    --skyroom-wb-btn-size: 26px;
+    --skyroom-wb-scale: clamp(0.68, calc(var(--skyroom-stage-width-num, 820) / 820), 1);
+    --skyroom-wb-popover-scale: calc(0.76 * var(--skyroom-wb-scale, 1));
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__inner {
+    transform: scale(calc(0.92 * var(--skyroom-wb-scale, 1))) !important;
+    transform-origin: bottom center !important;
   }
 
   /* Top-left: undo/redo — physical left in RTL too. */
@@ -1435,11 +1511,11 @@
   #layout[data-skyroom-column="true"] #WhiteboardOptionButton .skyroom-wb-action-btn,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #WhiteboardOptionButton .skyroom-wb-action-btn,
   #layout[data-skyroom-column="true"] #WhiteboardOptionButton button {
-    width: 30px !important;
-    height: 30px !important;
-    min-width: 30px !important;
-    min-height: 30px !important;
-    border-radius: 10px !important;
+    width: var(--skyroom-wb-btn-size, 26px) !important;
+    height: var(--skyroom-wb-btn-size, 26px) !important;
+    min-width: var(--skyroom-wb-btn-size, 26px) !important;
+    min-height: var(--skyroom-wb-btn-size, 26px) !important;
+    border-radius: calc(8px * var(--skyroom-wb-scale, 1)) !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28) !important;
   }
 
@@ -1449,9 +1525,9 @@
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #WhiteboardOptionButton .skyroom-wb-action-btn svg,
   #layout[data-skyroom-column="true"] #WhiteboardOptionButton button i,
   #layout[data-skyroom-column="true"] #WhiteboardOptionButton button svg {
-    font-size: 0.78rem !important;
-    width: 13px !important;
-    height: 13px !important;
+    font-size: calc(0.58rem * var(--skyroom-wb-scale, 1)) !important;
+    width: calc(12px * var(--skyroom-wb-scale, 1)) !important;
+    height: calc(12px * var(--skyroom-wb-scale, 1)) !important;
   }
 
   #layout[data-skyroom-column="true"] [class*="ExtraTools"] > [class*="Button"],
@@ -1460,19 +1536,19 @@
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="ExtraTools"] > [class*="Button"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="ExtraTools"] button,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="ExtraTools"] .skyroom-wb-action-btn {
-    width: 30px !important;
-    height: 30px !important;
-    min-width: 30px !important;
-    min-height: 30px !important;
+    width: var(--skyroom-wb-btn-size, 26px) !important;
+    height: var(--skyroom-wb-btn-size, 26px) !important;
+    min-width: var(--skyroom-wb-btn-size, 26px) !important;
+    min-height: var(--skyroom-wb-btn-size, 26px) !important;
     padding: 0 !important;
-    border-radius: 10px !important;
+    border-radius: calc(8px * var(--skyroom-wb-scale, 1)) !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28) !important;
   }
 
   #layout[data-skyroom-column="true"] [class*="ExtraTools"] .tlui-icon,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="ExtraTools"] .tlui-icon {
-    width: 13px !important;
-    height: 13px !important;
+    width: calc(12px * var(--skyroom-wb-scale, 1)) !important;
+    height: calc(12px * var(--skyroom-wb-scale, 1)) !important;
   }
 
   /* Mobile zone expand — stage: bottom-left for non-presenters; panel: in header row. */
@@ -1569,11 +1645,10 @@
     display: none !important;
   }
 
-  /* Style/color popovers stay above corner buttons without burying them under the canvas. */
-  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel__wrapper,
-  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content:has(.tlui-style-panel),
-  #layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-style-panel),
-  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) {
+  /* Open toolbar popovers sit above canvas and corner chrome. */
+  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content[data-state="open"],
+  #layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"][data-state="open"],
+  #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu[data-state="open"] {
     z-index: 1105 !important;
   }
 

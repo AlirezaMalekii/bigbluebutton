@@ -67,7 +67,6 @@ const TldrawV2GlobalStyle = createGlobalStyle`
   ${({ isSkyroom }) => isSkyroom && `
     .tlui-popover__content {
       left: auto !important;
-      right: auto !important;
     }
 
     .tlui-style-panel__wrapper {
@@ -208,6 +207,8 @@ const TldrawV2GlobalStyle = createGlobalStyle`
       width: max-content !important;
       height: auto !important;
       margin: 0 !important;
+      pointer-events: auto !important;
+      touch-action: manipulation !important;
     }
 
     .tlui-button__tool {
@@ -237,20 +238,11 @@ const TldrawV2GlobalStyle = createGlobalStyle`
       opacity: 1 !important;
     }
 
-    .tlui-popover__content:has(.tlui-style-panel),
-    .tlui-popover__content:has(.tlui-buttons__grid) {
-      transform: none !important;
-    }
-
-    [data-side="top"][role="dialog"]:has(.tlui-style-panel),
-    [data-side="bottom"][role="dialog"]:has(.tlui-style-panel) {
-      transform: none !important;
-    }
-
-    /* Toolbar popovers — position is set in useSkyroomToolbarPopoverAnchor. */
-    [data-side="bottom"][data-state="open"][role="dialog"]:has(.tlui-buttons__grid),
-    [data-side="bottom"][data-state="open"].tlui-popover__content:has(.tlui-buttons__grid) {
-      transform: none !important;
+    /* TLDraw/Radix positions toolbar popovers (side=top) — do not override transform. */
+    #whiteboard-element .tlui-popover__content[data-state="open"],
+    #whiteboard-element .tlui-menu[data-state="open"],
+    #whiteboard-element [role="dialog"][data-state="open"] {
+      z-index: 1105 !important;
     }
   ` : `
     .tlui-toolbar__inner {

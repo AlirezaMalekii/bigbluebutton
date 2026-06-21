@@ -36,7 +36,7 @@ import {
   usePrevious,
   getDifferences,
 } from './utils';
-import { useMouseEvents, useCursor, useSkyroomMoreToolsPopoverFlip } from './hooks';
+import { useMouseEvents, useCursor, useSkyroomMoreMenuAnchor } from './hooks';
 import {
   notifyShapeNumberExceeded, getCustomEditorAssetUrls, getCustomAssetUrls,
   debouncedUpdateShapes, sanitizeShape,
@@ -1991,7 +1991,7 @@ const Whiteboard = React.memo((props) => {
     },
   );
 
-  useSkyroomMoreToolsPopoverFlip(isSkyroomColumnLayout());
+  useSkyroomMoreMenuAnchor(isSkyroomColumnLayout());
 
   React.useEffect(() => {
     const handleArrowPress = (event) => {
