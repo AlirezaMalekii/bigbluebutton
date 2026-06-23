@@ -24,7 +24,7 @@ import { SKYROOM_MOBILE_ZONE_FS_EVENT } from '/imports/ui/components/skyroom-lay
 import { SKYROOM_MOBILE_STATUS_RAIL_EVENT } from '/imports/ui/components/skyroom-layout/mobile-status-rail-state';
 import { SKYROOM_MOBILE_TALKING_RAIL_EVENT } from '/imports/ui/components/skyroom-layout/mobile-talking-rail-state';
 import { SKYROOM_WEBCAM_LAYOUT_EVENT } from '/imports/ui/components/skyroom-layout/webcam-zone-store';
-import { useVideoStreams } from '/imports/ui/components/video-provider/hooks';
+import { useStreams } from '/imports/ui/components/video-provider/hooks';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import {
@@ -72,8 +72,8 @@ const CustomLayout = (props) => {
   const actionbarInput = layoutSelectInput((i) => i.actionBar);
   const navbarInput = layoutSelectInput((i) => i.navBar);
   const layoutContextDispatch = layoutDispatch();
-  const { streams: videoStreams = [] } = useVideoStreams();
-  const videoStreamLayoutKey = videoStreams
+  const layoutVideoStreams = useStreams();
+  const videoStreamLayoutKey = layoutVideoStreams
     .map((s) => `${s.type}:${s.stream ?? s.userId ?? ''}`)
     .join('|');
   const { data: meetingData } = useMeeting((m) => ({
@@ -167,7 +167,7 @@ const CustomLayout = (props) => {
     fontSize,
     fullscreen,
     isPresentationEnabled,
-    videoStreams.length,
+    layoutVideoStreams.length,
     skyroomNotesOpen,
   ]);
 
@@ -183,7 +183,7 @@ const CustomLayout = (props) => {
     return () => window.cancelAnimationFrame(raf);
   }, [
     hasActiveScreenShare,
-    videoStreams.length,
+    layoutVideoStreams.length,
     videoStreamLayoutKey,
     cameraDockInput.numCameras,
     presentationInput.isOpen,
@@ -738,7 +738,7 @@ const CustomLayout = (props) => {
       sidebarContentHeight,
       mediaAreaBounds,
       cameraDockBounds,
-      videoStreams,
+      videoStreams: layoutVideoStreams,
       presentationIsOpen: presentationInput.isOpen,
       hasScreenShare: hasActiveScreenShare,
       numCameras: cameraDockInput.numCameras,

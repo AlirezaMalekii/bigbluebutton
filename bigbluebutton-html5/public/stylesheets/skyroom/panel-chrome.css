@@ -187,15 +187,15 @@
 /* Desktop — compact search row in users / chat panels */
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="skyroomUserSearch"],
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="skyroomChatUserSearch"] {
-  padding: 6px var(--space-3) !important;
+  padding: 4px var(--space-3) !important;
 }
 
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="skyroomUserSearch"] label,
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="skyroomChatUserSearch"] label {
-  min-height: 26px !important;
-  border-radius: 8px !important;
-  padding-inline: 8px !important;
-  gap: 6px !important;
+  min-height: 22px !important;
+  border-radius: 7px !important;
+  padding-inline: 7px !important;
+  gap: 5px !important;
 }
 
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="skyroomUserSearch"] input,
@@ -204,17 +204,17 @@
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="skyroomChatUserSearch"] input:focus,
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="skyroomUserSearch"] input:focus-visible,
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="skyroomChatUserSearch"] input:focus-visible {
-  font-size: 11px !important;
-  line-height: 1.25 !important;
+  font-size: 10px !important;
+  line-height: 1.2 !important;
 }
 
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="skyroomUserSearch"] label svg,
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="skyroomChatUserSearch"] label svg,
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="skyroomUserSearch"] label i,
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="skyroomChatUserSearch"] label i {
-  font-size: 0.72rem !important;
-  width: 0.72rem !important;
-  height: 0.72rem !important;
+  font-size: 0.65rem !important;
+  width: 0.65rem !important;
+  height: 0.65rem !important;
   flex-shrink: 0 !important;
 }
 
@@ -249,6 +249,10 @@
 .MuiModal-root:has(.skyroom-actions-menu) .MuiPaper-root.override-mobile-styles,
 .MuiModal-root:has(.skyroom-audio-settings-menu) .override-mobile-styles,
 .MuiModal-root:has(.skyroom-audio-settings-menu) .MuiPaper-root.override-mobile-styles,
+.MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiBackdrop-root {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+}
+
 .MuiModal-root:has(.skyroom-webcam-actions-menu) .override-mobile-styles,
 .MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiPaper-root.override-mobile-styles {
   position: absolute !important;

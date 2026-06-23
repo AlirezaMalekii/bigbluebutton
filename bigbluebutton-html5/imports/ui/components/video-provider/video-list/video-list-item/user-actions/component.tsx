@@ -134,24 +134,41 @@ const UserActions: React.FC<UserActionProps> = (props) => {
   const pinEnabledForCurrentUser = useIsVideoPinEnabledForCurrentUser(amIModerator);
   const useSkyroomMobileMenu = isSkyroomColumnLayout() && isSkyroomMobileViewport();
 
-  const getMenuOpts = () => ({
-    id: `webcam-${stream.userId}-dropdown-menu`,
-    className: useSkyroomMobileMenu ? 'skyroom-webcam-actions-menu' : undefined,
-    keepMounted: true,
-    transitionDuration: 0,
-    elevation: useSkyroomMobileMenu ? 8 : 3,
-    getcontentanchorel: null,
-    fullwidth: useSkyroomMobileMenu ? undefined : 'true',
-    disableScrollLock: useSkyroomMobileMenu ? true : undefined,
-    BackdropProps: useSkyroomMobileMenu ? { invisible: true } : undefined,
-    anchorOrigin: useSkyroomMobileMenu
-      ? { vertical: 'top', horizontal: isRTL ? 'right' : 'left' }
-      : { vertical: 'bottom', horizontal: isRTL ? 'right' : 'left' },
-    transformOrigin: useSkyroomMobileMenu
-      ? { vertical: 'bottom', horizontal: isRTL ? 'right' : 'left' }
-      : { vertical: 'top', horizontal: isRTL ? 'right' : 'left' },
-    container: isFullscreenContext ? videoContainer?.current : document.body,
-  });
+  const getMenuOpts = () => {
+    const anchorHorizontal = isRTL ? 'right' : 'left';
+
+    if (!useSkyroomMobileMenu) {
+      return {
+        id: `webcam-${stream.userId}-dropdown-menu`,
+        keepMounted: true,
+        transitionDuration: 0,
+        elevation: 3,
+        getcontentanchorel: null,
+        fullwidth: 'true',
+        anchorOrigin: { vertical: 'bottom', horizontal: anchorHorizontal },
+        transformOrigin: { vertical: 'top', horizontal: anchorHorizontal },
+        container: isFullscreenContext ? videoContainer?.current : document.body,
+      };
+    }
+
+    return {
+      id: `webcam-${stream.userId}-dropdown-menu`,
+      className: 'skyroom-webcam-actions-menu',
+      keepMounted: false,
+      transitionDuration: 0,
+      elevation: 8,
+      getcontentanchorel: null,
+      disableScrollLock: true,
+      disablePortal: true,
+      container: videoContainer?.current ?? undefined,
+      anchorOrigin: { vertical: 'top', horizontal: anchorHorizontal },
+      transformOrigin: { vertical: 'bottom', horizontal: anchorHorizontal },
+      MenuListProps: {
+        autoFocusItem: true,
+        sx: { display: 'block', py: 0.5 },
+      },
+    };
+  };
 
   const isLocalStream = stream.userId === Auth.userID;
   const displayName = isLocalStream
@@ -313,64 +330,68 @@ const UserActions: React.FC<UserActionProps> = (props) => {
   };
 
   const renderDefaultButton = () => (
-    <Styled.MenuWrapper ref={menuTriggerRef} $skyroomMobile={useSkyroomMobileMenu}>
-      {enableVideoMenu && getAvailableActions().length >= 1
-        ? (
-          <BBBMenu
-            overrideMobileStyles={useSkyroomMobileMenu}
-            minContent={useSkyroomMobileMenu}
-            trigger={(
-              <Styled.DropdownTrigger
-                tabIndex={0}
-                data-test="dropdownWebcamButton"
-                data-webcam-participant-name="true"
-                $isRTL={isRTL}
+    <Styled.WebcamMenuHost ref={menuTriggerRef} data-test="skyroomWebcamMenuHost">
+      <Styled.MenuWrapper $skyroomMobile={useSkyroomMobileMenu}>
+        {enableVideoMenu && getAvailableActions().length >= 1
+          ? (
+            <BBBMenu
+              overrideMobileStyles={useSkyroomMobileMenu}
+              minContent={useSkyroomMobileMenu}
+              trigger={(
+                <Styled.DropdownTrigger
+                  tabIndex={0}
+                  data-test="dropdownWebcamButton"
+                  data-webcam-participant-name="true"
+                  $isRTL={isRTL}
+                  $skyroomMobile={useSkyroomMobileMenu}
+                  role="button"
+                >
+                  {displayName}
+                </Styled.DropdownTrigger>
+              )}
+              actions={getAvailableActions()}
+              opts={getMenuOpts()}
+            />
+          )
+          : (
+            <Styled.Dropdown $isFirefox={isFirefox}>
+              <Styled.UserName
+                $noMenu={numOfStreams < 3}
                 $skyroomMobile={useSkyroomMobileMenu}
-                role="button"
+                data-test="webcamParticipantName"
               >
                 {displayName}
-              </Styled.DropdownTrigger>
-            )}
-            actions={getAvailableActions()}
-            opts={getMenuOpts()}
-          />
-        )
-        : (
-          <Styled.Dropdown $isFirefox={isFirefox}>
-            <Styled.UserName
-              $noMenu={numOfStreams < 3}
-              $skyroomMobile={useSkyroomMobileMenu}
-              data-test="webcamParticipantName"
-            >
-              {displayName}
-            </Styled.UserName>
-          </Styled.Dropdown>
-        )}
-    </Styled.MenuWrapper>
+              </Styled.UserName>
+            </Styled.Dropdown>
+          )}
+      </Styled.MenuWrapper>
+    </Styled.WebcamMenuHost>
   );
 
   const renderSqueezedButton = () => (
-    <Styled.MenuWrapperSqueezed ref={menuTriggerRef}>
-      <BBBMenu
-        overrideMobileStyles={useSkyroomMobileMenu}
-        minContent={useSkyroomMobileMenu}
-        trigger={(
-          <Styled.OptionsButton
-            label={intl.formatMessage(intlMessages.squeezedLabel)}
-            aria-label={`${name} ${intl.formatMessage(intlMessages.squeezedLabel)}`}
-            data-test="webcamOptionsMenuSqueezed"
-            icon="device_list_selector"
-            ghost
-            color="primary"
-            hideLabel
-            size="sm"
-            onClick={() => null}
-          />
-        )}
-        actions={getAvailableActions()}
-        opts={getMenuOpts()}
-      />
-    </Styled.MenuWrapperSqueezed>
+    <Styled.WebcamMenuHost ref={menuTriggerRef} data-test="skyroomWebcamMenuHost">
+      <Styled.MenuWrapperSqueezed>
+        <BBBMenu
+          overrideMobileStyles={useSkyroomMobileMenu}
+          minContent={useSkyroomMobileMenu}
+          trigger={(
+            <Styled.OptionsButton
+              label={intl.formatMessage(intlMessages.squeezedLabel)}
+              aria-label={`${name} ${intl.formatMessage(intlMessages.squeezedLabel)}`}
+              data-test="webcamOptionsMenuSqueezed"
+              icon="device_list_selector"
+              ghost
+              color="primary"
+              hideLabel
+              size="sm"
+              onClick={() => null}
+            />
+          )}
+          actions={getAvailableActions()}
+          opts={getMenuOpts()}
+        />
+      </Styled.MenuWrapperSqueezed>
+    </Styled.WebcamMenuHost>
   );
 
   return (

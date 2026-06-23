@@ -49,6 +49,15 @@
   pointer-events: auto !important;
 }
 
+#layout[data-skyroom-column="true"] #ActionsBar [data-test="skyroomFooterLogoSlot"] {
+  position: absolute !important;
+  left: 12px !important;
+  top: 50% !important;
+  bottom: auto !important;
+  transform: translateY(-50%) !important;
+  z-index: 3 !important;
+}
+
 #layout[data-skyroom-column="true"] [data-test="skyroomHeaderLogos"] {
   flex: 0 0 auto !important;
   display: inline-flex !important;
@@ -436,39 +445,41 @@
   }
 }
 
-/* Mobile footer — icon-only platform mark, vertically aligned with 36px toolbar buttons */
-#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="skyroomFooterLogoSlot"] {
-  left: 12px !important;
-  bottom: calc((var(--skyroom-footer-h, 56px) - 36px) / 2) !important;
-}
-
-#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="skyroomHeaderLogos"] {
-  gap: 0 !important;
-}
-
+/* Mobile footer — icon-only platform mark inside the actions bar row */
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="skyroomPlatformLogo"][data-icon-only="true"] a {
   width: 36px !important;
   height: 36px !important;
   max-width: 36px !important;
   min-width: 36px !important;
+  padding: 0 !important;
   overflow: hidden !important;
-  justify-content: flex-start !important;
+  justify-content: center !important;
+  align-items: center !important;
 }
 
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="skyroomPlatformLogo"][data-icon-only="true"] img,
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="skyroomPlatformLogo"][data-icon-only="true"] object {
   height: 36px !important;
-  width: auto !important;
-  min-width: 0 !important;
-  max-width: none !important;
-  aspect-ratio: unset !important;
+  width: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
+  aspect-ratio: 1 / 1 !important;
   object-fit: contain !important;
-  object-position: left center !important;
+  object-position: center !important;
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.28)) !important;
 }
 
-/* Reserve horizontal space so scrollable controls never sit under the logo */
+/* Reserve space so controls never sit under the logo */
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar > div {
   padding-inline-start: calc(12px + 36px + 10px) !important;
   padding-inline-end: 10px !important;
+}
+
+/* Desktop / tablet footer logo stays fixed to viewport bottom chrome */
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="skyroomFooterLogoSlot"] {
+  position: fixed !important;
+  left: 16px !important;
+  bottom: calc((var(--skyroom-footer-h, 56px) - 28px) / 2) !important;
+  top: auto !important;
+  transform: none !important;
 }

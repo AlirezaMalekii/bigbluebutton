@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
@@ -13,12 +14,34 @@ type SkyroomHeaderLogosProps = {
 
 const SkyroomHeaderLogos: React.FC<SkyroomHeaderLogosProps> = ({ placement = 'header' }) => {
   const [isMobile, setIsMobile] = useState(isSkyroomMobileViewport());
+  const [actionsBarEl, setActionsBarEl] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     const onResize = () => setIsMobile(isSkyroomMobileViewport());
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+
+  useEffect(() => {
+    if (placement !== 'footer' || !isMobile) {
+      setActionsBarEl(null);
+      return undefined;
+    }
+
+    const resolveTarget = () => document.getElementById('ActionsBar');
+
+    setActionsBarEl(resolveTarget());
+
+    const observer = new MutationObserver(() => {
+      setActionsBarEl(resolveTarget());
+    });
+    const layout = document.getElementById('layout');
+    if (layout) {
+      observer.observe(layout, { childList: true, subtree: true });
+    }
+
+    return () => observer.disconnect();
+  }, [placement, isMobile]);
 
   if (!isSkyroomColumnLayout()) return null;
 
@@ -32,7 +55,17 @@ const SkyroomHeaderLogos: React.FC<SkyroomHeaderLogosProps> = ({ placement = 'he
   );
 
   if (placement === 'footer') {
-    return <Styled.FooterSlot>{logos}</Styled.FooterSlot>;
+    const slot = (
+      <Styled.FooterSlot data-in-actions-bar={isMobile && actionsBarEl ? 'true' : undefined}>
+        {logos}
+      </Styled.FooterSlot>
+    );
+
+    if (isMobile && actionsBarEl) {
+      return createPortal(slot, actionsBarEl);
+    }
+
+    return slot;
   }
 
   return logos;

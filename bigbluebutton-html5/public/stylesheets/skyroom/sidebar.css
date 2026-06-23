@@ -540,7 +540,92 @@
 
 #layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="UserNameSub"] {
   color: var(--skyroom-panel-text-muted) !important;
-  font-size: 0.7rem !important;
+}
+
+/* Desktop — single-line name + status (mobile / webcam) when camera is on */
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [class*="UserNameContainer"] {
+  display: flex !important;
+  flex-flow: row nowrap !important;
+  align-items: center !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  line-height: 1.1 !important;
+}
+
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [class*="UserName"] {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-width: 58% !important;
+  word-break: normal !important;
+}
+
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [class*="UserName"] > span {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  word-break: normal !important;
+}
+
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [class*="UserNameSub"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  flex: 0 0 auto !important;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  gap: 4px !important;
+  max-width: 42% !important;
+  font-size: 0.58rem !important;
+  line-height: 1 !important;
+  margin-top: 0 !important;
+  color: var(--skyroom-panel-text-muted) !important;
+}
+
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [class*="UserNameSub"] > span {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] .skyroom-user-sub-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] .skyroom-user-sub-sep {
+  display: inline-block !important;
+  flex-shrink: 0 !important;
+  width: 3px !important;
+  height: 3px !important;
+  border-radius: 50% !important;
+  background: rgba(198, 208, 220, 0.5) !important;
+  margin-inline: 3px !important;
+  vertical-align: middle !important;
+}
+
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [class*="UserNameSub"] i,
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [class*="UserNameSub"] [class^="icon-bbb-"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [class*="UserNameSub"] svg {
+  font-size: 0.6rem !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [class*="UserItemContents"] {
+  min-height: 22px !important;
+  max-height: 24px !important;
+  overflow: hidden !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="UserItem"],

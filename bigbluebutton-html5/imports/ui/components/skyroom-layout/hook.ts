@@ -13,6 +13,7 @@ import {
   isSkyroomMobileViewport,
   openSkyroomMobileBox,
 } from './panel-toggles';
+import { useVideoStreamsCount } from '/imports/ui/components/video-provider/hooks';
 import { subscribeSkyroomNotesOpen } from './notes-panel-state';
 import {
   getSkyroomMobileActiveBox,
@@ -50,7 +51,7 @@ export const useSkyroomColumnLayout = () => {
   const sidebarNavigation = layoutSelectInput((i: Input) => i.sidebarNavigation);
   const sidebarContent = layoutSelectInput((i: Input) => i.sidebarContent);
   const hasScreenShare = layoutSelectInput((i: Input) => i.screenShare.hasScreenShare);
-  const numCameras = layoutSelectInput((i: Input) => i.cameraDock.numCameras);
+  const meetingWebcamCount = useVideoStreamsCount();
   const presentationIsOpen = layoutSelectInput((i: Input) => i.presentation.isOpen);
   const { data: meetingData } = useMeeting((m) => ({
     componentsFlags: m.componentsFlags,
@@ -228,16 +229,16 @@ export const useSkyroomColumnLayout = () => {
   // Phone: when a camera turns on (0 → >0) while something is shared on the stage,
   // auto-select the Webcams bottom box so the user sees it. (With nothing shared the
   // engine already fills the top zone with cameras, so no tab switch is needed.)
-  const prevNumCamerasRef = useRef(numCameras);
+  const prevMeetingWebcamCountRef = useRef(meetingWebcamCount);
   useEffect(() => {
-    const prev = prevNumCamerasRef.current;
-    prevNumCamerasRef.current = numCameras;
+    const prev = prevMeetingWebcamCountRef.current;
+    prevMeetingWebcamCountRef.current = meetingWebcamCount;
     if (!isSkyroomMobileViewport()) return;
     const stageActive = presentationIsOpen || hasActiveScreenShare;
-    if (prev === 0 && numCameras > 0 && stageActive) {
+    if (prev === 0 && meetingWebcamCount > 0 && stageActive) {
       openSkyroomMobileBox(layoutContextDispatch, 'webcams');
     }
-  }, [numCameras, presentationIsOpen, hasActiveScreenShare, layoutContextDispatch]);
+  }, [meetingWebcamCount, presentationIsOpen, hasActiveScreenShare, layoutContextDispatch]);
 
   useEffect(() => {
     const onResize = () => {

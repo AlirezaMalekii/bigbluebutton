@@ -438,7 +438,7 @@
 }
 
 .MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiBackdrop-root {
-  background-color: transparent !important;
+  background-color: rgba(0, 0, 0, 0.2) !important;
 }
 
 .MuiModal-root:has(.skyroom-audio-settings-menu) .MuiBackdrop-root {
@@ -462,7 +462,7 @@
   right: auto !important;
   bottom: auto !important;
   width: auto !important;
-  max-width: min(300px, 92vw) !important;
+  max-width: min(260px, 92vw) !important;
 }
 
 @media (max-width: 899px) {
@@ -488,14 +488,27 @@
   padding: 6px !important;
 }
 
+#layout[data-skyroom-column="true"] .skyroom-webcam-actions-menu .MuiPaper-root {
+  min-width: 168px !important;
+  max-width: min(260px, 92vw) !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(218, 230, 245, 0.12) !important;
+  background:
+    linear-gradient(165deg, rgba(22, 34, 54, 0.98) 0%, rgba(12, 18, 30, 0.99) 100%) !important;
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(32, 199, 187, 0.08) inset !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+}
+
 #layout[data-skyroom-column="true"] #app-settings-dropdown-menu .MuiPaper-root,
 #layout[data-skyroom-column="true"] .skyroom-app-settings-menu .MuiPaper-root,
 #layout[data-skyroom-column="true"] #app-leave-meeting-menu .MuiPaper-root,
 #layout[data-skyroom-column="true"] .skyroom-leave-meeting-menu .MuiPaper-root,
 #layout[data-skyroom-column="true"] #actions-dropdown-menu .MuiPaper-root,
 #layout[data-skyroom-column="true"] .skyroom-actions-menu .MuiPaper-root,
-#layout[data-skyroom-column="true"] .MuiMenu-paper:has([data-key^="menuItem-"]),
-#layout[data-skyroom-column="true"] .skyroom-webcam-actions-menu .MuiPaper-root {
+#layout[data-skyroom-column="true"] .MuiMenu-paper:has([data-key^="menuItem-"]) {
   min-width: 220px !important;
   max-width: min(300px, 92vw) !important;
   border-radius: 12px !important;

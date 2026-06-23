@@ -106,6 +106,13 @@ const MenuWrapper = styled.div<{ $skyroomMobile?: boolean }>`
   `}
 `;
 
+const WebcamMenuHost = styled.div`
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+`;
+
 const MenuWrapperSqueezed = styled.div`
   position: absolute;
   right: 0;
@@ -151,5 +158,6 @@ export default {
   Dropdown,
   MenuWrapper,
   MenuWrapperSqueezed,
+  WebcamMenuHost,
   OptionsButton,
 };

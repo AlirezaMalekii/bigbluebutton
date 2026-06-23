@@ -3,6 +3,7 @@ export const SKYROOM_PRODUCT_NAME = 'سیف میت';
 export const SKYROOM_PRODUCT_NAME_EN = 'SafeMeet';
 export const SKYROOM_PLATFORM_URL = 'https://safemeet.ir';
 export const SKYROOM_PLATFORM_LOGO_PATH = '/resources/images/skyroom/SafeMeet.ir.svg';
+export const SKYROOM_PLATFORM_ICON_PATH = '/resources/images/skyroom/SafeMeet-icon.svg';
 
 const BBB_TEXT_REPLACEMENTS = [
   [/BigBlueButton\s*Inc\.?/gi, ''],

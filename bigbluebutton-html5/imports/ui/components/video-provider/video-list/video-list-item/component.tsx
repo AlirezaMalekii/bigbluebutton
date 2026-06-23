@@ -477,13 +477,11 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
 
     const target = event.target as HTMLElement;
     if (target.closest(
-      'button, a, [role="button"], [data-test="dropdownWebcamButton"], [data-test="webcamOptionsMenuSqueezed"], [class*="TopBar"], [class*="PinArea"], [class*="RaiseHand"], [class*="OptionsButton"], [class*="UserCameraButtons"]',
+      '[data-test="skyroomWebcamMenuHost"], [data-test="dropdownWebcamButton"], [data-test="webcamOptionsMenuSqueezed"], button, a, [class*="TopBar"], [class*="PinArea"], [class*="RaiseHand"], [class*="OptionsButton"], [class*="UserCameraButtons"], .skyroom-webcam-actions-menu',
     )) return;
 
-    const trigger = webcamMenuRef.current?.querySelector(
-      '[data-test="dropdownWebcamButton"], [data-test="webcamOptionsMenuSqueezed"]',
-    ) as HTMLElement | null;
-    trigger?.click();
+    const trigger = webcamMenuRef.current?.querySelector('[role="button"]');
+    (trigger as HTMLElement | null)?.click();
   };
 
   return (

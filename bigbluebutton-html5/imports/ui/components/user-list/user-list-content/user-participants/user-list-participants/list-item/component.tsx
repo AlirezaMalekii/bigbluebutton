@@ -254,11 +254,22 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, lockSettings, index }
 
   function addSeparator(elements: (string | JSX.Element)[]) {
     const modifiedElements: (string | JSX.Element)[] = [];
+    const skyroomCompact = isSkyroomColumnLayout();
 
     elements.forEach((element, index) => {
-      modifiedElements.push(element);
+      if (typeof element === 'string' && skyroomCompact) {
+        modifiedElements.push(
+          <span key={uniqueId('sub-')} className="skyroom-user-sub-label">{element}</span>,
+        );
+      } else {
+        modifiedElements.push(element);
+      }
       if (index !== elements.length - 1) {
-        modifiedElements.push(<span key={uniqueId('separator-')}> | </span>);
+        modifiedElements.push(
+          skyroomCompact
+            ? <span key={uniqueId('separator-')} className="skyroom-user-sub-sep" aria-hidden="true" />
+            : <span key={uniqueId('separator-')}> | </span>,
+        );
       }
     });
     return modifiedElements;

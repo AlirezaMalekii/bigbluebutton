@@ -7,6 +7,7 @@ import { layoutDispatch, layoutSelectInput } from '/imports/ui/components/layout
 import { Input } from '/imports/ui/components/layout/layoutTypes';
 import Icon from '/imports/ui/components/common/icon/component';
 import { useIsSharedNotesEnabled } from '/imports/ui/services/features';
+import { useVideoStreamsCount } from '/imports/ui/components/video-provider/hooks';
 import {
   SKYROOM_FOOTER_H,
   SKYROOM_MOBILE_EDGE,
@@ -55,7 +56,7 @@ const SkyroomMobileZoneTabs: React.FC = () => {
   const layoutContextDispatch = layoutDispatch();
   const sidebarNavigation = layoutSelectInput((i: Input) => i.sidebarNavigation);
   const sidebarContent = layoutSelectInput((i: Input) => i.sidebarContent);
-  const cameraDock = layoutSelectInput((i: Input) => i.cameraDock);
+  const meetingWebcamCount = useVideoStreamsCount();
   const presentation = layoutSelectInput((i: Input) => i.presentation);
   const screenShare = layoutSelectInput((i: Input) => i.screenShare);
   const notesEnabled = useIsSharedNotesEnabled();
@@ -84,7 +85,7 @@ const SkyroomMobileZoneTabs: React.FC = () => {
   const activeBox = resolveSkyroomMobileBox({ usersOpen, chatOpen, notesOpen });
 
   const hasStage = Boolean(presentation.isOpen || screenShare.hasScreenShare);
-  const hasCameras = (cameraDock.numCameras ?? 0) > 0;
+  const hasCameras = meetingWebcamCount > 0;
   // Webcams are a bottom box only while something is shared on the stage;
   // otherwise they live in the top zone and need no tab.
   const showWebcams = hasCameras && hasStage;

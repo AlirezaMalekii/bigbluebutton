@@ -14,7 +14,7 @@ const PlatformWrap = styled.div`
   flex-shrink: 0;
 `;
 
-const PlatformLink = styled.a`
+const PlatformLink = styled.a<{ $iconOnly?: boolean }>`
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
@@ -27,6 +27,13 @@ const PlatformLink = styled.a`
   text-decoration: none;
   cursor: pointer;
   transition: opacity 0.18s ease;
+
+  ${({ $iconOnly }) => $iconOnly && `
+    height: 36px;
+    width: 36px;
+    max-width: 36px;
+    justify-content: center;
+  `}
 
   &:hover {
     opacity: 0.9;
@@ -149,6 +156,11 @@ const FooterSlot = styled.div.attrs({
   display: inline-flex;
   align-items: center;
   pointer-events: auto;
+
+  &[data-in-actions-bar='true'] {
+    left: 12px;
+    z-index: 3;
+  }
 `;
 
 const LogoImage = styled.img`

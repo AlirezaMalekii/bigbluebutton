@@ -1,6 +1,7 @@
 import React from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import {
+  SKYROOM_PLATFORM_ICON_PATH,
   SKYROOM_PLATFORM_LOGO_PATH,
   SKYROOM_PLATFORM_URL,
 } from '/imports/ui/components/skyroom-layout/white-label';
@@ -21,9 +22,10 @@ type SkyroomPlatformLogoProps = {
   iconOnly?: boolean;
 };
 
-const getPlatformLogoSrc = () => {
+const getPlatformLogoSrc = (iconOnly: boolean) => {
   const basename = window.meetingClientSettings?.public?.app?.basename ?? '';
-  return `${basename}${SKYROOM_PLATFORM_LOGO_PATH}`;
+  const path = iconOnly ? SKYROOM_PLATFORM_ICON_PATH : SKYROOM_PLATFORM_LOGO_PATH;
+  return `${basename}${path}`;
 };
 
 const SkyroomPlatformLogo: React.FC<SkyroomPlatformLogoProps> = ({ iconOnly = false }) => {
@@ -37,9 +39,10 @@ const SkyroomPlatformLogo: React.FC<SkyroomPlatformLogoProps> = ({ iconOnly = fa
         target="_blank"
         rel="noopener noreferrer"
         aria-label={intl.formatMessage(intlMessages.logoLinkAria)}
+        $iconOnly={iconOnly}
       >
         <Styled.PlatformLogoImage
-          src={getPlatformLogoSrc()}
+          src={getPlatformLogoSrc(iconOnly)}
           alt={alt}
           draggable={false}
           $iconOnly={iconOnly}
