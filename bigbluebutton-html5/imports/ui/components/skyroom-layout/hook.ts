@@ -26,6 +26,7 @@ import {
   startSkyroomWhiteLabelDomWatch,
   stopSkyroomWhiteLabelDomWatch,
 } from './white-label';
+import { dispatchSkyroomLayoutResize } from './layout-resize';
 
 const syncSkyroomLayoutAttributes = (
   layoutEl: HTMLElement | null,
@@ -80,7 +81,7 @@ export const useSkyroomColumnLayout = () => {
       layoutEl.style.setProperty('--color-text', '#d6dfeb');
       // Force a layout pass now that the column engine is active (avoids a phone
       // loading deadlock where layoutReady flips before data-skyroom-mobile is set).
-      window.dispatchEvent(new Event('resize'));
+      dispatchSkyroomLayoutResize();
     }
 
     document.documentElement.setAttribute('data-theme', 'dark');
@@ -123,7 +124,7 @@ export const useSkyroomColumnLayout = () => {
     const interval = window.setInterval(() => {
       if (Session.equals('layoutReady', true)) {
         openSkyroomColumn();
-        window.dispatchEvent(new Event('resize'));
+        dispatchSkyroomLayoutResize();
         window.clearInterval(interval);
         // LayoutObserver closes sidebar content on phones once layoutIsReady flips;
         // re-apply the mobile default after that effect so first join shows chat.
@@ -199,8 +200,7 @@ export const useSkyroomColumnLayout = () => {
         layoutEl.removeAttribute('data-skyroom-presentation-minimized');
       }
     }
-    window.dispatchEvent(new Event('resize'));
-  }, [usersOpen, chatOpen, notesOpen, hasActiveScreenShare, screenshareMinimized, numCameras, presentationIsOpen]);
+  }, [usersOpen, chatOpen, notesOpen, hasActiveScreenShare, screenshareMinimized]);
 
   // Phone: sync navbar-opened notes with the bottom zone. Tab-bar switches go through
   // openSkyroomMobileBox first (activeBox is updated synchronously); while notesOpen

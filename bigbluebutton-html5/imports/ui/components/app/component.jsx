@@ -48,6 +48,7 @@ import LayoutObserver from '../layout/observer';
 import BBBLiveKitRoomContainer from '/imports/ui/components/livekit/component';
 import RaiseHandNotifier from '/imports/ui/components/raisehand-notifier/container';
 import SkyroomColumnController from '/imports/ui/components/skyroom-layout/component';
+import SkyroomHeaderLogos from '/imports/ui/components/skyroom-layout/header-logo/SkyroomHeaderLogos';
 
 const intlMessages = defineMessages({
   userListLabel: {
@@ -113,12 +114,39 @@ const intlMessages = defineMessages({
 });
 
 const propTypes = {
+  audioCaptions: PropTypes.node,
+  captionsStyle: PropTypes.shape({
+    left: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    right: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    maxWidth: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  }).isRequired,
+  currentUserAway: PropTypes.bool,
+  currentUserHasVoice: PropTypes.bool.isRequired,
+  currentUserRaiseHand: PropTypes.bool,
   darkTheme: PropTypes.bool.isRequired,
+  fitToWidth: PropTypes.bool,
+  genericMainContentId: PropTypes.string,
+  handlePresentationFitToWidth: PropTypes.func.isRequired,
+  hideActionsBar: PropTypes.bool,
   hideNotificationToasts: PropTypes.bool.isRequired,
+  intl: PropTypes.shape({
+    formatMessage: PropTypes.func.isRequired,
+  }).isRequired,
   isBreakout: PropTypes.bool.isRequired,
+  isCurrentUserNextRaisedHand: PropTypes.bool,
+  isNonMediaLayout: PropTypes.bool,
+  isNotificationEnabled: PropTypes.bool,
+  isPollingEnabled: PropTypes.bool,
   isRaiseHandEnabled: PropTypes.bool.isRequired,
+  isSharedNotesPinned: PropTypes.bool,
+  layoutContextDispatch: PropTypes.func.isRequired,
   meetingId: PropTypes.string.isRequired,
   meetingName: PropTypes.string.isRequired,
+  pluginConfig: PropTypes.arrayOf(PropTypes.shape({})),
+  presentationIsOpen: PropTypes.bool,
+  shouldShowExternalVideo: PropTypes.bool,
+  shouldShowPresentation: PropTypes.bool,
+  shouldShowScreenshare: PropTypes.bool,
 };
 
 class App extends Component {
@@ -422,6 +450,7 @@ class App extends Component {
           <PollingContainer />
           <WakeLockContainer />
           {this.renderActionsBar()}
+          <SkyroomHeaderLogos placement="footer" />
           <EmojiRainContainer />
           <VoiceActivityAdapter />
           <SkyroomColumnController />

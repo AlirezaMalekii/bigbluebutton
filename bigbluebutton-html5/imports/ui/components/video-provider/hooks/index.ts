@@ -52,8 +52,8 @@ import { SETTINGS } from '/imports/ui/services/settings/enums';
 import { useStorageKey } from '/imports/ui/services/storage/hooks';
 import ConnectionStatus from '/imports/ui/core/graphql/singletons/connectionStatus';
 import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
-import { layoutSelect } from '/imports/ui/components/layout/context';
-import { Layout } from '/imports/ui/components/layout/layoutTypes';
+import { layoutSelect, layoutSelectInput } from '/imports/ui/components/layout/context';
+import { Input, Layout } from '/imports/ui/components/layout/layoutTypes';
 import { LAYOUT_TYPE } from '/imports/ui/components/layout/enums';
 import createUseSubscription from '/imports/ui/core/hooks/createUseSubscription';
 import { filterByMeetingId } from '/imports/ui/core/utils/subscriptionFilters';
@@ -65,6 +65,11 @@ import {
   MediaType,
   PUBLIC_GROUP_IDS,
 } from '/imports/ui/components/livekit/selective-subscription/types';
+import {
+  isSkyroomMobileStageMediaActive,
+  limitSkyroomMobileStageRemoteWebcams,
+  useSkyroomMobileWebcamsVisible,
+} from '/imports/ui/components/skyroom-layout/mobile-webcam-visibility';
 
 const useVideoStreamsSubscription = createUseSubscription(
   VIDEO_STREAMS_SUBSCRIPTION,
@@ -549,6 +554,13 @@ export const useVideoStreams = () => {
   const audioOnlyUsers = useAudioOnlyUsers();
   const myPageSize = useMyPageSize();
   const isPaginationEnabled = useIsPaginationEnabled();
+  const skyroomMobileWebcamsVisible = useSkyroomMobileWebcamsVisible();
+  const hasScreenShare = layoutSelectInput((i: Input) => i.screenShare.hasScreenShare);
+  const presentationIsOpen = layoutSelectInput((i: Input) => i.presentation.isOpen);
+  const mobileStageMediaActive = isSkyroomMobileStageMediaActive(
+    hasScreenShare,
+    presentationIsOpen,
+  );
   const { senderIds, senderIdsInGroups, inAnyGroup } = useVideoSenders();
   let streams: StreamItem[] = [...videoStreams];
   let totalNumberOfOtherStreams: number | undefined;
@@ -568,8 +580,10 @@ export const useVideoStreams = () => {
 
   if (connectingStream) streams.push(connectingStream);
 
-  if (!viewParticipantsWebcams) {
+  if (!viewParticipantsWebcams || !skyroomMobileWebcamsVisible) {
     streams = streams.filter((vs) => videoService.isLocalStream(vs.stream));
+  } else if (mobileStageMediaActive && skyroomMobileWebcamsVisible) {
+    streams = limitSkyroomMobileStageRemoteWebcams(streams);
   } else if (inAnyGroup) {
     streams = streams.filter((vs) => videoService.isLocalStream(vs.stream)
       || (senderIds?.has(vs.userId)));

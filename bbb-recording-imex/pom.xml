@@ -69,7 +69,7 @@
         <dependency>
             <groupId>org.bigbluebutton</groupId>
             <artifactId>bbb-common-web</artifactId>
-            <version>0.0.3-SNAPSHOT</version>
+            <version>0.0.5-SNAPSHOT</version>
         </dependency>
 
         <dependency>

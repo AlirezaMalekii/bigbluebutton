@@ -111,3 +111,11 @@ if [ ! -d "$REC_STATUS_SANITY_DIR" ]; then
 fi
 
 sudo chown -R bigbluebutton:bigbluebutton /var/bigbluebutton/ /var/log/bigbluebutton/
+
+# scripts/ is removed above; resque worker cwd must be refreshed.
+find /usr/local/bigbluebutton/core/scripts -name '*.rb' -print0 | xargs -0 sudo sed -i 's/\r$//' 2>/dev/null || true
+if [[ -f /lib/systemd/system/bbb-rap-resque-worker.service ]]; then
+  sudo cp core/systemd/bbb-rap-resque-worker.service /lib/systemd/system/bbb-rap-resque-worker.service
+  sudo systemctl daemon-reload
+  sudo systemctl restart bbb-rap-resque-worker bbb-rap-starter
+fi

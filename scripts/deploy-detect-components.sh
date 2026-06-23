@@ -46,6 +46,25 @@ if [[ -z "$CHANGED_FILES" ]]; then
   exit 0
 fi
 
+is_safemeet_recording_asset_path() {
+  case "$1" in
+    record-and-playback/core/lib/recordandplayback/safemeet/*|\
+    record-and-playback/core/scripts/post_publish/90_safemeet*|\
+    record-and-playback/core/scripts/post_publish/post_publish_recording_ready_callback.rb|\
+    bbb-common-web/src/main/java/org/bigbluebutton/api/service/RecordingAsset*|\
+    bbb-common-web/src/main/java/org/bigbluebutton/api/service/impl/RecordingAsset*|\
+    bigbluebutton-web/grails-app/controllers/org/bigbluebutton/web/controllers/RecordingController.groovy|\
+    bigbluebutton-web/grails-app/controllers/org/bigbluebutton/web/UrlMappings.groovy|\
+    bigbluebutton-web/grails-app/conf/spring/resources.xml|\
+    bigbluebutton-web/grails-app/conf/bigbluebutton.properties)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 path_to_component() {
   case "$1" in
     bigbluebutton-html5/*) echo html5 ;;
@@ -70,6 +89,10 @@ path_to_component() {
 
 while IFS= read -r path; do
   [[ -z "$path" ]] && continue
+  if is_safemeet_recording_asset_path "$path"; then
+    components_add safemeet-recording
+    continue
+  fi
   comp="$(path_to_component "$path")"
   if [[ "$comp" == "_meta" ]]; then
     echo "full"
@@ -95,8 +118,16 @@ fi
 if components_has fsesl; then
   components_add libs
 fi
+if components_has imex; then
+  components_add libs
+fi
+if components_has safemeet-recording; then
+  components_add libs
+  components_add web
+  components_add playback
+fi
 
-ORDER="libs web akka fsesl graphql middleware actions html5 dashboard export notes playback imex"
+ORDER="libs web akka fsesl graphql middleware actions html5 dashboard export notes safemeet-recording playback imex"
 for name in $ORDER; do
   components_has "$name" && printf '%s\n' "$name"
 done

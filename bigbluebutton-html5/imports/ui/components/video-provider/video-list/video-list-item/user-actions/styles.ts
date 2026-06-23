@@ -9,6 +9,7 @@ import { landscape, mediumUp } from '/imports/ui/stylesheets/styled-components/b
 
 const DropdownTrigger = styled(DivElipsis)<{
   $isRTL: boolean;
+  $skyroomMobile?: boolean;
 }>`
   user-select: none;
   position: relative;
@@ -23,6 +24,15 @@ const DropdownTrigger = styled(DivElipsis)<{
   width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  ${({ $skyroomMobile }) => $skyroomMobile && `
+    text-overflow: clip;
+    width: auto;
+    max-width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0 0.85rem 0 0.45rem !important;
+  `}
 
   &::after {
     content: "\\203a";
@@ -40,6 +50,7 @@ const DropdownTrigger = styled(DivElipsis)<{
 
 const UserName = styled(TextElipsis)<{
   $noMenu: boolean;
+  $skyroomMobile?: boolean;
 }>`
   position: relative;
   // Keep the background with 0.5 opacity, but leave the text with 1
@@ -49,6 +60,12 @@ const UserName = styled(TextElipsis)<{
 
   ${({ $noMenu }) => $noMenu && `
     padding: 0 .5rem 0 .5rem !important;
+  `}
+
+  ${({ $skyroomMobile }) => $skyroomMobile && `
+    text-overflow: clip;
+    overflow: hidden;
+    max-width: 100%;
   `}
 `;
 
@@ -79,8 +96,14 @@ const Dropdown = styled.div<{
   `}
 `;
 
-const MenuWrapper = styled.div`
+const MenuWrapper = styled.div<{ $skyroomMobile?: boolean }>`
   max-width: 60%;
+
+  ${({ $skyroomMobile }) => $skyroomMobile && `
+    max-width: calc(100% - 2.5rem);
+    flex: 1 1 auto;
+    min-width: 0;
+  `}
 `;
 
 const MenuWrapperSqueezed = styled.div`

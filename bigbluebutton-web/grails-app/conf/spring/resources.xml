@@ -155,6 +155,15 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 
     <bean id="xmlService" class="org.bigbluebutton.api.service.impl.XmlServiceImpl"/>
 
+    <bean id="recordingAssetService" class="org.bigbluebutton.api.service.impl.RecordingAssetServiceImpl">
+        <property name="enabled" value="${safemeetRecordingAssetsEnabled}"/>
+        <property name="assetsDir" value="${safemeetRecordingAssetsDir}"/>
+        <property name="publishedDir" value="${publishedDir}"/>
+        <property name="defaultServerUrl" value="${bigbluebutton.web.serverURL}"/>
+        <property name="securitySalt" value="${securitySalt}"/>
+        <property name="paramsProcessorUtil" ref="paramsProcessorUtil"/>
+    </bean>
+
     <bean id="recordingService" class="org.bigbluebutton.api.service.impl.RecordingServiceFileImpl">
         <property name="recordingStatusDir" value="${recordStatusDir}"/>
         <property name="publishedDir" value="${publishedDir}"/>

@@ -19,9 +19,6 @@ const listeners = new Set<() => void>();
 
 const notify = () => {
   listeners.forEach((fn) => fn());
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new Event('resize'));
-  }
 };
 
 export const getSkyroomMobileActiveBox = (): SkyroomMobileBox => activeBox;

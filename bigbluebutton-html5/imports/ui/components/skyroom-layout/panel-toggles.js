@@ -13,6 +13,7 @@ import {
 } from './notes-panel-state';
 import { broadcastSkyroomNotesGlobalOpen } from './notes-panel-sync/useSkyroomNotesPanelSync';
 import { setSkyroomMobileActiveBox } from './mobile-bottom-state';
+import { dispatchSkyroomLayoutResize, dispatchSkyroomLayoutResizeNextFrame } from './layout-resize';
 
 /** Phone breakpoint — matches layout/utils.js isMobile (clientWidth <= 599). */
 export const isSkyroomMobileViewport = () => typeof window !== 'undefined'
@@ -53,7 +54,7 @@ export const openSkyroomPublicChat = (layoutContextDispatch) => {
 /** Leave private chat UI but keep the public chat panel open (Skyroom column). */
 export const returnToSkyroomPublicChat = (layoutContextDispatch) => {
   openSkyroomPublicChat(layoutContextDispatch);
-  window.dispatchEvent(new Event('resize'));
+  dispatchSkyroomLayoutResize();
 };
 
 export const openSkyroomUserList = (layoutContextDispatch) => {
@@ -118,12 +119,9 @@ export const openSkyroomMobileBox = (layoutContextDispatch, box) => {
   else if (box === 'notes') openSkyroomNotes();
 
   // The layout engine gates each panel's OUTPUT display on the BBB sidebar isOpen
-  // flags, which update asynchronously. The synchronous recompute fires too early
-  // (before React applies the open dispatch), so force one more recompute on the next
-  // frame — this is what makes the FIRST tab tap reliably reveal the new box.
-  if (typeof window !== 'undefined') {
-    window.requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
-  }
+  // flags, which update asynchronously. One coalesced recompute on the next frame
+  // makes the first tab tap reliably reveal the new box without a resize storm.
+  dispatchSkyroomLayoutResizeNextFrame();
 };
 
 export const toggleSkyroomUserList = (layoutContextDispatch, sidebarNavigation) => {

@@ -24,7 +24,9 @@ require "optimist"
 require 'net/http'
 require "jwt"
 require "java_properties"
+require "json"
 require File.expand_path('../../../lib/recordandplayback', __FILE__)
+require File.expand_path('../../../lib/recordandplayback/safemeet/manifest_store', __FILE__)
 
 logger = Logger.new("/var/log/bigbluebutton/post_publish.log", 'weekly' )
 logger.level = Logger::INFO
@@ -78,6 +80,35 @@ begin
     external_meeting_id = BigBlueButton::Events.get_external_meeting_id(events_xml)
 
     payload = { meeting_id: external_meeting_id, record_id: meeting_id }
+
+    props = BigBlueButton.read_props
+    if props.fetch('safemeet_recording_assets_enabled', true)
+      assets_dir = props['safemeet_assets_dir'] || File.join(props['recording_dir'] || '/var/bigbluebutton/recording', 'safemeet-assets')
+      manifest = BigBlueButton::SafeMeet::ManifestStore.read_manifest(assets_dir, meeting_id)
+      unless manifest.nil?
+        payload[:metadata] = {
+          recordId: manifest['recordId'],
+          meetingId: manifest['meetingId'],
+          internalMeetingId: manifest['internalMeetingId'],
+          name: manifest['name'],
+          startTime: manifest['startTime'],
+          endTime: manifest['endTime'],
+          published: manifest['published'],
+          publishedAt: manifest['publishedAt'],
+          participants: manifest['participants'],
+          duration: manifest['duration'],
+          playbackUrl: manifest['playbackUrl'],
+          recordingFormat: manifest['recordingFormat'],
+          processingStatus: manifest['processingStatus'],
+          publishStatus: manifest['publishStatus'],
+          formats: manifest['formats'],
+          indexedAt: manifest['indexedAt'],
+          ai: manifest['ai']
+        }
+        payload[:assets] = manifest['assets']
+      end
+    end
+
     payload_encoded = JWT.encode(payload, secret)
 
     uri = URI.parse(callback_url)

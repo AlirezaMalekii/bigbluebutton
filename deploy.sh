@@ -161,7 +161,7 @@ rsync_to_server() {
 }
 
 remote_env_base() {
-  printf "BBB_ROOT='%s' WITH_GRAPHQL='%s' WITH_SHARED_NOTES='%s' WITH_RECORDING='%s' SKIP_AKKA_FSESL='%s'"
+  printf "BBB_ROOT='%s' WITH_GRAPHQL='%s' WITH_SHARED_NOTES='%s' WITH_RECORDING='%s' SKIP_AKKA_FSESL='%s'" \
     "$REMOTE_DIR" "$WITH_GRAPHQL" "$WITH_SHARED_NOTES" "$WITH_RECORDING" "$SKIP_AKKA_FSESL"
 }
 

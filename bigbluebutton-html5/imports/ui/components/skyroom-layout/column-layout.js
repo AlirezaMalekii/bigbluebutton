@@ -30,8 +30,8 @@ export const SKYROOM_NAVBAR_H = 60;
 export const SKYROOM_CHROME_H = SKYROOM_FOOTER_H;
 /** Stage media (slides, whiteboard, screenshare) */
 export const SKYROOM_STAGE_Z_INDEX = 6;
-/** Stage webcam strip sits above screenshare while desktop is shared */
-export const SKYROOM_STAGE_WEBCAM_Z_INDEX = 7;
+/** Stage webcam strip sits above stage media (presentation / whiteboard / screenshare) */
+export const SKYROOM_STAGE_WEBCAM_Z_INDEX = 8;
 const MIN_COLUMN = 292;
 const MAX_COLUMN = 328;
 const MIN_USERS = 160;

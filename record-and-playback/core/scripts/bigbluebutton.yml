@@ -71,6 +71,11 @@ captions_dir: /var/bigbluebutton/captions
 playback_host: 127.0.0.1
 playback_protocol: https
 
+# SafeMeet recording asset indexing (post-publish manifest cache)
+safemeet_recording_assets_enabled: true
+safemeet_assets_dir: /var/bigbluebutton/recording/safemeet-assets
+safemeet_assets_checksum_enabled: false
+
 # For DEVELOPMENT
 # This allows us to run the scripts manually
 #scripts_dir: /home/ubuntu/dev/bigbluebutton/record-and-playback/core/scripts

@@ -6,6 +6,17 @@ SBT_VERSION="${SBT_VERSION:-1.6.2}"
 
 log() { printf '[prereq] %s\n' "$*"; }
 
+source_sdkman() {
+  if [[ ! -f /root/.sdkman/bin/sdkman-init.sh ]]; then
+    return 0
+  fi
+  # sdkman-init.sh is not nounset-safe (references unset vars before defaults).
+  set +u
+  # shellcheck source=/dev/null
+  source /root/.sdkman/bin/sdkman-init.sh
+  set -u
+}
+
 install_apt_packages() {
   local pkgs=()
   command -v go >/dev/null || pkgs+=(golang-go)
@@ -18,6 +29,12 @@ install_apt_packages() {
   fi
 }
 
+run_sdk() {
+  set +u
+  sdk "$@"
+  set -u
+}
+
 install_sbt() {
   if command -v sbt >/dev/null; then
     log "sbt already installed: $(sbt --version 2>&1 | head -1)"
@@ -26,12 +43,13 @@ install_sbt() {
 
   log "Installing SDKMAN + sbt ${SBT_VERSION} ..."
   if [[ ! -d /root/.sdkman ]]; then
+    set +u
     curl -fsSL "https://get.sdkman.io" | bash
+    set -u
   fi
-  # shellcheck source=/dev/null
-  source /root/.sdkman/bin/sdkman-init.sh
-  sdk install sbt "$SBT_VERSION" || sdk install sbt "$SBT_VERSION" </dev/null
-  sdk default sbt "$SBT_VERSION"
+  source_sdkman
+  run_sdk install sbt "$SBT_VERSION" || run_sdk install sbt "$SBT_VERSION" </dev/null
+  run_sdk default sbt "$SBT_VERSION"
 
   if ! grep -q sdkman-init /root/.bashrc 2>/dev/null; then
     echo 'source "/root/.sdkman/bin/sdkman-init.sh"' >> /root/.bashrc
@@ -39,10 +57,7 @@ install_sbt() {
 }
 
 ensure_path() {
-  if [[ -f /root/.sdkman/bin/sdkman-init.sh ]]; then
-    # shellcheck source=/dev/null
-    source /root/.sdkman/bin/sdkman-init.sh
-  fi
+  source_sdkman
 }
 
 main() {

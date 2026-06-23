@@ -86,11 +86,6 @@
     gap: 0 4px !important;
   }
 
-  /* Decorative logos — drop on phone to free horizontal space */
-  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomHeaderLogos"] {
-    display: none !important;
-  }
-
   /* Talking rail stays hidden in navbar on phone — shown above top box instead. */
   #layout[data-skyroom-column="true"] #Navbar [data-test="skyroom-talking-rail"] {
     display: none !important;
@@ -1358,6 +1353,14 @@
     -webkit-overflow-scrolling: touch;
   }
 
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu) .override-mobile-styles,
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiPaper-root.override-mobile-styles {
+    max-width: min(300px, 92vw) !important;
+    max-height: min(60dvh, 360px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
   /* ===================================================================
      8) Modal sticky header + full-width footer buttons (C1)
      Improves the bottom-sheet in section 6: sticky grab-rail header so
@@ -1689,8 +1692,8 @@
     box-shadow:
       0 4px 20px rgba(0, 0, 0, 0.40),
       inset 0 1px 0 rgba(32, 199, 187, 0.08) !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   .skyroom-mobile-zone-tab {
@@ -1740,6 +1743,13 @@
      =================================================================== */
 
   /* Bottom-zone webcams — lock react-draggable to the bottom box bounds. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"]:not([data-skyroom-mobile-bottom-webcams="true"]):not([data-skyroom-mobile-top-webcams="true"]) .react-draggable:has(#cameraDock) {
+    visibility: hidden !important;
+    pointer-events: none !important;
+    content-visibility: hidden !important;
+    contain: strict !important;
+  }
+
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"][data-skyroom-mobile-bottom-webcams="true"] .react-draggable:has(#cameraDock) {
     position: fixed !important;
     inset: auto !important;
@@ -1885,6 +1895,33 @@
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraPaginationNext"] {
     min-width: 44px !important;
     min-height: 44px !important;
+  }
+
+  /* Webcam tile — wider name chip, no ellipsis; tap tile opens menu */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [data-test="webcamItem"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [data-test="webcamItemTalkingUser"] {
+    cursor: pointer;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="BottomBar"] {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 4px 6px !important;
+    box-sizing: border-box !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="MenuWrapper"] {
+    max-width: calc(100% - 2rem) !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="DropdownTrigger"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [data-test="webcamParticipantName"] {
+    text-overflow: clip !important;
+    overflow: hidden !important;
+    max-width: 100% !important;
   }
 
   /* ===================================================================

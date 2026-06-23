@@ -56,6 +56,19 @@ const platformLogoSizing = `
   -webkit-user-drag: none;
 `;
 
+const PlatformLogoImage = styled.img<{ $iconOnly?: boolean }>`
+  ${platformLogoSizing}
+  ${({ $iconOnly }) => $iconOnly && `
+    width: 36px;
+    height: 36px;
+    max-width: 36px;
+    min-width: 36px;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+    object-position: center;
+  `}
+`;
+
 const PlatformLogoObject = styled.object`
   ${platformLogoSizing}
   pointer-events: none;
@@ -125,6 +138,19 @@ const Link = styled.a`
   }
 `;
 
+const FooterSlot = styled.div.attrs({
+  'data-test': 'skyroomFooterLogoSlot',
+})`
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  pointer-events: auto;
+`;
+
 const LogoImage = styled.img`
   display: block;
   max-height: 22px;
@@ -141,9 +167,11 @@ export default {
   Group,
   PlatformWrap,
   PlatformLink,
+  PlatformLogoImage,
   PlatformLogoObject,
   Wrap,
   Plate,
   Link,
   LogoImage,
+  FooterSlot,
 };

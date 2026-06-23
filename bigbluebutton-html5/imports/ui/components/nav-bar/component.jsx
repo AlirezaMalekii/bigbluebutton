@@ -27,7 +27,6 @@ import {
   toggleSkyroomSharedNotesLocally,
   isPublicChatOpen,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
-import SkyroomHeaderLogos from '/imports/ui/components/skyroom-layout/header-logo/SkyroomHeaderLogos';
 import SkyroomHeaderStatusCluster from '/imports/ui/components/skyroom-layout/active-poll-summary/SkyroomHeaderStatusCluster';
 import LeaveMeetingButtonContainer from './leave-meeting-button/container';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
@@ -563,7 +562,6 @@ class NavBar extends Component {
               {isDirectLeaveButtonEnabled && isConnected
                 ? <LeaveMeetingButtonContainer amIModerator={amIModerator} /> : null}
               {ConnectionStatusService.isEnabled() ? <ConnectionStatusButton /> : null}
-              {skyroomHeader ? <SkyroomHeaderLogos /> : null}
               {skyroomHeader ? <SkyroomHeaderStatusCluster /> : null}
               {ConnectionStatusService.isEnabled() ? <ConnectionStatus /> : null}
             </Styled.Right>

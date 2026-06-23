@@ -1400,6 +1400,20 @@ public class ParamsProcessorUtil {
 		return true;
 	}
 
+	public String buildChecksum(String apiCall, String queryString) {
+		if (queryString == null) {
+			queryString = "";
+		}
+
+		String data = apiCall + queryString + securitySalt;
+
+		if (supportedChecksumAlgorithms.contains("sha256")) {
+			return DigestUtils.sha256Hex(data);
+		}
+
+		return DigestUtils.sha1Hex(data);
+	}
+
 	public boolean isPostChecksumSame(String apiCall, Map<String, String[]> params) {
 		if (StringUtils.isEmpty(securitySalt)) {
 			log.warn("Security is disabled in this service. Make sure this is intentional.");

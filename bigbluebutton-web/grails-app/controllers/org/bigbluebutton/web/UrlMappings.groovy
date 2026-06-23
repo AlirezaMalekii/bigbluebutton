@@ -152,6 +152,18 @@ class UrlMappings {
       action = [GET: 'deleteRecordings']
     }
 
+    "/bigbluebutton/api/getRecordingAssets"(controller: "recording") {
+      action = [GET: 'getRecordingAssetsHandler', POST: 'getRecordingAssetsHandler']
+    }
+
+    "/bigbluebutton/api/getRecordingEvents"(controller: "recording") {
+      action = [GET: 'getRecordingEventsHandler', POST: 'getRecordingEventsHandler']
+    }
+
+    "/bigbluebutton/api/getRecordingAssetFile"(controller: "recording") {
+      action = [GET: 'getRecordingAssetFileHandler']
+    }
+
     "/bigbluebutton/$controller/$action?/$id?(.${format})?" {
       constraints {
         // apply constraints here

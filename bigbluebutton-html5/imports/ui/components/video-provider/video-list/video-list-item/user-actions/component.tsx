@@ -16,6 +16,10 @@ import { VideoItem } from '/imports/ui/components/video-provider/types';
 import { ACTIONS } from '/imports/ui/components/layout/enums';
 import { useIsVideoPinEnabledForCurrentUser } from '/imports/ui/components/video-provider/hooks';
 import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
+import {
+  isSkyroomColumnLayout,
+  isSkyroomMobileViewport,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const intlMessages = defineMessages({
   focusLabel: {
@@ -100,6 +104,7 @@ interface UserActionProps {
   amIModerator: boolean;
   isVideoSqueezed?: boolean,
   videoContainer?: MutableRefObject<HTMLDivElement | null>,
+  menuTriggerRef?: MutableRefObject<HTMLDivElement | null>,
   isFullscreenContext: boolean;
   layoutContextDispatch: (...args: unknown[]) => void;
 }
@@ -107,7 +112,7 @@ interface UserActionProps {
 const UserActions: React.FC<UserActionProps> = (props) => {
   const {
     name, cameraId, numOfStreams, onHandleVideoFocus, stream, focused, onHandleMirror,
-    isVideoSqueezed = false, videoContainer, isRTL, isStream, isSelfViewDisabled, isMirrored,
+    isVideoSqueezed = false, videoContainer, menuTriggerRef, isRTL, isStream, isSelfViewDisabled, isMirrored,
     amIModerator, isFullscreenContext, layoutContextDispatch,
   } = props;
 
@@ -127,6 +132,26 @@ const UserActions: React.FC<UserActionProps> = (props) => {
 
   const [setCameraPinned] = useMutation(SET_CAMERA_PINNED);
   const pinEnabledForCurrentUser = useIsVideoPinEnabledForCurrentUser(amIModerator);
+  const useSkyroomMobileMenu = isSkyroomColumnLayout() && isSkyroomMobileViewport();
+
+  const getMenuOpts = () => ({
+    id: `webcam-${stream.userId}-dropdown-menu`,
+    className: useSkyroomMobileMenu ? 'skyroom-webcam-actions-menu' : undefined,
+    keepMounted: true,
+    transitionDuration: 0,
+    elevation: useSkyroomMobileMenu ? 8 : 3,
+    getcontentanchorel: null,
+    fullwidth: useSkyroomMobileMenu ? undefined : 'true',
+    disableScrollLock: useSkyroomMobileMenu ? true : undefined,
+    BackdropProps: useSkyroomMobileMenu ? { invisible: true } : undefined,
+    anchorOrigin: useSkyroomMobileMenu
+      ? { vertical: 'top', horizontal: isRTL ? 'right' : 'left' }
+      : { vertical: 'bottom', horizontal: isRTL ? 'right' : 'left' },
+    transformOrigin: useSkyroomMobileMenu
+      ? { vertical: 'bottom', horizontal: isRTL ? 'right' : 'left' }
+      : { vertical: 'top', horizontal: isRTL ? 'right' : 'left' },
+    container: isFullscreenContext ? videoContainer?.current : document.body,
+  });
 
   const isLocalStream = stream.userId === Auth.userID;
   const displayName = isLocalStream
@@ -288,39 +313,33 @@ const UserActions: React.FC<UserActionProps> = (props) => {
   };
 
   const renderDefaultButton = () => (
-    <Styled.MenuWrapper>
+    <Styled.MenuWrapper ref={menuTriggerRef} $skyroomMobile={useSkyroomMobileMenu}>
       {enableVideoMenu && getAvailableActions().length >= 1
         ? (
           <BBBMenu
+            overrideMobileStyles={useSkyroomMobileMenu}
+            minContent={useSkyroomMobileMenu}
             trigger={(
               <Styled.DropdownTrigger
                 tabIndex={0}
                 data-test="dropdownWebcamButton"
                 data-webcam-participant-name="true"
                 $isRTL={isRTL}
+                $skyroomMobile={useSkyroomMobileMenu}
                 role="button"
               >
                 {displayName}
               </Styled.DropdownTrigger>
             )}
             actions={getAvailableActions()}
-            opts={{
-              id: `webcam-${stream.userId}-dropdown-menu`,
-              keepMounted: true,
-              transitionDuration: 0,
-              elevation: 3,
-              getcontentanchorel: null,
-              fullwidth: 'true',
-              anchorOrigin: { vertical: 'bottom', horizontal: isRTL ? 'right' : 'left' },
-              transformOrigin: { vertical: 'top', horizontal: isRTL ? 'right' : 'left' },
-              container: isFullscreenContext ? videoContainer?.current : document.body,
-            }}
+            opts={getMenuOpts()}
           />
         )
         : (
           <Styled.Dropdown $isFirefox={isFirefox}>
             <Styled.UserName
               $noMenu={numOfStreams < 3}
+              $skyroomMobile={useSkyroomMobileMenu}
               data-test="webcamParticipantName"
             >
               {displayName}
@@ -331,8 +350,10 @@ const UserActions: React.FC<UserActionProps> = (props) => {
   );
 
   const renderSqueezedButton = () => (
-    <Styled.MenuWrapperSqueezed>
+    <Styled.MenuWrapperSqueezed ref={menuTriggerRef}>
       <BBBMenu
+        overrideMobileStyles={useSkyroomMobileMenu}
+        minContent={useSkyroomMobileMenu}
         trigger={(
           <Styled.OptionsButton
             label={intl.formatMessage(intlMessages.squeezedLabel)}
@@ -347,9 +368,7 @@ const UserActions: React.FC<UserActionProps> = (props) => {
           />
         )}
         actions={getAvailableActions()}
-        opts={{
-          container: isFullscreenContext ? videoContainer?.current : document.body,
-        }}
+        opts={getMenuOpts()}
       />
     </Styled.MenuWrapperSqueezed>
   );

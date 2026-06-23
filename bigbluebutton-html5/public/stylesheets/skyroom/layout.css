@@ -193,9 +193,8 @@
   height: var(--skyroom-screenshare-height, auto) !important;
 }
 
-/* Viewer webcam strip above stage media (#cameraDock is inside .react-draggable, not a direct #layout child) */
-#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-mobile="true"]):not([data-skyroom-webcam-float="true"]) .react-draggable:has(#cameraDock),
-#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-mobile="true"]):not([data-skyroom-webcam-float="true"]) #cameraDock {
+/* Viewer webcam strip above stage media — portaled to #layout (not inside #cameraDock) */
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-mobile="true"]):not([data-skyroom-webcam-float="true"]) #skyroom-stage-webcam-dock {
   position: fixed !important;
   inset: auto !important;
   top: var(--skyroom-stage-webcam-top) !important;
@@ -204,13 +203,29 @@
   bottom: auto !important;
   width: var(--skyroom-stage-webcam-width) !important;
   height: var(--skyroom-stage-webcam-height) !important;
-  transform: translate3d(0, 0, 0) !important;
-  z-index: 7 !important;
+  transform: none !important;
+  z-index: 8 !important;
   margin: 0 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   overflow: hidden !important;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-mobile="true"]):not([data-skyroom-webcam-float="true"]) .react-draggable:has(#cameraDock),
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-mobile="true"]):not([data-skyroom-webcam-float="true"]) #cameraDock {
+  visibility: hidden !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-mobile="true"]):not([data-skyroom-webcam-float="true"]) #skyroom-stage-webcam-dock [data-test="webcamVideoItem"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"]:not([data-skyroom-mobile="true"]):not([data-skyroom-webcam-float="true"]) #skyroom-stage-webcam-dock .skyroom-webcam-zone-drag {
+  pointer-events: auto;
 }
 
 /* Presentation closed — BBB-style floating webcam dock (react-draggable) */
@@ -248,10 +263,12 @@
 #layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock,
 #layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #WebcamContainer,
 #layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] [data-test="webcamContainer"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #skyroom-stage-webcam-dock,
 #layout[data-skyroom-column="true"][data-skyroom-screen-share="true"] #skyroom-sidebar-webcam-dock {
-  z-index: 7 !important;
+  z-index: 8 !important;
 }
 
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #skyroom-stage-webcam-dock .skyroom-stage-webcam-list,
 #layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock .skyroom-stage-webcam-list {
   width: max-content !important;
   height: max-content !important;
@@ -265,6 +282,8 @@
   justify-items: center;
 }
 
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #skyroom-stage-webcam-dock .skyroom-stage-webcam-list [data-test="webcamVideoItem"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #skyroom-stage-webcam-dock .skyroom-stage-webcam-list .skyroom-webcam-zone-drag,
 #layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock .skyroom-stage-webcam-list [data-test="webcamVideoItem"],
 #layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock .skyroom-stage-webcam-list .skyroom-webcam-zone-drag {
   width: var(--skyroom-webcam-tile-w) !important;
@@ -279,6 +298,8 @@
   box-shadow: var(--skyroom-panel-shadow-token);
 }
 
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #skyroom-stage-webcam-dock .skyroom-stage-webcam-list [class*="videoContainer"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #skyroom-stage-webcam-dock .skyroom-stage-webcam-list video,
 #layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock .skyroom-stage-webcam-list [class*="videoContainer"],
 #layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock .skyroom-stage-webcam-list video {
   width: 100% !important;
@@ -462,6 +483,7 @@
   pointer-events: none;
   overflow: hidden;
   border-radius: var(--skyroom-panel-radius);
+  z-index: 8 !important;
 }
 
 #layout[data-skyroom-column="true"] #skyroom-center-webcam-dock .skyroom-center-webcam-list,
@@ -528,6 +550,7 @@
 
 #layout[data-skyroom-column="true"] #skyroom-sidebar-webcam-dock [data-test="webcamVideoItem"],
 #layout[data-skyroom-column="true"] #skyroom-center-webcam-dock [data-test="webcamVideoItem"],
+#layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #skyroom-stage-webcam-dock [data-test="webcamVideoItem"],
 #layout[data-skyroom-column="true"][data-skyroom-stage-webcams="true"] #cameraDock [data-test="webcamVideoItem"] {
   cursor: grab !important;
 }

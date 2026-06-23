@@ -157,6 +157,8 @@ class VideoList extends Component<VideoListProps, VideoListState> {
 
   private centerGrid: HTMLDivElement | null;
 
+  private stageGrid: HTMLDivElement | null;
+
   private unsubscribeSkyroomZones: (() => void) | null;
 
   private failedMediaElements: unknown[];
@@ -201,6 +203,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     this.canvas = null;
     this.sidebarGrid = null;
     this.centerGrid = null;
+    this.stageGrid = null;
     this.unsubscribeSkyroomZones = null;
     this.failedMediaElements = [];
     this.handleCanvasResize = throttle(this.handleCanvasResize.bind(this), 66,
@@ -388,8 +391,9 @@ class VideoList extends Component<VideoListProps, VideoListState> {
         (item) => item.type === VIDEO_TYPES.GRID || !('render' in item) || item.render !== false,
       );
 
-      if (visibleStage.length > 0 && this.canvas && this.grid) {
-        const gridGutter = parseInt(window.getComputedStyle(this.grid)
+      const stageGridEl = this.stageGrid ?? this.grid;
+      if (visibleStage.length > 0 && stageGridEl) {
+        const gridGutter = parseInt(window.getComputedStyle(stageGridEl)
           .getPropertyValue('grid-row-gap'), 10) || 2;
         const stageBoundsWidth = skyroomLayout.stage?.width ?? cameraDock?.width;
         const computedStageGrid = computeSkyroomStripGrid(
@@ -693,8 +697,10 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     const { sidebar, stage, center } = this.getSkyroomPartition();
     const dockStreams = stage;
     const sidebarBounds = skyroomLayout?.sidebar;
+    const stageBounds = skyroomLayout?.stage;
     const centerBounds = skyroomLayout?.center;
     const { position } = cameraDock;
+    const stageInPortal = dockStreams.length > 0 && Boolean(stageBounds);
 
     const sidebarDockStyle: React.CSSProperties = sidebarBounds ? {
       position: 'fixed',
@@ -728,6 +734,40 @@ class VideoList extends Component<VideoListProps, VideoListState> {
           style={buildSkyroomFixedGridStyle(sidebarGrid) ?? undefined}
         >
           {this.renderVideoList(sidebar, true, SKYROOM_WEBCAM_ZONES.SIDEBAR)}
+        </Styled.VideoList>
+      </div>
+    ) : null;
+
+    const stageDockStyle: React.CSSProperties = stageBounds ? {
+      position: 'fixed',
+      top: stageBounds.top,
+      left: stageBounds.left ?? undefined,
+      right: stageBounds.right ?? undefined,
+      width: stageBounds.width,
+      height: stageBounds.height,
+      zIndex: stageBounds.zIndex ?? 8,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      pointerEvents: 'auto',
+      margin: 0,
+      overflow: 'hidden',
+    } : {};
+
+    const stageDock = stageInPortal ? (
+      <div
+        id="skyroom-stage-webcam-dock"
+        data-test="skyroomStageWebcamDock"
+        style={stageDockStyle}
+      >
+        <Styled.VideoList
+          ref={(ref) => {
+            this.stageGrid = ref;
+          }}
+          className="video-provider_list skyroom-stage-webcam-list"
+          style={buildSkyroomFixedGridStyle(optimalGrid) ?? undefined}
+        >
+          {this.renderVideoList(dockStreams, true, SKYROOM_WEBCAM_ZONES.STAGE)}
         </Styled.VideoList>
       </div>
     ) : null;
@@ -777,6 +817,9 @@ class VideoList extends Component<VideoListProps, VideoListState> {
         {layoutEl && sidebarDock
           ? createPortal(sidebarDock, layoutEl)
           : sidebarDock}
+        {layoutEl && stageDock
+          ? createPortal(stageDock, layoutEl)
+          : stageDock}
         {layoutEl && centerDock
           ? createPortal(centerDock, layoutEl)
           : centerDock}
@@ -787,12 +830,12 @@ class VideoList extends Component<VideoListProps, VideoListState> {
           }}
           style={{
             minHeight: 'inherit',
-            visibility: dockStreams.length > 0 || isGridEnabled ? 'visible' : 'hidden',
+            visibility: (!stageInPortal && dockStreams.length > 0) || isGridEnabled ? 'visible' : 'hidden',
           }}
         >
           {this.renderPreviousPageButton()}
 
-          {!dockStreams.length && !isGridEnabled ? null : (
+          {!stageInPortal && dockStreams.length > 0 && !isGridEnabled ? (
             <Styled.VideoList
               ref={(ref) => {
                 this.grid = ref;
@@ -802,7 +845,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
             >
               {this.renderVideoList(dockStreams, true, SKYROOM_WEBCAM_ZONES.STAGE)}
             </Styled.VideoList>
-          )}
+          ) : null}
           {!autoplayBlocked ? null : (
             <AutoplayOverlay
               autoplayBlockedDesc={intl.formatMessage(intlMessages.autoplayBlockedDesc)}

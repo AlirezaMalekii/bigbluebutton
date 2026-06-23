@@ -2,10 +2,18 @@
 # Runs ON the BBB server after rsync. Invoked by ./deploy.sh from the laptop.
 set -euo pipefail
 
-if [[ -f /root/.sdkman/bin/sdkman-init.sh ]]; then
+source_sdkman() {
+  if [[ ! -f /root/.sdkman/bin/sdkman-init.sh ]]; then
+    return 0
+  fi
+  # sdkman-init.sh is not nounset-safe (references unset vars before defaults).
+  set +u
   # shellcheck source=/dev/null
   source /root/.sdkman/bin/sdkman-init.sh
-fi
+  set -u
+}
+
+source_sdkman
 
 BBB_ROOT="${BBB_ROOT:-/root/dev/bigbluebutton}"
 WITH_GRAPHQL="${WITH_GRAPHQL:-0}"
@@ -26,7 +34,8 @@ usage() {
 Usage: deploy-remote.sh [--only NAME]
 
   --only html5 | web | libs | akka | fsesl | graphql | middleware | actions |
-        dashboard | export | notes | playback | recording | imex
+        dashboard | export | notes | playback | recording | imex |
+        safemeet | safemeet-recording | recording-assets
 
 Smart mode (from ./deploy.sh): DEPLOY_MODE=smart DEPLOY_COMPONENTS="html5 playback"
 EOF
@@ -104,6 +113,19 @@ deploy_akka_fsesl() {
   log "bbb-fsesl-akka updated"
 }
 
+deploy_imex() {
+  log "Deploying bbb-recording-imex (requires bbb-common-web in local Maven repo) ..."
+  deploy_libs
+  run_deploy bbb-recording-imex
+}
+
+deploy_safemeet_recording_assets() {
+  log "Deploying SafeMeet recording asset stack (libs → web → playback) ..."
+  deploy_libs
+  deploy_web
+  deploy_playback
+}
+
 deploy_bbb_playback() {
   if [[ ! -f "$BBB_ROOT/bbb-playback/deploy.sh" ]]; then
     log "SKIP bbb-playback (deploy.sh missing)"
@@ -119,9 +141,17 @@ deploy_bbb_playback() {
   )
 }
 
+restart_rap_services() {
+  log "Restarting record-and-playback workers (scripts dir is replaced during deploy) ..."
+  find /usr/local/bigbluebutton/core/scripts -name '*.rb' -print0 | xargs -0 sed -i 's/\r$//' 2>/dev/null || true
+  systemctl daemon-reload
+  systemctl restart bbb-rap-resque-worker bbb-rap-starter
+}
+
 deploy_playback() {
   run_deploy record-and-playback
   deploy_bbb_playback
+  restart_rap_services
 }
 
 ensure_toolchain() {
@@ -132,10 +162,7 @@ ensure_toolchain() {
   if [[ -f "$prereq" ]]; then
     log "Installing missing build tools (sbt, go, maven) ..."
     bash "$prereq"
-    if [[ -f /root/.sdkman/bin/sdkman-init.sh ]]; then
-      # shellcheck source=/dev/null
-      source /root/.sdkman/bin/sdkman-init.sh
-    fi
+    source_sdkman
   else
     echo "Missing sbt/go and ${prereq} not found. Run deploy once with full sync."
     exit 1
@@ -195,7 +222,8 @@ deploy_component() {
     export) run_deploy bbb-export-annotations ;;
     notes) run_deploy bbb-shared-notes-server ;;
     playback|recording) deploy_playback ;;
-    imex) run_deploy bbb-recording-imex ;;
+    imex) deploy_imex ;;
+    safemeet|safemeet-recording|recording-assets) deploy_safemeet_recording_assets ;;
     *)
       log "Unknown component: $name"
       return 1
@@ -219,7 +247,8 @@ deploy_only() {
     export) run_deploy bbb-export-annotations ;;
     notes) run_deploy bbb-shared-notes-server ;;
     playback|recording) deploy_playback ;;
-    imex) run_deploy bbb-recording-imex ;;
+    imex) deploy_imex ;;
+    safemeet|safemeet-recording|recording-assets) deploy_safemeet_recording_assets ;;
     *)
       echo "Unknown --only: $ONLY"
       usage
@@ -287,7 +316,7 @@ deploy_full() {
   if [[ "$WITH_RECORDING" == "1" ]]; then
     log "=== Phase 8: playback & recording ==="
     deploy_playback
-    run_deploy bbb-recording-imex
+    deploy_imex
   fi
 
   log "=== Sanity check ==="

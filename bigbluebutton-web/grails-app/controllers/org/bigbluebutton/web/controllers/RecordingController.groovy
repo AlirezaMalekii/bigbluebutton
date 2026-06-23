@@ -4,6 +4,7 @@ import grails.web.context.ServletContextHolder
 import groovy.json.JsonBuilder
 import org.bigbluebutton.api.MeetingService
 import org.bigbluebutton.api.ParamsProcessorUtil
+import org.bigbluebutton.api.service.RecordingAssetService
 import org.bigbluebutton.api.util.ResponseBuilder
 import org.bigbluebutton.api.ApiErrors
 import org.bigbluebutton.api.ApiParams
@@ -19,6 +20,7 @@ class RecordingController {
 
   MeetingService meetingService
   ParamsProcessorUtil paramsProcessorUtil
+  RecordingAssetService recordingAssetService
   ResponseBuilder responseBuilder = initResponseBuilder()
 
   def initResponseBuilder = {
@@ -429,6 +431,147 @@ class RecordingController {
       json {
         render(text: result, contentType: "application/json")
       }
+    }
+  }
+
+  /******************************************************
+   * SAFEMEET GET RECORDING ASSETS API
+   ******************************************************/
+  def getRecordingAssetsHandler = {
+    String API_CALL = "getRecordingAssets"
+    log.debug CONTROLLER_NAME + "#${API_CALL}"
+
+    if (!recordingAssetService?.isEnabled()) {
+      respondWithError("notEnabled", "Recording asset API is disabled")
+      return
+    }
+
+    if (StringUtils.isEmpty(params.checksum)) {
+      respondWithError("checksumError", "You did not pass the checksum security check")
+      return
+    }
+
+    if (StringUtils.isEmpty(params.recordID)) {
+      respondWithError("missingParamRecordID", "You must specify a recordID.")
+      return
+    }
+
+    if (!paramsProcessorUtil.isChecksumSame(API_CALL, params.checksum, request.getQueryString())) {
+      respondWithError("checksumError", "You did not pass the checksum security check")
+      return
+    }
+
+    String recordId = StringUtils.strip(params.recordID)
+    if (!recordingAssetService.isRecordingPublished(recordId)) {
+      respondWithError("notFound", "We could not find a published recording for " + recordId)
+      return
+    }
+
+    String result = recordingAssetService.getRecordingAssetsJson(recordId, request.getQueryString(), API_CALL)
+    response.addHeader("Cache-Control", "no-cache")
+    withFormat {
+      json {
+        render(text: result, contentType: "application/json")
+      }
+    }
+  }
+
+  /******************************************************
+   * SAFEMEET GET RECORDING EVENTS API
+   ******************************************************/
+  def getRecordingEventsHandler = {
+    String API_CALL = "getRecordingEvents"
+    log.debug CONTROLLER_NAME + "#${API_CALL}"
+
+    if (!recordingAssetService?.isEnabled()) {
+      respondWithError("notEnabled", "Recording asset API is disabled")
+      return
+    }
+
+    if (StringUtils.isEmpty(params.checksum)) {
+      respondWithError("checksumError", "You did not pass the checksum security check")
+      return
+    }
+
+    if (StringUtils.isEmpty(params.recordID)) {
+      respondWithError("missingParamRecordID", "You must specify a recordID.")
+      return
+    }
+
+    if (!paramsProcessorUtil.isChecksumSame(API_CALL, params.checksum, request.getQueryString())) {
+      respondWithError("checksumError", "You did not pass the checksum security check")
+      return
+    }
+
+    String recordId = StringUtils.strip(params.recordID)
+    if (!recordingAssetService.isRecordingPublished(recordId)) {
+      respondWithError("notFound", "We could not find a published recording for " + recordId)
+      return
+    }
+
+    String result = recordingAssetService.getRecordingEventsJson(recordId, request.getQueryString(), API_CALL)
+    response.addHeader("Cache-Control", "no-cache")
+    withFormat {
+      json {
+        render(text: result, contentType: "application/json")
+      }
+    }
+  }
+
+  /******************************************************
+   * SAFEMEET GET RECORDING ASSET FILE API
+   ******************************************************/
+  def getRecordingAssetFileHandler = {
+    String API_CALL = "getRecordingAssetFile"
+    log.debug CONTROLLER_NAME + "#${API_CALL}"
+
+    if (!recordingAssetService?.isEnabled()) {
+      response.setStatus(404)
+      render(text: "Recording asset API is disabled", contentType: "text/plain")
+      return
+    }
+
+    if (StringUtils.isEmpty(params.checksum)) {
+      response.setStatus(403)
+      render(text: "Checksum required", contentType: "text/plain")
+      return
+    }
+
+    if (StringUtils.isEmpty(params.recordID) || StringUtils.isEmpty(params.asset)) {
+      response.setStatus(400)
+      render(text: "recordID and asset are required", contentType: "text/plain")
+      return
+    }
+
+    if (!paramsProcessorUtil.isChecksumSame(API_CALL, params.checksum, request.getQueryString())) {
+      response.setStatus(403)
+      render(text: "Checksum validation failed", contentType: "text/plain")
+      return
+    }
+
+    String recordId = StringUtils.strip(params.recordID)
+    String assetId = StringUtils.strip(params.asset)
+
+    if (!recordingAssetService.isRecordingPublished(recordId)) {
+      response.setStatus(404)
+      render(text: "Recording not found", contentType: "text/plain")
+      return
+    }
+
+    try {
+      File assetFile = recordingAssetService.resolvePublishedAssetFile(recordId, assetId)
+      if (assetFile == null || !assetFile.exists()) {
+        response.setStatus(404)
+        render(text: "Asset not found", contentType: "text/plain")
+        return
+      }
+
+      response.addHeader("Cache-Control", "private, max-age=3600")
+      render(file: assetFile, fileName: assetFile.getName())
+    } catch (IOException e) {
+      log.error("Failed to stream recording asset for {} asset {}", recordId, assetId, e)
+      response.setStatus(404)
+      render(text: "Asset not found", contentType: "text/plain")
     }
   }
 

@@ -23,6 +23,11 @@ import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
 import PluginButtonContainer from '../../../plugins/plugin-button/container';
 import { UserCameraHelperAreas } from '../../../plugins-engine/extensible-areas/components/user-camera-helper/types';
 import PluginMenuActions from './plugin-menu-actions/component';
+import {
+  isSkyroomColumnLayout,
+  isSkyroomMobileViewport,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
+import { dispatchSkyroomLayoutResize } from '/imports/ui/components/skyroom-layout/layout-resize';
 
 const intlMessages = defineMessages({
   disableDesc: {
@@ -150,6 +155,7 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
 
   const videoTag = useRef<HTMLVideoElement | null>(null);
   const videoContainer = useRef<HTMLDivElement | null>(null);
+  const webcamMenuRef = useRef<HTMLDivElement | null>(null);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -221,7 +227,10 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
 
   const onLoadedData = () => {
     setVideoDataLoaded(true);
-    window.dispatchEvent(new Event('resize'));
+    // Mobile Skyroom uses fixed zone bounds; avoid resize storms that freeze phones.
+    if (!isSkyroomMobileViewport() || !isSkyroomColumnLayout()) {
+      dispatchSkyroomLayoutResize();
+    }
 
     /* used when re-sharing cameras after leaving a breakout room.
     it is needed in cases where the user has more than one active camera
@@ -294,6 +303,7 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
       name={name}
       stream={stream}
       videoContainer={videoContainer}
+      menuTriggerRef={webcamMenuRef}
       isVideoSqueezed={isVideoSqueezed}
       cameraId={cameraId}
       numOfStreams={numOfStreams}
@@ -386,6 +396,7 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
           isSelfViewDisabled={isSelfViewDisabled}
           amIModerator={amIModerator}
           videoContainer={videoContainer}
+          menuTriggerRef={webcamMenuRef}
           isFullscreenContext={isFullscreenContext}
           layoutContextDispatch={layoutContextDispatch}
         />
@@ -460,6 +471,21 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
     onDrop,
   } = makeDragOperations(stream.userId);
 
+  const openWebcamMenuFromTile = (event: React.MouseEvent | React.TouchEvent) => {
+    if (!isSkyroomMobileViewport() || !isSkyroomColumnLayout()) return;
+    if (!window.meetingClientSettings.public.kurento.enableVideoMenu) return;
+
+    const target = event.target as HTMLElement;
+    if (target.closest(
+      'button, a, [role="button"], [data-test="dropdownWebcamButton"], [data-test="webcamOptionsMenuSqueezed"], [class*="TopBar"], [class*="PinArea"], [class*="RaiseHand"], [class*="OptionsButton"], [class*="UserCameraButtons"]',
+    )) return;
+
+    const trigger = webcamMenuRef.current?.querySelector(
+      '[data-test="dropdownWebcamButton"], [data-test="webcamOptionsMenuSqueezed"]',
+    ) as HTMLElement | null;
+    trigger?.click();
+  };
+
   return (
     // @ts-expect-error -> Until everything in Typescript.
     <Styled.Content
@@ -492,6 +518,7 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
         if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
         setIsHovered(false);
       }}
+      onClick={openWebcamMenuFromTile}
       {...{
         onDragLeave,
         onDragOver,

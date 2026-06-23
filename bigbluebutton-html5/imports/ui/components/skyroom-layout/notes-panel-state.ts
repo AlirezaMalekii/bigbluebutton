@@ -1,3 +1,5 @@
+import { dispatchSkyroomLayoutResize } from './layout-resize';
+
 type NotesPanelListener = (open: boolean) => void;
 
 let skyroomNotesGlobalOpen = false;
@@ -17,7 +19,7 @@ const getVisibleNotesOpen = (): boolean => {
 const notifyListeners = (): void => {
   const visible = getVisibleNotesOpen();
   listeners.forEach((listener) => listener(visible));
-  window.dispatchEvent(new Event('resize'));
+  dispatchSkyroomLayoutResize();
 };
 
 export const getSkyroomNotesOpen = (): boolean => getVisibleNotesOpen();
