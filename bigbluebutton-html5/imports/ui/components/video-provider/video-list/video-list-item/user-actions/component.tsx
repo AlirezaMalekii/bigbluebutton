@@ -112,7 +112,8 @@ interface UserActionProps {
 const UserActions: React.FC<UserActionProps> = (props) => {
   const {
     name, cameraId, numOfStreams, onHandleVideoFocus, stream, focused, onHandleMirror,
-    isVideoSqueezed = false, videoContainer, menuTriggerRef, isRTL, isStream, isSelfViewDisabled, isMirrored,
+    isVideoSqueezed = false, videoContainer, menuTriggerRef,
+    isRTL, isStream, isSelfViewDisabled, isMirrored,
     amIModerator, isFullscreenContext, layoutContextDispatch,
   } = props;
 
@@ -133,40 +134,40 @@ const UserActions: React.FC<UserActionProps> = (props) => {
   const [setCameraPinned] = useMutation(SET_CAMERA_PINNED);
   const pinEnabledForCurrentUser = useIsVideoPinEnabledForCurrentUser(amIModerator);
   const useSkyroomMobileMenu = isSkyroomColumnLayout() && isSkyroomMobileViewport();
+  const useSkyroomFullName = isSkyroomColumnLayout() && !isSkyroomMobileViewport();
 
   const getMenuOpts = () => {
     const anchorHorizontal = isRTL ? 'right' : 'left';
 
-    if (!useSkyroomMobileMenu) {
+    if (useSkyroomMobileMenu) {
       return {
         id: `webcam-${stream.userId}-dropdown-menu`,
+        className: 'skyroom-webcam-actions-menu',
         keepMounted: true,
         transitionDuration: 0,
-        elevation: 3,
+        elevation: 8,
         getcontentanchorel: null,
         fullwidth: 'true',
-        anchorOrigin: { vertical: 'bottom', horizontal: anchorHorizontal },
-        transformOrigin: { vertical: 'top', horizontal: anchorHorizontal },
+        disableScrollLock: true,
+        BackdropProps: {
+          invisible: true,
+        },
+        anchorOrigin: { vertical: 'top', horizontal: anchorHorizontal },
+        transformOrigin: { vertical: 'bottom', horizontal: anchorHorizontal },
         container: isFullscreenContext ? videoContainer?.current : document.body,
       };
     }
 
     return {
       id: `webcam-${stream.userId}-dropdown-menu`,
-      className: 'skyroom-webcam-actions-menu',
-      keepMounted: false,
+      keepMounted: true,
       transitionDuration: 0,
-      elevation: 8,
+      elevation: 3,
       getcontentanchorel: null,
-      disableScrollLock: true,
-      disablePortal: true,
-      container: videoContainer?.current ?? undefined,
-      anchorOrigin: { vertical: 'top', horizontal: anchorHorizontal },
-      transformOrigin: { vertical: 'bottom', horizontal: anchorHorizontal },
-      MenuListProps: {
-        autoFocusItem: true,
-        sx: { display: 'block', py: 0.5 },
-      },
+      fullwidth: 'true',
+      anchorOrigin: { vertical: 'bottom', horizontal: anchorHorizontal },
+      transformOrigin: { vertical: 'top', horizontal: anchorHorizontal },
+      container: isFullscreenContext ? videoContainer?.current : document.body,
     };
   };
 
@@ -304,11 +305,13 @@ const UserActions: React.FC<UserActionProps> = (props) => {
           menuItems.push({
             key: optionItem.id,
             label: optionItem.label,
-            onClick: (event: React.MouseEvent<HTMLElement>) => optionItem.onClick({
-              streamId: cameraId,
-              userId,
-              browserClickEvent: event,
-            }),
+            onClick: (event: React.MouseEvent<HTMLElement>) => {
+              optionItem.onClick({
+                streamId: cameraId,
+                userId,
+                browserClickEvent: event,
+              });
+            },
             icon: optionItem.icon,
             dataTest: optionItem.dataTest,
           });
@@ -331,12 +334,14 @@ const UserActions: React.FC<UserActionProps> = (props) => {
 
   const renderDefaultButton = () => (
     <Styled.WebcamMenuHost ref={menuTriggerRef} data-test="skyroomWebcamMenuHost">
-      <Styled.MenuWrapper $skyroomMobile={useSkyroomMobileMenu}>
+      <Styled.MenuWrapper
+        $skyroomMobile={useSkyroomMobileMenu}
+        $skyroomFullName={useSkyroomFullName}
+      >
         {enableVideoMenu && getAvailableActions().length >= 1
           ? (
             <BBBMenu
               overrideMobileStyles={useSkyroomMobileMenu}
-              minContent={useSkyroomMobileMenu}
               trigger={(
                 <Styled.DropdownTrigger
                   tabIndex={0}
@@ -344,6 +349,7 @@ const UserActions: React.FC<UserActionProps> = (props) => {
                   data-webcam-participant-name="true"
                   $isRTL={isRTL}
                   $skyroomMobile={useSkyroomMobileMenu}
+                  $skyroomFullName={useSkyroomFullName}
                   role="button"
                 >
                   {displayName}
@@ -358,6 +364,7 @@ const UserActions: React.FC<UserActionProps> = (props) => {
               <Styled.UserName
                 $noMenu={numOfStreams < 3}
                 $skyroomMobile={useSkyroomMobileMenu}
+                $skyroomFullName={useSkyroomFullName}
                 data-test="webcamParticipantName"
               >
                 {displayName}
@@ -373,7 +380,6 @@ const UserActions: React.FC<UserActionProps> = (props) => {
       <Styled.MenuWrapperSqueezed>
         <BBBMenu
           overrideMobileStyles={useSkyroomMobileMenu}
-          minContent={useSkyroomMobileMenu}
           trigger={(
             <Styled.OptionsButton
               label={intl.formatMessage(intlMessages.squeezedLabel)}

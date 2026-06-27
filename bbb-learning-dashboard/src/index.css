@@ -4,8 +4,11 @@
 @tailwind utilities;
 
 @layer base {
+  /* Skyroom dark theme: gray-700 is the dashboard's default body text and is
+     forced via !important across many components, so remap it to the light
+     primary ink instead of #374151. See src/skyroom-theme.css. */
   .text-gray-700 {
-    color: #374151 !important;
+    color: var(--skyroom-text-primary, #e6edf7) !important;
   }
 }
 

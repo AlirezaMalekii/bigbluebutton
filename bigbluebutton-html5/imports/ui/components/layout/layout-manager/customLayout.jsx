@@ -24,7 +24,8 @@ import { SKYROOM_MOBILE_ZONE_FS_EVENT } from '/imports/ui/components/skyroom-lay
 import { SKYROOM_MOBILE_STATUS_RAIL_EVENT } from '/imports/ui/components/skyroom-layout/mobile-status-rail-state';
 import { SKYROOM_MOBILE_TALKING_RAIL_EVENT } from '/imports/ui/components/skyroom-layout/mobile-talking-rail-state';
 import { SKYROOM_WEBCAM_LAYOUT_EVENT } from '/imports/ui/components/skyroom-layout/webcam-zone-store';
-import { useStreams } from '/imports/ui/components/video-provider/hooks';
+import { useStreams, useLayoutWebcamCount } from '/imports/ui/components/video-provider/hooks';
+import { useVideoState } from '/imports/ui/components/video-provider/state';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import {
@@ -73,6 +74,8 @@ const CustomLayout = (props) => {
   const navbarInput = layoutSelectInput((i) => i.navBar);
   const layoutContextDispatch = layoutDispatch();
   const layoutVideoStreams = useStreams();
+  const layoutWebcamCount = useLayoutWebcamCount();
+  const { isConnecting: isLocalWebcamConnecting } = useVideoState();
   const videoStreamLayoutKey = layoutVideoStreams
     .map((s) => `${s.type}:${s.stream ?? s.userId ?? ''}`)
     .join('|');
@@ -168,7 +171,9 @@ const CustomLayout = (props) => {
     fullscreen,
     isPresentationEnabled,
     layoutVideoStreams.length,
+    layoutWebcamCount,
     skyroomNotesOpen,
+    isLocalWebcamConnecting,
   ]);
 
   // Screenshare + new webcams: run layout immediately (throttle alone leaves full-height share)
@@ -184,9 +189,10 @@ const CustomLayout = (props) => {
   }, [
     hasActiveScreenShare,
     layoutVideoStreams.length,
+    layoutWebcamCount,
     videoStreamLayoutKey,
     cameraDockInput.numCameras,
-    presentationInput.isOpen,
+    isLocalWebcamConnecting,
     deviceType,
   ]);
 
@@ -1213,7 +1219,7 @@ const CustomLayout = (props) => {
     layoutContextDispatch({
       type: ACTIONS.SET_CAMERA_DOCK_OUTPUT,
       value: {
-        display: cameraDockInput.numCameras > 0,
+        display: layoutWebcamCount > 0 || isLocalWebcamConnecting,
         position: effectiveCameraPosition,
         minWidth: safeCameraDockBounds.minWidth,
         width: safeCameraDockBounds.width,

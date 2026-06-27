@@ -10,7 +10,7 @@ import {
 } from './panel-toggles';
 import { resolveSkyroomMobileBox, subscribeSkyroomMobileBottom } from './mobile-bottom-state';
 import { getSkyroomNotesOpen, subscribeSkyroomNotesOpen } from './notes-panel-state';
-import { useVideoStreamsCount } from '/imports/ui/components/video-provider/hooks';
+import { useLayoutWebcamCount } from '/imports/ui/components/video-provider/hooks';
 
 /** Max remote webcams decoded while mobile stage (screenshare/slides) is active. */
 export const SKYROOM_MOBILE_STAGE_MAX_REMOTE_WEBCAMS = 1;
@@ -72,7 +72,7 @@ export const useSkyroomMobileWebcamsVisible = (): boolean => {
   const sidebarContent = layoutSelectInput((i: Input) => i.sidebarContent);
   const hasScreenShare = layoutSelectInput((i: Input) => i.screenShare.hasScreenShare);
   const presentationIsOpen = layoutSelectInput((i: Input) => i.presentation.isOpen);
-  const meetingWebcamCount = useVideoStreamsCount();
+  const layoutWebcamCount = useLayoutWebcamCount();
   const [notesOpen, setNotesOpen] = useState(getSkyroomNotesOpen);
   const [, bumpMobileBottom] = useReducer((x: number) => x + 1, 0);
 
@@ -82,7 +82,7 @@ export const useSkyroomMobileWebcamsVisible = (): boolean => {
   return computeSkyroomMobileWebcamsVisible({
     hasScreenShare,
     presentationIsOpen,
-    numCameras: meetingWebcamCount,
+    numCameras: layoutWebcamCount,
     usersOpen: sidebarNavigation.isOpen,
     chatOpen: isPublicChatOpen(sidebarContent),
     notesOpen,

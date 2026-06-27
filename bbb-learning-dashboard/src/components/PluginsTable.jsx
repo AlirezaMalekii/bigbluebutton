@@ -123,7 +123,7 @@ const PluginsTable = (props) => {
         <ReactMarkdown
           components={{
             a: ({ href, children }) => (
-              <a href={href} className="text-blue-600 underline">
+              <a href={href} className="text-blue-400 underline">
                 {children}
               </a>
             ),

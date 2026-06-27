@@ -7,6 +7,8 @@
    reduced from 56px to free vertical space inside the boxes. */
 #layout[data-skyroom-column="true"] {
   --skyroom-header-height: 44px;
+  /* Fixed user-row height — same on desktop and mobile */
+  --skyroom-user-row-h: 26px;
 }
 
 /* --- Header row --- */
@@ -250,18 +252,14 @@
 .MuiModal-root:has(.skyroom-audio-settings-menu) .override-mobile-styles,
 .MuiModal-root:has(.skyroom-audio-settings-menu) .MuiPaper-root.override-mobile-styles,
 .MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiBackdrop-root {
-  background-color: rgba(0, 0, 0, 0.2) !important;
+  background-color: transparent !important;
 }
 
-.MuiModal-root:has(.skyroom-webcam-actions-menu) .override-mobile-styles,
 .MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiPaper-root.override-mobile-styles {
-  position: absolute !important;
-  top: auto !important;
-  left: auto !important;
-  right: auto !important;
-  bottom: auto !important;
   width: auto !important;
-  max-width: min(300px, 92vw) !important;
+  min-width: 168px !important;
+  max-width: min(260px, calc(100vw - 24px)) !important;
+  pointer-events: auto !important;
 }
 
 #layout[data-skyroom-column="true"] #user-options-dropdown-menu .MuiPaper-root,

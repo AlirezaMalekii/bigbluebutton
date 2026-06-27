@@ -308,7 +308,7 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, lockSettings, index }
       >
         {avatarContent}
       </Styled.Avatar>
-      <Styled.UserNameContainer>
+      <Styled.UserNameContainer data-test="userNameContainer">
         <Styled.UserName>
           <TooltipContainer title={user.name} role="button">
             <span>{user.name}</span>

@@ -471,19 +471,6 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
     onDrop,
   } = makeDragOperations(stream.userId);
 
-  const openWebcamMenuFromTile = (event: React.MouseEvent | React.TouchEvent) => {
-    if (!isSkyroomMobileViewport() || !isSkyroomColumnLayout()) return;
-    if (!window.meetingClientSettings.public.kurento.enableVideoMenu) return;
-
-    const target = event.target as HTMLElement;
-    if (target.closest(
-      '[data-test="skyroomWebcamMenuHost"], [data-test="dropdownWebcamButton"], [data-test="webcamOptionsMenuSqueezed"], button, a, [class*="TopBar"], [class*="PinArea"], [class*="RaiseHand"], [class*="OptionsButton"], [class*="UserCameraButtons"], .skyroom-webcam-actions-menu',
-    )) return;
-
-    const trigger = webcamMenuRef.current?.querySelector('[role="button"]');
-    (trigger as HTMLElement | null)?.click();
-  };
-
   return (
     // @ts-expect-error -> Until everything in Typescript.
     <Styled.Content
@@ -516,7 +503,6 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
         if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
         setIsHovered(false);
       }}
-      onClick={openWebcamMenuFromTile}
       {...{
         onDragLeave,
         onDragOver,

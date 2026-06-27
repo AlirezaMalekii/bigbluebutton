@@ -13,7 +13,8 @@ import {
   isSkyroomMobileViewport,
   openSkyroomMobileBox,
 } from './panel-toggles';
-import { useVideoStreamsCount } from '/imports/ui/components/video-provider/hooks';
+import { useLayoutWebcamCount } from '/imports/ui/components/video-provider/hooks';
+import { useVideoState } from '/imports/ui/components/video-provider/state';
 import { subscribeSkyroomNotesOpen } from './notes-panel-state';
 import {
   getSkyroomMobileActiveBox,
@@ -51,7 +52,8 @@ export const useSkyroomColumnLayout = () => {
   const sidebarNavigation = layoutSelectInput((i: Input) => i.sidebarNavigation);
   const sidebarContent = layoutSelectInput((i: Input) => i.sidebarContent);
   const hasScreenShare = layoutSelectInput((i: Input) => i.screenShare.hasScreenShare);
-  const meetingWebcamCount = useVideoStreamsCount();
+  const layoutWebcamCount = useLayoutWebcamCount();
+  const { isConnecting: isLocalWebcamConnecting } = useVideoState();
   const presentationIsOpen = layoutSelectInput((i: Input) => i.presentation.isOpen);
   const { data: meetingData } = useMeeting((m) => ({
     componentsFlags: m.componentsFlags,
@@ -229,16 +231,31 @@ export const useSkyroomColumnLayout = () => {
   // Phone: when a camera turns on (0 → >0) while something is shared on the stage,
   // auto-select the Webcams bottom box so the user sees it. (With nothing shared the
   // engine already fills the top zone with cameras, so no tab switch is needed.)
-  const prevMeetingWebcamCountRef = useRef(meetingWebcamCount);
+  const prevMeetingWebcamCountRef = useRef(layoutWebcamCount);
   useEffect(() => {
     const prev = prevMeetingWebcamCountRef.current;
-    prevMeetingWebcamCountRef.current = meetingWebcamCount;
+    prevMeetingWebcamCountRef.current = layoutWebcamCount;
     if (!isSkyroomMobileViewport()) return;
     const stageActive = presentationIsOpen || hasActiveScreenShare;
-    if (prev === 0 && meetingWebcamCount > 0 && stageActive) {
+    if (prev === 0 && layoutWebcamCount > 0 && stageActive) {
       openSkyroomMobileBox(layoutContextDispatch, 'webcams');
     }
-  }, [meetingWebcamCount, presentationIsOpen, hasActiveScreenShare, layoutContextDispatch]);
+  }, [layoutWebcamCount, presentationIsOpen, hasActiveScreenShare, layoutContextDispatch]);
+
+  // While the local user is joining video on phone, show the webcams zone immediately
+  // so LiveKit can mount and publish (numCameras may still be 0 until GraphQL catches up).
+  useEffect(() => {
+    if (!isSkyroomMobileViewport()) return;
+    if (!isLocalWebcamConnecting) return;
+    const stageActive = presentationIsOpen || hasActiveScreenShare;
+    if (!stageActive) return;
+    openSkyroomMobileBox(layoutContextDispatch, 'webcams');
+  }, [
+    isLocalWebcamConnecting,
+    presentationIsOpen,
+    hasActiveScreenShare,
+    layoutContextDispatch,
+  ]);
 
   useEffect(() => {
     const onResize = () => {

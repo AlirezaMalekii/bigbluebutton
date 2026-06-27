@@ -438,7 +438,7 @@
 }
 
 .MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiBackdrop-root {
-  background-color: rgba(0, 0, 0, 0.2) !important;
+  background-color: transparent !important;
 }
 
 .MuiModal-root:has(.skyroom-audio-settings-menu) .MuiBackdrop-root {
@@ -453,9 +453,7 @@
 .MuiModal-root:has(.skyroom-actions-menu) .override-mobile-styles,
 .MuiModal-root:has(.skyroom-actions-menu) .MuiPaper-root.override-mobile-styles,
 .MuiModal-root:has(.skyroom-audio-settings-menu) .override-mobile-styles,
-.MuiModal-root:has(.skyroom-audio-settings-menu) .MuiPaper-root.override-mobile-styles,
-.MuiModal-root:has(.skyroom-webcam-actions-menu) .override-mobile-styles,
-.MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiPaper-root.override-mobile-styles {
+.MuiModal-root:has(.skyroom-audio-settings-menu) .MuiPaper-root.override-mobile-styles {
   position: absolute !important;
   top: auto !important;
   left: auto !important;
@@ -469,8 +467,7 @@
   .MuiModal-root:has(.skyroom-app-settings-menu) .MuiPopover-root,
   .MuiModal-root:has(.skyroom-leave-meeting-menu) .MuiPopover-root,
   .MuiModal-root:has(.skyroom-actions-menu) .MuiPopover-root,
-  .MuiModal-root:has(.skyroom-audio-settings-menu) .MuiPopover-root,
-  .MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiPopover-root {
+  .MuiModal-root:has(.skyroom-audio-settings-menu) .MuiPopover-root {
     top: auto !important;
   }
 }

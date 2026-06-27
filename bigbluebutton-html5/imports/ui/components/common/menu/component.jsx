@@ -59,12 +59,16 @@ class BBBMenu extends React.Component {
     this.handleClose = this.handleClose.bind(this);
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
     const { anchorEl } = this.state;
     const { open } = this.props;
+    if (open === undefined) return;
+
     if (open === false && anchorEl) {
       this.setState({ anchorEl: null });
-    } else if (open === true && !anchorEl) {
+    } else if (open === true && !anchorEl && this.anchorElRef) {
+      this.setState({ anchorEl: this.anchorElRef });
+    } else if (prevProps.open !== open && open === true && this.anchorElRef) {
       this.setState({ anchorEl: this.anchorElRef });
     }
   }
@@ -104,14 +108,24 @@ class BBBMenu extends React.Component {
   }
 
   handleClick(event) {
-    const { disabled } = this.props;
+    const { disabled, open: controlledOpen, onOpenChange } = this.props;
     if (disabled) return;
+    if (controlledOpen !== undefined && onOpenChange) {
+      if (!controlledOpen) {
+        this.setState({ anchorEl: event.currentTarget });
+      }
+      onOpenChange(!controlledOpen);
+      return;
+    }
     this.setState({ anchorEl: event.currentTarget });
   }
 
   handleClose(event) {
-    const { onCloseCallback } = this.props;
-    this.setState({ anchorEl: null }, onCloseCallback());
+    const { onCloseCallback, onOpenChange } = this.props;
+    if (onOpenChange) {
+      onOpenChange(false);
+    }
+    this.setState({ anchorEl: null }, onCloseCallback);
 
     if (event) {
       event.persist();
@@ -255,7 +269,14 @@ class BBBMenu extends React.Component {
       overrideMobileStyles,
       isHorizontal,
       minContent,
+      open: controlledOpen,
     } = this.props;
+    const isControlled = controlledOpen !== undefined;
+    const controlledAnchor = isControlled && controlledOpen ? this.anchorElRef : null;
+    const resolvedAnchor = customAnchorEl || anchorEl || controlledAnchor;
+    const isOpen = isControlled
+      ? Boolean(controlledOpen && resolvedAnchor)
+      : Boolean(anchorEl);
     const actionsItems = this.makeMenuItems();
 
     const roundedCornersStyles = { borderRadius: '3rem' };
@@ -303,8 +324,8 @@ class BBBMenu extends React.Component {
         <Styled.MenuWrapper
           {...opts}
           {...this.optsToMerge}
-          anchorEl={customAnchorEl || anchorEl}
-          open={Boolean(anchorEl)}
+          anchorEl={resolvedAnchor}
+          open={isOpen}
           onClose={this.handleClose}
           style={menuStyles}
           data-test={dataTest}
@@ -317,7 +338,7 @@ class BBBMenu extends React.Component {
         >
           {actionsItems}
           {renderOtherComponents}
-          {!overrideMobileStyles && anchorEl && window.innerWidth < SMALL_VIEWPORT_BREAKPOINT
+          {!overrideMobileStyles && isOpen && window.innerWidth < SMALL_VIEWPORT_BREAKPOINT
             && (
               <Styled.CloseButton
                 label={intl.formatMessage(intlMessages.close)}
@@ -361,6 +382,7 @@ BBBMenu.propTypes = {
   onCloseCallback: PropTypes.func,
   dataTest: PropTypes.string,
   open: PropTypes.bool,
+  onOpenChange: PropTypes.func,
   customStyles: PropTypes.shape({}),
   opts: PropTypes.shape({}),
   accessKey: PropTypes.string,

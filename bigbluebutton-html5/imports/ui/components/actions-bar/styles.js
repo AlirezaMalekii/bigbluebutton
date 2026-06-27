@@ -8,6 +8,7 @@ const ActionsBar = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
+  position: relative;
 `;
 
 const ActionsBarWrapper = styled.section`

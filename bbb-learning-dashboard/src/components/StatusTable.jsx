@@ -67,7 +67,7 @@ class StatusTable extends React.Component {
     return (
       <div
         className={
-          'h-1.5 bg-gray-200 absolute inset-x-0 z-10'
+          'h-1.5 bg-skyroom-brand-400 absolute inset-x-0 z-10'
           + ` ${width} ${roundedLeft} ${roundedRight}`
         }
         style={{
@@ -192,7 +192,7 @@ class StatusTable extends React.Component {
     return (
       <table className="w-full">
         <thead>
-          <tr className="text-xs font-semibold tracking-wide text-gray-700 uppercase border-b bg-gray-100">
+          <tr className="text-xs font-semibold tracking-wide text-gray-700 uppercase border-b border-skyroom-border bg-gray-100">
             <th className={`z-30 bg-inherit px-4 py-3 col-text-left sticky ${isRTL ? 'right-0' : 'left-0'}`}>
               <FormattedMessage id="app.learningDashboard.user" defaultMessage="User" />
             </th>

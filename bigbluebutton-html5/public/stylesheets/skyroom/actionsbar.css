@@ -445,7 +445,55 @@
   }
 }
 
-/* Mobile footer — icon-only platform mark inside the actions bar row */
+/* Mobile footer — icon-only logo portaled into #ActionsBar */
+#layout[data-skyroom-column="true"] #ActionsBar > div {
+  position: relative !important;
+}
+
+#layout[data-skyroom-column="true"] #ActionsBar [data-test="skyroomFooterLogoSlot"][data-mobile-footer="true"],
+#layout[data-skyroom-column="true"] #ActionsBar [data-test="skyroomFooterLogoSlot"][data-in-actions-bar="true"] {
+  position: absolute !important;
+  left: 12px !important;
+  top: 50% !important;
+  bottom: auto !important;
+  transform: translateY(-50%) !important;
+  z-index: 25 !important;
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+#layout[data-skyroom-column="true"] #ActionsBar [data-test="skyroomFooterLogoSlot"] [data-test="skyroomPlatformLogo"][data-icon-only="true"] a {
+  width: 36px !important;
+  height: 36px !important;
+  max-width: 36px !important;
+  min-width: 36px !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  justify-content: center !important;
+  align-items: center !important;
+  pointer-events: auto !important;
+}
+
+#layout[data-skyroom-column="true"] #ActionsBar [data-test="skyroomFooterLogoSlot"] [data-test="skyroomPlatformLogo"][data-icon-only="true"] img {
+  height: 36px !important;
+  width: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
+  aspect-ratio: 1 / 1 !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  pointer-events: none !important;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.28)) !important;
+}
+
+#layout[data-skyroom-column="true"]:has(#ActionsBar [data-test="skyroomFooterLogoSlot"][data-mobile-footer="true"]) #ActionsBar > div {
+  padding-inline-start: calc(12px + 36px + 10px) !important;
+  padding-inline-end: 10px !important;
+}
+
+/* Legacy mobile icon rules (header portal path) */
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="skyroomPlatformLogo"][data-icon-only="true"] a {
   width: 36px !important;
   height: 36px !important;
@@ -469,7 +517,7 @@
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.28)) !important;
 }
 
-/* Reserve space so controls never sit under the logo */
+/* Reserve space so controls never sit under the logo (legacy portal path) */
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar > div {
   padding-inline-start: calc(12px + 36px + 10px) !important;
   padding-inline-end: 10px !important;

@@ -1,0 +1,360 @@
+/* =====================================================================
+   Skyroom theme for the Learning Analytics Dashboard
+   ---------------------------------------------------------------------
+   This standalone CRA app does NOT consume the html5 client's
+   public/stylesheets/skyroom/*.css (those target #layout[...] selectors
+   that don't exist here). So we replicate the Skyroom DARK design tokens
+   locally and re-skin the dashboard's Tailwind + MUI + Recharts UI.
+
+   Token values are kept in sync with:
+     bigbluebutton-html5/public/stylesheets/skyroom/tokens.css
+     bigbluebutton-html5/public/stylesheets/skyroom/theme.css  (dark block)
+     bigbluebutton-html5/public/stylesheets/skyroom/iranyekan.css
+
+   Brand : #0D887E (teal)   Accent : #20C7BB   Dark base : #070B14
+   Imported AFTER ./index.css in src/index.js, so the !important remaps
+   below win over Tailwind's generated utilities.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   1) IRANYekan web font (Persian/Farsi) — bundled under src/fonts
+   --------------------------------------------------------------------- */
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 100;
+  font-display: swap;
+  src: url('./fonts/iranyekan/iranyekanwebthinfanum.woff') format('woff');
+}
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./fonts/iranyekan/iranyekanweblightfanum.woff') format('woff');
+}
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/iranyekan/iranyekanwebregularfanum.woff') format('woff');
+}
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./fonts/iranyekan/iranyekanwebmediumfanum.woff') format('woff');
+}
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./fonts/iranyekan/iranyekanwebboldfanum.woff') format('woff');
+}
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('./fonts/iranyekan/iranyekanwebextraboldfanum.woff') format('woff');
+}
+@font-face {
+  font-family: 'IRANYekan';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('./fonts/iranyekan/iranyekanwebextrablackfanum.woff') format('woff');
+}
+
+/* ---------------------------------------------------------------------
+   2) Design tokens (Skyroom dark)
+   --------------------------------------------------------------------- */
+:root {
+  /* Brand scale */
+  --skyroom-brand-50:  #e9f8f6;
+  --skyroom-brand-100: #d1f2ee;
+  --skyroom-brand-200: #8cddd6;
+  --skyroom-brand-300: #3fc2b8;
+  --skyroom-brand-400: #14a99e;
+  --skyroom-brand-500: #0d887e;
+  --skyroom-brand-600: #0a6f67;
+  --skyroom-brand-700: #075952;
+
+  /* Interactive accent */
+  --skyroom-accent: #20c7bb;
+  --skyroom-accent-soft: rgba(32, 199, 187, 0.12);
+  --skyroom-accent-border: rgba(32, 199, 187, 0.36);
+  --skyroom-accent-hover-bg: rgba(32, 199, 187, 0.14);
+
+  /* Surfaces / background */
+  --color-background: #070b14;
+  --skyroom-surface: #151c28;
+  --skyroom-surface-2: #0f141c;
+  --skyroom-surface-3: #1a2436;
+  --skyroom-panel-bg: linear-gradient(165deg, #1a2234 0%, #121a28 55%, #0e1522 100%);
+
+  /* Text */
+  --skyroom-text-primary: #e6edf7;
+  --skyroom-text-secondary: #b5c0ce;
+  --skyroom-text-muted: #8b95a5;
+
+  /* Lines / dividers */
+  --skyroom-border: rgba(20, 169, 158, 0.18);
+  --skyroom-border-strong: rgba(20, 169, 158, 0.34);
+  --skyroom-grid-line: #243355;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.32);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.40);
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  /* Gradients */
+  --skyroom-gradient-primary: linear-gradient(135deg, #0d887e 0%, #14a99e 100%);
+  --skyroom-gradient-bg:
+    radial-gradient(1200px 600px at 0% 0%, rgba(20, 169, 158, 0.10), transparent 60%),
+    radial-gradient(900px 500px at 100% 100%, rgba(13, 136, 126, 0.08), transparent 60%),
+    linear-gradient(180deg, #070b14 0%, #050811 100%);
+}
+
+/* ---------------------------------------------------------------------
+   3) Global chrome — dark background + IRANYekan typography
+   --------------------------------------------------------------------- */
+html,
+body,
+#root {
+  background-color: var(--color-background);
+  background-image: var(--skyroom-gradient-bg);
+  background-attachment: fixed;
+  color: var(--skyroom-text-primary);
+  font-family: 'IRANYekan', 'Source Sans Pro', Tahoma, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  color: var(--skyroom-brand-300);
+}
+
+a:hover {
+  color: var(--skyroom-brand-200);
+}
+
+hr {
+  border-color: var(--skyroom-border) !important;
+}
+
+/* MUI injects its own (Roboto) font-family through emotion — force inherit
+   so every MUI surface uses IRANYekan like the rest of the app. */
+.MuiTypography-root,
+.MuiButtonBase-root,
+.MuiPaper-root,
+.MuiDataGrid-root,
+.MuiTablePagination-root,
+.MuiPopper-root {
+  font-family: inherit !important;
+}
+
+/* Persian reinforcement (mirrors skyroom/iranyekan.css). The app sets
+   <body class="lang-fa"> for Persian locales (see src/index.js). */
+body.lang-fa,
+body.lang-fa input,
+body.lang-fa textarea,
+body.lang-fa select,
+body.lang-fa button,
+body.lang-fa h1,
+body.lang-fa h2,
+body.lang-fa h3,
+body.lang-fa h4,
+body.lang-fa h5,
+body.lang-fa h6,
+body.lang-fa p,
+body.lang-fa span,
+body.lang-fa div,
+body.lang-fa li,
+body.lang-fa label,
+body.lang-fa a,
+body.lang-fa .MuiTypography-root,
+body.lang-fa .MuiDataGrid-root,
+body.lang-fa .recharts-text {
+  font-family: 'IRANYekan', 'Source Sans Pro', Tahoma, Arial, sans-serif !important;
+}
+
+/* ---------------------------------------------------------------------
+   4) Tailwind neutral remaps — flip light utilities to Skyroom dark.
+   Only neutral grays/white are remapped; category hues (pink/green/
+   purple/blue/orange/red) are intentionally left for per-component
+   dark-adaptation. !important guarantees these beat Tailwind utilities.
+   --------------------------------------------------------------------- */
+.bg-white { background-color: var(--skyroom-surface) !important; }
+.bg-gray-50 { background-color: var(--skyroom-surface-2) !important; }
+.bg-gray-100 { background-color: var(--skyroom-surface-3) !important; }
+.bg-gray-200 { background-color: var(--skyroom-surface-3) !important; }
+
+.text-gray-500 { color: var(--skyroom-text-muted) !important; }
+.text-gray-600 { color: var(--skyroom-text-secondary) !important; }
+.text-gray-800 { color: var(--skyroom-text-primary) !important; }
+.text-gray-900 { color: var(--skyroom-text-primary) !important; }
+.text-black { color: var(--skyroom-text-primary) !important; }
+
+.border-gray-100,
+.border-gray-200,
+.border-gray-300 { border-color: var(--skyroom-border) !important; }
+.border-white { border-color: rgba(255, 255, 255, 0.08) !important; }
+
+.divide-y > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--skyroom-border) !important;
+}
+
+/* ---------------------------------------------------------------------
+   5) MUI Paper / Card
+   --------------------------------------------------------------------- */
+.MuiPaper-root {
+  background-color: var(--skyroom-surface) !important;
+  background-image:
+    radial-gradient(360px 180px at 10% 0%, rgba(20, 169, 158, 0.12), transparent 62%),
+    linear-gradient(165deg, #1a2234 0%, #121a28 100%) !important;
+  color: var(--skyroom-text-primary) !important;
+  border: 1px solid var(--skyroom-border) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* The stat-card wrapper is a MUI Card; let the inner Card.jsx div be the
+   visible surface so we don't double up borders/shadows. */
+.MuiCard-root {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+/* ---------------------------------------------------------------------
+   6) MUI X DataGrid (Polls / Quizzes / Plugins tables)
+   --------------------------------------------------------------------- */
+.MuiDataGrid-root {
+  color: var(--skyroom-text-primary) !important;
+  background-color: var(--skyroom-surface) !important;
+  border: 1px solid var(--skyroom-border) !important;
+  border-radius: var(--radius-lg) !important;
+}
+
+.MuiDataGrid-columnHeaders {
+  background-color: var(--skyroom-surface-3) !important;
+  color: var(--skyroom-text-secondary) !important;
+  border-bottom: 1px solid var(--skyroom-border) !important;
+}
+
+.MuiDataGrid-columnHeaderTitle {
+  color: var(--skyroom-text-secondary) !important;
+}
+
+.MuiDataGrid-cell,
+.MuiDataGrid-cell--withRenderer {
+  border-bottom: 1px solid var(--skyroom-border) !important;
+  color: var(--skyroom-text-primary) !important;
+}
+
+.MuiDataGrid-row:hover,
+.MuiDataGrid-row.Mui-hovered {
+  background-color: var(--skyroom-accent-soft) !important;
+}
+
+.MuiDataGrid-footerContainer {
+  border-top: 1px solid var(--skyroom-border) !important;
+}
+
+.MuiDataGrid-columnSeparator { color: var(--skyroom-border) !important; }
+.MuiDataGrid-sortIcon,
+.MuiDataGrid-menuIconButton,
+.MuiDataGrid-iconButtonContainer .MuiIconButton-root,
+.MuiTablePagination-root,
+.MuiDataGrid-selectedRowCount,
+.MuiDataGrid-overlay {
+  color: var(--skyroom-text-secondary) !important;
+}
+
+/* DataGrid overlay (loading / no rows) surface */
+.MuiDataGrid-overlay {
+  background-color: rgba(10, 18, 32, 0.6) !important;
+}
+
+/* ---------------------------------------------------------------------
+   7) Recharts (Quiz performance scatter chart)
+   --------------------------------------------------------------------- */
+.recharts-cartesian-grid line {
+  stroke: var(--skyroom-grid-line) !important;
+}
+
+.recharts-cartesian-axis-line,
+.recharts-cartesian-axis-tick-line {
+  stroke: var(--skyroom-border-strong) !important;
+}
+
+.recharts-text,
+.recharts-cartesian-axis-tick-value tspan,
+.recharts-label {
+  fill: var(--skyroom-text-muted) !important;
+}
+
+.recharts-tooltip-cursor {
+  stroke: var(--skyroom-accent) !important;
+}
+
+/* ---------------------------------------------------------------------
+   8) Scrollbars — branded, slim (mirrors skyroom/theme.css §14)
+   --------------------------------------------------------------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--skyroom-brand-300) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--skyroom-brand-400), var(--skyroom-brand-500));
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--skyroom-brand-500), var(--skyroom-brand-600));
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+/* ---------------------------------------------------------------------
+   9) Focus ring + selection (teal accent)
+   --------------------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid var(--skyroom-brand-500) !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+
+::selection {
+  background-color: rgba(20, 169, 158, 0.45);
+  color: #ffffff;
+}

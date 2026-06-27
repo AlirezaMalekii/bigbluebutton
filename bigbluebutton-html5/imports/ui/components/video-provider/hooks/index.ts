@@ -171,6 +171,14 @@ export const useVideoStreamsCount = () => {
   return streams.length;
 };
 
+/** Meeting webcams + a local stream still connecting (not yet in GraphQL). */
+export const useLayoutWebcamCount = () => {
+  const meetingWebcamCount = useVideoStreamsCount();
+  const pendingLocalWebcam = useConnectingStream();
+
+  return meetingWebcamCount + (pendingLocalWebcam ? 1 : 0);
+};
+
 export const useLocalVideoStreamsCount = () => {
   const streams = useStreams();
   const localStreams = streams.filter((vs) => videoService.isLocalStream(vs.stream));
@@ -694,6 +702,15 @@ export const useVideoStreams = () => {
   }
 
   const { gridUsers, overflowCount } = useGridUsers(streams.length);
+
+  // Keep the in-flight local share visible for WebcamContainer / LiveKit even when
+  // mobile performance filters hide remote webcams on other tabs.
+  if (
+    connectingStream
+    && !streams.some((s) => s.stream === connectingStream.stream)
+  ) {
+    streams = [...streams, connectingStream];
+  }
 
   return {
     streams,

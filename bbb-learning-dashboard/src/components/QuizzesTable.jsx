@@ -60,7 +60,7 @@ const QuizzesTable = (props) => {
   if (typeof quizzes === 'object' && Object.values(quizzes).length === 0) {
     return (
       <div className="flex flex-col items-center py-24 bg-white">
-        <div className="mb-1 p-3 rounded-full bg-orange-100 text-orange-500">
+        <div className="mb-1 p-3 rounded-full bg-orange-500/20 text-orange-300">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-6 w-6"

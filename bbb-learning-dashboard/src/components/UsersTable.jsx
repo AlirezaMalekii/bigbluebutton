@@ -198,7 +198,7 @@ class UsersTable extends React.Component {
     return (
       <table className="w-full">
         <thead>
-          <tr className="text-xs font-semibold tracking-wide text-left text-gray-700 uppercase border-b bg-gray-100">
+          <tr className="text-xs font-semibold tracking-wide text-left text-gray-700 uppercase border-b border-skyroom-border bg-gray-100">
             <th
               className={`px-3.5 2xl:px-4 py-3 col-text-left ${tab === 'overview' ? 'cursor-pointer' : ''}`}
               onClick={() => { if (tab === 'overview') this.toggleOrder('userOrder'); }}
@@ -544,12 +544,12 @@ class UsersTable extends React.Component {
                       !user.isModerator ? (
                         <td className={`px-4 py-3 text-sm text-center items ${opacity}`} data-test="userActivityScoreDashboard">
                           <svg viewBox="0 0 82 12" width="82" height="12" className="flex-none m-auto inline">
-                            <rect width="12" height="12" fill={usersActivityScore[user.userKey] > 0 ? '#4BA381' : '#e4e4e7'} />
-                            <rect width="12" height="12" x="14" fill={usersActivityScore[user.userKey] > 2 ? '#338866' : '#e4e4e7'} />
-                            <rect width="12" height="12" x="28" fill={usersActivityScore[user.userKey] > 4 ? '#1A6653' : '#e4e4e7'} />
-                            <rect width="12" height="12" x="42" fill={usersActivityScore[user.userKey] > 6 ? '#055C42' : '#e4e4e7'} />
-                            <rect width="12" height="12" x="56" fill={usersActivityScore[user.userKey] > 8 ? '#023B34' : '#e4e4e7'} />
-                            <rect width="12" height="12" x="70" fill={usersActivityScore[user.userKey] === 10 ? '#02362B' : '#e4e4e7'} />
+                            <rect width="12" height="12" fill={usersActivityScore[user.userKey] > 0 ? '#4BA381' : '#243355'} />
+                            <rect width="12" height="12" x="14" fill={usersActivityScore[user.userKey] > 2 ? '#338866' : '#243355'} />
+                            <rect width="12" height="12" x="28" fill={usersActivityScore[user.userKey] > 4 ? '#1A6653' : '#243355'} />
+                            <rect width="12" height="12" x="42" fill={usersActivityScore[user.userKey] > 6 ? '#055C42' : '#243355'} />
+                            <rect width="12" height="12" x="56" fill={usersActivityScore[user.userKey] > 8 ? '#023B34' : '#243355'} />
+                            <rect width="12" height="12" x="70" fill={usersActivityScore[user.userKey] === 10 ? '#02362B' : '#243355'} />
                           </svg>
                           &nbsp;
                           <span className="text-xs bg-gray-200 rounded-full px-2">
@@ -567,12 +567,12 @@ class UsersTable extends React.Component {
                         Object.values(user.intIds)[Object.values(user.intIds).length - 1]
                           .sessions.slice(-1)[0].leftOn > 0
                           ? (
-                            <span className="px-2 py-1 font-semibold leading-tight text-red-700 bg-red-100 rounded-full">
+                            <span className="px-2 py-1 font-semibold leading-tight text-red-300 bg-red-500/20 rounded-full">
                               <FormattedMessage id="app.learningDashboard.usersTable.userStatusOffline" defaultMessage="Offline" />
                             </span>
                           )
                           : (
-                            <span className="px-2 py-1 font-semibold leading-tight text-green-700 bg-green-100 rounded-full">
+                            <span className="px-2 py-1 font-semibold leading-tight text-green-300 bg-green-500/20 rounded-full">
                               <FormattedMessage id="app.learningDashboard.usersTable.userStatusOnline" defaultMessage="Online" />
                             </span>
                           )

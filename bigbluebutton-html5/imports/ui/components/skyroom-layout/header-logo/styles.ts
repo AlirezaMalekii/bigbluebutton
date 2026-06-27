@@ -148,18 +148,35 @@ const Link = styled.a`
 const FooterSlot = styled.div.attrs({
   'data-test': 'skyroomFooterLogoSlot',
 })`
-  position: absolute;
+  position: fixed;
   left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
+  bottom: calc((var(--skyroom-footer-h, 56px) - 28px) / 2);
+  top: auto;
+  transform: none;
+  z-index: 22;
   display: inline-flex;
   align-items: center;
   pointer-events: auto;
 
-  &[data-in-actions-bar='true'] {
+  &[data-mobile-footer='true'] {
     left: 12px;
+    bottom: auto;
     z-index: 3;
+  }
+
+  &[data-mobile-footer='true'][data-in-actions-bar='true'] {
+    position: absolute !important;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 25;
+    pointer-events: auto;
+  }
+
+  &[data-mobile-footer='true']:not([data-in-actions-bar='true']) {
+    position: fixed;
+    top: calc(var(--skyroom-actionbar-top, 92vh) + (var(--skyroom-footer-h, 56px) - 36px) / 2);
+    z-index: 22;
   }
 `;
 

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
@@ -14,7 +13,7 @@ type SkyroomHeaderLogosProps = {
 
 const SkyroomHeaderLogos: React.FC<SkyroomHeaderLogosProps> = ({ placement = 'header' }) => {
   const [isMobile, setIsMobile] = useState(isSkyroomMobileViewport());
-  const [actionsBarEl, setActionsBarEl] = useState<HTMLElement | null>(null);
+  const [layoutMobile, setLayoutMobile] = useState(false);
 
   useEffect(() => {
     const onResize = () => setIsMobile(isSkyroomMobileViewport());
@@ -23,29 +22,26 @@ const SkyroomHeaderLogos: React.FC<SkyroomHeaderLogosProps> = ({ placement = 'he
   }, []);
 
   useEffect(() => {
-    if (placement !== 'footer' || !isMobile) {
-      setActionsBarEl(null);
-      return undefined;
-    }
-
-    const resolveTarget = () => document.getElementById('ActionsBar');
-
-    setActionsBarEl(resolveTarget());
-
-    const observer = new MutationObserver(() => {
-      setActionsBarEl(resolveTarget());
-    });
     const layout = document.getElementById('layout');
-    if (layout) {
-      observer.observe(layout, { childList: true, subtree: true });
-    }
+    if (!layout) return undefined;
+
+    const syncLayoutMobile = () => {
+      setLayoutMobile(layout.hasAttribute('data-skyroom-mobile'));
+    };
+
+    syncLayoutMobile();
+    const observer = new MutationObserver(syncLayoutMobile);
+    observer.observe(layout, {
+      attributes: true,
+      attributeFilter: ['data-skyroom-mobile'],
+    });
 
     return () => observer.disconnect();
-  }, [placement, isMobile]);
+  }, []);
 
   if (!isSkyroomColumnLayout()) return null;
 
-  const footerIconOnly = placement === 'footer' && isMobile;
+  const footerIconOnly = placement === 'footer' && (isMobile || layoutMobile);
 
   const logos = (
     <Styled.Group data-test="skyroomHeaderLogos">
@@ -55,17 +51,14 @@ const SkyroomHeaderLogos: React.FC<SkyroomHeaderLogosProps> = ({ placement = 'he
   );
 
   if (placement === 'footer') {
-    const slot = (
-      <Styled.FooterSlot data-in-actions-bar={isMobile && actionsBarEl ? 'true' : undefined}>
+    // Mobile footer logo is rendered inside #ActionsBar (see SkyroomMobileFooterLogo).
+    if (footerIconOnly) return null;
+
+    return (
+      <Styled.FooterSlot>
         {logos}
       </Styled.FooterSlot>
     );
-
-    if (isMobile && actionsBarEl) {
-      return createPortal(slot, actionsBarEl);
-    }
-
-    return slot;
   }
 
   return logos;

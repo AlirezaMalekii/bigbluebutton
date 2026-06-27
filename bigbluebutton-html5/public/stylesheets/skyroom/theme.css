@@ -436,6 +436,82 @@ header[role="banner"]::after,
   max-width: 92% !important;
 }
 
+/* Desktop Skyroom — use full tile width for name chip; no ellipsis dots */
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="webcamVideoItem"] [class*="BottomBar"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #cameraDock [class*="BottomBar"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-sidebar-webcam-dock [class*="BottomBar"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-stage-webcam-dock [class*="BottomBar"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-center-webcam-dock [class*="BottomBar"] {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  align-items: flex-end !important;
+  padding-inline: 5px !important;
+}
+
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="webcamVideoItem"] [data-test="skyroomWebcamMenuHost"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #cameraDock [data-test="skyroomWebcamMenuHost"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-sidebar-webcam-dock [data-test="skyroomWebcamMenuHost"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-stage-webcam-dock [data-test="skyroomWebcamMenuHost"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-center-webcam-dock [data-test="skyroomWebcamMenuHost"] {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="webcamVideoItem"] [class*="MenuWrapper"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #cameraDock [class*="MenuWrapper"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-sidebar-webcam-dock [class*="MenuWrapper"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-stage-webcam-dock [class*="MenuWrapper"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-center-webcam-dock [class*="MenuWrapper"] {
+  max-width: calc(100% - 0.25rem) !important;
+  width: auto !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="webcamVideoItem"] [class*="Dropdown"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="webcamVideoItem"] [class*="MenuWrapper"] > [class*="Dropdown"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #cameraDock [class*="Dropdown"]:not([class*="DropdownTrigger"]),
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-sidebar-webcam-dock [class*="Dropdown"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-stage-webcam-dock [class*="Dropdown"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-center-webcam-dock [class*="Dropdown"] {
+  width: auto !important;
+  max-width: 100% !important;
+  display: inline-flex !important;
+}
+
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="webcamVideoItem"] [data-test="webcamParticipantName"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="webcamVideoItem"] [data-webcam-participant-name="true"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="webcamVideoItem"] [class*="UserName"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="webcamVideoItem"] [class*="DropdownTrigger"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="webcamVideoItem"] [class*="SqueezedName"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #cameraDock [data-test="webcamParticipantName"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #cameraDock [data-webcam-participant-name="true"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #cameraDock [class*="UserName"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #cameraDock [class*="DropdownTrigger"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #cameraDock [class*="SqueezedName"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-sidebar-webcam-dock [data-test="webcamParticipantName"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-sidebar-webcam-dock [data-webcam-participant-name="true"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-sidebar-webcam-dock [class*="UserName"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-sidebar-webcam-dock [class*="DropdownTrigger"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-sidebar-webcam-dock [class*="SqueezedName"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-stage-webcam-dock [data-test="webcamParticipantName"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-stage-webcam-dock [data-webcam-participant-name="true"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-stage-webcam-dock [class*="UserName"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-stage-webcam-dock [class*="DropdownTrigger"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-stage-webcam-dock [class*="SqueezedName"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-center-webcam-dock [data-test="webcamParticipantName"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-center-webcam-dock [data-webcam-participant-name="true"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-center-webcam-dock [class*="UserName"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-center-webcam-dock [class*="DropdownTrigger"],
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #skyroom-center-webcam-dock [class*="SqueezedName"] {
+  width: auto !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+}
+
 [data-test="webcamVideoItem"] [class*="Dropdown"],
 [data-test="webcamVideoItem"] [class*="MenuWrapper"] > [class*="Dropdown"],
 [data-test="webcamVideoItem"] [class*="UserName"],

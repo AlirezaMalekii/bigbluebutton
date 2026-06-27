@@ -452,7 +452,7 @@ class App extends React.Component {
               {
                 activitiesJson.endedOn > 0
                   ? (
-                    <span className="px-2 py-1 font-semibold leading-tight text-red-700 bg-red-100 rounded-full">
+                    <span className="px-2 py-1 font-semibold leading-tight text-red-300 bg-red-500/20 rounded-full">
                       <FormattedMessage id="app.learningDashboard.indicators.meetingStatusEnded" defaultMessage="Ended" data-test="meetingStatusEndedDashboard" />
                     </span>
                   )
@@ -461,7 +461,7 @@ class App extends React.Component {
               {
                 activitiesJson.endedOn === 0
                   ? (
-                    <span className="px-2 py-1 font-semibold leading-tight text-green-700 bg-green-100 rounded-full" data-test="meetingStatusActiveDashboard">
+                    <span className="px-2 py-1 font-semibold leading-tight text-green-300 bg-green-500/20 rounded-full" data-test="meetingStatusActiveDashboard">
                       <FormattedMessage id="app.learningDashboard.indicators.meetingStatusActive" defaultMessage="Active" />
                     </span>
                   )
@@ -494,7 +494,7 @@ class App extends React.Component {
                     }
                     number={usersCount}
                     cardClass={tab === TABS.OVERVIEW ? 'border-pink-500' : 'hover:border-pink-500 border-white'}
-                    iconClass="bg-pink-50 text-pink-500"
+                    iconClass="bg-pink-500/20 text-pink-300"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -524,7 +524,7 @@ class App extends React.Component {
                       maximumFractionDigits: 1,
                     })}
                     cardClass={tab === TABS.OVERVIEW_ACTIVITY_SCORE ? 'border-green-500' : 'hover:border-green-500 border-white'}
-                    iconClass="bg-green-200 text-green-700"
+                    iconClass="bg-green-500/20 text-green-300"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -557,7 +557,7 @@ class App extends React.Component {
                     name={intl.formatMessage({ id: 'app.learningDashboard.indicators.timeline', defaultMessage: 'Timeline' })}
                     number={this.totalOfReactions()}
                     cardClass={tab === TABS.TIMELINE ? 'border-purple-500' : 'hover:border-purple-500 border-white'}
-                    iconClass="bg-purple-200 text-purple-500"
+                    iconClass="bg-purple-500/20 text-purple-300"
                   >
                     {this.fetchMostUsedReactions()}
                   </CardBody>
@@ -571,7 +571,7 @@ class App extends React.Component {
                     name={intl.formatMessage({ id: 'app.learningDashboard.indicators.polls', defaultMessage: 'Polls' })}
                     number={Object.keys(polls).length}
                     cardClass={tab === TABS.POLLING ? 'border-blue-500' : 'hover:border-blue-500 border-white'}
-                    iconClass="bg-blue-100 text-blue-500"
+                    iconClass="bg-blue-500/20 text-blue-300"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -598,7 +598,7 @@ class App extends React.Component {
                     name={intl.formatMessage({ id: 'app.learningDashboard.indicators.quizzes', defaultMessage: 'Quizzes' })}
                     number={Object.keys(quizzes).length}
                     cardClass={tab === TABS.QUIZZES ? 'border-orange-500' : 'hover:border-orange-500 border-white'}
-                    iconClass="bg-orange-100 text-orange-500"
+                    iconClass="bg-orange-500/20 text-orange-300"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                       <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
@@ -615,7 +615,7 @@ class App extends React.Component {
                       name={pluginUserDataCardTitle}
                       number={pluginUserDataColumnTitleList.length}
                       cardClass={tab === TABS.POLLING ? 'border-red-500' : 'hover:border-red-500 border-white'}
-                      iconClass="bg-red-100 text-red-500"
+                      iconClass="bg-red-500/20 text-red-300"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
