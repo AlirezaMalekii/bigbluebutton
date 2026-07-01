@@ -6,82 +6,88 @@ $player-wrapper-padding: $control-bar-height;
   box-sizing: border-box;
   display: grid;
   grid-template-areas:
-    "top-bar content"
-    "media content"
-    "application content"
-    "bottom-bar content";
-  grid-template-columns: 100% auto;
-  grid-template-rows: $top-bar-height auto 50% $bottom-bar-height;
+    "top-bar"
+    "content"
+    "media"
+    "application"
+    "bottom-bar";
+  grid-template-columns: 100%;
+  grid-template-rows: $top-bar-height minmax(0, 1fr) $media-fit-height 38% $bottom-bar-height;
   height: 100%;
-  padding: 0 0 $player-wrapper-padding 0;
+  padding: $margin $margin $player-wrapper-padding $margin;
   width: 100%;
 }
 
 .single-content {
   grid-template-areas:
-    "top-bar content"
-    "application content"
-    "application content"
-    "bottom-bar content";
+    "top-bar"
+    "content"
+    "application"
+    "application"
+    "bottom-bar";
 }
 
 .hidden-section {
   grid-template-areas:
-    "media top-bar"
-    "media content"
-    "application content"
-    "application bottom-bar";
-  grid-template-columns: 0% auto;
+    "top-bar"
+    "content"
+    "media"
+    "application"
+    "bottom-bar";
+  grid-template-rows: $top-bar-height minmax(0, 1fr) 0 0 $bottom-bar-height;
 }
 
 .fullscreen-content {
-  grid-template-columns: 0% auto;
-  grid-template-rows: 0% auto auto 0%;
+  grid-template-rows: 0 minmax(0, 1fr) 0 0 0;
+  padding: 0;
 }
 
 @media (min-width: $media-min-width) {
   .player-wrapper {
     grid-template-areas:
-      "media top-bar"
-      "media content"
-      "application content"
-      "application content"
-      "application bottom-bar";
-    grid-template-columns: $section-width auto;
-    grid-template-rows: $top-bar-height $media-fit-height auto auto $bottom-bar-height;
+      "top-bar top-bar"
+      "content media"
+      "content application"
+      "content application"
+      "bottom-bar application";
+    grid-template-columns: minmax(0, 1fr) $section-width;
+    grid-template-rows: $top-bar-height $media-fit-height minmax(0, 1fr) auto $bottom-bar-height;
+    gap: $margin;
   }
 
   .single-content {
     grid-template-areas:
-      "application top-bar"
-      "application content"
-      "application content"
-      "application content"
-      "application bottom-bar";
+      "top-bar top-bar"
+      "content application"
+      "content application"
+      "content application"
+      "bottom-bar application";
   }
 
   .hidden-section {
-    grid-template-columns: 0% auto;
+    grid-template-columns: minmax(0, 1fr) 0;
+    gap: 0;
   }
 
   .fullscreen-content {
-    grid-template-columns: 0% auto;
-    grid-template-rows: 0% auto auto auto 0%;
+    grid-template-columns: minmax(0, 1fr) 0;
+    grid-template-rows: 0 minmax(0, 1fr) auto auto 0;
+    gap: 0;
   }
 
   @media (max-height: $media-max-height) {
     .player-wrapper {
-      grid-template-columns: $section-width-small auto;
+      grid-template-columns: minmax(0, 1fr) $section-width-small;
       grid-template-rows: $top-bar-height $media-fit-height-small auto auto $bottom-bar-height;
     }
 
     .hidden-section {
-      grid-template-columns: 0% auto;
+      grid-template-columns: minmax(0, 1fr) 0;
     }
 
     .fullscreen-content {
-      grid-template-columns: 0% auto;
-      grid-template-rows: 0% auto auto auto 0%;
+      grid-template-columns: minmax(0, 1fr) 0;
+      grid-template-rows: 0 minmax(0, 1fr) auto auto 0;
     }
   }
 }

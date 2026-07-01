@@ -30,6 +30,17 @@ const Message = styled.div`
   overflow: hidden;
 `;
 
+const SenderName = styled.div`
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 3px;
+  color: var(--skyroom-panel-accent, #20c7bb);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
 export const DeleteMessage = styled.span`
   color: ${colorGrayLight};
   overflow: hidden;
@@ -92,4 +103,5 @@ export default {
   Message,
   DeleteMessage,
   HtmlContent,
+  SenderName,
 };

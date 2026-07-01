@@ -4,14 +4,15 @@
   --gray-light-color: var(--gray-light);
   --gray-lightest-color: var(--gray-lightest);
   --highlight-color: var(--blue);
-  --color-text: #111;
-  --color-off-white: #F3F6F9;
-  --color-gray-lightest: #D4D9DF;
-  --color-danger-dark: #AE1010;
+  --color-text: var(--skyroom-text-primary);
+  --color-off-white: rgba(255, 255, 255, .08);
+  --color-gray-lightest: rgba(148, 163, 184, .26);
+  --color-danger-dark: #fca5a5;
 }
 
 .reply-tag {
-  background-color: var(--gray-lightest-color);
+  background-color: rgba(20, 169, 158, .1);
+  border: 1px solid rgba(20, 169, 158, .18);
   display: flex;
   width: 90%;
   padding: $padding-small;
@@ -79,22 +80,34 @@
 }
 
 .highlight {
-  background-color: var(--highlight-color);
+  background-color: rgba(20, 169, 158, .2);
 }
 
 .message {
+  background: rgba(255, 255, 255, .035);
+  border: 1px solid rgba(255, 255, 255, .07);
+  border-radius: $border-radius;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  margin-bottom: $margin-small;
+  padding: $padding-small;
+  transition: background-color .18s ease, border-color .18s ease;
 
   width: 100%;
 
   [dir="ltr"] & {
-    padding: 0 0 $padding $padding;
+    padding: $padding-small;
   }
 
   [dir="rtl"] & {
-    padding: 0 $padding $padding 0;
+    padding: $padding-small;
+    text-align: right;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, .055);
+    border-color: rgba(20, 169, 158, .18);
   }
 
   .main-content-wrapper {
@@ -146,6 +159,7 @@
   }
 
   .name {
+    color: var(--skyroom-text-primary);
     font-weight: var(--font-weight-semi-bold);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -154,6 +168,7 @@
 
   .time {
     align-items: center;
+    color: var(--skyroom-text-muted);
     display: flex;
     font-size: x-small;
     opacity: .75;
@@ -169,6 +184,8 @@
 
   .text {
     box-sizing: border-box;
+    color: var(--skyroom-text-secondary);
+    line-height: 1.8;
     overflow-wrap: break-word;
     width: 100%;
     white-space: pre-wrap;

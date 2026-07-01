@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import { useMutation } from '@apollo/client';
 import {
@@ -53,6 +53,32 @@ const PadGraphql: React.FC<PadGraphqlProps> = (props) => {
     setPadURL(Service.buildPadURL(padId, sessionIds));
   }, [isRTL, hasSession, intl.locale]);
 
+  // The Etherpad toolbar lives inside the (same-origin) iframe, so it can't be styled from the
+  // parent stylesheet. On load, inject the Skyroom etherpad stylesheet into the iframe document
+  // to reskin the toolbar/icons. Absolute URL is derived from an already-loaded skyroom sheet so
+  // it resolves regardless of the client base path. Guarded so a cross-origin pad degrades safely.
+  const handleIFrameLoad = useCallback((e: React.SyntheticEvent<HTMLIFrameElement>) => {
+    try {
+      const doc = e.currentTarget.contentDocument;
+      if (!doc || doc.getElementById('skyroom-etherpad-styles')) return;
+
+      const skyroomSheet = Array.from(document.styleSheets)
+        .find((s) => s.href && s.href.includes('/stylesheets/skyroom/'));
+      const href = skyroomSheet?.href
+        ? skyroomSheet.href.replace(/[^/]+$/, 'etherpad.css')
+        : null;
+      if (!href) return;
+
+      const link = doc.createElement('link');
+      link.id = 'skyroom-etherpad-styles';
+      link.rel = 'stylesheet';
+      link.href = href;
+      doc.head.appendChild(link);
+    } catch (err) {
+      // Cross-origin pad (non-default deployment) — leave the native Etherpad chrome as-is.
+    }
+  }, []);
+
   if (!hasPermission) {
     return <PadContent externalId={externalId} />;
   }
@@ -63,6 +89,7 @@ const PadGraphql: React.FC<PadGraphqlProps> = (props) => {
         title="pad"
         src={padURL}
         aria-describedby="padEscapeHint"
+        onLoad={handleIFrameLoad}
         style={{
           pointerEvents: isResizing ? 'none' : 'inherit',
         }}

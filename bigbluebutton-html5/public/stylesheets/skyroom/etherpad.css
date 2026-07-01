@@ -1,0 +1,102 @@
+/*
+ * Skyroom shared-notes (Etherpad) reskin.
+ *
+ * This file is NOT loaded by the main client. It is injected into the same-origin Etherpad
+ * <iframe> at runtime (see pads/pads-graphql/component.tsx → handleIFrameLoad) because the
+ * Etherpad toolbar lives inside the iframe and cannot be reached from the parent stylesheet.
+ *
+ * It reskins Etherpad's classic toolbar + icons and the editor surface to match the Skyroom
+ * dark theme. Colours are literal (the iframe has no access to the parent's CSS variables).
+ */
+
+/* ── Toolbar bar ───────────────────────────────────────────────────────────── */
+#editbar,
+.toolbar {
+  background: #101826 !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: none !important;
+  padding: 6px 8px !important;
+}
+
+#editbar .menu_left,
+#editbar .menu_right,
+.toolbar .menu_left,
+.toolbar .menu_right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+}
+
+/* ── Toolbar buttons + icons ───────────────────────────────────────────────── */
+.toolbar ul li,
+#editbar ul li {
+  border: none !important;
+  background: transparent !important;
+  border-radius: 9px !important;
+  margin: 0 1px !important;
+  box-shadow: none !important;
+}
+
+.toolbar ul li a,
+.toolbar ul li a .buttonicon,
+.toolbar .buttonicon,
+#editbar .buttonicon {
+  color: #cdd8e6 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 9px !important;
+  box-shadow: none !important;
+  transition: background 130ms ease, color 130ms ease !important;
+}
+
+.toolbar ul li a:hover,
+.toolbar ul li:hover a,
+.toolbar ul li:hover .buttonicon,
+#editbar ul li:hover .buttonicon {
+  background: rgba(32, 199, 187, 0.16) !important;
+  color: #ffffff !important;
+}
+
+.toolbar ul li.selected,
+.toolbar ul li.selected a,
+.toolbar ul li[data-selected] a,
+.toolbar ul li a:active {
+  background: rgba(32, 199, 187, 0.26) !important;
+  color: #ffffff !important;
+  box-shadow: inset 0 0 0 1px rgba(32, 199, 187, 0.5) !important;
+}
+
+/* Separators between toolbar groups. */
+.toolbar ul li.separator,
+.separator {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: none !important;
+}
+
+/* Select controls in the toolbar (font, heading, etc.). */
+.toolbar select,
+#editbar select {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #e6edf7 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+  padding: 2px 6px !important;
+}
+
+/* ── Editor surface (dark, to match the panel chrome) ──────────────────────── */
+#innerdocbody,
+.innerdocbody,
+#innerdocbody a {
+  background: #0f1826 !important;
+  color: #e6edf7 !important;
+}
+
+/* Colour picker / popups raised by the toolbar. */
+#colorpicker,
+.popup {
+  background: #131d2c !important;
+  color: #e6edf7 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+}

@@ -2,7 +2,7 @@ $avatar-size: 2rem;
 
 :root {
   --avatar-color: var(--white);
-  --avatar-default-background-color: var(--blue);
+  --avatar-default-background-color: var(--skyroom-brand-gradient);
   --avatar-zero-background-color: rgb(123, 31, 162);
   --avatar-one-background-color: rgb(106, 27, 154);
   --avatar-two-background-color: rgb(74, 20, 140);
@@ -28,6 +28,7 @@ $avatar-size: 2rem;
 
   .avatar {
     color: var(--avatar-color);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .24);
     height: $avatar-size;
     text-align: center;
     width: $avatar-size;
@@ -48,7 +49,7 @@ $avatar-size: 2rem;
   }
 
   .avatar-default {
-    background-color: var(--avatar-default-background-color);
+    background: var(--avatar-default-background-color);
   }
 
   .avatar-zero {

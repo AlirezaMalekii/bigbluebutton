@@ -34,7 +34,7 @@ export const Modal = ({ isOpen, children }) => {
     ReactDOM.createPortal(
       <div
         role="dialog"
-        className="bg-black/50 grow fixed inset-0 z-50 flex items-center justify-center"
+        className="ld-modal-backdrop grow fixed inset-0 z-50 flex items-center justify-center"
         ref={container}
       >
         {children}
@@ -45,17 +45,17 @@ export const Modal = ({ isOpen, children }) => {
 };
 
 export const ModalTitle = ({ children }) => (
-  <h2 className="text-xl font-bold text-black p-6 pb-0">{children}</h2>
+  <h2 className="ld-modal-title">{children}</h2>
 );
 
 export const ModalContent = ({ children }) => (
-  <div className="w-full max-h-[calc(100%-50px)] md:w-2/3 bg-gray-100 relative rounded flex flex-col">{children}</div>
+  <div className="ld-modal-content">{children}</div>
 );
 
 export const ModalDismissButton = ({ onClick }) => (
   <button
     type="button"
-    className="absolute top-0 right-0 -translate-x-2 translate-y-2 text-gray-800 hover:text-gray-500 focus:outline-none focus:ring focus:ring-gray-500 focus:ring-opacity-50 hover:text-black/50 active:text-black/75 rounded-md"
+    className="ld-modal-close"
     onClick={onClick}
   >
     <span className="sr-only">
@@ -77,7 +77,7 @@ export const ModalDismissButton = ({ onClick }) => (
 );
 
 export const ModalBody = ({ children }) => (
-  <div className="p-6 overflow-auto h-full">
+  <div className="ld-modal-body">
     {children}
   </div>
 );

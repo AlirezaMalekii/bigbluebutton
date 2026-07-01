@@ -5,6 +5,11 @@ import Icon from '/imports/ui/components/common/icon/component';
 import Styled from './styles';
 import { ACTIONS, PANELS } from '../../../layout/enums';
 import BreakoutRemainingTime from '/imports/ui/components/common/remaining-time/breakout-duration/component';
+import {
+  isSkyroomColumnLayout,
+  isSkyroomMobileViewport,
+  openSkyroomBreakout,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const intlMessages = defineMessages({
   breakoutTitle: {
@@ -20,6 +25,12 @@ const BreakoutRoomItem = ({
   intl,
 }) => {
   const toggleBreakoutPanel = () => {
+    // On a Skyroom phone the breakout panel must take over the single bottom box; the raw
+    // content dispatch alone leaves the active box on 'users' so the panel never showed.
+    if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
+      openSkyroomBreakout(layoutContextDispatch);
+      return;
+    }
     layoutContextDispatch({
       type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
       value: sidebarContentPanel !== PANELS.BREAKOUT,

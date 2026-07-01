@@ -63,8 +63,17 @@ export const useSkyroomColumnLayout = () => {
 
   const usersOpen = sidebarNavigation.isOpen;
   const chatOpen = isPublicChatOpen(sidebarContent);
+  // Breakout shares the content sidebar with chat. The `chat-visible` layout attribute really
+  // gates the content wrapper (see layout.css), so it must be true for breakout too — otherwise
+  // the breakout management/join panel is hidden and unreachable.
+  const breakoutOpen = sidebarContent.isOpen
+    && sidebarContent.sidebarContentPanel === PANELS.BREAKOUT;
+  const waitingUsersOpen = sidebarContent.isOpen
+    && sidebarContent.sidebarContentPanel === PANELS.WAITING_USERS;
+  const contentOpen = chatOpen || breakoutOpen || waitingUsersOpen;
   const [notesOpen, setNotesOpen] = useState(isSkyroomNotesOpen);
-  const screenshareMinimized = hasActiveScreenShare && !presentationIsOpen;
+  const hasExternalVideo = layoutSelectInput((i: Input) => i.externalVideo.hasExternalVideo);
+  const stageMediaMinimized = (hasActiveScreenShare || hasExternalVideo) && !presentationIsOpen;
 
   useEffect(() => subscribeSkyroomNotesOpen(setNotesOpen), []);
 
@@ -190,20 +199,20 @@ export const useSkyroomColumnLayout = () => {
 
   useEffect(() => {
     const layoutEl = document.getElementById('layout');
-    syncSkyroomLayoutAttributes(layoutEl, usersOpen, chatOpen, notesOpen);
+    syncSkyroomLayoutAttributes(layoutEl, usersOpen, contentOpen, notesOpen);
     if (layoutEl) {
       if (hasActiveScreenShare) {
         layoutEl.setAttribute('data-skyroom-screen-share', 'true');
       } else {
         layoutEl.removeAttribute('data-skyroom-screen-share');
       }
-      if (screenshareMinimized) {
+      if (stageMediaMinimized) {
         layoutEl.setAttribute('data-skyroom-presentation-minimized', 'true');
       } else {
         layoutEl.removeAttribute('data-skyroom-presentation-minimized');
       }
     }
-  }, [usersOpen, chatOpen, notesOpen, hasActiveScreenShare, screenshareMinimized]);
+  }, [usersOpen, contentOpen, notesOpen, hasActiveScreenShare, stageMediaMinimized]);
 
   // Phone: sync navbar-opened notes with the bottom zone. Tab-bar switches go through
   // openSkyroomMobileBox first (activeBox is updated synchronously); while notesOpen
@@ -215,7 +224,8 @@ export const useSkyroomColumnLayout = () => {
 
     if (notesOpen) {
       if (explicit === 'notes') return;
-      if (explicit === 'chat' || explicit === 'users' || explicit === 'webcams') return;
+      if (explicit === 'chat' || explicit === 'users' || explicit === 'webcams'
+        || explicit === 'breakout' || explicit === 'waiting') return;
 
       layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_NAVIGATION_IS_OPEN, value: false });
       layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_NAVIGATION_PANEL, value: PANELS.NONE });
@@ -227,6 +237,23 @@ export const useSkyroomColumnLayout = () => {
       setSkyroomMobileActiveBox(null);
     }
   }, [notesOpen, layoutContextDispatch]);
+
+  // Phone: if the breakout box was active and the breakout ended (panel auto-closes), release
+  // the explicit selection so the bottom zone doesn't strand on an empty breakout panel.
+  useEffect(() => {
+    if (!isSkyroomMobileViewport()) return;
+    if (getSkyroomMobileActiveBox() === 'breakout' && !breakoutOpen) {
+      setSkyroomMobileActiveBox(null);
+    }
+  }, [breakoutOpen]);
+
+  // Phone: release waiting-users box when the panel closes.
+  useEffect(() => {
+    if (!isSkyroomMobileViewport()) return;
+    if (getSkyroomMobileActiveBox() === 'waiting' && !waitingUsersOpen) {
+      setSkyroomMobileActiveBox(null);
+    }
+  }, [waitingUsersOpen]);
 
   // Phone: when a camera turns on (0 → >0) while something is shared on the stage,
   // auto-select the Webcams bottom box so the user sees it. (With nothing shared the

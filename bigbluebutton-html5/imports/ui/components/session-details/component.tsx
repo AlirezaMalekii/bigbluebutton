@@ -7,6 +7,7 @@ import { useQuery } from '@apollo/client';
 import { GET_WELCOME_MESSAGE, WelcomeMsgsResponse } from './queries';
 import Styled from './styles';
 import deviceInfo from '/imports/utils/deviceInfo';
+import { hasDisplayableSessionDetails, stripHtml } from './utils';
 
 const intlMessages = defineMessages({
   title: {
@@ -96,6 +97,9 @@ const SessionDetails: React.FC<SessionDetailsProps> = (props) => {
 
   const { isMobile } = deviceInfo;
 
+  const showWelcome = stripHtml(welcomeMessage).length > 0;
+  const showModWelcome = stripHtml(welcomeMsgForModerators).length > 0;
+
   return (
     <ModalSimple
       title={intl.formatMessage(intlMessages.title)}
@@ -116,8 +120,12 @@ const SessionDetails: React.FC<SessionDetailsProps> = (props) => {
         isFullWidth={isMobile || !(loginUrl || (formattedDialNum && formattedTelVoice))}
       >
         <div>
-          <Styled.WelcomeMessage dangerouslySetInnerHTML={{ __html: welcomeMessage }} />
-          <Styled.WelcomeMessage dangerouslySetInnerHTML={{ __html: welcomeMsgForModerators }} />
+          {showWelcome && (
+            <Styled.WelcomeMessage dangerouslySetInnerHTML={{ __html: welcomeMessage }} />
+          )}
+          {showModWelcome && (
+            <Styled.WelcomeMessage dangerouslySetInnerHTML={{ __html: welcomeMsgForModerators }} />
+          )}
         </div>
         <div>
           {loginUrl && (
@@ -226,14 +234,24 @@ const SessionDetailsContainer: React.FC<SessionDetailsContainerProps> = ({
     loginUrl = '';
   }
 
+  const welcomeMessage = welcomeData.user_welcomeMsgs[0]?.welcomeMsg ?? '';
+  const welcomeMsgForModerators = welcomeData.user_welcomeMsgs[0]?.welcomeMsgForModerators ?? '';
+
+  if (!hasDisplayableSessionDetails({
+    welcome: welcomeMessage,
+    welcomeForModerators: welcomeMsgForModerators,
+  })) {
+    return null;
+  }
+
   return (
     <SessionDetails
       isOpen={isOpen}
       onRequestClose={onRequestClose}
       priority={priority}
       loginUrl={loginUrl}
-      welcomeMessage={welcomeData.user_welcomeMsgs[0]?.welcomeMsg ?? ''}
-      welcomeMsgForModerators={welcomeData.user_welcomeMsgs[0]?.welcomeMsgForModerators ?? ''}
+      welcomeMessage={welcomeMessage}
+      welcomeMsgForModerators={welcomeMsgForModerators}
       formattedDialNum={formattedDialNum}
       formattedTelVoice={formattedTelVoice}
       anchorElement={anchorElement}

@@ -471,9 +471,23 @@ const anchorSkyroomMoreMenuAboveTrigger = () => {
   left = Math.max(stageRect.left + gap, left);
   left = Math.min(left, stageRect.right - menuWidth - gap);
 
+  const desiredTop = `${Math.round(top)}px`;
+  const desiredLeft = `${Math.round(left)}px`;
+
+  // Idempotent: if the menu is already anchored where we want it, don't rewrite its style.
+  // Rewriting on every mutation nudges the element between touchstart and touchend, which
+  // cancels the tap on phones — that was why the menu items appeared to "do nothing".
+  if (
+    menu.dataset.skyroomMoreMenuAnchored === 'true'
+    && menu.style.top === desiredTop
+    && menu.style.left === desiredLeft
+  ) {
+    return;
+  }
+
   menu.style.setProperty('position', 'fixed', 'important');
-  menu.style.setProperty('top', `${Math.round(top)}px`, 'important');
-  menu.style.setProperty('left', `${Math.round(left)}px`, 'important');
+  menu.style.setProperty('top', desiredTop, 'important');
+  menu.style.setProperty('left', desiredLeft, 'important');
   menu.style.setProperty('right', 'auto', 'important');
   menu.style.setProperty('bottom', 'auto', 'important');
   menu.style.setProperty('transform', 'none', 'important');

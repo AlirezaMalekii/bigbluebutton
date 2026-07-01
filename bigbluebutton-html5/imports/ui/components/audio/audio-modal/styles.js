@@ -27,6 +27,14 @@ const AudioOptions = styled.div`
   align-items: flex-start;
   gap: 1.5rem 2.5rem;
   width: 100%;
+
+  @media ${smallOnly} {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
 `;
 
 const AudioOption = styled.div`
@@ -35,6 +43,10 @@ const AudioOption = styled.div`
   align-items: center;
   max-width: 11.5rem;
   text-align: center;
+
+  @media ${smallOnly} {
+    max-width: 100%;
+  }
 `;
 
 const AudioOptionDesc = styled.p`
@@ -44,6 +56,10 @@ const AudioOptionDesc = styled.p`
   line-height: 1.45;
   font-weight: 400;
   color: var(--skyroom-text-secondary, #aab6c7);
+
+  @media ${smallOnly} {
+    margin: 0.25rem 0 0;
+  }
 `;
 
 /* Classic BBB mic / listen-only layout — label color adapted for dark modal shell */
@@ -131,6 +147,10 @@ const ConnectingAnimation = styled.span`
 const AudioModal = styled(ModalSimple)`
   padding: 1rem;
   min-height: 20rem;
+
+  @media ${smallOnly} {
+    min-height: 0;
+  }
 `;
 
 const BrowserWarning = styled.p`

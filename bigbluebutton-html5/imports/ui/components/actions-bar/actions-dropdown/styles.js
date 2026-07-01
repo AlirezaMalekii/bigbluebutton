@@ -31,6 +31,13 @@ const TimerModalBody = styled.div`
   overflow-y: auto;
   overflow-x: hidden;
   padding: 0.5rem;
+
+  @media ${smallOnly} {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    padding: 0;
+  }
 `;
 
 export default {

@@ -157,7 +157,7 @@ export const MuteToggle: React.FC<MuteToggleProps> = ({
       hideLabel
       label={label}
       aria-label={label}
-      color={!muted ? 'primary' : 'default'}
+      color={!muted ? 'primary' : 'danger'}
       icon={muted ? 'mute' : 'unmute'}
       size="lg"
       circle

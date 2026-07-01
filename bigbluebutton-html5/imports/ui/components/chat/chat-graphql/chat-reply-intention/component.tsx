@@ -85,6 +85,12 @@ const ChatReplyIntention = () => {
       }}
     >
       <Styled.Message>
+        {username && (
+          <Styled.Username>
+            @
+            {username}
+          </Styled.Username>
+        )}
         <Styled.HtmlContent
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: getFirstVisibleLineHtml(message || '') }}

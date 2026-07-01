@@ -63,23 +63,28 @@ const BreakoutRoomUserAssignmentMobile: React.FC<ChildComponentProps> = ({
           <Styled.ListContainer>
             <span>
               {
-                new Array(numberOfRooms).fill(1).map((_, idx) => (
-                  <Styled.RoomItem>
-                    <Styled.ItemTitle>
-                      {intl.formatMessage(intlMessages.breakoutRoomLabel, { roomNumber: idx + 1 })}
-                    </Styled.ItemTitle>
-                    <Styled.ItemButton
-                      label={intl.formatMessage(intlMessages.addParticipantLabel)}
-                      size="lg"
-                      ghost
-                      color="primary"
-                      onClick={() => {
-                        setLayer(3);
-                        setSelectedRoom(idx + 1);
-                      }}
-                    />
-                  </Styled.RoomItem>
-                ))
+                new Array(numberOfRooms).fill(1).map((_, idx) => {
+                  const roomNumber = idx + 1;
+                  const assignedCount = rooms?.[roomNumber]?.users?.length ?? 0;
+                  return (
+                    <Styled.RoomItem key={`breakout-room-assign-${roomNumber}`}>
+                      <Styled.ItemTitle>
+                        {intl.formatMessage(intlMessages.breakoutRoomLabel, { roomNumber })}
+                        {assignedCount > 0 ? ` · ${assignedCount}` : ''}
+                      </Styled.ItemTitle>
+                      <Styled.ItemButton
+                        label={intl.formatMessage(intlMessages.addParticipantLabel)}
+                        size="lg"
+                        ghost
+                        color="primary"
+                        onClick={() => {
+                          setLayer(3);
+                          setSelectedRoom(roomNumber);
+                        }}
+                      />
+                    </Styled.RoomItem>
+                  );
+                })
               }
             </span>
           </Styled.ListContainer>
@@ -87,7 +92,7 @@ const BreakoutRoomUserAssignmentMobile: React.FC<ChildComponentProps> = ({
       );
     }
     return null;
-  }, [layer, numberOfRooms]);
+  }, [layer, numberOfRooms, rooms]);
 
   const layerThree = useMemo(() => {
     return (

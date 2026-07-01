@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Notification, NotificationResponse, getNotificationsStream } from './queries';
 import useCurrentUser from '../../core/hooks/useCurrentUser';
@@ -12,10 +12,25 @@ import {
 } from './service';
 import Styled from './styles';
 import useDeduplicatedSubscription from '../../core/hooks/useDeduplicatedSubscription';
+import { layoutDispatch } from '/imports/ui/components/layout/context';
+import {
+  isSkyroomMobileViewport,
+  openSkyroomWaitingUsers,
+  openSkyroomWaitingUsersDesktop,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const Notifications: React.FC = () => {
   const [registeredAt, setRegisteredAt] = React.useState<string>(new Date().toISOString());
   const [greaterThanLastOne, setGreaterThanLastOne] = React.useState<number>(0);
+  const layoutContextDispatch = layoutDispatch();
+
+  const openGuestWaitingPanel = useCallback(() => {
+    if (isSkyroomMobileViewport()) {
+      openSkyroomWaitingUsers(layoutContextDispatch);
+    } else {
+      openSkyroomWaitingUsersDesktop(layoutContextDispatch);
+    }
+  }, [layoutContextDispatch]);
 
   const messageIndexRef = React.useRef<{
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -49,7 +64,7 @@ const Notifications: React.FC = () => {
         <Styled.TitleMessage>{notification.messageValues['0']}</Styled.TitleMessage>,
         notification.notificationType,
         notification.icon,
-        null,
+        { onClick: openGuestWaitingPanel },
         <Styled.ContentMessage>
           <FormattedMessage
             id={notification.messageId}

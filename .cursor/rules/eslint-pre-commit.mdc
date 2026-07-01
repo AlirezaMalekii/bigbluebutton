@@ -1,0 +1,73 @@
+---
+description: ESLint compliance for BBB frontend — avoid pre-commit hook failures
+globs: bigbluebutton-html5/**/*.{js,jsx,ts,tsx}
+alwaysApply: false
+---
+
+# ESLint Pre-Commit Compliance (BBB HTML5)
+
+Husky runs `eslint` on staged `*.{js,jsx,ts,tsx}` and `tsc --noEmit --incremental` (`tscheck:staged`) before every commit. **Errors block the commit**; fix them before finishing work.
+
+## Before Committing
+
+```bash
+cd bigbluebutton-html5
+npx eslint path/to/changed/file.tsx
+npm run tscheck:staged   # or: npx tsc --noEmit --incremental
+```
+
+## Common Rules in This Project
+
+### `react/jsx-indent` — child elements must align with parent depth
+
+```tsx
+// ❌ BAD — child at same indent as parent opening tag
+<Styled.Message>
+<Styled.HtmlContent />
+</Styled.Message>
+
+// ✅ GOOD — child indented 2 spaces inside parent
+<Styled.Message>
+  <Styled.HtmlContent />
+</Styled.Message>
+```
+
+### `object-curly-newline` — multi-item imports/exports need line breaks
+
+```js
+// ❌ BAD — 4+ named imports on one line
+import React, { useContext, useEffect, useMemo, useState } from 'react';
+
+// ✅ GOOD
+import React, {
+  useContext, useEffect, useMemo, useState,
+} from 'react';
+```
+
+### `react/prop-types` — warnings only (usually non-blocking)
+
+Prefer matching existing file style. Do not add PropTypes to `.tsx` files that use TypeScript interfaces unless the file already uses PropTypes.
+
+### TypeScript selectors in hooks — return type must match `Partial<T>`
+
+```ts
+// ❌ BAD — inline type narrows breakoutRoomsSummary incompatible with User
+useCurrentUser((u: { breakoutRoomsSummary?: { totalOfJoinURL?: number } }) => ({
+  breakoutRoomsSummary: u.breakoutRoomsSummary,
+}));
+
+// ✅ GOOD — let hook infer Partial<User>
+useCurrentUser((u) => ({
+  isModerator: u.isModerator,
+  breakoutRoomsSummary: u.breakoutRoomsSummary,
+}));
+```
+
+## Agent Checklist
+
+When editing BBB frontend files:
+
+1. Preserve JSX indentation — each nested element +2 spaces
+2. Break long `{ a, b, c, d }` import/export braces across lines
+3. Run `npx eslint` on touched files before telling the user work is done
+4. If commit fails on pre-commit, fix errors and retry — never suggest `--no-verify`

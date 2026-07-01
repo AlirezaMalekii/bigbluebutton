@@ -25,6 +25,16 @@ const Overlay = styled.div`
   pointer-events: auto;
   background-color: rgba(0, 0, 0, ${overlayOpacity});
   backdrop-filter: blur(4px);
+
+  /*
+   * On phones the poll is a non-blocking bottom sheet: drop the dimming backdrop and let taps
+   * pass through the overlay to the class behind it. The sheet itself re-enables pointer events.
+   */
+  @media ${hasPhoneDimentions} {
+    background-color: transparent;
+    backdrop-filter: none;
+    pointer-events: none;
+  }
 `;
 
 // ─── Main card ──────────────────────────────────────────────────────────────
@@ -59,24 +69,86 @@ const PollingContainer = styled.aside<{ autoWidth: boolean }>`
     border-color: var(--skyroom-accent, #20c7bb);
   }
 
+  /*
+   * Phone: a non-blocking bottom sheet instead of a full-screen modal. It sits at the bottom,
+   * never taller than ~62vh so the class above stays visible, and can be dismissed with the
+   * close button (a floating pill reopens it). This keeps the meeting usable while a poll is live.
+   */
   @media ${hasPhoneDimentions} {
-    top: 0;
+    top: auto;
     left: 0;
     right: 0;
     bottom: 0;
     transform: none;
     width: 100vw;
     max-width: 100vw;
-    height: 100dvh;
-    max-height: 100dvh;
-    border-radius: 0;
+    height: auto;
+    max-height: 62vh;
+    border-radius: var(--radius-lg, 16px) var(--radius-lg, 16px) 0 0;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.45);
     padding: var(--space-5, 20px) var(--space-4, 16px)
-      calc(var(--space-5, 20px) + env(safe-area-inset-bottom, 0px));
+      calc(var(--space-4, 16px) + env(safe-area-inset-bottom, 0px));
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
 
   ${({ autoWidth }) => autoWidth && 'width: auto;'}
+`;
+
+// ─── Dismiss (close) button — bottom sheet header ─────────────────────────────
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: var(--skyroom-accent-soft, rgba(32, 199, 187, 0.12));
+  color: var(--skyroom-text-primary, #e6edf7);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    background: var(--skyroom-accent-hover-bg, rgba(32, 199, 187, 0.2));
+  }
+`;
+
+// ─── Floating "reopen poll" pill (shown after the sheet is dismissed) ─────────
+
+const ReopenPill = styled.button`
+  position: fixed;
+  z-index: ${pollIndex};
+  inset-inline-end: 16px;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--skyroom-accent-border, rgba(32, 199, 187, 0.36));
+  border-radius: 999px;
+  background: var(--skyroom-accent, #20c7bb);
+  color: #06231f;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  pointer-events: auto;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    filter: brightness(1.06);
+  }
 `;
 
 // ─── Question header ─────────────────────────────────────────────────────────
@@ -220,7 +292,7 @@ const SubmitVoteButton = styled(Button)`
 
 const PollingSecret = styled.div`
   font-size: ${fontSizeSmall};
-  color: var(--skyroom-text-muted, rgba(230, 237, 247, 0.45));
+  color: var(--skyroom-text-secondary, rgba(230, 237, 247, 0.78));
   padding-top: var(--space-2, 8px);
   border-top: 1px solid var(--skyroom-panel-border-token, rgba(20, 169, 158, 0.14));
   text-align: center;
@@ -290,4 +362,6 @@ export default {
   QText,
   PollingContainer,
   PollingAnswers,
+  CloseButton,
+  ReopenPill,
 };

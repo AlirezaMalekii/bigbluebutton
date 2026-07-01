@@ -1,4 +1,4 @@
-$control-bar-height: 30px;
+$control-bar-height: 34px;
 $media-min-width: 480px;
 $media-max-height: 400px;
 
@@ -7,23 +7,23 @@ $modal-max-width: 320px;
 $webcams-height: 480px;
 $webcams-width: 640px;
 
-$section-width: calc(#{$webcams-width} / 2);
-$section-width-small: calc((#{$webcams-width} / 8) * 3);
+$section-width: 360px;
+$section-width-small: 300px;
 
-$bottom-content-height: 80px;
+$bottom-content-height: 96px;
 
-$bar-height: 60px;
+$bar-height: 56px;
 
 $top-bar-height: $bar-height;
 $bottom-bar-height: calc(#{$bar-height} / 3);
 $modal-bar-height: $bar-height;
 
-$media-fit-height: calc((#{$webcams-height} / 2) - #{$bar-height});
-$media-fit-height-small: calc(((#{$webcams-height} / 8) * 3) - #{$bar-height});
+$media-fit-height: 224px;
+$media-fit-height-small: 190px;
 
 $shortcuts-list-height: 8rem;
 
-$border-radius: .35rem;
+$border-radius: .75rem;
 $border-width: .2rem;
 $border-width-small: .15rem;
 $border-width-extra-small: .1rem;

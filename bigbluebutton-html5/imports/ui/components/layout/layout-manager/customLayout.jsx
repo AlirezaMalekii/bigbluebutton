@@ -13,6 +13,7 @@ import Session from '/imports/ui/services/storage/in-memory';
 import adjustSkyroomColumnLayout, {
   SKYROOM_FOOTER_H,
   SKYROOM_MOBILE_EDGE,
+  SKYROOM_MOBILE_FOOTER_LIFT,
   SKYROOM_NAVBAR_H,
   SKYROOM_STAGE_Z_INDEX,
 } from '/imports/ui/components/skyroom-layout/column-layout';
@@ -573,8 +574,9 @@ const CustomLayout = (props) => {
 
     const hasAlternateStageMedia = hasScreenShare || hasExternalVideo
       || isSharedNotesPinned || genericContentId;
+    const stageMediaShouldHide = !isOpen && (hasScreenShare || hasExternalVideo);
 
-    if ((!isOpen && !hasAlternateStageMedia) || isGeneralMediaOff) {
+    if ((!isOpen && !hasAlternateStageMedia) || stageMediaShouldHide || isGeneralMediaOff) {
       mediaBounds.width = 0;
       mediaBounds.height = 0;
       mediaBounds.top = 0;
@@ -747,6 +749,7 @@ const CustomLayout = (props) => {
       videoStreams: layoutVideoStreams,
       presentationIsOpen: presentationInput.isOpen,
       hasScreenShare: hasActiveScreenShare,
+      hasExternalVideo: externalVideoInput.hasExternalVideo,
       numCameras: cameraDockInput.numCameras,
       localUserIsPrivileged,
     });
@@ -774,7 +777,7 @@ const CustomLayout = (props) => {
       if (skyroomLayout.cameraDockBounds) {
         layoutCameraDockBounds = skyroomLayout.cameraDockBounds;
       }
-      if (skyroomLayout.screenshareMinimized) {
+      if (skyroomLayout.stageMediaMinimized ?? skyroomLayout.screenshareMinimized) {
         layoutMediaBounds = {
           width: 0,
           height: 0,
@@ -813,6 +816,7 @@ const CustomLayout = (props) => {
           layoutEl?.removeAttribute('data-skyroom-mobile-zone-fs');
         }
         layoutEl.style.setProperty('--skyroom-mobile-edge', `${SKYROOM_MOBILE_EDGE}px`);
+        layoutEl.style.setProperty('--skyroom-mobile-footer-lift', `${SKYROOM_MOBILE_FOOTER_LIFT}px`);
         const bottomRect = skyroomLayout.mobileBottomRect;
         if (bottomRect) {
           layoutEl.style.setProperty('--skyroom-mobile-bottom-top', `${bottomRect.top}px`);
@@ -896,6 +900,7 @@ const CustomLayout = (props) => {
         layoutEl?.removeAttribute('data-skyroom-mobile-has-bottom');
         layoutEl?.removeAttribute('data-skyroom-mobile-zone-fs');
         layoutEl?.style.removeProperty('--skyroom-mobile-edge');
+        layoutEl?.style.removeProperty('--skyroom-mobile-footer-lift');
         layoutEl?.style.removeProperty('--skyroom-mobile-bottom-top');
         layoutEl?.style.removeProperty('--skyroom-mobile-bottom-height');
         layoutEl?.style.removeProperty('--skyroom-mobile-bottom-width');
@@ -1062,6 +1067,7 @@ const CustomLayout = (props) => {
       layoutElOff?.removeAttribute('data-skyroom-mobile-has-bottom');
       layoutElOff?.removeAttribute('data-skyroom-mobile-zone-fs');
       layoutElOff?.style.removeProperty('--skyroom-mobile-edge');
+      layoutElOff?.style.removeProperty('--skyroom-mobile-footer-lift');
       layoutElOff?.style.removeProperty('--skyroom-mobile-bottom-top');
       layoutElOff?.style.removeProperty('--skyroom-mobile-bottom-height');
       layoutElOff?.removeAttribute('data-skyroom-mobile-talking-rail');
@@ -1122,7 +1128,9 @@ const CustomLayout = (props) => {
       ? skyroomLayout.mobileActiveBox === 'users'
       : sidebarNavigationInput.isOpen;
     const sidebarContentDisplay = skyroomLayout?.isMobileSplit
-      ? skyroomLayout.mobileActiveBox === 'chat'
+      ? (skyroomLayout.mobileActiveBox === 'chat'
+        || skyroomLayout.mobileActiveBox === 'breakout'
+        || skyroomLayout.mobileActiveBox === 'waiting')
       : sidebarContentInput.isOpen;
 
     layoutContextDispatch({
@@ -1295,10 +1303,12 @@ const CustomLayout = (props) => {
       },
     });
 
+    const externalVideoMinimized = externalVideoInput.hasExternalVideo
+      && !presentationInput.isOpen;
     layoutContextDispatch({
       type: ACTIONS.SET_EXTERNAL_VIDEO_OUTPUT,
       value: {
-        display: externalVideoInput.hasExternalVideo,
+        display: externalVideoInput.hasExternalVideo && !externalVideoMinimized,
         width: layoutMediaBounds.width,
         height: layoutMediaBounds.height,
         top: layoutMediaBounds.top,

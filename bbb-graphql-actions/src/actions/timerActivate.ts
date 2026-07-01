@@ -26,8 +26,8 @@ export default function buildRedisMessage(sessionVariables: Record<string, unkno
   };
 
   const body = {
-    stopwatch: true,
-    running: false,
+    stopwatch: input.stopwatch,
+    running: input.running,
     time: input.time, //Meteor.settings.public.timer * 60000
     accumulated: 0,
     timestamp: 0,

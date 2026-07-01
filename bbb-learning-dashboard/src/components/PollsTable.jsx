@@ -14,7 +14,7 @@ const PollsTable = (props) => {
 
   if (typeof polls === 'object' && Object.values(polls).length === 0) {
     return (
-      <div className="flex flex-col items-center py-24 bg-white">
+      <div className="ld-empty-state flex flex-col items-center py-24">
         <div className="mb-1 p-3 rounded-full bg-blue-500/20 text-blue-300">
           <svg
             xmlns="http://www.w3.org/2000/svg"

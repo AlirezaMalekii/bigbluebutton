@@ -566,6 +566,15 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
 
   const isMinimized = width === 0 && height === 0;
 
+  useEffect(() => {
+    if (!playerRef.current) return;
+    if (isMinimized) {
+      stopVideo(playerRef.current);
+    } else if (playing) {
+      playVideo(playerRef.current);
+    }
+  }, [isMinimized, playing, stopVideo, playVideo]);
+
   // @ts-ignore accessing lib private property
   const playerName = playerRef.current && playerRef.current.player
     // @ts-ignore accessing lib private property
@@ -589,6 +598,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
 
   return (
     <Styled.Container
+      data-skyroom-stage-media="true"
       style={{
         height,
         width,

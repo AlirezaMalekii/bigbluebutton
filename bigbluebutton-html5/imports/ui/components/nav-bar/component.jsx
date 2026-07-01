@@ -86,6 +86,7 @@ const intlMessages = defineMessages({
 
 const propTypes = {
   presentationTitle: PropTypes.string,
+  hasSessionDetails: PropTypes.bool,
   hasUnreadMessages: PropTypes.bool,
   shortcuts: PropTypes.string,
   breakoutNum: PropTypes.number,
@@ -98,6 +99,7 @@ const propTypes = {
 
 const defaultProps = {
   presentationTitle: 'Default Room Title',
+  hasSessionDetails: false,
   hasUnreadMessages: false,
   shortcuts: '',
 };
@@ -241,10 +243,11 @@ class NavBar extends Component {
   componentDidUpdate() {
     const {
       showSessionDetailsOnJoin,
+      hasSessionDetails,
       meetingId,
     } = this.props;
     const ShownId = SessionStorage.getItem('alreadyShowSessionDetailsOnJoin');
-    if (showSessionDetailsOnJoin && ShownId !== meetingId) {
+    if (showSessionDetailsOnJoin && hasSessionDetails && ShownId !== meetingId) {
       this.setModalIsOpen(true);
     }
   }
@@ -381,6 +384,7 @@ class NavBar extends Component {
       shortcuts: TOGGLE_USERLIST_AK,
       togglePublicChatShortcut: TOGGLE_PUBLIC_CHAT_AK,
       presentationTitle,
+      hasSessionDetails,
       amIModerator,
       style,
       main,
@@ -511,14 +515,19 @@ class NavBar extends Component {
               <Styled.PresentationTitle
                 data-test="presentationTitle"
                 id="presentationTitle"
-                onClick={() => this.setModalIsOpen(true)}
+                onClick={hasSessionDetails ? () => this.setModalIsOpen(true) : undefined}
+                style={hasSessionDetails ? undefined : { cursor: 'default' }}
               >
-                <Tooltip title={intl.formatMessage(intlMessages.openDetailsTooltip)}>
-                  <span>
-                    {presentationTitle}
-                    <Icon iconName="device_list_selector" />
-                  </span>
-                </Tooltip>
+                {hasSessionDetails ? (
+                  <Tooltip title={intl.formatMessage(intlMessages.openDetailsTooltip)}>
+                    <span>
+                      {presentationTitle}
+                      <Icon iconName="device_list_selector" />
+                    </span>
+                  </Tooltip>
+                ) : (
+                  <span>{presentationTitle}</span>
+                )}
               </Styled.PresentationTitle>
               <ModalRegistration id="SessionDetailsModal" priority="low">
                 {

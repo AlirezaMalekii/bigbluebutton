@@ -110,6 +110,8 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.32);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.40);
+  --shadow-glow-sm: 0 0 0 1px rgba(32, 199, 187, 0.18), 0 10px 30px rgba(32, 199, 187, 0.10);
+  --shadow-glow-md: 0 0 0 1px rgba(32, 199, 187, 0.28), 0 18px 42px rgba(32, 199, 187, 0.18);
 
   /* Radius */
   --radius-sm: 8px;
@@ -120,6 +122,14 @@
 
   /* Gradients */
   --skyroom-gradient-primary: linear-gradient(135deg, #0d887e 0%, #14a99e 100%);
+  --skyroom-gradient-danger: linear-gradient(135deg, #df2721 0%, #ff6a66 100%);
+  --skyroom-gradient-panel:
+    radial-gradient(420px 220px at 12% 0%, rgba(32, 199, 187, 0.16), transparent 64%),
+    linear-gradient(165deg, rgba(26, 34, 52, 0.94) 0%, rgba(14, 21, 34, 0.98) 100%);
+  --skyroom-gradient-panel-strong:
+    radial-gradient(680px 320px at 0% 0%, rgba(32, 199, 187, 0.22), transparent 60%),
+    radial-gradient(520px 260px at 100% 100%, rgba(13, 136, 126, 0.16), transparent 62%),
+    linear-gradient(145deg, rgba(19, 31, 50, 0.98) 0%, rgba(6, 12, 23, 0.98) 100%);
   --skyroom-gradient-bg:
     radial-gradient(1200px 600px at 0% 0%, rgba(20, 169, 158, 0.10), transparent 60%),
     radial-gradient(900px 500px at 100% 100%, rgba(13, 136, 126, 0.08), transparent 60%),
@@ -220,7 +230,356 @@ body.lang-fa .recharts-text {
 }
 
 /* ---------------------------------------------------------------------
-   5) MUI Paper / Card
+   5) Learning dashboard custom chrome
+   --------------------------------------------------------------------- */
+.ld-shell {
+  width: min(100% - 32px, 1440px);
+  margin: 0 auto;
+  padding: 28px 0 34px;
+}
+
+.ld-hero,
+.ld-panel,
+.ld-stat-card,
+.ld-modal-content {
+  position: relative;
+  border: 1px solid var(--skyroom-border);
+  background-image: var(--skyroom-gradient-panel);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.ld-hero::before,
+.ld-panel::before,
+.ld-stat-card::before,
+.ld-modal-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent 18%, transparent 82%, rgba(255, 255, 255, 0.04)),
+    radial-gradient(420px 160px at 50% 0%, rgba(255, 255, 255, 0.06), transparent 70%);
+  opacity: 0.72;
+}
+
+.ld-hero {
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  align-items: stretch;
+  padding: 26px;
+  margin-bottom: 28px;
+  background-image: var(--skyroom-gradient-panel-strong);
+  box-shadow: var(--shadow-lg), var(--shadow-glow-sm);
+}
+
+.ld-hero > *,
+.ld-panel > *,
+.ld-stat-card > *,
+.ld-modal-content > * {
+  position: relative;
+  z-index: 1;
+}
+
+.ld-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  padding: 6px 10px;
+  margin-bottom: 12px;
+  color: var(--skyroom-brand-200);
+  background: rgba(32, 199, 187, 0.10);
+  border: 1px solid var(--skyroom-accent-border);
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ld-hero-title {
+  color: var(--skyroom-text-primary);
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.16;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.ld-hero-subtitle {
+  max-width: 760px;
+  margin-top: 12px;
+  color: var(--skyroom-text-secondary);
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.ld-meeting-name {
+  display: inline-flex;
+  margin-top: 16px;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  color: var(--skyroom-text-primary);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: 700;
+}
+
+.ld-hero-meta {
+  min-width: 260px;
+  padding: 16px;
+  background: rgba(5, 11, 22, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  backdrop-filter: saturate(170%) blur(16px);
+}
+
+.ld-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  color: var(--skyroom-text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 13px;
+}
+
+.ld-meta-row:last-child {
+  border-bottom: 0;
+}
+
+.ld-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.ld-badge-success {
+  color: #b7fff5;
+  background: rgba(20, 169, 158, 0.18);
+  border: 1px solid rgba(32, 199, 187, 0.36);
+}
+
+.ld-badge-danger {
+  color: #ffd4d2;
+  background: rgba(223, 39, 33, 0.17);
+  border: 1px solid rgba(255, 106, 102, 0.34);
+}
+
+.ld-tabs-grid {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 22px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.ld-stat-tab {
+  border-radius: var(--radius-xl);
+  border: 0;
+  background: transparent;
+}
+
+.ld-stat-tab:focus-visible {
+  outline-offset: 4px !important;
+}
+
+.ld-stat-card {
+  display: flex;
+  min-height: 122px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.ld-stat-card:hover,
+.ld-stat-card-active {
+  transform: translateY(-2px);
+  border-color: var(--skyroom-accent-border);
+  box-shadow: var(--shadow-lg), var(--shadow-glow-md);
+}
+
+.ld-stat-card-active::after {
+  content: '';
+  position: absolute;
+  inset-inline: 18px;
+  bottom: 0;
+  height: 3px;
+  border-radius: var(--radius-pill) var(--radius-pill) 0 0;
+  background: var(--skyroom-gradient-primary);
+}
+
+.ld-stat-number {
+  color: var(--skyroom-text-primary);
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.ld-stat-label {
+  margin-top: 10px;
+  color: var(--skyroom-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ld-stat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px;
+  border-radius: 15px;
+  color: #dffffb;
+  background: rgba(32, 199, 187, 0.16);
+  border: 1px solid rgba(32, 199, 187, 0.30);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.ld-panel {
+  margin-bottom: 22px;
+  border-radius: var(--radius-xl);
+}
+
+.ld-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--skyroom-border);
+}
+
+.ld-panel-title {
+  color: var(--skyroom-text-primary);
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.ld-panel-body {
+  overflow-x: auto;
+}
+
+.ld-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 9px 14px;
+  color: var(--skyroom-text-primary);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--skyroom-border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 800;
+  transition: transform 140ms ease, border-color 140ms ease, background-color 140ms ease;
+}
+
+.ld-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: var(--skyroom-accent-hover-bg);
+  border-color: var(--skyroom-accent-border);
+}
+
+.ld-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.ld-button-primary {
+  background: var(--skyroom-gradient-primary);
+  border-color: transparent;
+  box-shadow: var(--shadow-glow-sm);
+}
+
+.ld-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 8px;
+  color: var(--skyroom-text-muted);
+  font-size: 12px;
+}
+
+.ld-footer-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ld-feedback {
+  margin: 18px 0;
+  padding: 14px 16px;
+  color: var(--skyroom-text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--skyroom-border);
+  border-radius: var(--radius-lg);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.ld-detail-card {
+  margin-bottom: 16px;
+  background: rgba(255, 255, 255, 0.045) !important;
+  border: 1px solid var(--skyroom-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.ld-detail-card > div:first-child {
+  border-bottom: 1px solid var(--skyroom-border);
+}
+
+.ld-detail-card table {
+  background: transparent !important;
+  box-shadow: none !important;
+  margin-bottom: 0 !important;
+}
+
+.ld-empty-state {
+  color: var(--skyroom-text-secondary);
+  background:
+    radial-gradient(320px 160px at 50% 0%, rgba(32, 199, 187, 0.10), transparent 68%),
+    rgba(255, 255, 255, 0.035) !important;
+}
+
+@media (max-width: 768px) {
+  .ld-shell {
+    width: min(100% - 20px, 1440px);
+    padding-top: 14px;
+  }
+
+  .ld-hero,
+  .ld-footer {
+    flex-direction: column;
+  }
+
+  .ld-hero {
+    padding: 18px;
+  }
+
+  .ld-hero-meta {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   6) MUI Paper / Card
    --------------------------------------------------------------------- */
 .MuiPaper-root {
   background-color: var(--skyroom-surface) !important;
@@ -244,11 +603,46 @@ body.lang-fa .recharts-text {
 }
 
 /* ---------------------------------------------------------------------
-   6) MUI X DataGrid (Polls / Quizzes / Plugins tables)
+   7) Tables + MUI X DataGrid (Polls / Quizzes / Plugins tables)
    --------------------------------------------------------------------- */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+thead tr {
+  background: rgba(26, 36, 54, 0.88) !important;
+}
+
+tbody tr {
+  transition: background-color 140ms ease;
+}
+
+tbody tr:hover {
+  background-color: rgba(32, 199, 187, 0.08) !important;
+}
+
+th,
+td {
+  border-color: var(--skyroom-border) !important;
+}
+
+.timeline-reaction {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.86), rgba(32, 199, 187, 0.82)) !important;
+  color: #ffffff !important;
+  box-shadow: var(--shadow-sm);
+}
+
+.MuiDataGrid-main,
+.MuiDataGrid-virtualScroller,
+.MuiDataGrid-withBorderColor {
+  border-color: var(--skyroom-border) !important;
+}
+
 .MuiDataGrid-root {
   color: var(--skyroom-text-primary) !important;
-  background-color: var(--skyroom-surface) !important;
+  background-color: transparent !important;
   border: 1px solid var(--skyroom-border) !important;
   border-radius: var(--radius-lg) !important;
 }
@@ -293,8 +687,66 @@ body.lang-fa .recharts-text {
   background-color: rgba(10, 18, 32, 0.6) !important;
 }
 
+.MuiDataGrid-cell:focus,
+.MuiDataGrid-columnHeader:focus,
+.MuiDataGrid-cell:focus-within,
+.MuiDataGrid-columnHeader:focus-within {
+  outline: 1px solid var(--skyroom-accent-border) !important;
+  outline-offset: -1px !important;
+}
+
 /* ---------------------------------------------------------------------
-   7) Recharts (Quiz performance scatter chart)
+   8) Modals
+   --------------------------------------------------------------------- */
+.ld-modal-backdrop {
+  background:
+    radial-gradient(700px 340px at 50% 20%, rgba(32, 199, 187, 0.16), transparent 64%),
+    rgba(3, 7, 14, 0.74);
+  backdrop-filter: blur(14px) saturate(140%);
+}
+
+.ld-modal-content {
+  width: min(100% - 24px, 980px);
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+}
+
+.ld-modal-title {
+  padding: 22px 24px 6px;
+  color: var(--skyroom-text-primary);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.ld-modal-body {
+  padding: 18px 24px 24px;
+  overflow: auto;
+  color: var(--skyroom-text-secondary);
+}
+
+.ld-modal-close {
+  position: absolute;
+  top: 14px;
+  inset-inline-end: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  color: var(--skyroom-text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--skyroom-border);
+  border-radius: var(--radius-md);
+}
+
+.ld-modal-close:hover {
+  color: var(--skyroom-text-primary);
+  background: var(--skyroom-accent-hover-bg);
+}
+
+/* ---------------------------------------------------------------------
+   9) Recharts (Quiz performance scatter chart)
    --------------------------------------------------------------------- */
 .recharts-cartesian-grid line {
   stroke: var(--skyroom-grid-line) !important;
@@ -316,7 +768,7 @@ body.lang-fa .recharts-text {
 }
 
 /* ---------------------------------------------------------------------
-   8) Scrollbars — branded, slim (mirrors skyroom/theme.css §14)
+   10) Scrollbars — branded, slim (mirrors skyroom/theme.css §14)
    --------------------------------------------------------------------- */
 * {
   scrollbar-width: thin;
@@ -346,7 +798,7 @@ body.lang-fa .recharts-text {
 }
 
 /* ---------------------------------------------------------------------
-   9) Focus ring + selection (teal accent)
+   11) Focus ring + selection (teal accent)
    --------------------------------------------------------------------- */
 :focus-visible {
   outline: 2px solid var(--skyroom-brand-500) !important;

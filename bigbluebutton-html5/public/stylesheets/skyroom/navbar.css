@@ -559,6 +559,27 @@
   }
 
   #layout[data-skyroom-column="true"] [data-test="presentationTitle"] {
-    max-width: min(140px, 36vw) !important;
+    max-width: min(170px, 46vw) !important;
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  /*
+   * While recording, the recording chip (icon + elapsed time) shares the centered
+   * header zone with the session name. On phones that timer text squeezes the name
+   * so it gets clipped. Drop the elapsed-time text here so the full meeting name
+   * keeps its width; the red recording icon still signals that recording is on
+   * (the exact duration remains available via the recording modal/tooltip).
+   */
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroom-header-center"] {
+    gap: 6px !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"] {
+    flex: 0 0 auto !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"] [class*="PresentationTitle"] {
+    display: none !important;
   }
 }

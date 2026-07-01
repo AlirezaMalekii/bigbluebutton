@@ -5,6 +5,8 @@ import ReactDOM from 'react-dom';
 import { useMutation } from '@apollo/client';
 import { defineMessages, useIntl } from 'react-intl';
 import Checkbox from '/imports/ui/components/common/checkbox/component';
+import Icon from '/imports/ui/components/common/icon/icon-ts/component';
+import { hasPhoneDimentions } from '/imports/ui/stylesheets/styled-components/breakpoints';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import {
   POLL_SUBMIT_TYPED_VOTE,
@@ -56,6 +58,12 @@ const intlMessages = defineMessages({
   responsePlaceholder: {
     id: 'app.polling.responsePlaceholder',
   },
+  dismissLabel: {
+    id: 'app.polling.dismissLabel',
+  },
+  reopenLabel: {
+    id: 'app.polling.reopenLabel',
+  },
 });
 
 const validateInput = (i: string) => {
@@ -100,6 +108,12 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
 
   const [typedAns, setTypedAns] = useState('');
   const [checkedAnswers, setCheckedAnswers] = useState<Array<number>>([]);
+  // Phone-only: allow dismissing the poll bottom sheet without answering, then reopening it via
+  // a floating pill. Desktop keeps the centered modal untouched.
+  const [dismissed, setDismissed] = useState(false);
+  const [isPhoneSheet, setIsPhoneSheet] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(hasPhoneDimentions).matches,
+  );
   const intl = useIntl();
   const responseInput = useRef<HTMLInputElement>(null);
   const pollingContainer = useRef<HTMLElement>(null);
@@ -110,6 +124,19 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
       pollingContainer.current.focus();
     }
   }, []);
+
+  useEffect(() => {
+    const mql = window.matchMedia(hasPhoneDimentions);
+    const onChange = () => setIsPhoneSheet(mql.matches);
+    onChange();
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
+
+  // A brand-new poll should always show, even if the previous one was dismissed.
+  useEffect(() => {
+    setDismissed(false);
+  }, [poll.pollId]);
 
   const handleUpdateResponseInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (responseInput.current) {
@@ -322,6 +349,20 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
     );
   };
 
+  if (isPhoneSheet && dismissed) {
+    return ReactDOM.createPortal(
+      <Styled.ReopenPill
+        type="button"
+        data-test="reopenPoll"
+        onClick={() => setDismissed(false)}
+      >
+        <Icon iconName="polling" />
+        {intl.formatMessage(intlMessages.reopenLabel)}
+      </Styled.ReopenPill>,
+      document.getElementById('polling-container') || document.body,
+    );
+  }
+
   return ReactDOM.createPortal(
     <Styled.Overlay>
       <Styled.PollingContainer
@@ -331,6 +372,16 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
         ref={pollingContainer}
         tabIndex={-1}
       >
+        {isPhoneSheet && (
+          <Styled.CloseButton
+            type="button"
+            data-test="dismissPoll"
+            aria-label={intl.formatMessage(intlMessages.dismissLabel)}
+            onClick={() => setDismissed(true)}
+          >
+            ×
+          </Styled.CloseButton>
+        )}
         {poll.questionText.length > 0 && (
           <Styled.QHeader>
             <Styled.QTitle>

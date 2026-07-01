@@ -10,6 +10,12 @@ import Styled from './styles';
 import logger from '/imports/startup/client/logger';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
 import { notify } from '/imports/ui/services/notification';
+import {
+  isSkyroomColumnLayout,
+  isSkyroomMobileViewport,
+  openSkyroomMobileBox,
+  openSkyroomWaitingUsers,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 interface GuestPanelOpenerProps {
   count: number;
@@ -34,6 +40,14 @@ const GuestPanelOpener: React.FC<GuestPanelOpenerProps> = ({
   const { sidebarContentPanel } = sidebarContent;
   const intl = useIntl();
   const toggleWaitingPanel = useCallback(() => {
+    if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
+      if (sidebarContentPanel === PANELS.WAITING_USERS) {
+        openSkyroomMobileBox(layoutContextDispatch, null);
+        return;
+      }
+      openSkyroomWaitingUsers(layoutContextDispatch);
+      return;
+    }
     layoutContextDispatch({
       type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
       value: sidebarContentPanel !== PANELS.WAITING_USERS,
@@ -44,7 +58,7 @@ const GuestPanelOpener: React.FC<GuestPanelOpenerProps> = ({
         ? PANELS.NONE
         : PANELS.WAITING_USERS,
     });
-  }, [sidebarContentPanel]);
+  }, [sidebarContentPanel, layoutContextDispatch]);
 
   return (
     <Styled.Messages>

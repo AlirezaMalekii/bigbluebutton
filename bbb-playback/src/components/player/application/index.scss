@@ -3,17 +3,20 @@
 :root {
   --application-background-color: var(--secondary-background-color);
   --application-color: var(--secondary-content-color);
-  --application-control-background-color: var(--tertiary-background-color);
+  --application-control-background-color: rgba(255, 255, 255, .035);
   --application-control-color: var(--tertiary-content-color);
 }
 
 .application {
-  background-color: var(--application-background-color);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .012)),
+    var(--application-background-color);
   color: var(--application-color);
   display: flex;
   flex-direction: column;
   grid-area: application;
   height: 100%;
+  min-height: 0;
   width: 100%;
 
   .application-control {
@@ -21,30 +24,52 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: row-reverse;
-    padding: $padding;
+    gap: $margin-small;
+    padding: $padding-small;
 
     .application-icon {
+      align-items: center;
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 999px;
       box-sizing: border-box;
       color: var(--application-control-color);
       display: flex;
       font-size: large;
       font-weight: var(--font-weight-semi-bold);
-      opacity: .75;
+      height: 2.1rem;
+      justify-content: center;
+      opacity: 1;
       outline: none;
       overflow: hidden;
+      transition: background .18s ease, color .18s ease, opacity .18s ease, transform .18s ease;
+      width: 2.1rem;
 
       [dir="ltr"] & {
-        padding-left: $padding;
+        padding-left: 0;
       }
 
       [dir="rtl"] & {
-        padding-right: $padding;
+        padding-right: 0;
       }
     }
 
     .inactive {
       cursor: pointer;
-      opacity: .5;
+      opacity: .55;
+
+      &:focus,
+      &:hover {
+        background: rgba(20, 169, 158, .14);
+        color: var(--skyroom-brand-200);
+        opacity: 1;
+        transform: translateY(-1px);
+      }
+    }
+
+    .application-icon:not(.inactive) {
+      background: var(--skyroom-brand-gradient);
+      color: var(--white);
+      box-shadow: 0 12px 28px rgba(20, 169, 158, .24);
     }
   }
 }

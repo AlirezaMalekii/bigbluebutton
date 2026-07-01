@@ -426,7 +426,7 @@ const UserDatailsComponent = (props) => {
           </div>
           <h3 className="break-words text-center">{user.name}</h3>
         </div>
-        <div className="bg-white shadow rounded mb-4">
+        <div className="ld-detail-card">
           <div className="p-6 text-lg flex items-center">
             <div className="p-2 rounded-full bg-pink-500/20 text-pink-300">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -502,7 +502,7 @@ const UserDatailsComponent = (props) => {
         </div>
         { !user.isModerator && (
           <>
-            <div className="bg-white shadow rounded mb-4 w-full">
+            <div className="ld-detail-card w-full">
               <div className="p-6 text-lg flex items-center">
                 <div className="p-2 rounded-full bg-green-500/20 text-green-300">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -518,7 +518,7 @@ const UserDatailsComponent = (props) => {
                   </span>
                 </h3>
               </div>
-              <table className="bg-white shadow rounded mb-4 table w-full">
+              <table className="table w-full">
                 <tr className="p-6 py-2 m-px bg-gray-200 flex flex-row justify-between text-xs text-gray-700">
                   <th aria-label="Category" className="min-w-[20%] text-ellipsis font-normal text-left"><FormattedMessage id="app.learningDashboard.userDetails.category" defaultMessage="Category" /></th>
                   <th aria-label="Average" className="grow text-center font-normal"><FormattedMessage id="app.learningDashboard.userDetails.average" defaultMessage="Average" /></th>
@@ -555,7 +555,7 @@ const UserDatailsComponent = (props) => {
                 }) }
               </table>
             </div>
-            <div className="bg-white shadow rounded mb-4">
+            <div className="ld-detail-card">
               <div className="p-6 text-lg flex items-center">
                 <div className="p-2 rounded-full bg-blue-500/20 text-blue-300">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -577,7 +577,7 @@ const UserDatailsComponent = (props) => {
                   )) }
               </table>
             </div>
-            <div className="bg-white shadow rounded">
+            <div className="ld-detail-card">
               <div className="p-6 text-lg flex items-center">
                 <div className="p-2 rounded-full bg-orange-500/20 text-orange-300">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

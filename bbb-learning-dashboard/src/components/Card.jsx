@@ -10,7 +10,7 @@ function Card(props) {
   try {
     React.Children.only(children);
     icons = (
-      <div className={`p-2 rounded-full ${iconClass || 'text-orange-500'}`}>
+      <div className={`ld-stat-icon ${iconClass || ''}`}>
         { children }
       </div>
     );
@@ -19,11 +19,12 @@ function Card(props) {
       <div className="flex">
         {
           React.Children.map(children, (child, index) => {
-            let offset = 4 / (index + 1);
-            offset = index === (React.Children.count(children) - 1) ? 0 : offset;
+            let offsetClass = 'translate-x-2';
+            if (index === 0) offsetClass = 'translate-x-4';
+            if (index === (React.Children.count(children) - 1)) offsetClass = 'translate-x-0';
 
             return (
-              <div className={`flex justify-center transform translate-x-${offset} border-2 border-white p-2 rounded-full z-${index * 10} ${iconClass || 'text-orange-500'}`}>
+              <div className={`ld-stat-icon transform ${offsetClass} ${iconClass || ''}`} style={{ zIndex: index * 10 }}>
                 { child }
               </div>
             );
@@ -36,15 +37,15 @@ function Card(props) {
   return (
     <div
       className={
-        'flex items-start justify-between p-3 bg-white rounded-lg shadow border border-skyroom-border border-l-4'
+        'ld-stat-card'
         + ` ${cardClass}`
       }
     >
       <div className="w-70 text-left rtl:text-right">
-        <p className="text-lg font-semibold text-gray-700">
+        <p className="ld-stat-number">
           { number }
         </p>
-        <p className="mb-2 text-sm font-medium text-gray-600">
+        <p className="ld-stat-label">
           { name }
         </p>
       </div>

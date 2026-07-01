@@ -384,24 +384,49 @@ const LockIcon = styled.span`
 
 const ListContainer = styled(FlexColumn)`
   justify-content: flex-start;
+  gap: 10px;
+  max-height: 52vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-inline-end: 4px;
+
+  & > span {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
 `;
 
 const RoomItem = styled.div`
-  margin: 1rem 0 1rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--skyroom-panel-border-token, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  background: var(--skyroom-surface-2, rgba(255, 255, 255, 0.03));
 `;
 
 const ItemTitle = styled.h2`
   margin: 0;
-  color: ${colorBlueLight};
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--skyroom-text-primary, ${colorBlueLight});
 `;
 
 // @ts-ignore - Button is a JS component
 const ItemButton = styled(Button)`
-  padding: 0;
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 16px !important;
+  border-radius: 999px !important;
+  white-space: nowrap;
   outline: none !important;
 
   & > span {
-    color: ${colorBlueLight};
+    color: var(--skyroom-accent, ${colorBlueLight});
   }
 `;
 

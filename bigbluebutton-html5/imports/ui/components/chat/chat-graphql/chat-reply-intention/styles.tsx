@@ -61,6 +61,17 @@ const Message = styled.div`
   min-width: 0;
 `;
 
+const Username = styled.div`
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 2px;
+  color: var(--skyroom-panel-accent, #20c7bb);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
 const HtmlContent = styled.div`
   color: ${colorText};
 
@@ -122,4 +133,5 @@ export default {
   CloseBtn,
   Message,
   HtmlContent,
+  Username,
 };

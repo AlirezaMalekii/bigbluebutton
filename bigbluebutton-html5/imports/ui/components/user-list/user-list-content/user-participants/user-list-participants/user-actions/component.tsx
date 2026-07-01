@@ -39,7 +39,11 @@ import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import { setPendingChat } from '/imports/ui/core/local-states/usePendingChat';
 import Styled from './styles';
 import BBBMenu from '/imports/ui/components/common/menu/component';
-import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import {
+  isSkyroomColumnLayout,
+  isSkyroomMobileViewport,
+  openSkyroomPrivateChat,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 import { useMutation } from '@apollo/client';
 import { USER_SET_WHITEBOARD_WRITE_ACCESS } from '/imports/ui/components/presentation/mutations';
 import useToggleVoice from '/imports/ui/components/audio/audio-graphql/hooks/useToggleVoice';
@@ -412,6 +416,14 @@ const UserActions: React.FC<UserActionsProps> = ({
             userId: user.userId,
           },
         });
+        // On a Skyroom phone the bottom zone shows one box at a time; dispatching the CHAT
+        // panel alone leaves the active box on 'users'. Route through the mobile helper so it
+        // switches to the chat box (and closes users). idChatOpen stays '' — ChatContainer
+        // resolves the newly created private chat via pendingChat.
+        if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
+          openSkyroomPrivateChat(layoutContextDispatch, '');
+          return;
+        }
         layoutContextDispatch({
           type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
           value: true,

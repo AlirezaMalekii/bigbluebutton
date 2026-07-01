@@ -4,19 +4,35 @@
 }
 
 .media {
-  background-color: var(--media-background-color);
+  background:
+    linear-gradient(180deg, rgba(20, 169, 158, .12), rgba(255, 255, 255, .018)),
+    var(--media-background-color);
   display: flex;
   grid-area: media;
   height: 100%;
+  min-height: 0;
+  position: relative;
   width: 100%;
+
+  &::before {
+    background: linear-gradient(90deg, rgba(20, 169, 158, .8), rgba(124, 58, 237, .75));
+    content: "";
+    height: 3px;
+    inset: 0 0 auto 0;
+    position: absolute;
+    z-index: 2;
+  }
 
   .video-js {
     background-color: var(--media-background-color);
+    overflow: hidden;
   }
 }
 
 .swapped-media {
-  background-color: var(--top-content-background-color);
+  background:
+    radial-gradient(circle at 50% 0, rgba(20, 169, 158, .12), transparent 34%),
+    var(--top-content-background-color);
   grid-area: content;
 
   .video-js {

@@ -6,6 +6,7 @@ import {
   mdPaddingX,
   smPaddingX,
 } from '/imports/ui/stylesheets/styled-components/general';
+import { smallOnly } from '/imports/ui/stylesheets/styled-components/breakpoints';
 import {
 } from '/imports/ui/stylesheets/styled-components/palette';
 
@@ -213,6 +214,11 @@ const Actions = styled.div`
   justify-content: flex-end;
   gap: ${smPaddingX};
   padding-bottom: 0.2rem;
+
+  @media ${smallOnly} {
+    justify-content: stretch;
+    padding-bottom: 0;
+  }
 `;
 
 // @ts-ignore — Button is JS

@@ -318,6 +318,10 @@
 #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-button-grid__button {
   color: #dce6f2 !important;
   opacity: 1 !important;
+  /* Faster, more reliable taps on the overflow menu items (avoids the 300ms delay and
+     double-tap-zoom swallowing the first tap). */
+  touch-action: manipulation !important;
+  pointer-events: auto !important;
 }
 
 #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-icon {

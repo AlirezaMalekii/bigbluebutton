@@ -4,32 +4,89 @@ html[data-skyroom='true'] {
   color-scheme: dark;
 }
 
+body {
+  background:
+    var(--skyroom-surface-gradient),
+    var(--primary-background-color);
+}
+
+* {
+  scrollbar-color: rgba(63, 194, 184, .5) rgba(15, 23, 42, .5);
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, .44);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(63, 194, 184, .86), rgba(124, 58, 237, .72));
+  border-radius: 999px;
+}
+
 .video-js .vjs-volume-level,
 .video-js .vjs-play-progress {
   background-color: var(--skyroom-brand-400) !important;
 }
 
+.video-js .vjs-slider {
+  background-color: rgba(148, 163, 184, .24);
+}
+
+.video-js .vjs-big-play-button {
+  background: var(--skyroom-brand-gradient);
+  border-radius: 999px;
+  box-shadow: 0 18px 50px rgba(20, 169, 158, .32);
+  height: 3.6rem;
+  line-height: 3.6rem;
+  width: 3.6rem;
+}
+
 .video-js .vjs-control-bar {
-  background: linear-gradient(180deg, transparent, rgba(7, 11, 20, 0.92));
+  backdrop-filter: blur(18px);
+  background: linear-gradient(180deg, transparent, rgba(7, 11, 20, 0.94));
+  border-top: 1px solid rgba(255, 255, 255, .08);
 }
 
 .top-bar {
-  border-bottom: 1px solid rgba(218, 230, 245, 0.08);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.32);
+  border: 1px solid var(--skyroom-border);
+  border-radius: $border-radius;
+  box-shadow: var(--skyroom-shadow-soft), var(--skyroom-shadow-inner);
 }
 
+.media,
 .application,
+.content .top-content,
+.content .bottom-content {
+  border: 1px solid var(--skyroom-border);
+  border-radius: $border-radius;
+  box-shadow: var(--skyroom-shadow-soft), var(--skyroom-shadow-inner);
+  overflow: hidden;
+}
+
+.media,
+.application {
+  background: var(--skyroom-panel-gradient), var(--secondary-background-color);
+}
+
 .chat-wrapper,
 .notes-wrapper {
-  border-inline-start: 1px solid rgba(20, 169, 158, 0.14);
+  border-top: 1px solid rgba(20, 169, 158, 0.14);
 }
 
 .message-wrapper .message {
-  border-radius: 8px;
+  border-radius: 14px;
 }
 
 .tl-container {
   .tl-background {
-    background-color: var(--skyroom-surface-3) !important;
+    background:
+      radial-gradient(circle at 50% 0, rgba(20, 169, 158, .08), transparent 36%),
+      var(--skyroom-surface-3) !important;
   }
 }

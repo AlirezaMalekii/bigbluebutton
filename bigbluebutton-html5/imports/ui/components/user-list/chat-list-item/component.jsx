@@ -7,6 +7,11 @@ import Styled from './styles';
 import UserAvatar from '/imports/ui/components/user-avatar/component';
 import { ACTIONS, PANELS } from '../../layout/enums';
 import Icon from '/imports/ui/components/common/icon/component';
+import {
+  isSkyroomColumnLayout,
+  isSkyroomMobileViewport,
+  openSkyroomPrivateChat,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const DEBOUNCE_TIME = 1000;
 
@@ -89,6 +94,15 @@ const ChatListItem = ({
   }, [idChatOpen, sidebarContentIsOpen, sidebarContentPanel, chat]);
 
   const handleClickToggleChat = () => {
+    // On a Skyroom phone the Messages list lives in the users box; opening a conversation must
+    // switch the bottom zone to the chat box (one box at a time), so route through the mobile
+    // helper. Works for both the public group chat and private chats (chat.chatId carries the
+    // right target).
+    if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
+      openSkyroomPrivateChat(layoutContextDispatch, chat.chatId);
+      return;
+    }
+
     // Verify if chat panel is open
 
     if (sidebarContentIsOpen && sidebarContentPanel === PANELS.CHAT) {

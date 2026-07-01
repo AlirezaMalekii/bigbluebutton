@@ -1,11 +1,14 @@
 @import 'src/styles/sizes';
 
 :root {
-  --system-message-wrapper-background-color: var(--secondary-highlight-color);
+  --system-message-wrapper-background-color: rgba(20, 169, 158, .11);
 }
 
 .system-message-wrapper {
   background-color: var(--system-message-wrapper-background-color);
+  border: 1px solid rgba(20, 169, 158, .16);
+  border-radius: $border-radius;
+  color: var(--skyroom-text-secondary);
   padding: $padding-small $padding-small $padding-small $padding-small;
 
   [dir="ltr"] & {

@@ -4,23 +4,41 @@
   --skyroom-brand-600: #0a6f67;
   --skyroom-brand-400: #14a99e;
   --skyroom-brand-300: #3fc2b8;
+  --skyroom-brand-200: #8fe5dc;
+  --skyroom-accent-500: #7c3aed;
+  --skyroom-accent-400: #a78bfa;
+  --skyroom-rose-500: #db2777;
 
-  --skyroom-surface: #070b14;
-  --skyroom-surface-2: #0f1520;
-  --skyroom-surface-3: #141c28;
-  --skyroom-surface-4: #1a2436;
+  --skyroom-surface: #060914;
+  --skyroom-surface-2: #0b1020;
+  --skyroom-surface-3: #11182a;
+  --skyroom-surface-4: #172236;
+  --skyroom-surface-5: #20304a;
+  --skyroom-glass: rgba(15, 23, 42, .72);
+  --skyroom-glass-strong: rgba(8, 13, 25, .9);
 
-  --skyroom-text-primary: #e6edf7;
-  --skyroom-text-secondary: #b5c0ce;
-  --skyroom-text-muted: #8b95a5;
+  --skyroom-text-primary: #f4f7fb;
+  --skyroom-text-secondary: #c6d1df;
+  --skyroom-text-muted: #93a0b2;
+  --skyroom-text-faint: #64748b;
+
+  --skyroom-border: rgba(148, 163, 184, .14);
+  --skyroom-border-strong: rgba(20, 169, 158, .28);
+  --skyroom-brand-gradient: linear-gradient(135deg, var(--skyroom-brand-400), var(--skyroom-accent-400));
+  --skyroom-surface-gradient: radial-gradient(circle at 85% 10%, rgba(20, 169, 158, .18), transparent 34%),
+    radial-gradient(circle at 10% 20%, rgba(124, 58, 237, .14), transparent 32%),
+    linear-gradient(135deg, #060914 0%, #0b1020 48%, #111827 100%);
+  --skyroom-panel-gradient: linear-gradient(180deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .018));
+  --skyroom-shadow-soft: 0 18px 55px rgba(0, 0, 0, .36);
+  --skyroom-shadow-inner: inset 0 1px 0 rgba(255, 255, 255, .06);
 
   --gray-darkest: #050811;
   --gray-darker: var(--skyroom-surface-2);
-  --gray-dark: var(--skyroom-surface-4);
+  --gray-dark: var(--skyroom-surface-5);
   --gray: var(--skyroom-text-muted);
   --gray-light: var(--skyroom-text-secondary);
   --gray-lighter: #6b7689;
-  --gray-lightest: #243355;
+  --gray-lightest: #253653;
 
   --blue: var(--skyroom-brand-400);
   --red: rgb(223, 39, 33);

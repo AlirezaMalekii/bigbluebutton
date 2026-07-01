@@ -774,6 +774,7 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
           message={message.replyToMessage.messageAsHtml || ''}
           sequence={message.replyToMessage.messageSequence}
           deletedByUser={message.replyToMessage.deletedBy?.name ?? null}
+          senderName={message.replyToMessage.user?.name ?? null}
         />
       )}
       {!deleteTime && (

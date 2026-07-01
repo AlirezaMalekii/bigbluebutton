@@ -35,7 +35,7 @@ const Pad = styled.div`
 
 const IFrame = styled.iframe`
   width: 100%;
-  height: auto;
+  height: 100%;
   overflow: hidden;
   border-style: none;
   border-bottom: 1px solid ${colorGrayLightest};

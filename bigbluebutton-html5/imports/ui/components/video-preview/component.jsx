@@ -87,6 +87,14 @@ const intlMessages = defineMessages({
     id: 'app.videoPreview.cameraLabel',
     description: 'Camera dropdown label',
   },
+  cameraNameFront: {
+    id: 'app.videoPreview.cameraNameFront',
+    description: 'Localized name for a front (user-facing) camera',
+  },
+  cameraNameBack: {
+    id: 'app.videoPreview.cameraNameBack',
+    description: 'Localized name for a back (environment) camera',
+  },
   qualityLabel: {
     id: 'app.videoPreview.profileLabel',
     description: 'Quality dropdown label',
@@ -963,6 +971,25 @@ class VideoPreview extends Component {
     return `${intl.formatMessage(intlMessages.cameraLabel)} ${index}`
   }
 
+  // Browser-provided MediaDeviceInfo.label is usually English even in a Persian UI
+  // (e.g. "Front Camera", "camera2 0, facing back"). Map the common front/back
+  // facing keywords to localized names; keep the raw label for named devices
+  // (e.g. "FaceTime HD Camera") that carry no facing hint.
+  localizeCameraLabel(webcam, index) {
+    const { intl } = this.props;
+    const raw = webcam.label;
+    if (!raw) return this.getFallbackLabel(webcam, index);
+
+    const lower = raw.toLowerCase();
+    if (/(front|user[\s-]*facing|facing\s*:?\s*front|selfie|self[\s-]*facing)/.test(lower)) {
+      return intl.formatMessage(intlMessages.cameraNameFront);
+    }
+    if (/(back|rear|environment|facing\s*:?\s*back|world[\s-]*facing)/.test(lower)) {
+      return intl.formatMessage(intlMessages.cameraNameBack);
+    }
+    return raw;
+  }
+
   isAlreadyShared (webcamId) { 
     const { sharedDevices, cameraAsContentDeviceId } = this.props;
 
@@ -1002,7 +1029,7 @@ class VideoPreview extends Component {
             >
               {availableWebcams.map((webcam, index) => (
                 <option key={webcam.deviceId} value={webcam.deviceId}>
-                  {webcam.label || this.getFallbackLabel(webcam, index)}
+                  {this.localizeCameraLabel(webcam, index)}
                 </option>
               ))}
             </Styled.Select>

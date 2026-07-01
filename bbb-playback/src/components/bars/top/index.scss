@@ -1,13 +1,16 @@
 @import 'src/styles/sizes';
 
 :root {
-  --top-bar-active-background-color: var(--primary-highlight-color);
-  --top-bar-background-color: var(--primary-background-color);
+  --top-bar-active-background-color: rgba(20, 169, 158, .16);
+  --top-bar-background-color: var(--skyroom-glass-strong);
   --top-bar-color: var(--primary-content-color);
 }
 
 .top-bar {
-  background-color: var(--top-bar-background-color);
+  backdrop-filter: blur(18px);
+  background:
+    linear-gradient(90deg, rgba(20, 169, 158, .12), transparent 34%, rgba(124, 58, 237, .12)),
+    var(--top-bar-background-color);
   color: var(--top-bar-color);
   box-sizing: border-box;
   display: flex;
@@ -45,19 +48,28 @@
   }
 
   .title {
+    color: var(--skyroom-text-primary);
+    font-size: .95rem;
+    font-weight: var(--font-weight-semi-bold);
+    letter-spacing: -.01em;
     overflow: hidden;
     padding: $padding-small;
     text-overflow: ellipsis;
+    text-shadow: 0 1px 18px rgba(20, 169, 158, .16);
     white-space: nowrap;
   }
 
   .interactive {
+    border-radius: 999px;
     cursor: pointer;
     outline: none;
+    transition: background-color .18s ease, color .18s ease, transform .18s ease;
 
     &:focus,
     &:hover {
       background-color: var(--top-bar-active-background-color);
+      color: var(--skyroom-brand-200);
+      transform: translateY(-1px);
     }
   }
 }

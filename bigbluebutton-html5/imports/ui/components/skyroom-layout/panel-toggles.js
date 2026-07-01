@@ -104,6 +104,20 @@ const openSkyroomNotes = () => {
   }
 };
 
+/** Breakout shares the content sidebar with chat; open it as the BREAKOUT content panel. */
+const openSkyroomBreakoutContent = (dispatch) => {
+  dispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN, value: true });
+  dispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL, value: PANELS.BREAKOUT });
+};
+
+/** Guest waiting room shares the content sidebar with chat/breakout. */
+const openSkyroomWaitingUsersContent = (dispatch) => {
+  dispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN, value: true });
+  dispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL, value: PANELS.WAITING_USERS });
+};
+
+const isSkyroomContentSidebarBox = (box) => box === 'chat' || box === 'breakout' || box === 'waiting';
+
 /** Show one box in the mobile bottom zone; `null` closes everything. */
 export const openSkyroomMobileBox = (layoutContextDispatch, box) => {
   // Explicit single source of truth — set first so the resolver/tab bar reflect the
@@ -111,16 +125,56 @@ export const openSkyroomMobileBox = (layoutContextDispatch, box) => {
   setSkyroomMobileActiveBox(box);
 
   if (box !== 'users') closeSkyroomUsers(layoutContextDispatch);
-  if (box !== 'chat') closeSkyroomChat(layoutContextDispatch);
+  // chat, breakout, and waiting-users share the content sidebar.
+  if (!isSkyroomContentSidebarBox(box)) closeSkyroomChat(layoutContextDispatch);
   if (box !== 'notes') closeSkyroomNotes();
 
   if (box === 'users') openSkyroomUserList(layoutContextDispatch);
   else if (box === 'chat') openSkyroomPublicChat(layoutContextDispatch);
+  else if (box === 'breakout') openSkyroomBreakoutContent(layoutContextDispatch);
+  else if (box === 'waiting') openSkyroomWaitingUsersContent(layoutContextDispatch);
   else if (box === 'notes') openSkyroomNotes();
 
   // The layout engine gates each panel's OUTPUT display on the BBB sidebar isOpen
   // flags, which update asynchronously. One coalesced recompute on the next frame
   // makes the first tab tap reliably reveal the new box without a resize storm.
+  dispatchSkyroomLayoutResizeNextFrame();
+};
+
+/**
+ * Open a specific PRIVATE chat in the mobile bottom zone.
+ *
+ * Unlike `openSkyroomMobileBox(_, 'chat')` — which always targets the public group chat —
+ * this keeps the caller's `chatId`. Pass '' to let `ChatContainer` resolve a freshly created
+ * chat through `pendingChat` and set `idChatOpen` itself. Switches the bottom zone to the chat
+ * box and closes the other boxes (mobile shows exactly one box at a time), which is why simply
+ * dispatching the CHAT panel from the user menu was not enough to leave the users tab.
+ */
+export const openSkyroomPrivateChat = (layoutContextDispatch, chatId = '') => {
+  setSkyroomMobileActiveBox('chat');
+  closeSkyroomUsers(layoutContextDispatch);
+  closeSkyroomNotes();
+
+  layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN, value: true });
+  layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL, value: PANELS.CHAT });
+  layoutContextDispatch({ type: ACTIONS.SET_ID_CHAT_OPEN, value: chatId });
+
+  dispatchSkyroomLayoutResizeNextFrame();
+};
+
+/** Show the breakout management/join panel in the mobile bottom zone (moderator or invitee). */
+export const openSkyroomBreakout = (layoutContextDispatch) => {
+  openSkyroomMobileBox(layoutContextDispatch, 'breakout');
+};
+
+/** Show the guest waiting-room approval panel in the mobile bottom zone (moderator). */
+export const openSkyroomWaitingUsers = (layoutContextDispatch) => {
+  openSkyroomMobileBox(layoutContextDispatch, 'waiting');
+};
+
+/** Open guest waiting-room panel on desktop (content sidebar). */
+export const openSkyroomWaitingUsersDesktop = (layoutContextDispatch) => {
+  openSkyroomWaitingUsersContent(layoutContextDispatch);
   dispatchSkyroomLayoutResizeNextFrame();
 };
 

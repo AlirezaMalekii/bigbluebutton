@@ -9,17 +9,22 @@ $cursor-size: .5rem;
 .presentation-wrapper {
   align-items: center;
   bottom: 0;
+  box-sizing: border-box;
   display: flex;
   justify-content: center;
   height: 100%;
+  padding: 10px;
   position: absolute;
   top: 0;
   width: 100%;
 }
 
 .presentation {
+  background: rgba(255, 255, 255, .02);
+  border-radius: .9rem;
   display: flex;
   height: 100%;
+  overflow: hidden;
   width: 100%;
 
   .cursor {

@@ -12,7 +12,7 @@
  * notes) the resolver falls back to the derived state so nothing is lost.
  */
 
-export type SkyroomMobileBox = 'webcams' | 'chat' | 'users' | 'notes' | null;
+export type SkyroomMobileBox = 'webcams' | 'chat' | 'users' | 'notes' | 'breakout' | 'waiting' | null;
 
 let activeBox: SkyroomMobileBox = null;
 const listeners = new Set<() => void>();
@@ -48,15 +48,21 @@ export const resolveSkyroomMobileBox = ({
   usersOpen,
   chatOpen,
   notesOpen,
+  breakoutOpen = false,
+  waitingUsersOpen = false,
 }: {
   usersOpen: boolean;
   chatOpen: boolean;
   notesOpen: boolean;
+  breakoutOpen?: boolean;
+  waitingUsersOpen?: boolean;
 }): SkyroomMobileBox => {
   if (activeBox) return activeBox;
 
   // Fallback: derive from live state (external opens / initial state).
   if (notesOpen) return 'notes';
+  if (breakoutOpen) return 'breakout';
+  if (waitingUsersOpen) return 'waiting';
   if (usersOpen) return 'users';
   if (chatOpen) return 'chat';
   return null;

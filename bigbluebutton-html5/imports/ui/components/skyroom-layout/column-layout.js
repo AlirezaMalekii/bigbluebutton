@@ -88,6 +88,8 @@ const buildStageCameraDockBounds = ({
    Exported so the tab-bar component can self-position with the same metrics. */
 export const SKYROOM_MOBILE_EDGE = 8;
 const SKYROOM_MOBILE_GAP = 8;
+/** Gap between the floating footer chrome and the physical screen bottom (px). */
+export const SKYROOM_MOBILE_FOOTER_LIFT = 8;
 export const SKYROOM_MOBILE_TAB_H = 36;
 /* The phone navbar is a single compact row (~48px), shorter than the desktop
    two-row navbar (SKYROOM_NAVBAR_H=60). Use this for both the reserved top space
@@ -123,6 +125,7 @@ const buildSkyroomMobileLayout = ({
   videoStreams = [],
   presentationIsOpen = true,
   hasScreenShare = false,
+  hasExternalVideo = false,
 }) => {
   /* eslint-disable no-param-reassign -- layout engine mutates bound objects in place */
   const viewportW = windowWidth();
@@ -132,9 +135,17 @@ const buildSkyroomMobileLayout = ({
   const usersOpen = sidebarNavigationInput.isOpen;
   const chatOpen = sidebarContentInput.isOpen
     && sidebarContentInput.sidebarContentPanel === PANELS.CHAT;
+  const breakoutOpen = sidebarContentInput.isOpen
+    && sidebarContentInput.sidebarContentPanel === PANELS.BREAKOUT;
+  const waitingUsersOpen = sidebarContentInput.isOpen
+    && sidebarContentInput.sidebarContentPanel === PANELS.WAITING_USERS;
+  const contentPanelOpen = chatOpen || breakoutOpen || waitingUsersOpen;
   const notesOpen = getSkyroomNotesOpen();
-  const activeBox = resolveSkyroomMobileBox({ usersOpen, chatOpen, notesOpen });
-  const panelBox = activeBox === 'users' || activeBox === 'chat' || activeBox === 'notes';
+  const activeBox = resolveSkyroomMobileBox({
+    usersOpen, chatOpen, notesOpen, breakoutOpen, waitingUsersOpen,
+  });
+  const panelBox = activeBox === 'users' || activeBox === 'chat'
+    || activeBox === 'notes' || activeBox === 'breakout' || activeBox === 'waiting';
   const webcamsBox = activeBox === 'webcams';
 
   const { totalCount } = classifySkyroomCameras(videoStreams);
@@ -143,9 +154,10 @@ const buildSkyroomMobileLayout = ({
 
   const edge = SKYROOM_MOBILE_EDGE;
   const gap = SKYROOM_MOBILE_GAP;
+  const lift = SKYROOM_MOBILE_FOOTER_LIFT;
   const tabBarH = SKYROOM_MOBILE_TAB_H;
   const areaTop = SKYROOM_MOBILE_NAVBAR_H + banner + edge;
-  const areaBottom = viewportH - SKYROOM_FOOTER_H - edge;
+  const areaBottom = viewportH - SKYROOM_FOOTER_H - edge - lift;
   const availH = Math.max(120, areaBottom - areaTop);
 
   const talkingOffset = getSkyroomMobileTalkingRailOffset();
@@ -233,9 +245,10 @@ const buildSkyroomMobileLayout = ({
     boundsObj.right = bottomRect.right;
   };
   setPanel(sidebarNavWidth, sidebarNavBounds, activeBox === 'users');
-  setPanel(sidebarContentWidth, sidebarContentBounds, activeBox === 'chat');
+  const contentSidebarActive = activeBox === 'chat' || activeBox === 'breakout' || activeBox === 'waiting';
+  setPanel(sidebarContentWidth, sidebarContentBounds, contentSidebarActive);
   const sidebarNavHeightOut = activeBox === 'users' ? bottomH : 0;
-  const sidebarContentHeightOut = activeBox === 'chat' ? bottomH : 0;
+  const sidebarContentHeightOut = contentSidebarActive ? bottomH : 0;
 
   const notesColumnBounds = activeBox === 'notes' ? {
     top: bottomRect.top,
@@ -284,7 +297,7 @@ const buildSkyroomMobileLayout = ({
     mediaAreaBounds,
     cameraDockBounds: cameraDockOut,
     cameraDockPosition: CAMERADOCK_POSITION.CONTENT_TOP,
-    screenshareMinimized: false,
+    screenshareMinimized: (hasScreenShare || hasExternalVideo) && !presentationIsOpen,
     useSplitCameras: false,
     useSidebarWebcam: false,
     sidebarCameraDockBounds: null,
@@ -297,7 +310,7 @@ const buildSkyroomMobileLayout = ({
     centerDropEnabled: false,
     stageWebcamStripHeight: 0,
     usersOpen,
-    chatOpen,
+    chatOpen: contentPanelOpen,
     notesOpen,
     sidebarStackActive: false,
     notesColumnBounds,
@@ -325,9 +338,10 @@ const buildSkyroomMobileLayout = ({
       height: SKYROOM_MOBILE_NAVBAR_H,
     },
     actionbarFullWidth: {
-      width: viewportW,
-      left: 0,
-      right: isRTL ? 0 : null,
+      width: viewportW - edge * 2,
+      left: isRTL ? null : edge,
+      right: isRTL ? edge : null,
+      top: viewportH - SKYROOM_FOOTER_H - lift,
       height: SKYROOM_FOOTER_H,
     },
   };
@@ -357,6 +371,7 @@ const adjustSkyroomColumnLayout = ({
   videoStreams = [],
   presentationIsOpen = true,
   hasScreenShare = false,
+  hasExternalVideo = false,
 }) => {
   /* eslint-disable no-param-reassign -- layout engine mutates bound objects in place */
   if (!isSkyroomColumnActive()) return null;
@@ -380,15 +395,21 @@ const adjustSkyroomColumnLayout = ({
       videoStreams,
       presentationIsOpen,
       hasScreenShare,
+      hasExternalVideo,
     });
   }
 
   const usersOpen = sidebarNavigationInput.isOpen;
   const chatOpen = sidebarContentInput.isOpen
     && sidebarContentInput.sidebarContentPanel === PANELS.CHAT;
+  const breakoutOpen = sidebarContentInput.isOpen
+    && sidebarContentInput.sidebarContentPanel === PANELS.BREAKOUT;
+  const waitingUsersOpen = sidebarContentInput.isOpen
+    && sidebarContentInput.sidebarContentPanel === PANELS.WAITING_USERS;
+  const contentPanelOpen = chatOpen || breakoutOpen || waitingUsersOpen;
   const notesOpen = getSkyroomNotesOpen();
-  const columnVisible = usersOpen || chatOpen || notesOpen;
-  const screenshareMinimized = hasScreenShare && !presentationIsOpen;
+  const columnVisible = usersOpen || contentPanelOpen || notesOpen;
+  const stageMediaMinimized = (hasScreenShare || hasExternalVideo) && !presentationIsOpen;
 
   const viewportW = windowWidth();
   const viewportH = windowHeight();
@@ -405,9 +426,9 @@ const adjustSkyroomColumnLayout = ({
 
   const { totalCount } = classifySkyroomCameras(videoStreams);
 
-  const stageMediaOpen = presentationIsOpen && !screenshareMinimized;
+  const stageMediaOpen = presentationIsOpen && !stageMediaMinimized;
   const centerDropEnabled = !stageMediaOpen;
-  const sidebarStackActive = usersOpen || chatOpen;
+  const sidebarStackActive = usersOpen || contentPanelOpen;
 
   const zonePartition = partitionSkyroomStreams(videoStreams, {
     centerDropEnabled,
@@ -433,13 +454,13 @@ const adjustSkyroomColumnLayout = ({
   let usersH = 0;
   let chatH = 0;
 
-  if (usersOpen && chatOpen) {
+  if (usersOpen && contentPanelOpen) {
     const shared = sidebarPanelAreaHeight - GAP;
     chatH = Math.max(MIN_CHAT, Math.round(shared * CHAT_PANEL_HEIGHT_RATIO));
     usersH = Math.max(MIN_USERS, shared - chatH);
   } else if (usersOpen) {
     usersH = sidebarPanelAreaHeight;
-  } else if (chatOpen) {
+  } else if (contentPanelOpen) {
     chatH = sidebarPanelAreaHeight;
   }
 
@@ -447,24 +468,24 @@ const adjustSkyroomColumnLayout = ({
   sidebarNavWidth.width = usersOpen ? columnW : 0;
   sidebarNavWidth.maxWidth = usersOpen ? MAX_COLUMN : 0;
 
-  sidebarContentWidth.minWidth = chatOpen ? MIN_COLUMN : 0;
-  sidebarContentWidth.width = chatOpen ? columnW : 0;
-  sidebarContentWidth.maxWidth = chatOpen ? MAX_COLUMN : 0;
+  sidebarContentWidth.minWidth = contentPanelOpen ? MIN_COLUMN : 0;
+  sidebarContentWidth.width = contentPanelOpen ? columnW : 0;
+  sidebarContentWidth.maxWidth = contentPanelOpen ? MAX_COLUMN : 0;
 
   const contentTop = sidebarPanelTop;
 
   sidebarNavBounds.top = contentTop;
   sidebarNavHeight = usersH;
 
-  sidebarContentBounds.top = usersOpen && chatOpen
+  sidebarContentBounds.top = usersOpen && contentPanelOpen
     ? contentTop + usersH + GAP
     : contentTop;
 
   const panelStackBottom = (() => {
-    if (usersOpen && chatOpen) {
+    if (usersOpen && contentPanelOpen) {
       return contentTop + usersH + GAP + chatH;
     }
-    if (chatOpen) return contentTop + chatH;
+    if (contentPanelOpen) return contentTop + chatH;
     if (usersOpen) return contentTop + usersH;
     return columnBottom;
   })();
@@ -489,7 +510,7 @@ const adjustSkyroomColumnLayout = ({
 
   const notesColumnW = notesOpen ? columnW : 0;
   const notesColumnGap = notesOpen ? STAGE_GAP : 0;
-  const sidebarStackW = (usersOpen || chatOpen) ? columnW : 0;
+  const sidebarStackW = (usersOpen || contentPanelOpen) ? columnW : 0;
   const sidebarStackGap = sidebarStackW > 0 ? STAGE_GAP : 0;
   const notesOffset = sidebarStackW + sidebarStackGap + notesColumnGap;
   const totalLeftColumnsW = sidebarStackW + notesColumnW + (sidebarStackW > 0 ? sidebarStackGap : 0)
@@ -527,7 +548,7 @@ const adjustSkyroomColumnLayout = ({
     : columnBottom - presentationTop;
   let stageWebcamStripTop = presentationTop;
 
-  if (screenshareMinimized && totalCount > 0) {
+  if (stageMediaMinimized && totalCount > 0) {
     if (stageCount > 0) {
       stageStripH = calcStageWebcamHeight(stageCount);
       stageWebcamStripTop = presentationTop;
@@ -536,7 +557,7 @@ const adjustSkyroomColumnLayout = ({
     }
     mediaAreaBounds.top = presentationTop;
     mediaAreaBounds.height = presentationHeight;
-  } else if (screenshareMinimized) {
+  } else if (stageMediaMinimized) {
     mediaAreaBounds.top = presentationTop;
     mediaAreaBounds.height = 0;
     stageStripH = 0;
@@ -675,11 +696,11 @@ const adjustSkyroomColumnLayout = ({
     stageStripBounds,
     stageMediaOpen,
     centerDropEnabled: centerDropAllowed,
-    screenshareMinimized,
+    stageMediaMinimized,
     stageWebcamStripHeight: needsStageStripDock ? stageStripH : 0,
     sidebarSize: columnW,
     usersOpen,
-    chatOpen,
+    chatOpen: contentPanelOpen,
     notesOpen,
     sidebarStackActive,
     notesColumnBounds: notesOpen ? {

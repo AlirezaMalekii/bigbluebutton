@@ -22,6 +22,7 @@ import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import SkyroomModeratorBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomModeratorBadge';
 import SkyroomViewerBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomViewerBadge';
+import SkyroomPresenterBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomPresenterBadge';
 
 const messages = defineMessages({
   moderator: {
@@ -168,7 +169,7 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, lockSettings, index }
       <span key={uniqueId('breakout-')}>
         <Icon iconName="rooms" />
         &nbsp;
-        {user.lastBreakoutRoom?.shortName
+        {user.lastBreakoutRoom?.isDefaultName
           ? intl.formatMessage(messages.breakoutRoom, { roomNumber: user.lastBreakoutRoom?.sequence })
           : user.lastBreakoutRoom?.shortName}
       </span>,
@@ -176,7 +177,7 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, lockSettings, index }
   }
   if (user?.cameras?.length > 0 && LABEL.sharingWebcam) {
     subs.push(
-      <span key={uniqueId('breakout-')}>
+      <span key={uniqueId('webcam-')}>
         {user?.pinned === true
           ? <Icon iconName="pin-video_on" />
           : <Icon iconName="video" />}
@@ -228,6 +229,9 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, lockSettings, index }
         if (user.isModerator || user.role === 'MODERATOR') {
           return <SkyroomModeratorBadge color={user.color} />;
         }
+        if (user.presenter && !user.bot) {
+          return <SkyroomPresenterBadge color={user.color} />;
+        }
         if (!user.presenter && !user.bot) {
           return <SkyroomViewerBadge color={user.color} />;
         }
@@ -246,9 +250,7 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, lockSettings, index }
     return '';
   };
 
-  const avatarContent = user.lastBreakoutRoom?.isUserCurrentlyInRoom && userAvatarFiltered.length === 0
-    ? user.lastBreakoutRoom?.sequence
-    : getIconUser();
+  const avatarContent = getIconUser();
 
   const hasWhiteboardAccess = user?.whiteboardWriteAccess === true;
 

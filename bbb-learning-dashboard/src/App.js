@@ -18,7 +18,8 @@ import StatusTable from './components/StatusTable';
 import PollsTable from './components/PollsTable';
 import PluginsTable from './components/PluginsTable';
 import ErrorMessage from './components/ErrorMessage';
-import { makeUserCSVData, tsToHHmmss } from './services/UserService';
+import { tsToHHmmss } from './services/UserService';
+import { createWorkbookBlob, makeSessionWorkbookBuffer } from './services/SessionExportService';
 import QuizzesTable from './components/QuizzesTable';
 import QuizzesChart from './components/QuizzesChart';
 import {
@@ -74,8 +75,8 @@ class App extends React.Component {
     this.setState({ modalOpen: false });
   }
 
-  handleSaveSessionData(e) {
-    const { target: downloadButton } = e;
+  async handleSaveSessionData(e) {
+    const { currentTarget: downloadButton } = e;
     const downloadButtonLabel = downloadButton.querySelector('span') || downloadButton;
     const { intl } = this.props;
     const { activitiesJson } = this.state;
@@ -86,24 +87,43 @@ class App extends React.Component {
     if (downloadSessionDataEnabled === false) return;
 
     const link = document.createElement('a');
-    const data = makeUserCSVData(users, polls, intl);
-    const filename = `LearningDashboard_${meetingName}_${new Date(createdOn).toISOString().substr(0, 10)}.csv`.replace(/ /g, '-');
+    const filename = `LearningDashboard_${meetingName}_${new Date(createdOn).toISOString().substr(0, 10)}.xlsx`.replace(/ /g, '-');
+    let objectUrl = '';
 
     downloadButton.setAttribute('disabled', 'true');
     downloadButton.style.cursor = 'not-allowed';
-    link.setAttribute('href', `data:text/csv;charset=UTF-8,${encodeURIComponent(data)}`);
-    link.setAttribute('download', filename);
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    downloadButtonLabel.innerHTML = intl.formatMessage({ id: 'app.learningDashboard.sessionDataDownloadedLabel', defaultMessage: 'Downloaded!' });
-    setTimeout(() => {
-      downloadButtonLabel.innerHTML = intl.formatMessage({ id: 'app.learningDashboard.downloadSessionDataLabel', defaultMessage: 'Download Session Data' });
+    downloadButtonLabel.innerHTML = intl.formatMessage({ id: 'app.learningDashboard.exportingSessionDataLabel', defaultMessage: 'Preparing...' });
+
+    try {
+      const buffer = await makeSessionWorkbookBuffer(activitiesJson, intl, {
+        averageActivityScore: intl.formatNumber((this.getAverageActivityScore() || 0), {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 1,
+        }),
+        totalActivityTime: this.totalOfActivity(),
+        usersCount: Object.values(users || {}).length,
+        pollsCount: Object.values(polls || {}).filter((poll) => !poll.quiz).length,
+        quizzesCount: Object.values(polls || {}).filter((poll) => poll.quiz).length,
+      });
+      objectUrl = window.URL.createObjectURL(createWorkbookBlob(buffer));
+      link.setAttribute('href', objectUrl);
+      link.setAttribute('download', filename);
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      downloadButtonLabel.innerHTML = intl.formatMessage({ id: 'app.learningDashboard.sessionDataDownloadedLabel', defaultMessage: 'Downloaded!' });
+    } catch (error) {
+      downloadButtonLabel.innerHTML = intl.formatMessage({ id: 'app.learningDashboard.sessionDataDownloadFailedLabel', defaultMessage: 'Download failed' });
+    } finally {
+      if (link.parentNode) document.body.removeChild(link);
+      if (objectUrl) window.URL.revokeObjectURL(objectUrl);
       downloadButton.removeAttribute('disabled');
       downloadButton.style.cursor = 'pointer';
       downloadButton.focus();
-    }, 3000);
-    document.body.removeChild(link);
+      setTimeout(() => {
+        downloadButtonLabel.innerHTML = intl.formatMessage({ id: 'app.learningDashboard.downloadSessionDataLabel', defaultMessage: 'Download Session Data' });
+      }, 3000);
+    }
   }
 
   setDashboardParams(callback) {
@@ -401,78 +421,82 @@ class App extends React.Component {
       .map((p) => ([p.pollId, p])));
 
     return (
-      <div className="mx-10">
-        <div className="flex flex-col sm:flex-row items-start justify-between pb-3">
-          <h1 className="mt-3 text-2xl font-semibold inline-block">
-            <FormattedMessage id="app.learningDashboard.dashboardTitle" defaultMessage="Learning Dashboard" />
+      <div className="ld-shell">
+        <div className="ld-hero">
+          <div>
+            <span className="ld-eyebrow">
+              <FormattedMessage id="app.learningDashboard.dashboardTitle" defaultMessage="Learning Dashboard" />
+            </span>
+            <h1 className="ld-hero-title">
+              <FormattedMessage id="app.learningDashboard.dashboardTitle" defaultMessage="Learning Dashboard" />
+            </h1>
             {
               ldAccessTokenCopied === true
                 ? (
-                  <span className="text-xs text-gray-500 font-normal ml-2">
+                  <span className="mt-3 inline-flex text-xs text-skyroom-inkMuted font-normal">
                     <FormattedMessage id="app.learningDashboard.linkCopied" defaultMessage="Link successfully copied!" />
                   </span>
                 )
                 : null
             }
-            <br />
             { activitiesJson?.other
               && activitiesJson.other[LEARNING_DASHBOARD_LEARN_MORE_LINK] !== ''
               && (
-                <>
-                  <span className="text-sm font-light font-base mt-0">
-                    {intl.formatMessage({ id: 'app.learningDashboard.learnMore', defaultMessage: 'Learn more about the use of the Dashboard in {learnMoreLink} from our Knowledge Base.' }, {
-                      learnMoreLink: (
-                        <a
-                          target="_blank"
-                          rel="noreferrer"
-                          href={activitiesJson.other[LEARNING_DASHBOARD_LEARN_MORE_LINK]}
-                          className="underline"
-                        >
-                          {intl.formatMessage({ id: 'app.learningDashboard.learnMoreLinkText', defaultMessage: 'this article' })}
-                        </a>
-                      ),
-                    })}
-                  </span>
-                  <br />
-                </>
+                <p className="ld-hero-subtitle">
+                  {intl.formatMessage({ id: 'app.learningDashboard.learnMore', defaultMessage: 'Learn more about the use of the Dashboard in {learnMoreLink} from our Knowledge Base.' }, {
+                    learnMoreLink: (
+                      <a
+                        target="_blank"
+                        rel="noreferrer"
+                        href={activitiesJson.other[LEARNING_DASHBOARD_LEARN_MORE_LINK]}
+                        className="underline underline-offset-4"
+                      >
+                        {intl.formatMessage({ id: 'app.learningDashboard.learnMoreLinkText', defaultMessage: 'this article' })}
+                      </a>
+                    ),
+                  })}
+                </p>
               )}
-            <span className="text-sm font-medium">{activitiesJson.name || ''}</span>
-          </h1>
-          <div className="mt-3 col-text-right py-1 text-gray-500 inline-block">
-            <p className="font-bold">
-              <div className="inline" data-test="meetingDateDashboard">
+            <span className="ld-meeting-name">{activitiesJson.name || ''}</span>
+          </div>
+          <div className="ld-hero-meta col-text-right">
+            <div className="ld-meta-row">
+              <span>
+                <FormattedMessage id="app.learningDashboard.indicators.meetingStatusActive" defaultMessage="Active" />
+              </span>
+              {
+                activitiesJson.endedOn > 0
+                  ? (
+                    <span className="ld-badge ld-badge-danger">
+                      <FormattedMessage id="app.learningDashboard.indicators.meetingStatusEnded" defaultMessage="Ended" data-test="meetingStatusEndedDashboard" />
+                    </span>
+                  )
+                  : (
+                    <span className="ld-badge ld-badge-success" data-test="meetingStatusActiveDashboard">
+                      <FormattedMessage id="app.learningDashboard.indicators.meetingStatusActive" defaultMessage="Active" />
+                    </span>
+                  )
+              }
+            </div>
+            <div className="ld-meta-row">
+              <span>
+                <FormattedMessage id="app.learningDashboard.indicators.duration" defaultMessage="Duration" />
+              </span>
+              <strong data-test="meetingDurationTimeDashboard">{tsToHHmmss(this.totalOfActivity())}</strong>
+            </div>
+            <div className="ld-meta-row">
+              <span>
+                <FormattedMessage id="app.learningDashboard.date" defaultMessage="Date" />
+              </span>
+              <strong data-test="meetingDateDashboard">
                 <FormattedDate
                   value={activitiesJson.createdOn}
                   year="numeric"
                   month="short"
                   day="numeric"
                 />
-              </div>
-              &nbsp;&nbsp;
-              {
-                activitiesJson.endedOn > 0
-                  ? (
-                    <span className="px-2 py-1 font-semibold leading-tight text-red-300 bg-red-500/20 rounded-full">
-                      <FormattedMessage id="app.learningDashboard.indicators.meetingStatusEnded" defaultMessage="Ended" data-test="meetingStatusEndedDashboard" />
-                    </span>
-                  )
-                  : null
-              }
-              {
-                activitiesJson.endedOn === 0
-                  ? (
-                    <span className="px-2 py-1 font-semibold leading-tight text-green-300 bg-green-500/20 rounded-full" data-test="meetingStatusActiveDashboard">
-                      <FormattedMessage id="app.learningDashboard.indicators.meetingStatusActive" defaultMessage="Active" />
-                    </span>
-                  )
-                  : null
-              }
-            </p>
-            <p data-test="meetingDurationTimeDashboard">
-              <FormattedMessage id="app.learningDashboard.indicators.duration" defaultMessage="Duration" />
-              :&nbsp;
-              {tsToHHmmss(this.totalOfActivity())}
-            </p>
+              </strong>
+            </div>
           </div>
         </div>
 
@@ -482,8 +506,8 @@ class App extends React.Component {
             this.setState({ tab: v });
           }}
         >
-          <TabsListUnstyled className="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">
-            <TabUnstyled className="rounded focus:outline-none focus:ring focus:ring-pink-500 ring-offset-2" data-test="activeUsersPanelDashboard">
+          <TabsListUnstyled className="ld-tabs-grid">
+            <TabUnstyled className="ld-stat-tab" data-test="activeUsersPanelDashboard">
               <Card>
                 <CardContent classes={{ root: '!p-0' }}>
                   <CardBody
@@ -493,8 +517,8 @@ class App extends React.Component {
                         : intl.formatMessage({ id: 'app.learningDashboard.indicators.usersTotal', defaultMessage: 'Total Number Of Users' })
                     }
                     number={usersCount}
-                    cardClass={tab === TABS.OVERVIEW ? 'border-pink-500' : 'hover:border-pink-500 border-white'}
-                    iconClass="bg-pink-500/20 text-pink-300"
+                    cardClass={tab === TABS.OVERVIEW ? 'ld-stat-card-active' : ''}
+                    iconClass="text-pink-200"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -514,7 +538,7 @@ class App extends React.Component {
                 </CardContent>
               </Card>
             </TabUnstyled>
-            <TabUnstyled className="rounded focus:outline-none focus:ring focus:ring-green-500 ring-offset-2" data-test="activityScorePanelDashboard">
+            <TabUnstyled className="ld-stat-tab" data-test="activityScorePanelDashboard">
               <Card>
                 <CardContent classes={{ root: '!p-0' }}>
                   <CardBody
@@ -523,8 +547,8 @@ class App extends React.Component {
                       minimumFractionDigits: 0,
                       maximumFractionDigits: 1,
                     })}
-                    cardClass={tab === TABS.OVERVIEW_ACTIVITY_SCORE ? 'border-green-500' : 'hover:border-green-500 border-white'}
-                    iconClass="bg-green-500/20 text-green-300"
+                    cardClass={tab === TABS.OVERVIEW_ACTIVITY_SCORE ? 'ld-stat-card-active' : ''}
+                    iconClass="text-emerald-100"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -550,28 +574,28 @@ class App extends React.Component {
                 </CardContent>
               </Card>
             </TabUnstyled>
-            <TabUnstyled className="rounded focus:outline-none focus:ring focus:ring-purple-500 ring-offset-2" data-test="timelinePanelDashboard">
+            <TabUnstyled className="ld-stat-tab" data-test="timelinePanelDashboard">
               <Card>
                 <CardContent classes={{ root: '!p-0' }}>
                   <CardBody
                     name={intl.formatMessage({ id: 'app.learningDashboard.indicators.timeline', defaultMessage: 'Timeline' })}
                     number={this.totalOfReactions()}
-                    cardClass={tab === TABS.TIMELINE ? 'border-purple-500' : 'hover:border-purple-500 border-white'}
-                    iconClass="bg-purple-500/20 text-purple-300"
+                    cardClass={tab === TABS.TIMELINE ? 'ld-stat-card-active' : ''}
+                    iconClass="text-violet-100"
                   >
                     {this.fetchMostUsedReactions()}
                   </CardBody>
                 </CardContent>
               </Card>
             </TabUnstyled>
-            <TabUnstyled className="rounded focus:outline-none focus:ring focus:ring-blue-500 ring-offset-2" data-test="pollsPanelDashboard">
+            <TabUnstyled className="ld-stat-tab" data-test="pollsPanelDashboard">
               <Card>
                 <CardContent classes={{ root: '!p-0' }}>
                   <CardBody
                     name={intl.formatMessage({ id: 'app.learningDashboard.indicators.polls', defaultMessage: 'Polls' })}
                     number={Object.keys(polls).length}
-                    cardClass={tab === TABS.POLLING ? 'border-blue-500' : 'hover:border-blue-500 border-white'}
-                    iconClass="bg-blue-500/20 text-blue-300"
+                    cardClass={tab === TABS.POLLING ? 'ld-stat-card-active' : ''}
+                    iconClass="text-sky-100"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -591,14 +615,14 @@ class App extends React.Component {
                 </CardContent>
               </Card>
             </TabUnstyled>
-            <TabUnstyled className="rounded focus:outline-none focus:ring focus:ring-orange-500 ring-offset-2" data-test="quizzesPanelDashboard">
+            <TabUnstyled className="ld-stat-tab" data-test="quizzesPanelDashboard">
               <Card>
                 <CardContent classes={{ root: '!p-0' }}>
                   <CardBody
                     name={intl.formatMessage({ id: 'app.learningDashboard.indicators.quizzes', defaultMessage: 'Quizzes' })}
                     number={Object.keys(quizzes).length}
-                    cardClass={tab === TABS.QUIZZES ? 'border-orange-500' : 'hover:border-orange-500 border-white'}
-                    iconClass="bg-orange-500/20 text-orange-300"
+                    cardClass={tab === TABS.QUIZZES ? 'ld-stat-card-active' : ''}
+                    iconClass="text-amber-100"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                       <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
@@ -608,14 +632,14 @@ class App extends React.Component {
               </Card>
             </TabUnstyled>
             {pluginUserDataColumnTitleList.length && (
-              <TabUnstyled className="rounded focus:outline-none focus:ring focus:ring-red-500 ring-offset-2" data-test="pluginsPanelDashboard">
+              <TabUnstyled className="ld-stat-tab" data-test="pluginsPanelDashboard">
                 <Card>
                   <CardContent classes={{ root: '!p-0' }}>
                     <CardBody
                       name={pluginUserDataCardTitle}
                       number={pluginUserDataColumnTitleList.length}
-                      cardClass={tab === TABS.POLLING ? 'border-red-500' : 'hover:border-red-500 border-white'}
-                      iconClass="bg-red-500/20 text-red-300"
+                      cardClass={tab === 5 ? 'ld-stat-card-active' : ''}
+                      iconClass="text-rose-100"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -638,11 +662,13 @@ class App extends React.Component {
             )}
           </TabsListUnstyled>
           <TabPanelUnstyled value={0}>
-            <h2 className="block my-2 pr-2 text-xl font-semibold">
-              <FormattedMessage id="app.learningDashboard.usersTable.title" defaultMessage="Overview" />
-            </h2>
-            <div className="w-full overflow-hidden rounded-md shadow-xs border-2 border-gray-100">
-              <div className="w-full overflow-x-auto">
+            <section className="ld-panel">
+              <div className="ld-panel-header">
+                <h2 className="ld-panel-title">
+                  <FormattedMessage id="app.learningDashboard.usersTable.title" defaultMessage="Overview" />
+                </h2>
+              </div>
+              <div className="ld-panel-body">
                 <UsersTable
                   allUsers={activitiesJson.users}
                   totalOfActivityTime={this.totalOfActivity()}
@@ -650,14 +676,16 @@ class App extends React.Component {
                   tab="overview"
                 />
               </div>
-            </div>
+            </section>
           </TabPanelUnstyled>
           <TabPanelUnstyled value={1}>
-            <h2 className="block my-2 pr-2 text-xl font-semibold">
-              <FormattedMessage id="app.learningDashboard.usersTable.title" defaultMessage="Overview" />
-            </h2>
-            <div className="w-full overflow-hidden rounded-md shadow-xs border-2 border-gray-100">
-              <div className="w-full overflow-x-auto">
+            <section className="ld-panel">
+              <div className="ld-panel-header">
+                <h2 className="ld-panel-title">
+                  <FormattedMessage id="app.learningDashboard.usersTable.title" defaultMessage="Overview" />
+                </h2>
+              </div>
+              <div className="ld-panel-body">
                 <UsersTable
                   allUsers={activitiesJson.users}
                   totalOfActivityTime={this.totalOfActivity()}
@@ -665,14 +693,16 @@ class App extends React.Component {
                   tab="overview_activityscore"
                 />
               </div>
-            </div>
+            </section>
           </TabPanelUnstyled>
           <TabPanelUnstyled value={2}>
-            <h2 className="block my-2 pr-2 text-xl font-semibold">
-              <FormattedMessage id="app.learningDashboard.statusTimelineTable.title" defaultMessage="Timeline" />
-            </h2>
-            <div className="w-full overflow-hidden rounded-md shadow-xs border-2 border-gray-100">
-              <div className="w-full overflow-x-auto">
+            <section className="ld-panel">
+              <div className="ld-panel-header">
+                <h2 className="ld-panel-title">
+                  <FormattedMessage id="app.learningDashboard.statusTimelineTable.title" defaultMessage="Timeline" />
+                </h2>
+              </div>
+              <div className="ld-panel-body">
                 <StatusTable
                   allUsers={activitiesJson.users}
                   slides={activitiesJson.presentationSlides}
@@ -680,47 +710,57 @@ class App extends React.Component {
                   sessionToken={sessionToken}
                 />
               </div>
-            </div>
+            </section>
           </TabPanelUnstyled>
           <TabPanelUnstyled value={3}>
-            <h2 className="block my-2 pr-2 text-xl font-semibold">
-              <FormattedMessage id="app.learningDashboard.pollsTable.title" defaultMessage="Polls" />
-            </h2>
-            <div className="w-full overflow-hidden rounded-md shadow-xs border-2 border-gray-100">
-              <div className="w-full overflow-x-auto">
+            <section className="ld-panel">
+              <div className="ld-panel-header">
+                <h2 className="ld-panel-title">
+                  <FormattedMessage id="app.learningDashboard.pollsTable.title" defaultMessage="Polls" />
+                </h2>
+              </div>
+              <div className="ld-panel-body">
                 <PollsTable polls={polls} allUsers={activitiesJson.users} />
               </div>
-            </div>
+            </section>
           </TabPanelUnstyled>
           <TabPanelUnstyled value={4}>
-            <h2 className="block my-2 pr-2 text-xl font-semibold">
-              <FormattedMessage id="app.learningDashboard.quizzes.title" defaultMessage="Quiz Results" />
-            </h2>
-            <Stack spacing={2}>
-              <QuizzesChart
-                quizzes={quizzes}
-                allUsers={activitiesJson.users}
-                totalOfPolls={Object.values(activitiesJson.polls || {}).length}
-              />
-              <QuizzesTable
-                quizzes={quizzes}
-                allUsers={activitiesJson.users}
-              />
-            </Stack>
+            <section className="ld-panel">
+              <div className="ld-panel-header">
+                <h2 className="ld-panel-title">
+                  <FormattedMessage id="app.learningDashboard.quizzes.title" defaultMessage="Quiz Results" />
+                </h2>
+              </div>
+              <div className="ld-panel-body p-4">
+                <Stack spacing={2}>
+                  <QuizzesChart
+                    quizzes={quizzes}
+                    allUsers={activitiesJson.users}
+                    totalOfPolls={Object.values(activitiesJson.polls || {}).length}
+                  />
+                  <QuizzesTable
+                    quizzes={quizzes}
+                    allUsers={activitiesJson.users}
+                  />
+                </Stack>
+              </div>
+            </section>
           </TabPanelUnstyled>
           <TabPanelUnstyled value={5}>
-            <h2 className="block my-2 pr-2 text-xl font-semibold">
-              {pluginUserDataCardTitle}
-            </h2>
-            <div className="w-full overflow-hidden rounded-md shadow-xs border-2 border-gray-100">
-              <div className="w-full overflow-x-auto">
+            <section className="ld-panel">
+              <div className="ld-panel-header">
+                <h2 className="ld-panel-title">
+                  {pluginUserDataCardTitle}
+                </h2>
+              </div>
+              <div className="ld-panel-body">
                 <PluginsTable
                   pluginUserDataCardTitle={pluginUserDataCardTitle}
                   pluginUserDataColumnTitleList={pluginUserDataColumnTitleList}
                   allUsers={activitiesJson.users}
                 />
               </div>
-            </div>
+            </section>
           </TabPanelUnstyled>
         </TabsUnstyled>
         <UserDetails dataJson={activitiesJson} />
@@ -729,26 +769,25 @@ class App extends React.Component {
           && activitiesJson.other[LEARNING_DASHBOARD_FEEDBACK_LINK] !== ''
           && (
             <>
-              <div className="mt-6 mb-4 text-sm font-light font-base text-gray-500">
+              <div className="ld-feedback">
                 { intl.formatMessage({ id: 'app.learningDashboard.feedback', defaultMessage: 'How has your experience been with this feature? We would love to hear your opinion and even suggestions on how we can improve it. Share with us by clicking {feedbackLink}.' }, {
                   feedbackLink: (
                     <a
                       target="_blank"
                       rel="noreferrer"
                       href={activitiesJson.other[LEARNING_DASHBOARD_FEEDBACK_LINK]}
-                      className="underline"
+                      className="underline underline-offset-4"
                     >
                       {intl.formatMessage({ id: 'app.learningDashboard.feedbackLinkText', defaultMessage: 'here' })}
                     </a>
                   ),
                 })}
               </div>
-              <hr className="mb-8" />
             </>
           )}
-        <div className="flex justify-between pb-8 text-xs text-gray-800 dark:text-gray-400 whitespace-nowrap flex-col sm:flex-row">
-          <div className="flex flex-col justify-center mb-4 sm:mb-0">
-            <p className="text-gray-700">
+        <div className="ld-footer">
+          <div>
+            <p>
               {
                 lastUpdated && (
                   <>
@@ -772,20 +811,19 @@ class App extends React.Component {
               }
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="ld-footer-actions">
             {
             (activitiesJson.downloadSessionDataEnabled || false)
               ? (
                 <button
                   data-test="downloadSessionDataDashboard"
                   type="button"
-                  className="flex border-2 text-gray-700 border-gray-200 rounded-md px-4 py-2 bg-white focus:outline-none focus:ring ring-offset-2 focus:ring-gray-500 focus:ring-opacity-50"
+                  className="ld-button ld-button-primary"
                   onClick={this.handleSaveSessionData.bind(this)}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                   </svg>
-                  &nbsp;
                   <span>
                     <FormattedMessage
                       id="app.learningDashboard.downloadSessionDataLabel"
@@ -798,7 +836,7 @@ class App extends React.Component {
           }
             <button
               type="button"
-              className="border-2 text-gray-700 border-gray-200 rounded-md px-4 py-2 bg-white focus:outline-none focus:ring ring-offset-2 focus:ring-gray-500 focus:ring-opacity-50 flex items-center"
+              className="ld-button"
               onClick={this.handleOpenModal}
             >
               {process.env.REACT_APP_EXTERNAL_HELP_PAGE_URL ? (
@@ -810,7 +848,6 @@ class App extends React.Component {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
                 </svg>
               )}
-              &nbsp;
               <FormattedMessage
                 id="app.learningDashboard.helpButtonLabel"
                 defaultMessage="Help"

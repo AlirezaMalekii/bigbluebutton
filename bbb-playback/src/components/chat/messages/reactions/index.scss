@@ -1,8 +1,8 @@
 @import 'src/styles/sizes';
 
 :root {
-  --emoji-wrapper-border-color: var(--gray-lightest);
-  --emoji-wrapper-border-color-hover: var(--gray-lighter);
+  --emoji-wrapper-border-color: rgba(148, 163, 184, .22);
+  --emoji-wrapper-border-color-hover: rgba(20, 169, 158, .42);
 }
 
 .reactions-wrapper {
@@ -13,7 +13,7 @@
 }
 
 .emoji-wrapper {
-  background: none;
+  background: rgba(255, 255, 255, .04);
   border-radius: 1rem;
   padding: 0.375rem 1rem;
   line-height: 1;
@@ -21,6 +21,10 @@
   flex-wrap: nowrap;
   border: 1px solid var(--emoji-wrapper-border-color);
   margin-right: 0.25rem;
+
+  &:hover {
+    border-color: var(--emoji-wrapper-border-color-hover);
+  }
 
   em-emoji {
     [dir='ltr'] & {

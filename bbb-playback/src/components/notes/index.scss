@@ -9,12 +9,14 @@
   .notes {
     bottom: 0;
     box-sizing: border-box;
+    color: var(--skyroom-text-secondary);
     display: flex;
     font-size: small;
+    line-height: 1.9;
     overflow-x: hidden;
     overflow-wrap: break-word;
     overflow-y: auto;
-    padding-top: $padding;
+    padding-top: $padding-small;
     position: absolute;
     width: 100%;
     top: 0;
@@ -22,12 +24,17 @@
 
     [dir="ltr"] & {
       padding-left: $padding;
-      padding-right: $padding-extra-small;
+      padding-right: $padding;
     }
 
     [dir="rtl"] & {
-      padding-left: $padding-extra-small;
+      padding-left: $padding;
       padding-right: $padding;
+      text-align: right;
+    }
+
+    a {
+      color: var(--skyroom-brand-200);
     }
   }
 }

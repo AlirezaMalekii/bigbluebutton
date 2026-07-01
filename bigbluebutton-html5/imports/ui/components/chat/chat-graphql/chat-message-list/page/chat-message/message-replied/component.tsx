@@ -15,11 +15,12 @@ interface MessageRepliedProps {
   message: string;
   sequence: number;
   deletedByUser: string | null;
+  senderName?: string | null;
 }
 
 const ChatMessageReplied: React.FC<MessageRepliedProps> = (props) => {
   const {
-    message, sequence, deletedByUser,
+    message, sequence, deletedByUser, senderName,
   } = props;
 
   const intl = useIntl();
@@ -42,12 +43,20 @@ const ChatMessageReplied: React.FC<MessageRepliedProps> = (props) => {
       }}
     >
       {!deletedByUser && (
-        <Styled.Message>
-          <Styled.HtmlContent
-            // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{ __html: getFirstVisibleLineHtml(message) }}
-          />
-        </Styled.Message>
+        <>
+          {senderName && (
+            <Styled.SenderName>
+              @
+              {senderName}
+            </Styled.SenderName>
+          )}
+          <Styled.Message>
+            <Styled.HtmlContent
+              // eslint-disable-next-line react/no-danger
+              dangerouslySetInnerHTML={{ __html: getFirstVisibleLineHtml(message) }}
+            />
+          </Styled.Message>
+        </>
       )}
       {deletedByUser && (
         <DeleteMessage>
