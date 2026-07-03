@@ -7,16 +7,32 @@ require File.expand_path('../../lib/recordandplayback/safemeet/manifest_store', 
 module BigBlueButton
   module SafeMeet
     describe EventParser do
-      it 'normalizes talking true/false events with participant names' do
+      it 'normalizes talking true/false events with participant names and audio timeline' do
         events_xml = File.join(__dir__, 'resources', 'sample_events.xml')
         payload = EventParser.parse_events_file(events_xml)
 
         expect(payload['count']).to eq(3)
         expect(payload['talkingEventsSupported']).to eq(true)
+        expect(payload['timeline']).to eq('recorded_audio')
         types = payload['events'].map { |event| event['type'] }
         expect(types).to eq(%w[talking_start talking_stop talking_stop])
         expect(payload['events'].first['name']).to eq('علی رضایی')
         expect(payload['events'].first['userId']).to eq('u-1')
+        expect(payload['events'].first['audioTimestamp']).to eq(1.0)
+        expect(payload['events'].first['timestampRaw']).to eq(2000)
+      end
+
+      it 'aligns talking events to recorded audio using RecordStatusEvent gaps' do
+        events_xml = File.join(__dir__, 'resources', 'sample_events_with_recording_marks.xml')
+        payload = EventParser.parse_events_file(events_xml)
+
+        expect(payload['timeline']).to eq('recorded_audio')
+        expect(payload['recordingStartOffsetMs']).to eq(4000)
+        expect(payload['recordingIntervals'].length).to eq(2)
+        expect(payload['count']).to eq(4)
+
+        starts = payload['events'].select { |event| event['type'] == 'talking_start' }.map { |event| event['audioTimestamp'] }
+        expect(starts).to eq([1.0, 5.0])
       end
 
       it 'returns empty payload when events file is missing' do

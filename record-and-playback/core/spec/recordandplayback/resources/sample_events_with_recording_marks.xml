@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<recording>
+  <event timestamp="1000" module="PARTICIPANT" eventname="ParticipantJoinEvent">
+    <userId>u-1</userId>
+    <name>علی رضایی</name>
+  </event>
+  <event timestamp="5000" module="PARTICIPANT" eventname="RecordStatusEvent"/>
+  <event timestamp="6000" module="VOICE" eventname="ParticipantTalkingEvent">
+    <participant>u-1</participant>
+    <talking>true</talking>
+  </event>
+  <event timestamp="8000" module="VOICE" eventname="ParticipantTalkingEvent">
+    <participant>u-1</participant>
+    <talking>false</talking>
+  </event>
+  <event timestamp="9000" module="PARTICIPANT" eventname="RecordStatusEvent"/>
+  <event timestamp="10000" module="VOICE" eventname="ParticipantTalkingEvent">
+    <participant>u-1</participant>
+    <talking>true</talking>
+  </event>
+  <event timestamp="11000" module="PARTICIPANT" eventname="RecordStatusEvent"/>
+  <event timestamp="12000" module="VOICE" eventname="ParticipantTalkingEvent">
+    <participant>u-1</participant>
+    <talking>true</talking>
+  </event>
+  <event timestamp="13000" module="VOICE" eventname="ParticipantTalkingEvent">
+    <participant>u-1</participant>
+    <talking>false</talking>
+  </event>
+  <event timestamp="15000" module="PARTICIPANT" eventname="RecordStatusEvent"/>
+</recording>

@@ -28,6 +28,10 @@ module BigBlueButton
 
       doc = REXML::Document.new(File.read(events_xml_path))
       participant_names = build_participant_name_map(doc)
+      recording_intervals = build_recording_intervals(doc)
+      first_event_ts = first_event_timestamp(doc)
+      recording_start_offset_ms = recording_intervals.empty? || first_event_ts.nil? ? 0 : recording_intervals.first['startMs'] - first_event_ts
+
       events = []
       talking_supported = false
 
@@ -35,33 +39,44 @@ module BigBlueButton
         event_name = event_elem.attributes['eventname']
         next if event_name.nil? || event_name.empty?
 
-        timestamp = extract_timestamp(event_elem)
+        timestamp_raw = extract_timestamp(event_elem)
         user_id = extract_user_id(event_elem)
 
-        if TALKING_EVENTS.include?(event_name)
-          talking_supported = true
-          talking = extract_talking_flag(event_elem, event_name)
-          normalized_type = talking ? 'talking_start' : 'talking_stop'
-          next if talking.nil?
+        next unless TALKING_EVENTS.include?(event_name)
 
-          payload = {
-            'type' => normalized_type,
-            'timestamp' => timestamp,
-            'userId' => user_id,
-            'participant' => user_id,
-            'name' => participant_names[user_id],
-            'talking' => talking,
-            'eventname' => event_name
-          }
-          events << payload
-        end
+        talking_supported = true
+        talking = extract_talking_flag(event_elem, event_name)
+        normalized_type = talking ? 'talking_start' : 'talking_stop'
+        next if talking.nil?
+
+        audio_ms = raw_to_audio_ms(timestamp_raw, first_event_ts, recording_intervals)
+        next if audio_ms.nil?
+
+        audio_seconds = (audio_ms / 1000.0).round(3)
+
+        payload = {
+          'type' => normalized_type,
+          'timestamp' => audio_ms,
+          'timestampRaw' => timestamp_raw,
+          'audioTimestamp' => audio_seconds,
+          'playbackTimestamp' => audio_seconds,
+          'userId' => user_id,
+          'participant' => user_id,
+          'name' => participant_names[user_id],
+          'talking' => talking,
+          'eventname' => event_name
+        }
+        events << payload
       end
 
       {
         'schemaVersion' => ManifestStore::SCHEMA_VERSION,
         'source' => File.basename(events_xml_path),
+        'timeline' => 'recorded_audio',
         'talkingEventsSupported' => talking_supported,
         'talkingEventsDocumented' => 'Talking events are available only when the archived events.xml contains ParticipantTalkingEvent or ParticipantTalkingStatusEvent and the events file is retained.',
+        'recordingStartOffsetMs' => recording_start_offset_ms,
+        'recordingIntervals' => recording_intervals,
         'count' => events.length,
         'events' => events
       }
@@ -73,13 +88,100 @@ module BigBlueButton
       {
         'schemaVersion' => ManifestStore::SCHEMA_VERSION,
         'source' => nil,
+        'timeline' => nil,
         'talkingEventsSupported' => false,
         'talkingEventsDocumented' => 'Talking events are available only when the archived events.xml contains ParticipantTalkingEvent or ParticipantTalkingStatusEvent and the events file is retained.',
+        'recordingStartOffsetMs' => nil,
+        'recordingIntervals' => [],
         'count' => 0,
         'events' => [],
         'error' => reason,
         'detail' => detail
       }.compact
+    end
+
+    def self.build_recording_intervals(doc)
+      first_ts = first_event_timestamp(doc)
+      last_ts = last_event_timestamp(doc)
+      return [] if first_ts.nil? || last_ts.nil?
+
+      rec_events = extract_record_status_events(doc)
+      rec_events = [first_ts, last_ts] if rec_events.empty?
+      rec_events << last_ts if rec_events.size.odd?
+
+      pairs = []
+      rec_events.each_slice(2) do |start_ms, stop_ms|
+        pairs << { 'startMs' => start_ms, 'endMs' => stop_ms }
+      end
+
+      pairs.map do |interval|
+        {
+          'startMs' => interval['startMs'],
+          'endMs' => interval['endMs'],
+          'startAudioSec' => ms_to_audio_seconds(interval['startMs'], first_ts, pairs),
+          'endAudioSec' => ms_to_audio_seconds(interval['endMs'], first_ts, pairs)
+        }
+      end
+    end
+
+    def self.ms_to_audio_seconds(raw_ms, first_ts, intervals)
+      audio_ms = raw_to_audio_ms(raw_ms, first_ts, intervals)
+      return nil if audio_ms.nil?
+
+      (audio_ms / 1000.0).round(3)
+    end
+
+    # Map a raw epoch-ms event timestamp to podcast audio timeline (ms from audio start).
+    # Mirrors BBB edl_match_recording_marks gap removal.
+    def self.raw_to_audio_ms(raw_ts, first_ts, intervals)
+      return nil if raw_ts.nil? || first_ts.nil? || intervals.nil? || intervals.empty?
+
+      offset = 0
+      last_stop = first_ts
+
+      intervals.each do |interval|
+        start_ms = interval['startMs']
+        end_ms = interval['endMs']
+        offset += start_ms - last_stop
+
+        if raw_ts >= start_ms && raw_ts <= end_ms
+          return raw_ts - first_ts - offset
+        end
+
+        last_stop = end_ms
+      end
+
+      nil
+    end
+
+    def self.first_event_timestamp(doc)
+      timestamps = collect_event_timestamps(doc)
+      timestamps.min
+    end
+
+    def self.last_event_timestamp(doc)
+      timestamps = collect_event_timestamps(doc)
+      timestamps.max
+    end
+
+    def self.collect_event_timestamps(doc)
+      timestamps = []
+      doc.elements.each('recording/event') do |event_elem|
+        ts = extract_timestamp(event_elem)
+        timestamps << ts if ts
+      end
+      timestamps
+    end
+
+    def self.extract_record_status_events(doc)
+      events = []
+      doc.elements.each('recording/event') do |event_elem|
+        next unless event_elem.attributes['eventname'] == 'RecordStatusEvent'
+
+        ts = extract_timestamp(event_elem)
+        events << ts if ts
+      end
+      events.sort
     end
 
     def self.build_participant_name_map(doc)
