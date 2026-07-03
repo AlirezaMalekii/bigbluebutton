@@ -12,7 +12,40 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    name: Detect changed areas
+    outputs:
+      html5: ${{ steps.filter.outputs.html5 }}
+      recording: ${{ steps.filter.outputs.recording }}
+      shell: ${{ steps.filter.outputs.shell }}
+      fsesl: ${{ steps.filter.outputs.fsesl }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            html5:
+              - 'bigbluebutton-html5/**'
+            recording:
+              - 'record-and-playback/**'
+              - 'bbb-common-web/**/RecordingAsset*'
+              - 'bigbluebutton-web/grails-app/controllers/org/bigbluebutton/web/controllers/RecordingController.groovy'
+              - 'bigbluebutton-web/grails-app/controllers/org/bigbluebutton/web/UrlMappings.groovy'
+              - 'bigbluebutton-web/grails-app/conf/**'
+            shell:
+              - 'scripts/**'
+              - 'deploy.sh'
+              - 'deploy.rsync-excludes'
+            fsesl:
+              - 'akka-bbb-fsesl/**'
+              - 'bbb-fsesl-client/**'
+
   shellcheck:
+    needs: changes
+    if: github.event_name == 'pull_request' || needs.changes.outputs.shell == 'true'
     runs-on: ubuntu-latest
     name: ShellCheck
     steps:
@@ -24,6 +57,8 @@ jobs:
           severity: error
 
   html5-checks:
+    needs: changes
+    if: github.event_name == 'pull_request' || needs.changes.outputs.html5 == 'true'
     runs-on: ubuntu-latest
     name: HTML5 lint & typecheck
     defaults:
@@ -50,6 +85,8 @@ jobs:
         run: npm run tscheck:staged
 
   safemeet-recording-specs:
+    needs: changes
+    if: github.event_name == 'pull_request' || needs.changes.outputs.recording == 'true'
     runs-on: ubuntu-latest
     name: SafeMeet recording specs
     defaults:
@@ -77,8 +114,13 @@ jobs:
         run: bundle exec rspec spec/recordandplayback/safemeet_asset_spec.rb
 
   deploy:
-    needs: [shellcheck, html5-checks, safemeet-recording-specs]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/safemeet'
+    needs: [changes, shellcheck, html5-checks, safemeet-recording-specs]
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/safemeet' &&
+      (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped') &&
+      (needs.html5-checks.result == 'success' || needs.html5-checks.result == 'skipped') &&
+      (needs.safemeet-recording-specs.result == 'success' || needs.safemeet-recording-specs.result == 'skipped')
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 120
@@ -86,6 +128,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
@@ -97,19 +141,59 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -p "${{ secrets.DEPLOY_PORT }}" -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
 
+      - name: Show deploy plan
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          REMOTE_DIR: ${{ secrets.DEPLOY_REMOTE_DIR }}
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          LAST="$(ssh -p "$DEPLOY_PORT" -o BatchMode=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "cat '${REMOTE_DIR}/.deploy-state' 2>/dev/null" | head -1 | tr -d '[:space:]' || true)"
+          echo "Last deployed commit: ${LAST:-none}"
+          BASELINE_COMMIT="$LAST"
+          if [[ -n "$BASELINE_COMMIT" ]]; then
+            git fetch --no-tags --depth=1 origin "$BASELINE_COMMIT" 2>/dev/null || git fetch --no-tags origin "$BASELINE_COMMIT" 2>/dev/null || true
+          elif [[ -n "${GITHUB_EVENT_BEFORE:-}" && "$GITHUB_EVENT_BEFORE" != 0000000000000000000000000000000000000000 ]]; then
+            BASELINE_COMMIT="$GITHUB_EVENT_BEFORE"
+            git fetch --no-tags --depth=1 origin "$BASELINE_COMMIT" 2>/dev/null || true
+          fi
+          PLAN="$(bash scripts/deploy-detect-components.sh "$BASELINE_COMMIT" HEAD 2>/dev/null || true)"
+          if [[ -z "${PLAN// }" ]]; then
+            if [[ -z "$LAST" ]]; then
+              echo "Plan: first deploy or unknown baseline → full remote build"
+            else
+              echo "Plan: rsync only (no component changes since last deploy)"
+            fi
+          elif [[ "$PLAN" == "full" ]]; then
+            echo "Plan: full remote build"
+          else
+            echo "Plan: smart deploy → $(echo "$PLAN" | tr '\n' ' ')"
+          fi
+
       - name: Deploy to BBB server
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           REMOTE_DIR: ${{ secrets.DEPLOY_REMOTE_DIR }}
-        run: ./deploy.sh
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+          DEPLOY_SKIP_AKKA_FSESL: ${{ needs.changes.outputs.fsesl != 'true' && '1' || '0' }}
+        run: |
+          set -euo pipefail
+          ARGS=()
+          if [[ "${DEPLOY_SKIP_AKKA_FSESL}" == "1" ]]; then
+            ARGS+=(--skip-akka-fsesl)
+          fi
+          ./deploy.sh "${ARGS[@]}"
 
       - name: Deploy summary
         run: |
           echo "### BigBlueButton deploy" >> "$GITHUB_STEP_SUMMARY"
           echo "- Branch: \`${{ github.ref_name }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Commit: \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Mode: smart (only changed components; full only on first deploy or deploy-script changes)" >> "$GITHUB_STEP_SUMMARY"
           echo "- Server: BBB (${{ secrets.DEPLOY_HOST }})" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "> After recording indexer changes, re-index affected recordings manually on the server." >> "$GITHUB_STEP_SUMMARY"

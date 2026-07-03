@@ -32,7 +32,25 @@ Local override: copy [`deploy.env.example`](../deploy.env.example) → `.deploy.
 
 Create environment **`production`** (recommended). BBB deploys can take 10–90 minutes depending on changed components.
 
-## Manual deploy
+## Smart deploy (fast path)
+
+CI uses the same logic as manual `./deploy.sh`:
+
+1. Read last successful commit from server `.deploy-state`
+2. `git fetch` that baseline commit (shallow checkout stays fast)
+3. Detect changed components → build **only** those on the server
+4. Skip `akka-fsesl` unless fsesl paths changed (`--skip-akka-fsesl`)
+
+Typical times after the first deploy:
+
+| Change type | Components | Approx. time |
+|-------------|------------|--------------|
+| SafeMeet recording Ruby only | libs → web → playback | ~5–15 min |
+| HTML5 UI only | html5 | ~10–20 min |
+| CI/workflow only | rsync only, no remote build | ~1–2 min |
+| `deploy.sh` / deploy scripts | full (safety) | ~30–90 min |
+
+CI checks (html5 lint, RSpec) also run **only when related paths change**, so pushes that touch recording code skip the HTML5 npm job.
 
 ```bash
 ./deploy.sh                    # smart deploy (changed components only)

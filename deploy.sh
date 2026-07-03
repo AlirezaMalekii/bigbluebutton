@@ -135,6 +135,35 @@ current_commit() {
   fi
 }
 
+ensure_commit_available() {
+  local commit="$1"
+  [[ -z "$commit" || "$commit" == "unknown" ]] && return 1
+  if git -C "$SCRIPT_DIR" cat-file -e "${commit}^{commit}" 2>/dev/null; then
+    return 0
+  fi
+  log "Fetching baseline commit ${commit:0:12} for smart detection ..."
+  git -C "$SCRIPT_DIR" fetch --no-tags --depth=1 origin "$commit" 2>/dev/null \
+    || git -C "$SCRIPT_DIR" fetch --no-tags origin "$commit" 2>/dev/null \
+    || return 1
+  git -C "$SCRIPT_DIR" cat-file -e "${commit}^{commit}" 2>/dev/null
+}
+
+resolve_deploy_baseline() {
+  local last="$1"
+  if ensure_commit_available "$last"; then
+    echo "$last"
+    return 0
+  fi
+  if [[ -n "${GITHUB_EVENT_BEFORE:-}" && "$GITHUB_EVENT_BEFORE" != "0000000000000000000000000000000000000000" ]]; then
+    if ensure_commit_available "$GITHUB_EVENT_BEFORE"; then
+      log "Using github.event.before (${GITHUB_EVENT_BEFORE:0:12}) as deploy baseline"
+      echo "$GITHUB_EVENT_BEFORE"
+      return 0
+    fi
+  fi
+  echo ""
+}
+
 detect_components() {
   local last="$1"
   bash "$SCRIPT_DIR/scripts/deploy-detect-components.sh" "$last" "$(current_commit)"
@@ -188,6 +217,13 @@ fi
 
 LAST_DEPLOY_COMMIT="$(read_deploy_state | head -1 | tr -d '[:space:]')"
 CURRENT_COMMIT="$(current_commit)"
+RESOLVED_BASELINE="$(resolve_deploy_baseline "$LAST_DEPLOY_COMMIT")"
+if [[ -n "$RESOLVED_BASELINE" ]]; then
+  LAST_DEPLOY_COMMIT="$RESOLVED_BASELINE"
+elif [[ -n "$LAST_DEPLOY_COMMIT" ]]; then
+  log "Deploy baseline ${LAST_DEPLOY_COMMIT:0:12} unavailable locally → treating as first deploy"
+  LAST_DEPLOY_COMMIT=""
+fi
 
 if [[ "$DO_SYNC" == "1" ]]; then
   rsync_to_server
