@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useIntl } from 'react-intl';
 import humanizeSeconds from '/imports/utils/humanizeSeconds';
 import { Text, Time } from './styles';
@@ -18,6 +18,8 @@ interface RemainingTimeProps {
   boldText: boolean;
   endingLabel?: intlMsg;
   alertLabel?: intlMsg;
+  /** SafeMeet scheduled ends_at (ms) from join userdata — overrides createdTime + duration. */
+  scheduledEndTimeMs?: number;
 }
 
 let lastAlertTime: number | null = null;
@@ -31,46 +33,50 @@ const RemainingTime: React.FC<RemainingTimeProps> = (props) => {
     alertLabel = undefined,
     isBreakout,
     boldText,
+    scheduledEndTimeMs = 0,
   } = props;
 
   const intl = useIntl();
   const [timeSync] = useTimeSync();
-  const timeRemainingInterval = React.useRef<ReturnType<typeof setTimeout>>();
+  const timeRemainingInterval = React.useRef<ReturnType<typeof setInterval>>();
   const [remainingTime, setRemainingTime] = useState<number>(-1);
 
-  const currentDate: Date = new Date();
-  const adjustedCurrent: Date = new Date(currentDate.getTime() + timeSync);
+  const calculateRemainingTime = useCallback(() => {
+    const adjustedCurrentTime = Date.now() + timeSync;
 
-  const calculateRemainingTime = () => {
+    if (scheduledEndTimeMs > 0) {
+      return Math.max(0, Math.floor((scheduledEndTimeMs - adjustedCurrentTime) / 1000));
+    }
+
     const durationInMilliseconds = durationInSeconds * 1000;
-    const adjustedCurrentTime = adjustedCurrent.getTime();
 
     return Math.floor(((referenceStartedTime + durationInMilliseconds) - adjustedCurrentTime) / 1000);
-  };
+  }, [durationInSeconds, referenceStartedTime, scheduledEndTimeMs, timeSync]);
 
   useEffect(() => {
-    if (remainingTime && durationInSeconds) {
-      if (durationInSeconds > 0 && timeRemainingInterval && referenceStartedTime) {
-        setRemainingTime(calculateRemainingTime());
-      }
+    const hasScheduledEnd = scheduledEndTimeMs > 0;
+    const hasBbbDuration = durationInSeconds > 0 && referenceStartedTime > 0;
 
-      clearInterval(timeRemainingInterval.current);
-      const remainingMillisecondsDiff = (
-        (referenceStartedTime + (durationInSeconds * 60000)) - adjustedCurrent.getTime()
-      ) % 1000;
-      timeRemainingInterval.current = setInterval(() => {
-        setRemainingTime((currentTime) => currentTime - 1);
-      }, remainingMillisecondsDiff === 0 ? 1000 : remainingMillisecondsDiff);
+    if (!hasScheduledEnd && !hasBbbDuration) {
+      return undefined;
     }
+
+    const tick = () => {
+      setRemainingTime(calculateRemainingTime());
+    };
+
+    tick();
+    clearInterval(timeRemainingInterval.current);
+    timeRemainingInterval.current = setInterval(tick, 1000);
 
     return () => {
       clearInterval(timeRemainingInterval.current);
     };
-  }, [remainingTime, durationInSeconds]);
+  }, [calculateRemainingTime, durationInSeconds, referenceStartedTime, scheduledEndTimeMs]);
 
   const meetingTimeMessage = React.useRef<string>('');
 
-  if (remainingTime >= 0 && timeRemainingInterval) {
+  if (remainingTime >= 0) {
     if (remainingTime > 0) {
       const APP_SETTINGS = window.meetingClientSettings.public.app;
       const REMAINING_TIME_ALERT_THRESHOLD_ARRAY: number[] = APP_SETTINGS.remainingTimeAlertThresholdArray;

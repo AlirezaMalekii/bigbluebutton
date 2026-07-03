@@ -1,6 +1,7 @@
 import React from 'react';
 import RemainingTime from '/imports/ui/components/common/remaining-time/component';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
+import useUserSettings from '/imports/ui/core/local-states/useUserSettings';
 import { defineMessages, useIntl } from 'react-intl';
 
 const intlMessages = defineMessages({
@@ -36,6 +37,7 @@ const intlMessages = defineMessages({
 
 const MeetingRemainingTimeContainer: React.FC = () => {
   const intl = useIntl();
+  const [userSettings] = useUserSettings();
   const loadingRemainingTime = () => {
     return (
       <span>
@@ -71,10 +73,13 @@ const MeetingRemainingTimeContainer: React.FC = () => {
     ? intlMessages.alertBreakoutEndsUnderMinutes
     : intlMessages.alertMeetingEndsUnderMinutes;
 
+  const scheduledEndTimeMs = Number(userSettings?.bbb_safemeet_scheduled_end_ms) || 0;
+
   return (
     <RemainingTime
       durationInSeconds={meetingDurationInSeconds}
       referenceStartedTime={meetingCreatedTime}
+      scheduledEndTimeMs={scheduledEndTimeMs}
       durationLabel={durationLabel}
       endingLabel={endingLabel}
       isBreakout={!!isBreakout}

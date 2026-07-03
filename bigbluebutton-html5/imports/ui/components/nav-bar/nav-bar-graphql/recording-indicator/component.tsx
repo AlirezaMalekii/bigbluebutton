@@ -90,7 +90,8 @@ interface RecordingIndicatorProps {
   micUser: boolean;
   isPhone: boolean;
   recordingNotificationEnabled: boolean;
-  serverTime: number;
+  recordingStartedAt: string;
+  previousRecordedTimeInSeconds: number;
   isModerator: boolean;
   hasError: boolean;
   isLoading: boolean;
@@ -100,7 +101,8 @@ const RecordingIndicator: React.FC<RecordingIndicatorProps> = ({
   isPhone,
   recording,
   micUser,
-  serverTime,
+  recordingStartedAt,
+  previousRecordedTimeInSeconds,
   allowStartStopRecording,
   isModerator,
   record,
@@ -113,6 +115,23 @@ const RecordingIndicator: React.FC<RecordingIndicatorProps> = ({
   const [time, setTime] = useState(0);
   const setIntervalRef = React.useRef<ReturnType<typeof setTimeout>>();
   const disabled = hasError || isLoading;
+  const [timeSync] = useTimeSync();
+
+  const computeRecordingElapsed = useCallback(() => {
+    if (!recording || !recordingStartedAt) {
+      return Math.max(0, previousRecordedTimeInSeconds);
+    }
+
+    const startedAtMs = new Date(recordingStartedAt).getTime();
+    if (Number.isNaN(startedAtMs)) {
+      return Math.max(0, previousRecordedTimeInSeconds);
+    }
+
+    const adjustedNow = Date.now() + timeSync;
+    const elapsedSeconds = Math.floor((adjustedNow - startedAtMs) / 1000);
+
+    return Math.max(0, elapsedSeconds + previousRecordedTimeInSeconds);
+  }, [previousRecordedTimeInSeconds, recording, recordingStartedAt, timeSync]);
 
   const {
     isOpen: isRecordingModalOpen,
@@ -159,19 +178,21 @@ const RecordingIndicator: React.FC<RecordingIndicatorProps> = ({
 
   useEffect(() => {
     if (recording) {
-      setTime(serverTime);
+      const tick = () => {
+        setTime(computeRecordingElapsed());
+      };
+      tick();
       clearInterval(setIntervalRef.current);
-      setIntervalRef.current = setInterval(() => {
-        setTime((currentTime) => currentTime + 1);
-      }, 1000);
+      setIntervalRef.current = setInterval(tick, 1000);
     }
     if (!recording) {
+      setTime(computeRecordingElapsed());
       clearInterval(setIntervalRef.current);
     }
     return () => {
       clearInterval(setIntervalRef.current);
     };
-  }, [recording]);
+  }, [computeRecordingElapsed, recording]);
 
   useEffect(() => {
     if (recordingNotificationEnabled && recording) {
@@ -368,7 +389,6 @@ const RecordingIndicatorContainer: React.FC = () => {
     recordingPolicies: meeting.recordingPolicies,
   }));
 
-  const [timeSync] = useTimeSync();
   const Settings = getSettingsSingletonInstance();
   const animations = Settings?.application?.animations;
 
@@ -410,13 +430,6 @@ const RecordingIndicatorContainer: React.FC = () => {
   };
   meetingRecordingAssertion(meetingRecording);
 
-  const currentDate: Date = new Date();
-  const startedAt: Date = new Date(meetingRecording?.startedAt ?? '');
-  const adjustedCurrent: Date = new Date(currentDate.getTime() + timeSync);
-  const timeDifferenceMs: number = adjustedCurrent.getTime() - startedAt.getTime();
-  const totalPassedTime: number = timeDifferenceMs / 1000 + (meetingRecording?.previousRecordedTimeInSeconds ?? 0);
-  const passedTime = Math.floor(totalPassedTime);
-
   return (
     <RecordingIndicator
       allowStartStopRecording={currentMeeting?.recordingPolicies?.allowStartStopRecording ?? false}
@@ -430,7 +443,8 @@ const RecordingIndicatorContainer: React.FC = () => {
           && currentMeeting?.notifyRecordingIsOn)
           ?? false
       }
-      serverTime={passedTime > 0 ? passedTime : 0}
+      recordingStartedAt={meetingRecording?.startedAt ?? ''}
+      previousRecordedTimeInSeconds={meetingRecording?.previousRecordedTimeInSeconds ?? 0}
       isModerator={currentUser?.isModerator ?? false}
       hasError={Boolean(currentMeetingErrors || meetingRecordingError)}
       isLoading={currentMeetingLoading || meetingRecordingLoading}
