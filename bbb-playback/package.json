@@ -35,7 +35,6 @@
     "start": "react-scripts start",
     "start:proxy": "bash start-proxy.sh",
     "build": "react-scripts build",
-    "postbuild": "mkdir -p build/assets/fonts public/assets/fonts && cp -r node_modules/@bigbluebutton/assets/fonts/* build/assets/fonts/ && cp -r node_modules/@bigbluebutton/assets/fonts/* public/assets/fonts/",
     "test": "react-scripts test"
   },
   "eslintConfig": {

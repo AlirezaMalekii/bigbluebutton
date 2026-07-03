@@ -93,7 +93,7 @@ if [[ -n "${ISSUE_NUMBER}" && "${ISSUE_NUMBER}" != "null" ]]; then
     ATTEMPT=2
   fi
 else
-  ISSUE_NUMBER="$(gh issue create \
+  ISSUE_URL="$(gh issue create \
     --repo "${REPO_SLUG}" \
     --title "[ci-auto-repair] ${PROJECT_NAME} chain=${CHAIN_SHORT}" \
     --label "ci-auto-repair" \
@@ -103,7 +103,8 @@ chain_sha: ${CHAIN_SHA}
 branch: ${HEAD_BRANCH}
 attempt: 0
 run: ${RUN_URL}
-" --jq '.number')"
+")"
+  ISSUE_NUMBER="${ISSUE_URL##*/}"
   ATTEMPT=1
 fi
 

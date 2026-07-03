@@ -134,8 +134,14 @@ deploy_bbb_playback() {
   log "Deploying bbb-playback (presentation 2.3 player) ..."
   (
     cd "$BBB_ROOT/bbb-playback"
-    if [[ "$NEEDS_NPM_INSTALL" == "1" ]] || [[ ! -d node_modules ]]; then
-      npm install
+    if [[ "$NEEDS_NPM_INSTALL" == "1" ]] \
+      || [[ ! -d node_modules ]] \
+      || [[ ! -f node_modules/@bigbluebutton/assets/package.json ]]; then
+      if [[ -f package-lock.json ]]; then
+        npm ci
+      else
+        npm install
+      fi
     fi
     bash ./deploy.sh
   )
