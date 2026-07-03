@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": ".cursor/hooks/bbb-guard-commit.sh",
+        "matcher": "git\\s+(-c\\s+\\S+\\s+)*commit",
+        "timeout": 120
+      }
+    ]
+  }
+}

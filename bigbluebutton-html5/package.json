@@ -189,7 +189,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged && npm run tscheck:staged"
+      "pre-commit": "./scripts/pre-commit.sh"
     }
   }
 }

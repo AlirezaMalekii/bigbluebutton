@@ -12,9 +12,22 @@ Husky runs `eslint` on staged `*.{js,jsx,ts,tsx}` and `tsc --noEmit --incrementa
 
 ```bash
 cd bigbluebutton-html5
-npx eslint path/to/changed/file.tsx
-npm run tscheck:staged   # or: npx tsc --noEmit --incremental
+./scripts/pre-commit.sh   # eslint --fix + lint-staged + tsc (same as husky)
 ```
+
+Or commit via **Cursor Agent** in the `bigbluebutton` repo: the project hook `.cursor/hooks/bbb-guard-commit.sh` runs the same checks before `git commit`. If checks fail, the commit is blocked and the agent receives the error log to fix automatically — then retry commit.
+
+**Do not use `git commit --no-verify`** unless explicitly requested.
+
+## Agent Checklist
+
+When editing BBB frontend files:
+
+1. Preserve JSX indentation — each nested element +2 spaces
+2. Break long `{ a, b, c, d }` import/export braces across lines
+3. Run `./scripts/pre-commit.sh` or `npm run tscheck:staged` on touched files before telling the user work is done
+4. If commit fails on pre-commit, fix errors and retry — never suggest `--no-verify`
+5. GraphQL dates: fields like `startedAt` may be `Date` at runtime — normalize with `instanceof Date` before passing to `string` props
 
 ## Common Rules in This Project
 
@@ -62,12 +75,3 @@ useCurrentUser((u) => ({
   breakoutRoomsSummary: u.breakoutRoomsSummary,
 }));
 ```
-
-## Agent Checklist
-
-When editing BBB frontend files:
-
-1. Preserve JSX indentation — each nested element +2 spaces
-2. Break long `{ a, b, c, d }` import/export braces across lines
-3. Run `npx eslint` on touched files before telling the user work is done
-4. If commit fails on pre-commit, fix errors and retry — never suggest `--no-verify`

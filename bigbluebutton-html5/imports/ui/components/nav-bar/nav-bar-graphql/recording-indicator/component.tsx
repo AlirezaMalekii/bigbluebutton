@@ -430,6 +430,10 @@ const RecordingIndicatorContainer: React.FC = () => {
   };
   meetingRecordingAssertion(meetingRecording);
 
+  const recordingStartedAt = meetingRecording?.startedAt instanceof Date
+    ? meetingRecording.startedAt.toISOString()
+    : String(meetingRecording?.startedAt ?? '');
+
   return (
     <RecordingIndicator
       allowStartStopRecording={currentMeeting?.recordingPolicies?.allowStartStopRecording ?? false}
@@ -443,7 +447,7 @@ const RecordingIndicatorContainer: React.FC = () => {
           && currentMeeting?.notifyRecordingIsOn)
           ?? false
       }
-      recordingStartedAt={meetingRecording?.startedAt ?? ''}
+      recordingStartedAt={recordingStartedAt}
       previousRecordedTimeInSeconds={meetingRecording?.previousRecordedTimeInSeconds ?? 0}
       isModerator={currentUser?.isModerator ?? false}
       hasError={Boolean(currentMeetingErrors || meetingRecordingError)}
