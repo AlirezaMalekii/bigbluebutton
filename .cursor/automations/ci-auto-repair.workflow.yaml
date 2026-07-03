@@ -1,0 +1,27 @@
+name: "SafeMeet CI Auto-Repair — bigbluebutton"
+description: "When SafeMeet CI/CD fails on safemeet, Cursor agent applies a minimal fix and pushes (max 3 attempts per chain)."
+workflow:
+  triggers:
+    - git:
+        ciCompleted:
+          repos:
+            - AlirezaMalekii/bigbluebutton
+          branches:
+            - safemeet
+  actions:
+    - manageCheckRun: {}
+  prompts:
+    - |
+      Repair failed CI/CD for SafeMeet **bigbluebutton** fork.
+
+      Trigger: checks failed on `safemeet` in `AlirezaMalekii/bigbluebutton`.
+
+      Steps: read failed logs → minimal fix → push to `safemeet` (no PR).
+
+      Limits: max 3 attempts; never touch `.deploy.env`, deploy secrets, or server SSH; respect smart deploy in `deploy.sh`. Stop on infra/SSH failures.
+
+      Commit: `ci-auto-repair: chain=<sha> attempt=<n>`
+  gitConfig:
+    repo: AlirezaMalekii/bigbluebutton
+    branch: safemeet
+  memoryEnabled: true
