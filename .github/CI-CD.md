@@ -34,7 +34,9 @@ Create environment **`production`** (recommended). BBB deploys can take 10–90 
 
 ## Smart deploy (fast path)
 
-CI uses the same logic as manual `./deploy.sh`:
+CI computes the plan in the **Plan deploy** step (baseline = server `.deploy-state` or `github.event.before`), then runs `./deploy.sh --only COMPONENT` for a single changed area or passes `CI_DEPLOY_COMPONENTS` for multi-component smart deploy.
+
+**Important:** If logs show `Plan: html5` but deploy runs **full** (~15 min), that was a bug (fixed) — baseline was lost between plan and deploy. After the fix, html5-only pushes should take ~3–5 min like manual `./deploy.sh --only html5`.
 
 1. Read last successful commit from server `.deploy-state`
 2. `git fetch` that baseline commit (shallow checkout stays fast)

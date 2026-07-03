@@ -35,11 +35,7 @@ if ! git -C "$REPO_ROOT" cat-file -e "${LAST_COMMIT}^{commit}" 2>/dev/null; then
 fi
 
 CHANGED_FILES="$(
-  {
-    git -C "$REPO_ROOT" diff --name-only "$LAST_COMMIT" "$CURRENT_COMMIT" 2>/dev/null || true
-    git -C "$REPO_ROOT" diff --name-only HEAD 2>/dev/null || true
-    git -C "$REPO_ROOT" diff --name-only --cached HEAD 2>/dev/null || true
-  } | awk 'NF && !seen[$0]++'
+  git -C "$REPO_ROOT" diff --name-only "$LAST_COMMIT" "$CURRENT_COMMIT" 2>/dev/null || true
 )"
 
 if [[ -z "$CHANGED_FILES" ]]; then

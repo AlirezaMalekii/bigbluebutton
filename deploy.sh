@@ -70,6 +70,9 @@ Environment:
 EOF
 }
 
+PRESET_COMPONENTS="${CI_DEPLOY_COMPONENTS:-}"
+PRESET_BASELINE="${DEPLOY_BASELINE_COMMIT:-}"
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --full) FORCE_FULL=1 ;;
@@ -217,6 +220,16 @@ fi
 
 LAST_DEPLOY_COMMIT="$(read_deploy_state | head -1 | tr -d '[:space:]')"
 CURRENT_COMMIT="$(current_commit)"
+
+if [[ -n "$PRESET_BASELINE" ]]; then
+  if ensure_commit_available "$PRESET_BASELINE"; then
+    LAST_DEPLOY_COMMIT="$PRESET_BASELINE"
+    log "Using CI deploy baseline ${PRESET_BASELINE:0:12}"
+  else
+    log "CI baseline ${PRESET_BASELINE:0:12} unavailable — falling back to server state"
+  fi
+fi
+
 RESOLVED_BASELINE="$(resolve_deploy_baseline "$LAST_DEPLOY_COMMIT")"
 if [[ -n "$RESOLVED_BASELINE" ]]; then
   LAST_DEPLOY_COMMIT="$RESOLVED_BASELINE"
@@ -253,6 +266,23 @@ if [[ -n "$ONLY_COMPONENTS" ]]; then
   write_deploy_state "$CURRENT_COMMIT"
   log "Done."
   exit 0
+fi
+
+if [[ -n "${PRESET_COMPONENTS// }" ]]; then
+  if [[ "$PRESET_COMPONENTS" == "full" ]]; then
+    log "CI requested full deploy"
+  else
+    DEPLOY_MODE="smart"
+    DEPLOY_COMPONENTS="$(echo "$PRESET_COMPONENTS" | tr '\n' ' ' | sed 's/  */ /g;s/^ //;s/ $//')"
+    log "CI smart deploy — components: ${DEPLOY_COMPONENTS}"
+    if [[ " ${DEPLOY_COMPONENTS} " == *" playback "* ]]; then
+      NEEDS_NPM_INSTALL_FLAG="$(needs_npm_install "$LAST_DEPLOY_COMMIT")"
+    fi
+    ssh_cmd "$(remote_env_base) DEPLOY_MODE='${DEPLOY_MODE}' DEPLOY_COMPONENTS='${DEPLOY_COMPONENTS}' NEEDS_NPM_INSTALL='${NEEDS_NPM_INSTALL_FLAG}' bash '${REMOTE_DIR}/scripts/deploy-remote.sh'"
+    write_deploy_state "$CURRENT_COMMIT"
+    log "Done. Recorded deploy state: ${CURRENT_COMMIT:0:12}"
+    exit 0
+  fi
 fi
 
 if [[ "$FORCE_FULL" == "1" ]]; then

@@ -136,7 +136,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
@@ -148,7 +148,8 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -p "${{ secrets.DEPLOY_PORT }}" -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: Show deploy plan
+      - name: Plan deploy
+        id: deploy_plan
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
@@ -158,25 +159,27 @@ jobs:
         run: |
           set -euo pipefail
           LAST="$(ssh -p "$DEPLOY_PORT" -o BatchMode=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "cat '${REMOTE_DIR}/.deploy-state' 2>/dev/null" | head -1 | tr -d '[:space:]' || true)"
-          echo "Last deployed commit: ${LAST:-none}"
-          BASELINE_COMMIT="$LAST"
-          if [[ -n "$BASELINE_COMMIT" ]]; then
-            git fetch --no-tags --depth=1 origin "$BASELINE_COMMIT" 2>/dev/null || git fetch --no-tags origin "$BASELINE_COMMIT" 2>/dev/null || true
-          elif [[ -n "${GITHUB_EVENT_BEFORE:-}" && "$GITHUB_EVENT_BEFORE" != 0000000000000000000000000000000000000000 ]]; then
-            BASELINE_COMMIT="$GITHUB_EVENT_BEFORE"
-            git fetch --no-tags --depth=1 origin "$BASELINE_COMMIT" 2>/dev/null || true
+          BASELINE="$LAST"
+          if [[ -z "$BASELINE" && -n "${GITHUB_EVENT_BEFORE:-}" && "$GITHUB_EVENT_BEFORE" != 0000000000000000000000000000000000000000 ]]; then
+            BASELINE="$GITHUB_EVENT_BEFORE"
           fi
-          PLAN="$(bash scripts/deploy-detect-components.sh "$BASELINE_COMMIT" HEAD 2>/dev/null || true)"
-          if [[ -z "${PLAN// }" ]]; then
-            if [[ -z "$LAST" ]]; then
-              echo "Plan: first deploy or unknown baseline → full remote build"
-            else
-              echo "Plan: rsync only (no component changes since last deploy)"
-            fi
-          elif [[ "$PLAN" == "full" ]]; then
-            echo "Plan: full remote build"
+          if [[ -n "$BASELINE" ]]; then
+            git fetch --no-tags --depth=1 origin "$BASELINE" 2>/dev/null || git fetch --no-tags origin "$BASELINE" 2>/dev/null || true
+          fi
+          PLAN="$(bash scripts/deploy-detect-components.sh "$BASELINE" HEAD 2>/dev/null || true)"
+          echo "DEPLOY_BASELINE_COMMIT=${BASELINE}" >> "$GITHUB_ENV"
+          if [[ "$PLAN" == "full" ]]; then
+            echo "mode=full" >> "$GITHUB_OUTPUT"
+            echo "Deploy plan: **full** (first deploy or deploy scripts changed)"
+          elif [[ -z "${PLAN// }" ]]; then
+            echo "mode=rsync-only" >> "$GITHUB_OUTPUT"
+            echo "Deploy plan: **rsync only** (no component changes)"
           else
-            echo "Plan: smart deploy → $(echo "$PLAN" | tr '\n' ' ')"
+            COMPACT="$(echo "$PLAN" | tr '\n' ' ' | sed 's/  */ /g;s/^ //;s/ $//')"
+            echo "mode=smart" >> "$GITHUB_OUTPUT"
+            echo "components=${COMPACT}" >> "$GITHUB_OUTPUT"
+            echo "CI_DEPLOY_COMPONENTS=${COMPACT}" >> "$GITHUB_ENV"
+            echo "Deploy plan: **smart** → ${COMPACT}"
           fi
 
       - name: Deploy to BBB server
@@ -193,14 +196,30 @@ jobs:
           if [[ "${DEPLOY_SKIP_AKKA_FSESL}" == "1" ]]; then
             ARGS+=(--skip-akka-fsesl)
           fi
-          ./deploy.sh "${ARGS[@]}"
+          MODE="${{ steps.deploy_plan.outputs.mode }}"
+          COMPONENTS="${{ steps.deploy_plan.outputs.components }}"
+          case "$MODE" in
+            rsync-only)
+              ./deploy.sh "${ARGS[@]}"
+              ;;
+            smart)
+              if [[ "$COMPONENTS" != *" "* ]]; then
+                ./deploy.sh "${ARGS[@]}" --only "$COMPONENTS"
+              else
+                ./deploy.sh "${ARGS[@]}"
+              fi
+              ;;
+            full|*)
+              ./deploy.sh "${ARGS[@]}"
+              ;;
+          esac
 
       - name: Deploy summary
         run: |
           echo "### BigBlueButton deploy" >> "$GITHUB_STEP_SUMMARY"
           echo "- Branch: \`${{ github.ref_name }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Commit: \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Mode: smart (only changed components; full only on first deploy or deploy-script changes)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Mode: ${{ steps.deploy_plan.outputs.mode }}${{ steps.deploy_plan.outputs.components && format(' → {0}', steps.deploy_plan.outputs.components) || '' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Server: BBB (${{ secrets.DEPLOY_HOST }})" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "> After recording indexer changes, re-index affected recordings manually on the server." >> "$GITHUB_STEP_SUMMARY"
