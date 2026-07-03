@@ -59,8 +59,11 @@ video_compositing_parallel_workers: 2
 steps:
   archive: "sanity"
   sanity: "captions"
-  captions: "process:presentation"
+  captions:
+    - "process:presentation"
+    - "process:podcast"
   "process:presentation": "publish:presentation"
+  "process:podcast": "publish:podcast"
 
 # For PRODUCTION
 log_dir: /var/log/bigbluebutton

@@ -84,15 +84,14 @@ module BigBlueButton
 
     def build_format_manifest(record_id, format_name, published_root, metadata)
       assets = {
-        'audio' => summarize_group(find_audio_assets(published_root, format_name)),
+        'audio' => summarize_group(find_audio_assets(record_id, published_root, format_name)),
         'events' => summarize_asset('events.xml', locate_events_xml(record_id), 'application/xml'),
         'metadata' => summarize_asset('metadata.xml', File.join(published_root, 'metadata.xml'), 'application/xml'),
         'webcams' => summarize_group(find_webcam_assets(published_root)),
         'deskshare' => summarize_group(find_deskshare_assets(published_root)),
         'captions' => summarize_group(find_caption_assets(published_root)),
         'presentation' => summarize_group(find_presentation_assets(published_root)),
-        'slides' => summarize_group(find_slide_assets(published_root)),
-        'thumbnails' => summarize_group(find_thumbnail_assets(published_root))
+        'slides' => summarize_group(find_slide_assets(published_root))
       }
 
       {
@@ -170,23 +169,36 @@ module BigBlueButton
       }
     end
 
-    def find_audio_assets(published_root, format_name)
+    def find_audio_assets(record_id, published_root, format_name)
       files = []
-      if format_name == 'podcast'
-        path = File.join(published_root, 'audio.ogg')
-        files << asset_entry('audio.ogg', path, 'audio:podcast', 'audio/ogg') if File.exist?(path)
+      seen_paths = {}
+
+      add_audio = lambda do |relative_path, absolute_path, asset_id, mime|
+        return if absolute_path.nil? || !File.exist?(absolute_path)
+        return if seen_paths[absolute_path]
+
+        seen_paths[absolute_path] = true
+        files << asset_entry(relative_path, absolute_path, asset_id, mime)
       end
 
-      %w[audio webcams.webm video/webcams.webm].each do |candidate|
-        path = File.join(published_root, candidate)
-        next unless File.exist?(path)
+      podcast_audio = File.join(@published_dir, 'podcast', record_id, 'audio.ogg')
+      add_audio.call('audio.ogg', podcast_audio, 'audio:podcast', 'audio/ogg')
 
-        files << asset_entry(candidate, path, "audio:#{candidate}")
+      if format_name == 'podcast'
+        path = File.join(published_root, 'audio.ogg')
+        add_audio.call('audio.ogg', path, 'audio:podcast', 'audio/ogg')
+      end
+
+      return files if files.any?
+
+      %w[audio].each do |candidate|
+        path = File.join(published_root, candidate)
+        add_audio.call(candidate, path, "audio:#{candidate}")
       end
 
       Dir.glob(File.join(published_root, 'video', '*.{webm,mp4,ogg}')).each do |path|
         relative = path.sub("#{published_root}/", '')
-        files << asset_entry(relative, path, "audio:#{relative}")
+        add_audio.call(relative, path, "audio:#{relative}")
       end
 
       files

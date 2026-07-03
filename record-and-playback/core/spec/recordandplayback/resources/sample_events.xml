@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <recording>
-  <event eventname="ParticipantJoinEvent" timestamp="1000" userId="u-1"/>
-  <event eventname="ParticipantTalkingEvent" timestamp="2000" userId="u-1"/>
-  <event eventname="ParticipantTalkingStatusEvent" timestamp="3000" userId="u-1"/>
+  <event timestamp="1000" module="PARTICIPANT" eventname="ParticipantJoinEvent">
+    <userId>u-1</userId>
+    <name>علی رضایی</name>
+  </event>
+  <event timestamp="1500" module="VOICE" eventname="ParticipantJoinedEvent">
+    <participant>u-1</participant>
+    <callername>علی رضایی</callername>
+  </event>
+  <event timestamp="2000" module="VOICE" eventname="ParticipantTalkingEvent">
+    <participant>u-1</participant>
+    <talking>true</talking>
+  </event>
+  <event timestamp="3000" module="VOICE" eventname="ParticipantTalkingEvent">
+    <participant>u-1</participant>
+    <talking>false</talking>
+  </event>
+  <event timestamp="4000" module="VOICE" eventname="ParticipantTalkingStatusEvent">
+    <participant>u-1</participant>
+  </event>
 </recording>

@@ -78,6 +78,8 @@ module BigBlueButton
         merged['assets'][key] = value
       end
 
+      merged['assets']&.delete('thumbnails')
+
       merged
     end
 

@@ -567,12 +567,54 @@ class RecordingController {
       }
 
       response.addHeader("Cache-Control", "private, max-age=3600")
-      render(file: assetFile, fileName: assetFile.getName())
+      render(
+        file: assetFile,
+        fileName: assetFile.getName(),
+        contentType: resolveRecordingAssetContentType(assetId, assetFile)
+      )
     } catch (IOException e) {
       log.error("Failed to stream recording asset for {} asset {}", recordId, assetId, e)
       response.setStatus(404)
       render(text: "Asset not found", contentType: "text/plain")
     }
+  }
+
+  private String resolveRecordingAssetContentType(String assetId, File assetFile) {
+    String name = assetFile?.getName()?.toLowerCase() ?: ""
+    String asset = assetId?.toLowerCase() ?: ""
+
+    if (name.endsWith(".webm") || asset.contains("webm")) {
+      return "video/webm"
+    }
+    if (name.endsWith(".ogg") || asset.contains(".ogg")) {
+      return "audio/ogg"
+    }
+    if (name.endsWith(".mp4") || asset.contains(".mp4")) {
+      return "video/mp4"
+    }
+    if (name.endsWith(".xml") || asset.contains(".xml")) {
+      return "application/xml"
+    }
+    if (name.endsWith(".json") || asset.contains(".json")) {
+      return "application/json"
+    }
+    if (name.endsWith(".html") || asset.contains(".html")) {
+      return "text/html"
+    }
+    if (name.endsWith(".svg") || asset.contains(".svg")) {
+      return "image/svg+xml"
+    }
+    if (name.endsWith(".png") || asset.contains(".png")) {
+      return "image/png"
+    }
+    if (name.endsWith(".pdf") || asset.contains(".pdf")) {
+      return "application/pdf"
+    }
+    if (name.endsWith(".txt") || asset.contains(".txt")) {
+      return "text/plain"
+    }
+
+    return "application/octet-stream"
   }
 
   private void respondWithError(errorKey, errorMessage) {
