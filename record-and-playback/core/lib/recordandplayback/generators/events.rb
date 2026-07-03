@@ -410,6 +410,75 @@ module BigBlueButton
         last_timestamp)
     end
 
+    def self.get_matched_start_and_stop_webcam_events(events)
+      last_timestamp = BigBlueButton::Events.last_event_timestamp(events)
+      webcam_start_events = BigBlueButton::Events.get_start_webcam_events(events)
+      webcam_stop_events = BigBlueButton::Events.get_stop_webcam_events(events)
+      BigBlueButton::Events.match_start_and_stop_webcam_events(
+        webcam_start_events,
+        webcam_stop_events,
+        last_timestamp)
+    end
+
+    def self.get_start_webcam_events(events)
+      start_events = []
+      events.xpath('/recording/event[@module="WEBCAM" or (@module="bbb-webrtc-sfu" and @eventname="StartWebRTCShareEvent")]').each do |start_event|
+        case start_event['eventname']
+        when 'StartWebcamShareEvent'
+          stream = start_event.at_xpath('stream').text
+          filename = stream
+        when 'StartWebRTCShareEvent'
+          uri = start_event.at_xpath('filename').text
+          filename = File.basename(uri)
+        else
+          next
+        end
+
+        start_events << {
+          start_timestamp: start_event['timestamp'].to_i,
+          stream: filename
+        }
+      end
+      start_events.sort { |a, b| a[:start_timestamp] <=> b[:start_timestamp] }
+    end
+
+    def self.get_stop_webcam_events(events)
+      stop_events = []
+      events.xpath('/recording/event[@module="WEBCAM" or (@module="bbb-webrtc-sfu" and @eventname="StopWebRTCShareEvent")]').each do |stop_event|
+        case stop_event['eventname']
+        when 'StopWebcamShareEvent'
+          stream = stop_event.at_xpath('stream').text
+          filename = stream
+        when 'StopWebRTCShareEvent'
+          uri = stop_event.at_xpath('filename').text
+          filename = File.basename(uri)
+        else
+          next
+        end
+
+        stop_events << {
+          stop_timestamp: stop_event['timestamp'].to_i,
+          stream: filename
+        }
+      end
+      stop_events.sort { |a, b| a[:stop_timestamp] <=> b[:stop_timestamp] }
+    end
+
+    def self.match_start_and_stop_webcam_events(start_events, stop_events, last_timestamp)
+      BigBlueButton.logger.info("Task: Matching the start and stop webcam events")
+      matched_events = []
+      start_events.each do |start|
+        stop = find_video_event_matched(stop_events, start)
+        if stop
+          start[:stop_timestamp] = stop[:stop_timestamp]
+        else
+          start[:stop_timestamp] = last_timestamp
+        end
+        matched_events << start
+      end
+      matched_events.sort { |a, b| a[:start_timestamp] <=> b[:start_timestamp] }
+    end
+
     # Match the start and stop events.
     def self.match_start_and_stop_deskshare_events(start_events, stop_events, last_timestamp)
       BigBlueButton.logger.info("Task: Matching the start and stop deskshare events")

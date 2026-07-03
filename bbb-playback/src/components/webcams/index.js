@@ -4,6 +4,7 @@ import {
   useIntl,
 } from 'react-intl';
 import videojs from 'video.js/dist/video.es.js';
+import 'video.js/dist/lang/fa.json';
 import 'videojs-seek-buttons'
 import { player as config, shortcuts } from 'config';
 import {
@@ -78,6 +79,7 @@ const buildOptions = (sources, tracks) => {
     controls: true,
     fill: true,
     inactivityTimeout: 0,
+    language: 'fa',
     playbackRates: config.rates,
     sources: sources.current,
     tracks: tracks.current,

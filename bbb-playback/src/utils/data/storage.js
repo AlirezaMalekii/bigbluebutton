@@ -165,6 +165,7 @@ const storage = {
       videos: hasProperty(DATA, ID.VIDEOS),
       presentation: hasProperty(DATA, ID.SHAPES),
       screenshare: hasProperty(DATA, ID.SCREENSHARE),
+      webcamEvents: hasProperty(DATA, ID.WEBCAM_EVENTS),
       layoutSwap: hasProperty(DATA, ID.LAYOUT),
     };
   },
@@ -225,6 +226,14 @@ const storage = {
   },
   get screenshare() {
     return DATA[ID.SCREENSHARE];
+  },
+  get webcamEvents() {
+    if (!Object.hasOwn(DATA, ID.WEBCAM_EVENTS)) return null;
+
+    const events = DATA[ID.WEBCAM_EVENTS];
+    if (events === null || events === undefined) return null;
+
+    return events;
   },
   get shapes() {
     return DATA[ID.SHAPES];

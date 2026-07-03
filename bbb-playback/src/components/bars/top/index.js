@@ -35,15 +35,15 @@ const Top = ({
     <div className="top-bar">
       <div className="left">
         <PlatformLogo />
-        <SectionButton
-          section={section}
-          toggleSection={toggleSection}
-        />
       </div>
       <div className="center">
         <Title openAbout={() => openModal(ID.ABOUT)} />
       </div>
       <div className="right">
+        <SectionButton
+          section={section}
+          toggleSection={toggleSection}
+        />
         <SearchButton openSearch={() => openModal(ID.SEARCH)} />
         <SwapButton toggleSwap={toggleSwap} hidePresentation={hidePresentation} />
       </div>

@@ -8,13 +8,17 @@ import './index.scss';
 
 const Media = ({
   fullscreen,
+  showWebcam,
   swap,
   toggleFullscreen,
   hidePresentation,
 }) => {
 
   return (
-    <div className={cx('media', { 'swapped-media': swap || layout.single || hidePresentation })}>
+    <div className={cx('media', {
+      'swapped-media': swap || layout.single || hidePresentation,
+      'media-hidden': !showWebcam,
+    })}>
       <FullscreenButton
         content={LAYOUT.MEDIA}
         fullscreen={fullscreen}
@@ -30,6 +34,8 @@ const areEqual = (prevProps, nextProps) => {
   if (prevProps.fullscreen !== nextProps.fullscreen) return false;
 
   if (prevProps.hidePresentation !== nextProps.hidePresentation) return false;
+
+  if (prevProps.showWebcam !== nextProps.showWebcam) return false;
 
   if (prevProps.swap !== nextProps.swap) return false;
 

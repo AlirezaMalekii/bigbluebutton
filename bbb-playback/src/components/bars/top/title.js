@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import {
   defineMessages,
   useIntl,
-  FormattedDate,
 } from 'react-intl';
 import cx from 'classnames';
 import {
@@ -13,6 +12,7 @@ import {
 import { handleOnEnterPress } from 'utils/data/handlers';
 import storage from 'utils/data/storage';
 import layout from 'utils/layout';
+import formatJalaliDate from 'utils/jalali';
 import './index.scss';
 
 const intlMessages = defineMessages({
@@ -28,7 +28,7 @@ const defaultProps = { openAbout: () => {} };
 
 const Title = ({ openAbout }) => {
   const intl = useIntl();
-  const start = <FormattedDate value={new Date(storage.metadata.start)} />;
+  const start = formatJalaliDate(storage.metadata.start);
 
   const interactive = layout.control && config.about;
   if (!interactive) {
@@ -37,7 +37,7 @@ const Title = ({ openAbout }) => {
       <span className="title">
         {storage.metadata.name}
         {date.enabled ? (
-          <> - {start}</>
+          <> — {start}</>
         ) : null}
       </span>
     );
@@ -53,7 +53,7 @@ const Title = ({ openAbout }) => {
     >
       {storage.metadata.name}
       {date.enabled ? (
-        <> - {start}</>
+        <> — {start}</>
       ) : null}
     </span>
   );

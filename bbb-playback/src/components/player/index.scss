@@ -12,9 +12,9 @@ $player-wrapper-padding: $control-bar-height;
     "application"
     "bottom-bar";
   grid-template-columns: 100%;
-  grid-template-rows: $top-bar-height minmax(0, 1fr) $media-fit-height 38% $bottom-bar-height;
+  grid-template-rows: $top-bar-height minmax(0, 1fr) $media-fit-height minmax(0, 38%) 0;
   height: 100%;
-  padding: $margin $margin $player-wrapper-padding $margin;
+  padding: $margin $margin calc(#{$player-wrapper-padding} + env(safe-area-inset-bottom, 0px)) $margin;
   width: 100%;
 }
 
@@ -34,7 +34,21 @@ $player-wrapper-padding: $control-bar-height;
     "media"
     "application"
     "bottom-bar";
-  grid-template-rows: $top-bar-height minmax(0, 1fr) 0 0 $bottom-bar-height;
+  grid-template-rows: $top-bar-height minmax(0, 1fr) 0 0 0;
+}
+
+.no-webcam {
+  grid-template-areas:
+    "top-bar"
+    "content"
+    "application"
+    "application"
+    "bottom-bar";
+  grid-template-rows: $top-bar-height minmax(0, 1fr) minmax(0, 1fr) 0 0;
+}
+
+.no-webcam.hidden-section {
+  grid-template-rows: $top-bar-height minmax(0, 1fr) 0 0 0;
 }
 
 .fullscreen-content {
@@ -51,7 +65,7 @@ $player-wrapper-padding: $control-bar-height;
       "content application"
       "bottom-bar application";
     grid-template-columns: minmax(0, 1fr) $section-width;
-    grid-template-rows: $top-bar-height $media-fit-height minmax(0, 1fr) auto $bottom-bar-height;
+    grid-template-rows: $top-bar-height $media-fit-height minmax(0, 1fr) auto 0;
     gap: $margin;
   }
 
@@ -64,9 +78,23 @@ $player-wrapper-padding: $control-bar-height;
       "bottom-bar application";
   }
 
+  .no-webcam {
+    grid-template-areas:
+      "top-bar top-bar"
+      "content application"
+      "content application"
+      "content application"
+      "bottom-bar application";
+    grid-template-rows: $top-bar-height minmax(0, 1fr) auto auto 0;
+  }
+
   .hidden-section {
     grid-template-columns: minmax(0, 1fr) 0;
     gap: 0;
+  }
+
+  .no-webcam.hidden-section {
+    grid-template-columns: minmax(0, 1fr) 0;
   }
 
   .fullscreen-content {
@@ -78,7 +106,7 @@ $player-wrapper-padding: $control-bar-height;
   @media (max-height: $media-max-height) {
     .player-wrapper {
       grid-template-columns: minmax(0, 1fr) $section-width-small;
-      grid-template-rows: $top-bar-height $media-fit-height-small auto auto $bottom-bar-height;
+      grid-template-rows: $top-bar-height $media-fit-height-small minmax(0, 1fr) auto 0;
     }
 
     .hidden-section {
@@ -89,5 +117,16 @@ $player-wrapper-padding: $control-bar-height;
       grid-template-columns: minmax(0, 1fr) 0;
       grid-template-rows: 0 minmax(0, 1fr) auto auto 0;
     }
+  }
+}
+
+@media (max-width: calc(#{$media-min-width} - 1px)) {
+  .player-wrapper {
+    gap: $margin-small;
+  }
+
+  .top-bar .title {
+    font-size: .82rem;
+    max-width: 100%;
   }
 }

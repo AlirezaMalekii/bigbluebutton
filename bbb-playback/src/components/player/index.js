@@ -19,7 +19,7 @@ import {
 import { ID } from 'utils/constants';
 import layout from 'utils/layout';
 import Shortcuts from 'utils/shortcuts';
-import { useLayoutSwap } from 'components/utils/hooks';
+import { useLayoutSwap, useWebcamVisibility } from 'components/utils/hooks';
 import './index.scss';
 
 const intlMessages = defineMessages({
@@ -42,6 +42,7 @@ const Player = () => {
 
   const { showPresentation } = useLayoutSwap();
   const hidePresentation = showPresentation === false;
+  const showWebcam = useWebcamVisibility();
 
   useEffect(() => {
     if (showPresentation === false) {
@@ -80,6 +81,7 @@ const Player = () => {
     'fullscreen-content': fullscreen,
     'hidden-section': !section,
     'single-content': layout.single || hidePresentation,
+    'no-webcam': !showWebcam,
   };
 
   return (
@@ -97,6 +99,7 @@ const Player = () => {
       />
       <Media
         fullscreen={fullscreen}
+        showWebcam={showWebcam}
         swap={swap}
         toggleFullscreen={() => setFullscreen(prevFullscreen => !prevFullscreen)}
         hidePresentation={hidePresentation}

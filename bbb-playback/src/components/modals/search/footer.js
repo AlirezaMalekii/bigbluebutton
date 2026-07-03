@@ -4,13 +4,12 @@ import {
   defineMessages,
   useIntl,
 } from 'react-intl';
-import Button from 'components/utils/button';
 import './index.scss';
 
 const intlMessages = defineMessages({
-  search: {
-    id: 'button.search.aria',
-    description: 'Aria label for the search button',
+  submit: {
+    id: 'player.search.modal.submit',
+    description: 'Label for the search submit button',
   },
 });
 
@@ -32,13 +31,14 @@ const Footer = ({
 
   return (
     <div className="search-footer">
-      <Button
-        aria={intl.formatMessage(intlMessages.search)}
+      <button
+        className="search-submit"
         disabled={disabled}
-        handleOnClick={(event) => handleOnClick(event)}
-        icon="search"
-        type="solid"
-      />
+        onClick={() => handleOnClick()}
+        type="button"
+      >
+        {intl.formatMessage(intlMessages.submit)}
+      </button>
     </div>
   );
 };

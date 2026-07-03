@@ -21,15 +21,19 @@
 }
 
 .modal {
-  background-color: var(--modal-background-color);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .012)),
+    var(--modal-background-color);
+  border: 1px solid var(--skyroom-border);
   border-radius: $border-radius;
+  box-shadow: var(--skyroom-shadow-soft);
   color: var(--modal-color);
   display: flex;
   flex-direction: column;
   max-width: $modal-max-width;
-  max-height: 80%;
+  max-height: 85%;
   padding: 0 $padding-small;
-  width: 80%;
+  width: min(92%, $modal-max-width);
 
   .modal-control,
   .modal-content {

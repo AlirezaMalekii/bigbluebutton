@@ -24,6 +24,10 @@
 
 .text-vanilla {
   color: var(--color-text);
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: plaintext;
+  width: 100%;
 
   img {
     max-width: 100%;

@@ -24,6 +24,7 @@ const files = {
   panzooms: 'panzooms.xml',
   polls: 'polls.json',
   screenshare: 'deskshare.xml',
+  webcamEvents: 'webcams.xml',
   shapes: 'shapes.svg',
   tldraw: 'tldraw.json',
   videos: 'external_videos.json',

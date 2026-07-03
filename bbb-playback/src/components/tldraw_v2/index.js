@@ -7,6 +7,7 @@ import {
 import cx from 'classnames';
 import { Tldraw, AssetRecordType } from '@bigbluebutton/tldraw';
 import '@bigbluebutton/tldraw/tldraw.css'
+import { localTldrawAssetUrls, configureLocalTldrawAssets } from 'utils/tldrawAssets';
 import {
   useCurrentContent,
   useCurrentIndex,
@@ -29,6 +30,7 @@ const MAX_IMAGE_WIDTH = 1440;
 const MAX_IMAGE_HEIGHT = 1080;
 
 setupColorThemePaletteOverrides();
+configureLocalTldrawAssets();
 
 const intlMessages = defineMessages({
   aria: {
@@ -171,6 +173,7 @@ const TldrawPresentationV2 = ({ size }) => {
           height: svgHeight < 0 ? 0 : svgHeight,
         }}>
         <Tldraw
+          assetUrls={localTldrawAssetUrls}
           autofocus={false}
           hideUi={true}
           onMount={(app) => {

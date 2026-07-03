@@ -6,8 +6,8 @@ PartOf=bigbluebutton.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bigbluebutton/core/scripts/rap-starter.rb
-WorkingDirectory=/usr/local/bigbluebutton/core/scripts
+WorkingDirectory=/usr/local/bigbluebutton/core
+ExecStart=/usr/bin/bundle exec ruby scripts/rap-starter.rb
 User=bigbluebutton
 Slice=bbb_record_core.slice
 Restart=on-failure

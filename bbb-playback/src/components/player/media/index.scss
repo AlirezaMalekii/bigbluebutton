@@ -29,6 +29,23 @@
   }
 }
 
+.media-hidden {
+  border: 0 !important;
+  box-shadow: none !important;
+  grid-area: media;
+  height: 0 !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+
+  &::before {
+    display: none;
+  }
+}
+
 .swapped-media {
   background:
     radial-gradient(circle at 50% 0, rgba(20, 169, 158, .12), transparent 34%),

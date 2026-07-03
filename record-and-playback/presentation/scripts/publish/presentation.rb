@@ -1150,6 +1150,25 @@ def process_chat_messages(events, bbb_props)
   xml
 end
 
+def process_webcam_events(events)
+  BigBlueButton.logger.info('Processing webcam events')
+  webcam_matched_events = BigBlueButton::Events.get_matched_start_and_stop_webcam_events(events)
+
+  @webcams_xml = Builder::XmlMarkup.new(indent: 2)
+  @webcams_xml.instruct!
+
+  @webcams_xml.recording('id' => 'webcam_events') do
+    webcam_matched_events.each do |event|
+      start_timestamp = (translate_timestamp(event[:start_timestamp].to_f) / 1000).round(1)
+      stop_timestamp = (translate_timestamp(event[:stop_timestamp].to_f) / 1000).round(1)
+      next unless start_timestamp != stop_timestamp
+
+      @webcams_xml.event(start_timestamp: start_timestamp,
+                         stop_timestamp: stop_timestamp)
+    end
+  end
+end
+
 def process_deskshare_events(events)
   BigBlueButton.logger.info('Processing deskshare events')
   deskshare_matched_events = BigBlueButton::Events.get_matched_start_and_stop_deskshare_events(events)
@@ -1332,6 +1351,7 @@ end
 @panzooms_xml_filename = 'panzooms.xml'
 @cursor_xml_filename = 'cursor.xml'
 @deskshare_xml_filename = 'deskshare.xml'
+@webcams_xml_filename = 'webcams.xml'
 @tldraw_shapes_filename = 'tldraw.json'
 @layout_xml_filename = 'layout.xml'
 @svg_shape_id = 1
@@ -1493,6 +1513,8 @@ begin
 
         process_deskshare_events(@doc)
 
+        process_webcam_events(@doc)
+
         process_layout_events(@doc)
 
         process_poll_events(@doc, package_dir)
@@ -1501,6 +1523,8 @@ begin
 
         # Write deskshare.xml to file
         File.open("#{package_dir}/#{@deskshare_xml_filename}", 'w') { |f| f.puts @deskshare_xml.target! }
+        # Write webcams.xml to file
+        File.open("#{package_dir}/#{@webcams_xml_filename}", 'w') { |f| f.puts @webcams_xml.target! }
         # Write layout_swap.xml to file
         File.open("#{package_dir}/#{@layout_xml_filename}", 'w') { |f| f.puts @layout_swap_xml.target! }
 

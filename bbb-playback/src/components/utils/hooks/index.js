@@ -9,7 +9,51 @@ import {
   getCurrentDataInterval,
 } from 'utils/data';
 import storage from 'utils/data/storage';
-import { isEqual, getLayoutEvent } from 'utils/data/validators';
+import { isEmpty, isEqual, getLayoutEvent, isEnabled } from 'utils/data/validators';
+
+const getInitialWebcamVisible = () => {
+  if (storage.fallback) return false;
+
+  const events = storage.webcamEvents;
+  if (events === null) return true;
+
+  if (isEmpty(events)) return false;
+
+  return isEnabled(events, 0);
+};
+
+const useWebcamVisibility = () => {
+  const [visible, setVisible] = useState(getInitialWebcamVisible);
+
+  useEffect(() => {
+    const handleTimeUpdate = (event) => {
+      if (storage.fallback) {
+        setVisible(false);
+        return;
+      }
+
+      const events = storage.webcamEvents;
+      if (events === null) {
+        setVisible(true);
+        return;
+      }
+
+      if (isEmpty(events)) {
+        setVisible(false);
+        return;
+      }
+
+      setVisible(isEnabled(events, event.detail.time));
+    };
+
+    document.addEventListener(EVENTS.TIME_UPDATE, handleTimeUpdate);
+    return () => {
+      document.removeEventListener(EVENTS.TIME_UPDATE, handleTimeUpdate);
+    };
+  }, []);
+
+  return visible;
+};
 
 const useCurrentContent = () => {
   const [currentContent, setCurrentContent] = useState(ID.PRESENTATION);
@@ -108,4 +152,5 @@ export {
   useCurrentIndex,
   useCurrentInterval,
   useLayoutSwap,
+  useWebcamVisibility,
 };

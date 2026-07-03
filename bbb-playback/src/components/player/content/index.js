@@ -2,7 +2,7 @@ import React from 'react';
 import cx from 'classnames';
 import Presentation from 'components/presentation';
 import TldrawPresentation from 'components/tldraw';
-import TldrawPresentationV2 from 'components/tldraw_v2';
+import TldrawPresentationV2 from 'components/tldraw_v2/wrapper';
 import { getTldrawBbbVersion, isTldrawWhiteboard as isTldraw } from 'utils/tldraw';
 import { useCurrentInterval, useLayoutSwap } from 'components/utils/hooks';
 import Screenshare from 'components/screenshare';

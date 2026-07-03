@@ -38,6 +38,10 @@
   "player.screenshare.wrapper.aria": "Screenshare area",
   "player.search.modal.title": "Search",
   "player.search.modal.subtitle": "Find presentation slides content",
+  "player.search.modal.placeholder": "Enter search term…",
+  "player.search.modal.minLength": "Enter at least 3 characters",
+  "player.search.modal.noResults": "No results found",
+  "player.search.modal.submit": "Apply search",
   "player.thumbnails.wrapper.aria": "Thumbnails area",
   "player.webcams.wrapper.aria": "Webcams area"
 }

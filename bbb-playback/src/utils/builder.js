@@ -519,6 +519,20 @@ const buildScreenshare = result => {
   return data;
 };
 
+const buildWebcamEvents = result => {
+  let data = [];
+  const { recording } = result;
+
+  if (hasProperty(recording, 'event')) {
+    data = convertToArray(recording.event).map(webcam => ({
+      timestamp: parseFloat(webcam._start_timestamp),
+      clear: parseFloat(webcam._stop_timestamp),
+    }));
+  }
+
+  return data;
+};
+
 const build = (filename, value) => {
   return new Promise((resolve, reject) => {
     let data;
@@ -584,6 +598,9 @@ const build = (filename, value) => {
             break;
           case config.screenshare:
             data = buildScreenshare(result);
+            break;
+          case config.webcamEvents:
+            data = buildWebcamEvents(result);
             break;
           case config.shapes:
             data = buildShapes(result);

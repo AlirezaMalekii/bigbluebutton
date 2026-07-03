@@ -3,6 +3,7 @@
   "version": "5.4.6",
   "homepage": "/playback/presentation/2.3",
   "dependencies": {
+    "@bigbluebutton/assets": "^2.0.0-alpha.20",
     "@bigbluebutton/tldraw": "^2.0.0-alpha.33",
     "bowser": "^2.11.0",
     "classnames": "^2.3.1",
@@ -34,6 +35,7 @@
     "start": "react-scripts start",
     "start:proxy": "bash start-proxy.sh",
     "build": "react-scripts build",
+    "postbuild": "mkdir -p build/assets/fonts public/assets/fonts && cp -r node_modules/@bigbluebutton/assets/fonts/* build/assets/fonts/ && cp -r node_modules/@bigbluebutton/assets/fonts/* public/assets/fonts/",
     "test": "react-scripts test"
   },
   "eslintConfig": {

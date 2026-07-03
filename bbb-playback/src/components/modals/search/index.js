@@ -43,26 +43,25 @@ const Search = ({
 }) => {
   const [disabled, setDisabled] = useState(true);
   const [search, setSearch] = useState([]);
+  const [queryLength, setQueryLength] = useState(0);
 
   const handleOnChange = (event) => {
     const value = getValue(event);
+    setQueryLength(value ? value.length : 0);
+
     if (isValid(value)) {
       const result = getSearch(value, storage.thumbnails);
 
-      // If different, update search
       if (!isEqual(search, result)) {
         setSearch(result);
       }
 
-      // Check to enable
       if (disabled) setDisabled(false);
     } else {
-      // If not empty, clear search
       if (!isEmpty(search)) {
         setSearch([]);
       }
 
-      // Chack to disable
       if (!disabled) setDisabled(true);
     }
   };
@@ -77,6 +76,7 @@ const Search = ({
       <Header />
       <Body
         handleOnChange={(event) => handleOnChange(event)}
+        queryLength={queryLength}
         search={search}
       />
       <Footer
@@ -90,7 +90,6 @@ const Search = ({
 Search.propTypes = propTypes;
 Search.defaultProps = defaultProps;
 
-// Avoid re-render
 const areEqual = () => true;
 
 export default React.memo(Search, areEqual);

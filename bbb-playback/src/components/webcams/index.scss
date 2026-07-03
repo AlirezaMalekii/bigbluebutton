@@ -1,7 +1,7 @@
 @import 'src/styles/sizes';
 
 :root {
-  --control-bar-background-color: var(--gray-dark);
+  --control-bar-background-color: rgba(7, 11, 20, .94);
 }
 
 .webcams-wrapper {
@@ -27,10 +27,12 @@
 .video-js .vjs-big-play-button {
   border: none;
   border-radius: 999px;
-  line-height: 1.65em;
+  height: 4.5rem;
+  line-height: 4.5rem;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+  width: 4.5rem;
 }
 
 .vjs-text-track-display,
@@ -40,10 +42,66 @@
 }
 
 .video-js .vjs-control-bar {
-  background-color: var(--control-bar-background-color);
+  backdrop-filter: blur(18px);
+  background: linear-gradient(180deg, transparent, var(--control-bar-background-color));
+  border-top: 1px solid rgba(255, 255, 255, .08);
   display: flex;
+  height: $control-bar-height;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   position: fixed;
-  z-index: 1;
+  z-index: 3;
+}
+
+.video-js .vjs-control {
+  height: $control-bar-height;
+  width: 3.1em;
+}
+
+.video-js .vjs-button > .vjs-icon-placeholder:before {
+  font-size: 1.45em;
+  line-height: $control-bar-height;
+}
+
+.video-js .vjs-time-control {
+  align-items: center;
+  display: flex;
+  font-size: .82rem;
+  line-height: $control-bar-height;
+  min-width: 0;
+  padding: 0 .35em;
+}
+
+.video-js .vjs-progress-control {
+  align-items: center;
+  display: flex;
+  height: $control-bar-height;
+  min-width: 4em;
+}
+
+.video-js .vjs-progress-holder {
+  border-radius: 999px;
+  height: .55rem;
+  margin: 0;
+}
+
+.video-js .vjs-load-progress,
+.video-js .vjs-load-progress div {
+  background: rgba(148, 163, 184, .22);
+  border-radius: 999px;
+}
+
+.video-js .vjs-play-progress {
+  border-radius: 999px;
+}
+
+.video-js .vjs-play-progress:before {
+  font-size: .95em;
+  top: -.28em;
+}
+
+.video-js .vjs-playback-rate .vjs-playback-rate-value {
+  font-size: .82rem;
+  line-height: $control-bar-height;
 }
 
 .vjs-menu-button-popup {
@@ -54,6 +112,17 @@
 }
 
 [class^="vjs-text-track-cue"] {
-  inset: auto 0 calc(#{$control-bar-height} * 2) 0 !important;
+  inset: auto 0 calc(#{$control-bar-height} + env(safe-area-inset-bottom, 0px) + .75rem) 0 !important;
   z-index: 2;
+}
+
+@media (max-width: calc(#{$media-min-width} - 1px)) {
+  .video-js .vjs-control {
+    width: 2.6em;
+  }
+
+  .video-js .vjs-time-control {
+    font-size: .75rem;
+    padding: 0 .2em;
+  }
 }

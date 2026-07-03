@@ -23,6 +23,13 @@ set -xe
 "$(dirname "$0")/sync-playback-skyroom.sh"
 
 sudo cp core/Gemfile /usr/local/bigbluebutton/core/Gemfile
+sudo cp core/Gemfile.lock /usr/local/bigbluebutton/core/Gemfile.lock
+sudo chown bigbluebutton:bigbluebutton /usr/local/bigbluebutton/core/Gemfile /usr/local/bigbluebutton/core/Gemfile.lock
+(
+  cd /usr/local/bigbluebutton/core
+  sudo -u bigbluebutton bundle config set deployment 'true'
+  sudo -u bigbluebutton bundle install
+)
 sudo rm -rf /usr/local/bigbluebutton/core/lib
 sudo cp -r core/lib /usr/local/bigbluebutton/core/
 sudo rm -rf /usr/local/bigbluebutton/core/scripts
@@ -116,6 +123,8 @@ sudo chown -R bigbluebutton:bigbluebutton /var/bigbluebutton/ /var/log/bigbluebu
 find /usr/local/bigbluebutton/core/scripts -name '*.rb' -print0 | xargs -0 sudo sed -i 's/\r$//' 2>/dev/null || true
 if [[ -f /lib/systemd/system/bbb-rap-resque-worker.service ]]; then
   sudo cp core/systemd/bbb-rap-resque-worker.service /lib/systemd/system/bbb-rap-resque-worker.service
+  sudo cp core/systemd/bbb-rap-starter.service /lib/systemd/system/bbb-rap-starter.service
   sudo systemctl daemon-reload
+  sudo systemctl reset-failed bbb-rap-resque-worker bbb-rap-starter 2>/dev/null || true
   sudo systemctl restart bbb-rap-resque-worker bbb-rap-starter
 fi
