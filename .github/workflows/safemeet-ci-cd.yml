@@ -58,6 +58,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install systemd headers (journald-native)
+        run: sudo apt-get update && sudo apt-get install -y libsystemd-dev
+
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
