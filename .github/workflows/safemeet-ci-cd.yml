@@ -16,32 +16,37 @@ jobs:
     runs-on: ubuntu-latest
     name: Detect changed areas
     outputs:
-      html5: ${{ steps.filter.outputs.html5 }}
-      recording: ${{ steps.filter.outputs.recording }}
-      shell: ${{ steps.filter.outputs.shell }}
-      fsesl: ${{ steps.filter.outputs.fsesl }}
+      html5: ${{ steps.paths.outputs.html5 }}
+      recording: ${{ steps.paths.outputs.recording }}
+      shell: ${{ steps.paths.outputs.shell }}
+      fsesl: ${{ steps.paths.outputs.fsesl }}
     steps:
       - uses: actions/checkout@v4
-
-      - uses: dorny/paths-filter@v3
-        id: filter
         with:
-          filters: |
-            html5:
-              - 'bigbluebutton-html5/**'
-            recording:
-              - 'record-and-playback/**'
-              - 'bbb-common-web/**/RecordingAsset*'
-              - 'bigbluebutton-web/grails-app/controllers/org/bigbluebutton/web/controllers/RecordingController.groovy'
-              - 'bigbluebutton-web/grails-app/controllers/org/bigbluebutton/web/UrlMappings.groovy'
-              - 'bigbluebutton-web/grails-app/conf/**'
-            shell:
-              - 'scripts/**'
-              - 'deploy.sh'
-              - 'deploy.rsync-excludes'
-            fsesl:
-              - 'akka-bbb-fsesl/**'
-              - 'bbb-fsesl-client/**'
+          fetch-depth: 0
+
+      - name: Detect changed paths
+        id: paths
+        run: |
+          set -euo pipefail
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+          if [[ "$BEFORE" == "0000000000000000000000000000000000000000" || -z "$BEFORE" ]]; then
+            FILES="$(git diff --name-only HEAD~1 HEAD 2>/dev/null || git show --name-only --pretty=format: HEAD)"
+          else
+            FILES="$(git diff --name-only "$BEFORE" "$AFTER")"
+          fi
+          echo "Changed files in this push:"
+          echo "$FILES"
+          has() { grep -qE "$1" <<< "$FILES"; }
+          if has '^bigbluebutton-html5/'; then echo "html5=true"; else echo "html5=false"; fi
+          if has '^(record-and-playback/|bbb-common-web/.*/RecordingAsset|bigbluebutton-web/grails-app/(controllers/org/bigbluebutton/web/controllers/RecordingController\.groovy|controllers/org/bigbluebutton/web/UrlMappings\.groovy|conf/))'; then
+            echo "recording=true"
+          else
+            echo "recording=false"
+          fi
+          if has '^(scripts/|deploy\.sh|deploy\.rsync-excludes)'; then echo "shell=true"; else echo "shell=false"; fi
+          if has '^(akka-bbb-fsesl/|bbb-fsesl-client/)'; then echo "fsesl=true"; else echo "fsesl=false"; fi
 
   shellcheck:
     needs: changes
