@@ -1,0 +1,112 @@
+name: SafeMeet CI/CD
+
+on:
+  push:
+    branches: [safemeet]
+  pull_request:
+    branches: [safemeet]
+  workflow_dispatch:
+
+concurrency:
+  group: safemeet-ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    name: ShellCheck
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: './scripts'
+          severity: warning
+
+  html5-checks:
+    runs-on: ubuntu-latest
+    name: HTML5 lint & typecheck
+    defaults:
+      run:
+        working-directory: bigbluebutton-html5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: bigbluebutton-html5/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npx eslint . --ext .ts,.tsx --max-warnings 0
+        continue-on-error: true
+
+      - name: Typecheck
+        run: npm run tscheck:staged
+
+  safemeet-recording-specs:
+    runs-on: ubuntu-latest
+    name: SafeMeet recording specs
+    defaults:
+      run:
+        working-directory: record-and-playback/core
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: false
+          working-directory: record-and-playback/core
+
+      - name: Install gems (with test group)
+        run: |
+          bundle config set --local with 'test'
+          bundle install --jobs 4 --retry 3
+
+      - name: Run RSpec
+        run: bundle exec rspec spec/recordandplayback/safemeet_asset_spec.rb
+
+  deploy:
+    needs: [shellcheck, html5-checks, safemeet-recording-specs]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/safemeet'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+
+      - name: Add server to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "${{ secrets.DEPLOY_PORT }}" -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy to BBB server
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          REMOTE_DIR: ${{ secrets.DEPLOY_REMOTE_DIR }}
+        run: ./deploy.sh
+
+      - name: Deploy summary
+        run: |
+          echo "### BigBlueButton deploy" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Branch: \`${{ github.ref_name }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Server: BBB (${{ secrets.DEPLOY_HOST }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "> After recording indexer changes, re-index affected recordings manually on the server." >> "$GITHUB_STEP_SUMMARY"

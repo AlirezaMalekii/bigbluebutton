@@ -28,8 +28,12 @@ DEPLOY_USER="${DEPLOY_USER:-root}"
 DEPLOY_HOST="${DEPLOY_HOST:-78.157.39.51}"
 DEPLOY_PORT="${DEPLOY_PORT:-3698}"
 REMOTE_DIR="${REMOTE_DIR:-/root/dev/bigbluebutton}"
-SSH_IDENTITY="${SSH_IDENTITY:-}"
+SSH_IDENTITY="${SSH_IDENTITY:-${DEPLOY_SSH_PRIVATE_KEY_PATH:-}}"
 DEPLOY_STATE_FILE="${REMOTE_DIR}/.deploy-state"
+KNOWN_HOSTS_FILE="${DEPLOY_KNOWN_HOSTS_FILE:-${SCRIPT_DIR}/.deploy-known_hosts}"
+mkdir -p "$(dirname "$KNOWN_HOSTS_FILE")" 2>/dev/null || true
+touch "$KNOWN_HOSTS_FILE"
+chmod 600 "$KNOWN_HOSTS_FILE" 2>/dev/null || true
 
 WITH_GRAPHQL=0
 WITH_SHARED_NOTES=1
@@ -92,19 +96,25 @@ log() {
   printf '[deploy] %s\n' "$*"
 }
 
-ssh_rsh() {
+_ssh_common_args() {
+  local -n _out=$1
+  _out=(-p "$DEPLOY_PORT" -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$KNOWN_HOSTS_FILE")
   if [[ -n "$SSH_IDENTITY" ]]; then
-    echo "ssh -p ${DEPLOY_PORT} -i ${SSH_IDENTITY}"
-  else
-    echo "ssh -p ${DEPLOY_PORT}"
+    _out+=(-i "$SSH_IDENTITY" -o IdentitiesOnly=yes)
   fi
 }
 
-ssh_cmd() {
-  local ssh_args=(-p "$DEPLOY_PORT" -o BatchMode=yes -o ConnectTimeout=15)
+ssh_rsh() {
+  local rsh="ssh -p ${DEPLOY_PORT} -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=${KNOWN_HOSTS_FILE}"
   if [[ -n "$SSH_IDENTITY" ]]; then
-    ssh_args+=(-i "$SSH_IDENTITY")
+    rsh+=" -i ${SSH_IDENTITY} -o IdentitiesOnly=yes"
   fi
+  echo "$rsh"
+}
+
+ssh_cmd() {
+  local ssh_args=()
+  _ssh_common_args ssh_args
   ssh "${ssh_args[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" "$@"
 }
 
@@ -167,7 +177,14 @@ remote_env_base() {
 
 log "Target: ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PORT} → ${REMOTE_DIR}"
 log "Testing SSH ..."
-ssh_cmd "echo OK" >/dev/null
+if ! ssh_cmd "echo OK" >/dev/null 2>&1; then
+  if [[ "${GITHUB_ACTIONS:-false}" == "true" ]]; then
+    echo "[deploy] ERROR: SSH key authentication required in CI. Configure DEPLOY_SSH_PRIVATE_KEY secret." >&2
+    exit 1
+  fi
+  echo "[deploy] ERROR: SSH connection failed. Check DEPLOY_HOST, DEPLOY_PORT, and SSH key." >&2
+  exit 1
+fi
 
 LAST_DEPLOY_COMMIT="$(read_deploy_state | head -1 | tr -d '[:space:]')"
 CURRENT_COMMIT="$(current_commit)"
