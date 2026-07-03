@@ -75,6 +75,4 @@ Rotate BBB server SSH access and update `DEPLOY_SSH_PRIVATE_KEY` in GitHub Secre
 
 ## CI auto-repair (Cursor Cloud Agent)
 
-Production branch: **`safemeet`**. Workflow: [`.github/workflows/ci-auto-repair.yml`](workflows/ci-auto-repair.yml) watches **SafeMeet CI/CD**.
-
-Secret `CURSOR_API_KEY` required. Max 3 auto-fix attempts per chain; infra/SSH failures skipped. Setup: `SafeMeet/scripts/setup-ci-auto-repair.sh`. Optional UI: [`.cursor/automations/ci-auto-repair.workflow.yaml`](../.cursor/automations/ci-auto-repair.workflow.yaml).
+Job **CI Auto-Repair** inside [`.github/workflows/safemeet-ci-cd.yml`](workflows/safemeet-ci-cd.yml) — runs only when any check or deploy fails on push to **`safemeet`**. Secret: `CURSOR_API_KEY`. Max 3 attempts; infra/SSH failures skipped.

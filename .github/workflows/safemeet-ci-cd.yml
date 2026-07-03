@@ -204,3 +204,39 @@ jobs:
           echo "- Server: BBB (${{ secrets.DEPLOY_HOST }})" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "> After recording indexer changes, re-index affected recordings manually on the server." >> "$GITHUB_STEP_SUMMARY"
+
+  auto-repair:
+    name: CI Auto-Repair
+    needs: [changes, shellcheck, html5-checks, safemeet-recording-specs, deploy]
+    if: >-
+      always() &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/safemeet' &&
+      (
+        needs.changes.result == 'failure' ||
+        needs.shellcheck.result == 'failure' ||
+        needs.html5-checks.result == 'failure' ||
+        needs.safemeet-recording-specs.result == 'failure' ||
+        needs.deploy.result == 'failure'
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    env:
+      PROJECT_NAME: bigbluebutton
+      PRODUCTION_BRANCH: safemeet
+      REPO_URL: https://github.com/AlirezaMalekii/bigbluebutton
+    steps:
+      - name: Checkout (scripts only)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/scripts/ci-auto-repair.sh
+          sparse-checkout-cone-mode: false
+
+      - name: Run auto-repair
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/ci-auto-repair.sh
