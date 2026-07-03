@@ -121,8 +121,10 @@ jobs:
   deploy:
     needs: [changes, shellcheck, html5-checks, safemeet-recording-specs]
     if: |
+      always() &&
       github.event_name == 'push' &&
       github.ref == 'refs/heads/safemeet' &&
+      needs.changes.result == 'success' &&
       (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped') &&
       (needs.html5-checks.result == 'success' || needs.html5-checks.result == 'skipped') &&
       (needs.safemeet-recording-specs.result == 'success' || needs.safemeet-recording-specs.result == 'skipped')
