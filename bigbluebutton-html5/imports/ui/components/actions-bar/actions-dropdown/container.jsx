@@ -23,6 +23,14 @@ import {
 } from '../../timer/mutations';
 import Auth from '/imports/ui/services/auth';
 import { PRESENTATION_SET_CURRENT } from '../../presentation/mutations';
+import {
+  EXTERNAL_VIDEO_START,
+  EXTERNAL_VIDEO_STOP,
+} from '../../external-video-player/mutations';
+import {
+  isPresentationMedia,
+  startPresentationMediaExternalVideo,
+} from '../../presentation/presentation-uploader/presentationMediaSync';
 import { useStorageKey } from '/imports/ui/services/storage/hooks';
 import { useMeetingIsBreakout } from '/imports/ui/components/app/service';
 import { useIsQuizEnabled } from '../../../services/features';
@@ -65,12 +73,34 @@ const ActionsDropdownContainer = (props) => {
   const [timerSetSongTrack] = useMutation(TIMER_SET_SONG_TRACK);
   const [timerSwitchMode] = useMutation(TIMER_SWITCH_MODE);
   const [presentationSetCurrent] = useMutation(PRESENTATION_SET_CURRENT);
+  const [startExternalVideoMutation] = useMutation(EXTERNAL_VIDEO_START);
+  const [stopExternalVideoMutation] = useMutation(EXTERNAL_VIDEO_STOP);
+
+  const startExternalVideo = (externalVideoUrl) => {
+    if (!externalVideoUrl) return;
+    startExternalVideoMutation({ variables: { externalVideoUrl } });
+  };
+
+  const stopExternalVideo = () => {
+    stopExternalVideoMutation();
+  };
 
   const handleTakePresenter = () => {
     setPresenter({ variables: { userId: Auth.userID } });
   };
 
   const setPresentation = (presentationId) => {
+    const presentation = presentations.find((p) => p.presentationId === presentationId);
+    if (presentation && isPresentationMedia(presentation)) {
+      startPresentationMediaExternalVideo(
+        presentation,
+        presentations,
+        { startExternalVideo, stopExternalVideo },
+      );
+      return;
+    }
+
+    stopExternalVideo();
     presentationSetCurrent({ variables: { presentationId } });
   };
 

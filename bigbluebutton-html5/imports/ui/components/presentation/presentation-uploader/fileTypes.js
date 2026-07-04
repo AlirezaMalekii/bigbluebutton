@@ -51,6 +51,31 @@ export const getPresentationMediaDownloadUrl = (presentationId, presentationName
   buildMediaUrl(presentationId, presentationName, 'download')
 );
 
+export const isPresentationMediaUrl = (url) => {
+  if (!url || typeof url !== 'string') return false;
+  return /\/presentation\/(media|download)\//.test(url);
+};
+
+export const getPresentationMediaKindFromUrl = (url) => {
+  try {
+    const parsed = new URL(url, window.location.origin);
+    const name = parsed.searchParams.get('presFilename')
+      || parsed.searchParams.get('filename')
+      || '';
+    const ext = normalizeExtension(name);
+    if (['.mp3', '.ogg', '.wav', '.m4a'].includes(ext)) return 'audio';
+    return 'video';
+  } catch {
+    return 'video';
+  }
+};
+
+export const getAuthenticatedPresentationMediaPlaybackUrl = (presentationId, presentationName) => {
+  const playbackUrl = getPresentationMediaPlaybackUrl(presentationId, presentationName);
+  if (!playbackUrl) return null;
+  return Auth.authenticateURL(playbackUrl);
+};
+
 export const buildAcceptList = (fileValidMimeTypes = []) => {
   const extensions = fileValidMimeTypes.map((entry) => entry.extension);
   const mimes = fileValidMimeTypes.map((entry) => entry.mime);
@@ -71,6 +96,10 @@ export default {
   isImageExtension,
   getPresentationMediaPlaybackUrl,
   getPresentationMediaDownloadUrl,
+  getAuthenticatedPresentationMediaPlaybackUrl,
+  isPresentationMediaUrl,
+  getPresentationMediaKindFromUrl,
   buildAcceptList,
   isFileAccepted,
+  buildAbsoluteBbbUrl,
 };

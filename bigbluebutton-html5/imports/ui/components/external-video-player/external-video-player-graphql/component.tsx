@@ -19,6 +19,11 @@ import { ExternalVideoVolumeUiDataNames } from 'bigbluebutton-html-plugin-sdk';
 import { ExternalVideoVolumeUiDataPayloads } from 'bigbluebutton-html-plugin-sdk/dist/cjs/ui-data/domain/external-video/volume/types';
 
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
+import logger from '/imports/startup/client/logger';
+import {
+  getPresentationMediaKindFromUrl,
+  isPresentationMediaUrl,
+} from '../../presentation/presentation-uploader/fileTypes';
 import {
   layoutDispatch,
   layoutSelect,
@@ -137,6 +142,11 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   }), []);
 
   const videoPlayConfig = useMemo(() => {
+    const isPresentationMedia = isPresentationMediaUrl(videoUrl);
+    const presentationMediaKind = isPresentationMedia
+      ? getPresentationMediaKindFromUrl(videoUrl)
+      : null;
+
     return {
       // default option for all players, can be overwritten
       playerOptions: {
@@ -145,10 +155,13 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
         controls: true,
       },
       file: {
+        forceVideo: presentationMediaKind === 'video',
+        forceAudio: presentationMediaKind === 'audio',
         attributes: {
-          controls: 'controls',
+          controls: true,
           autoPlay: true,
           playsInline: true,
+          preload: 'auto',
         },
       },
       facebook: {
@@ -182,7 +195,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
       preload: true,
       showHoverToolBar: false,
     };
-  }, []);
+  }, [videoUrl]);
 
   const [showUnsynchedMsg, setShowUnsynchedMsg] = React.useState(false);
   const [showHoverToolBar, setShowHoverToolBar] = React.useState(false);
@@ -419,6 +432,18 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
     }
   }, [isPresenter]);
 
+  const handleOnReady = () => {
+    if (!isPresenter || !playing || !playerRef.current) return;
+    playVideo(playerRef.current);
+  };
+
+  const handleOnError = (error: unknown) => {
+    logger.warn({
+      logCode: 'external_video_player_error',
+      extraInfo: { videoUrl, error },
+    }, 'External video player failed to load media');
+  };
+
   const handleOnStart = async () => {
     const currentTime = getServerCurrentTime();
     const playerCurrentTime = await getPlayerCurrentTime(playerRef.current as ReactPlayer);
@@ -442,8 +467,13 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   const handleOnPlay = async () => {
     setReactPlayerPlaying(true);
     const internalPlayer = playerRef.current?.getInternalPlayer();
-    const url = new URL(videoUrl);
-    const isTwitch = url.hostname === 'twitch.tv' || url.hostname === 'www.twitch.tv';
+    let isTwitch = false;
+    try {
+      const url = new URL(videoUrl);
+      isTwitch = url.hostname === 'twitch.tv' || url.hostname === 'www.twitch.tv';
+    } catch (e) {
+      isTwitch = false;
+    }
     if (isPresenter && !playing) {
       const rate = (internalPlayer instanceof HTMLVideoElement || internalPlayer instanceof HTMLAudioElement)
         ? internalPlayer.playbackRate
@@ -639,6 +669,8 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
               width="100%"
               ref={playerRef}
               volume={volume}
+              onReady={handleOnReady}
+              onError={handleOnError}
               onStart={handleOnStart}
               onPlay={handleOnPlay}
               onSeek={handleOnSeek}

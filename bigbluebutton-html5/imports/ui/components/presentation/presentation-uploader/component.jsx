@@ -14,12 +14,14 @@ import PresentationDownloadDropdown from './presentation-download-dropdown/compo
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import Radio from '/imports/ui/components/common/radio/component';
 import Session from '/imports/ui/services/storage/in-memory';
-import Auth from '/imports/ui/services/auth';
 import {
   buildAcceptList,
-  getPresentationMediaPlaybackUrl,
   isMediaExtension,
 } from './fileTypes';
+import {
+  resolvePresentationId,
+  startPresentationMediaExternalVideo,
+} from './presentationMediaSync';
 /* eslint-disable react/sort-comp */
 
 const propTypes = {
@@ -304,32 +306,6 @@ const applySelectionToPresentations = (list, selectedId) => {
   }));
 };
 
-const resolvePresentationId = (item, propPresentations = []) => {
-  if (!item) return '';
-
-  if (item.presentationId
-    && propPresentations.some((p) => p.presentationId === item.presentationId)) {
-    return item.presentationId;
-  }
-
-  const tempId = item.uploadTemporaryId || item.presentationId;
-  const byTemporaryId = propPresentations.find(
-    (p) => p.uploadTemporaryId === tempId || p.uploadTemporaryId === item.presentationId,
-  );
-  if (byTemporaryId?.presentationId) return byTemporaryId.presentationId;
-
-  const byName = propPresentations.find(
-    (p) => p.name === item.name && p.uploadCompleted !== false,
-  );
-  if (byName?.presentationId) return byName.presentationId;
-
-  if (item.id && propPresentations.some((p) => p.presentationId === item.id)) {
-    return item.id;
-  }
-
-  return item.presentationId || '';
-};
-
 class PresentationUploader extends Component {
   constructor(props) {
     super(props);
@@ -378,41 +354,14 @@ class PresentationUploader extends Component {
     return Session.getItem('selectedToBeNextCurrent') || selectedToBeNextCurrent || '';
   }
 
-  syncExternalVideoForSelection(selectedItem, propPresentations) {
+  syncExternalVideoForSelection(selectedItem, propPresentations, options = {}) {
     const { startExternalVideo, stopExternalVideo } = this.props;
-    if (!startExternalVideo && !stopExternalVideo) return;
-
-    const isMedia = selectedItem?.isMedia || isMediaExtension(selectedItem?.name);
-    if (!isMedia) {
-      stopExternalVideo?.();
-      return;
-    }
-
-    const presentationId = resolvePresentationId(selectedItem, propPresentations);
-    const playbackUrl = getPresentationMediaPlaybackUrl(
-      presentationId,
-      selectedItem?.name,
+    startPresentationMediaExternalVideo(
+      selectedItem,
+      propPresentations,
+      { startExternalVideo, stopExternalVideo },
+      options,
     );
-
-    if (!presentationId || !playbackUrl || !startExternalVideo) {
-      logger.warn({
-        logCode: 'presentationuploader_media_sync_skipped',
-        extraInfo: {
-          presentationId,
-          playbackUrl,
-          selectedName: selectedItem?.name,
-        },
-      }, 'Skipped presentation media external video sync');
-      return;
-    }
-
-    const authenticatedUrl = Auth.authenticateURL(playbackUrl);
-    logger.debug({
-      logCode: 'presentationuploader_media_sync_start',
-      extraInfo: { presentationId, playbackUrl: authenticatedUrl },
-    }, 'Starting external video for uploaded presentation media');
-
-    startExternalVideo(authenticatedUrl);
   }
 
   assignServerPresentationId(tempId, serverPresentationId) {
@@ -984,7 +933,14 @@ class PresentationUploader extends Component {
           const resolvedSelected = mergedPresentations.find(
             (p) => p.presentationId === resolvedId,
           ) || (selectedItem ? { ...selectedItem, presentationId: resolvedId } : null);
-          this.syncExternalVideoForSelection(resolvedSelected, mergedPresentations);
+          const needsUploadDelay = presentations.some(
+            (p) => p.presentationId === pendingId && (p.uploadInProgress || p.file),
+          );
+          this.syncExternalVideoForSelection(
+            resolvedSelected,
+            mergedPresentations,
+            { delayMs: needsUploadDelay ? 800 : 0 },
+          );
           return;
         }
         Session.setItem('showUploadPresentationView', true);
