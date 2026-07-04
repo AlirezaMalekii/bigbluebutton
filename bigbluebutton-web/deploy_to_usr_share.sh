@@ -32,6 +32,16 @@ sudo cp -R . /usr/share/bbb-web/
 sudo chown bigbluebutton:bigbluebutton /usr/share/bbb-web
 sudo chown -R bigbluebutton:bigbluebutton /usr/share/bbb-web/assets/ /usr/share/bbb-web/META-INF/ /usr/share/bbb-web/org/ /usr/share/bbb-web/WEB-INF/
 
+if [[ -f bbb-web.nginx ]]; then
+	echo 'Updating bbb-web nginx config ...'
+	sudo cp bbb-web.nginx /usr/share/bigbluebutton/nginx/web
+	if [[ ! -L /usr/share/bigbluebutton/nginx/web.nginx ]]; then
+		sudo ln -sf /usr/share/bigbluebutton/nginx/web /usr/share/bigbluebutton/nginx/web.nginx
+	fi
+	sudo nginx -t
+	sudo systemctl reload nginx
+fi
+
 echo ''
 echo ''
 echo '----------------'
