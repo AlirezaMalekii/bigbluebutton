@@ -110,8 +110,8 @@
   content: none !important;
 }
 
-/* Skyroom users panel: only title + participant list (chat is separate column) */
-#layout[data-skyroom-column="true"] [data-test="userListContent"] > *:not(:has([data-test-users-count])):not([role="list"]):not([data-test="skyroomUserSearch"]) {
+/* Skyroom users panel: only title + participant list + guest waiting (chat is separate column) */
+#layout[data-skyroom-column="true"] [data-test="userListContent"] > *:not(:has([data-test-users-count])):not([role="list"]):not([data-test="skyroomUserSearch"]):not([data-test="skyroomGuestWaiting"]) {
   display: none !important;
 }
 

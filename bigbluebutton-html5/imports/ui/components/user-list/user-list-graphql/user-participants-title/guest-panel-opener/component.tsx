@@ -61,7 +61,7 @@ const GuestPanelOpener: React.FC<GuestPanelOpenerProps> = ({
   }, [sidebarContentPanel, layoutContextDispatch]);
 
   return (
-    <Styled.Messages>
+    <Styled.Messages data-test="skyroomGuestWaiting">
       <Styled.Container>
         <Styled.SmallTitle data-test="userManagementTitle">
           {intl.formatMessage(intlMessages.waitingUsersTitle)}

@@ -92,6 +92,7 @@ const ActionsDropdownContainer = (props) => {
   const setPresentation = (presentationId) => {
     const presentation = presentations.find((p) => p.presentationId === presentationId);
     if (presentation && isPresentationMedia(presentation)) {
+      presentationSetCurrent({ variables: { presentationId } });
       startPresentationMediaExternalVideo(
         presentation,
         presentations,

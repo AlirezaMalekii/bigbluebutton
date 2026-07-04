@@ -321,10 +321,12 @@ class PresentationUploader extends Component {
     this.exportToastId = 'exportPresentationToastId';
     this.focusTrapHandler = null;
     this.focusTrapModal = null;
+    this.fileInputRef = React.createRef();
 
     const { handleFiledrop } = this.props;
     // handlers
     this.handleFiledrop = handleFiledrop;
+    this.handleNativeFileInput = this.handleNativeFileInput.bind(this);
     this.handleConfirm = this.handleConfirm.bind(this);
     this.triggerAutoUpload = this.triggerAutoUpload.bind(this);
     this.handleDismiss = this.handleDismiss.bind(this);
@@ -396,6 +398,16 @@ class PresentationUploader extends Component {
     if (event.target.closest('button, [role="button"], a, input, label')) return;
     if (item?.uploadErrorMsgKey || item?.uploadErrorDetailsJson) return;
     this.handleCurrentChange(item.presentationId);
+  }
+
+  handleNativeFileInput(event) {
+    const { intl } = this.props;
+    const files = Array.from(event.target.files || []);
+    if (files.length) {
+      this.handleFiledrop(files, [], this, intl, intlMessages);
+    }
+    // eslint-disable-next-line no-param-reassign
+    event.target.value = '';
   }
 
   setupFocusTrap() {
@@ -933,6 +945,9 @@ class PresentationUploader extends Component {
           const resolvedSelected = mergedPresentations.find(
             (p) => p.presentationId === resolvedId,
           ) || (selectedItem ? { ...selectedItem, presentationId: resolvedId } : null);
+          if (resolvedId) {
+            setPresentation(resolvedId);
+          }
           const needsUploadDelay = presentations.some(
             (p) => p.presentationId === pendingId && (p.uploadInProgress || p.file),
           );
@@ -1277,26 +1292,44 @@ class PresentationUploader extends Component {
         </div>
       </div>
     ) : (
-      // Until the Dropzone package has fixed the mime type hover validation, the rejectClassName
-      // prop is being remove to prevent the error styles from being applied to valid file types.
-      // Error handling is being done in the onDrop prop.
-      <Styled.UploaderDropzone
-        multiple
-        activeClassName="dropzoneActive"
-        accept={acceptList}
-        disablepreview="true"
-        data-test="fileUploadDropZone"
-        onDrop={(files, files2) => this.handleFiledrop(files, files2, this, intl, intlMessages)}
-      >
-        <Styled.DropzoneIcon iconName="upload" />
-        <Styled.DropzoneMessage>
-          {intl.formatMessage(intlMessages.dropzoneLabel)}
-          &nbsp;
-          <Styled.DropzoneLink>
-            {intl.formatMessage(intlMessages.browseFilesLabel)}
-          </Styled.DropzoneLink>
-        </Styled.DropzoneMessage>
-      </Styled.UploaderDropzone>
+      <>
+        <Styled.MobileFilePickerWrap>
+          <Styled.MobileFileInput
+            ref={this.fileInputRef}
+            type="file"
+            multiple
+            accept={acceptList}
+            data-test="fileUploadNativeInput"
+            onChange={this.handleNativeFileInput}
+          />
+          <Styled.MobileFilePickerButton
+            color="default"
+            data-test="fileUploadNativeButton"
+            onClick={() => this.fileInputRef.current?.click()}
+            label={intl.formatMessage(intlMessages.browseFilesLabel)}
+          />
+        </Styled.MobileFilePickerWrap>
+        {/* Until the Dropzone package has fixed the mime type hover validation, the rejectClassName
+      prop is being remove to prevent the error styles from being applied to valid file types.
+      Error handling is being done in the onDrop prop. */}
+        <Styled.UploaderDropzone
+          multiple
+          activeClassName="dropzoneActive"
+          accept={acceptList}
+          disablepreview="true"
+          data-test="fileUploadDropZone"
+          onDrop={(files, files2) => this.handleFiledrop(files, files2, this, intl, intlMessages)}
+        >
+          <Styled.DropzoneIcon iconName="upload" />
+          <Styled.DropzoneMessage>
+            {intl.formatMessage(intlMessages.dropzoneLabel)}
+            &nbsp;
+            <Styled.DropzoneLink>
+              {intl.formatMessage(intlMessages.browseFilesLabel)}
+            </Styled.DropzoneLink>
+          </Styled.DropzoneMessage>
+        </Styled.UploaderDropzone>
+      </>
     );
   }
 

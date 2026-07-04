@@ -550,6 +550,32 @@ const DropzoneLink = styled.span`
   }
 `;
 
+const MobileFileInput = styled.input`
+  display: none;
+`;
+
+const MobileFilePickerWrap = styled.div`
+  display: none;
+
+  @media (max-width: 640px) {
+    display: block;
+    margin-bottom: 8px;
+  }
+`;
+
+const MobileFilePickerButton = styled(Button)`
+  && {
+    width: 100%;
+    min-height: 36px;
+    border-radius: 12px !important;
+    border: 1px solid rgba(32, 199, 187, 0.35) !important;
+    background: rgba(32, 199, 187, 0.1) !important;
+    color: var(--skyroom-brand-400, #14a99e) !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+  }
+`;
+
 const ToastItemIcon = styled(Icon)`
   position: relative;
   width: ${statusIconSize};
@@ -840,6 +866,9 @@ export default {
   DropzoneIcon,
   DropzoneMessage,
   DropzoneLink,
+  MobileFileInput,
+  MobileFilePickerWrap,
+  MobileFilePickerButton,
   ModalHint,
   ToastItemIcon,
   StatusInfoSpan,

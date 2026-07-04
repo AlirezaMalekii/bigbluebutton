@@ -37,22 +37,24 @@
     margin: 0 !important;
   }
 
-  /* Stage content fills the top card — no letterboxing above/below the slide. */
+  /* Stage content — center narrow slides with white letterbox margins. */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="Presentation"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationContainer"] [class*="Presentation"] {
-    align-items: stretch !important;
-    justify-content: stretch !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationInnerWrapper {
-    width: 100% !important;
-    height: 100% !important;
+    width: auto !important;
+    height: auto !important;
     max-width: 100% !important;
     max-height: 100% !important;
     display: flex !important;
-    align-items: stretch !important;
+    align-items: center !important;
     justify-content: center !important;
     overflow: hidden !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element,
@@ -629,6 +631,11 @@
     transform: none !important;
   }
 
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] {
+    --skyroom-presentation-toolbar-h: 24px;
+    --skyroom-wb-toolbar-gap: calc(var(--skyroom-presentation-toolbar-h, 24px) + 4px);
+  }
+
   #layout[data-skyroom-column="true"] #presentationToolbarWrapper,
   #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] {
     z-index: 1001 !important;
@@ -636,7 +643,7 @@
     width: 100% !important;
     max-width: 100% !important;
     min-height: 0 !important;
-    padding-block: 2px !important;
+    padding-block: 1px !important;
   }
 
   #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] {
@@ -644,10 +651,10 @@
     box-sizing: border-box !important;
     width: 100% !important;
     max-width: 100% !important;
-    padding-inline: 6px !important;
-    gap: 1px !important;
+    padding-inline: 4px !important;
+    gap: 0 !important;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
-    min-height: 30px !important;
+    min-height: 24px !important;
   }
 
   #layout[data-skyroom-column="true"] [class*="QuickPollButtonWrapper"],
@@ -663,18 +670,18 @@
 
   /* Compact slide/zoom control buttons so the three clusters fit ~360px */
   #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] button > span:first-child {
-    min-width: 22px !important;
-    min-height: 22px !important;
-    width: 22px !important;
-    height: 22px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
     padding: 0 !important;
   }
 
   #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] select,
   #layout[data-skyroom-column="true"] [class*="SkipSlideSelect"] {
-    min-height: 24px !important;
-    height: 24px !important;
-    font-size: 0.68rem !important;
+    min-height: 20px !important;
+    height: 20px !important;
+    font-size: 0.62rem !important;
     padding-block: 0 !important;
   }
 
@@ -701,10 +708,10 @@
   }
 
   [dir="ltr"] #layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] {
-    padding-inline-end: 4px !important;
+    padding-inline-end: 10px !important;
   }
 
-  /* The tldraw floating toolbar uses the shared --skyroom-wb-toolbar-gap (4px). */
+  /* TLDraw toolbar sits above the slide-nav bar on phone. */
 
   /* Let fixed-position toolbar popovers escape the presentation clip on phone. */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationInnerWrapper,

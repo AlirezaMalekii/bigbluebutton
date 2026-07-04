@@ -5,6 +5,7 @@ import update from 'immutability-helper';
 import { v4 as uuid } from 'uuid';
 import { uniqueId } from '/imports/utils/string-utils';
 import { notify } from '/imports/ui/services/notification';
+import Session from '/imports/ui/services/storage/in-memory';
 import apolloContextHolder from '/imports/ui/core/graphql/apolloContextHolder/apolloContextHolder';
 import { getPresentationUploadToken } from './queries';
 import { requestPresentationUploadTokenMutation } from './mutation';
@@ -14,7 +15,7 @@ import {
   isMediaExtension,
 } from './fileTypes';
 
-const TOKEN_TIMEOUT = 5000;
+const TOKEN_TIMEOUT = 15000;
 const POD_ID = 'DEFAULT_PRESENTATION_POD';
 
 // fetch doesn't support progress. So we use xhr which support progress.
@@ -178,10 +179,15 @@ const uploadPendingPresentations = (
   const presentationsToUpload = getPresentationsPendingUpload(
     presentations,
     presentationIds,
-  ).map((p) => ({
-    ...p,
-    current: false,
-  }));
+  ).map((p) => {
+    const selectedId = Session.getItem('selectedToBeNextCurrent');
+    const isSelected = selectedId
+      && (p.presentationId === selectedId || p.uploadTemporaryId === selectedId);
+    return {
+      ...p,
+      current: isSelected || p.current === true,
+    };
+  });
 
   if (!presentationsToUpload.length) return Promise.resolve();
 
@@ -198,10 +204,6 @@ const uploadPendingPresentations = (
     return results;
   });
 };
-
-const isMediaPresentation = (presentation) => (
-  presentation?.isMedia || isMediaExtension(presentation?.name)
-);
 
 const persistPresentationChanges = (
   oldState,
@@ -240,11 +242,6 @@ const persistPresentationChanges = (
       if (currentPresentation?.uploadInProgress) {
         const currentIndex = presentationsToUpload.findIndex((p) => p === currentPresentation);
         currentPresentation = presentations[currentIndex];
-      }
-
-      // Media files play through External Video — keep the previous slide deck visible.
-      if (isMediaPresentation(currentPresentation)) {
-        return Promise.resolve();
       }
 
       // skip setting as current if error happened

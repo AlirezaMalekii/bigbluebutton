@@ -7,6 +7,7 @@ import {
 } from '/imports/ui/components/whiteboard/queries';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
 import SET_PRESENTATION_RENDERED_IN_TOAST from './mutation';
+import { useStorageKey } from '/imports/ui/services/storage/hooks';
 
 const PresentationUploaderToastContainer = (props) => {
   const {
@@ -24,6 +25,7 @@ const PresentationUploaderToastContainer = (props) => {
   const presentationsToBeShowed = presentations.filter(
     (p) => p && !p.uploadCompletionNotified,
   );
+  const uploadModalOpen = useStorageKey('showUploadPresentationView') || false;
 
   if (presentationLoading) return null;
   if (!presentations.length) return null;
@@ -37,6 +39,7 @@ const PresentationUploaderToastContainer = (props) => {
         setPresentationUploadCompletionNotified,
         forceShowToast,
         setForceShowToast,
+        uploadModalOpen,
         ...props,
       }
       }

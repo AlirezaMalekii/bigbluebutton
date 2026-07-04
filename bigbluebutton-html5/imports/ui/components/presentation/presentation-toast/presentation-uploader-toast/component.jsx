@@ -460,6 +460,7 @@ export const PresentationUploaderToast = ({
   setPresentationUploadCompletionNotified,
   forceShowToast,
   setForceShowToast,
+  uploadModalOpen = false,
 }) => {
   const [showToast, setShowToast] = useState(false);
   const [dismissedItems, setDismissedItems] = useState([]);
@@ -544,12 +545,20 @@ export const PresentationUploaderToast = ({
   }, [showToast]);
 
   useEffect(() => {
+    if (uploadModalOpen) {
+      if (toast.isActive(convertingToastIdRef.current)) {
+        handleDismissToast(convertingToastIdRef.current);
+      }
+      setShowToast(false);
+      return;
+    }
+
     const allPresentationsDone = presentationsToBeShowed.every(
       (p) => p && p.uploadCompleted && !p.uploadErrorMsgKey,
     );
     // Forcing to show toast will only work if there are any presentations to show
     setShowToast(presentationsToBeShowed.length > 0 && (!allPresentationsDone || forceShowToast));
-  }, [presentationsToBeShowed]);
+  }, [presentationsToBeShowed, forceShowToast, uploadModalOpen]);
 
   if (showToast && !toast.isActive(convertingToastIdRef.current)) {
     toast(() => renderToastList(presentationsToBeShowed, intl), {
