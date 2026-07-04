@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 cd "$(dirname "$0")"
+BBB_WEB_DIR="$(pwd)"
 
 for var in "$@"
 do
@@ -32,9 +33,9 @@ sudo cp -R . /usr/share/bbb-web/
 sudo chown bigbluebutton:bigbluebutton /usr/share/bbb-web
 sudo chown -R bigbluebutton:bigbluebutton /usr/share/bbb-web/assets/ /usr/share/bbb-web/META-INF/ /usr/share/bbb-web/org/ /usr/share/bbb-web/WEB-INF/
 
-if [[ -f bbb-web.nginx ]]; then
+if [[ -f "${BBB_WEB_DIR}/bbb-web.nginx" ]]; then
 	echo 'Updating bbb-web nginx config ...'
-	sudo cp bbb-web.nginx /usr/share/bigbluebutton/nginx/web
+	sudo cp "${BBB_WEB_DIR}/bbb-web.nginx" /usr/share/bigbluebutton/nginx/web
 	if [[ ! -L /usr/share/bigbluebutton/nginx/web.nginx ]]; then
 		sudo ln -sf /usr/share/bigbluebutton/nginx/web /usr/share/bigbluebutton/nginx/web.nginx
 	fi
