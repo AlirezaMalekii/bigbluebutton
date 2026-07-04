@@ -20,6 +20,15 @@ const getMediaExtensionFromName = (presentationName) => {
   return 'mp4';
 };
 
+export const buildAbsoluteBbbUrl = (relativePath) => {
+  if (!relativePath) return null;
+  if (/^https?:\/\//i.test(relativePath)) return relativePath;
+  const pathMatch = window.location.pathname.match('^(.*)/html5client/?$');
+  const serverPathPrefix = pathMatch ? pathMatch[1] : '';
+  const normalizedPath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
+  return new URL(normalizedPath, `${window.location.origin}${serverPathPrefix}`).toString();
+};
+
 const buildMediaUrl = (presentationId, presentationName, endpoint) => {
   if (!presentationId || !Auth.meetingID) return null;
   const { bbbWebBase } = window.meetingClientSettings.public.app;
@@ -30,7 +39,8 @@ const buildMediaUrl = (presentationId, presentationName, endpoint) => {
     presFilename,
     filename,
   });
-  return `${bbbWebBase}/presentation/${endpoint}/${Auth.meetingID}/${presentationId}?${params.toString()}`;
+  const relativeUrl = `${bbbWebBase}/presentation/${endpoint}/${Auth.meetingID}/${presentationId}?${params.toString()}`;
+  return buildAbsoluteBbbUrl(relativeUrl);
 };
 
 export const getPresentationMediaPlaybackUrl = (presentationId, presentationName) => (

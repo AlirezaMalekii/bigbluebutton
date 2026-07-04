@@ -305,18 +305,29 @@ const applySelectionToPresentations = (list, selectedId) => {
 };
 
 const resolvePresentationId = (item, propPresentations = []) => {
-  if (!item?.presentationId) return '';
-  if (propPresentations.some((p) => p.presentationId === item.presentationId)) {
+  if (!item) return '';
+
+  if (item.presentationId
+    && propPresentations.some((p) => p.presentationId === item.presentationId)) {
     return item.presentationId;
   }
+
+  const tempId = item.uploadTemporaryId || item.presentationId;
   const byTemporaryId = propPresentations.find(
-    (p) => p.uploadTemporaryId === item.presentationId,
+    (p) => p.uploadTemporaryId === tempId || p.uploadTemporaryId === item.presentationId,
   );
   if (byTemporaryId?.presentationId) return byTemporaryId.presentationId;
+
   const byName = propPresentations.find(
-    (p) => p.name === item.name && p.uploadCompleted,
+    (p) => p.name === item.name && p.uploadCompleted !== false,
   );
-  return byName?.presentationId || item.presentationId;
+  if (byName?.presentationId) return byName.presentationId;
+
+  if (item.id && propPresentations.some((p) => p.presentationId === item.id)) {
+    return item.id;
+  }
+
+  return item.presentationId || '';
 };
 
 class PresentationUploader extends Component {
@@ -359,6 +370,7 @@ class PresentationUploader extends Component {
     this.getPendingSelectionId = this.getPendingSelectionId.bind(this);
     this.handlePresentationRowClick = this.handlePresentationRowClick.bind(this);
     this.syncExternalVideoForSelection = this.syncExternalVideoForSelection.bind(this);
+    this.assignServerPresentationId = this.assignServerPresentationId.bind(this);
   }
 
   getPendingSelectionId() {
@@ -381,9 +393,54 @@ class PresentationUploader extends Component {
       presentationId,
       selectedItem?.name,
     );
-    if (!playbackUrl || !startExternalVideo) return;
 
-    startExternalVideo(Auth.authenticateURL(playbackUrl));
+    if (!presentationId || !playbackUrl || !startExternalVideo) {
+      logger.warn({
+        logCode: 'presentationuploader_media_sync_skipped',
+        extraInfo: {
+          presentationId,
+          playbackUrl,
+          selectedName: selectedItem?.name,
+        },
+      }, 'Skipped presentation media external video sync');
+      return;
+    }
+
+    const authenticatedUrl = Auth.authenticateURL(playbackUrl);
+    logger.debug({
+      logCode: 'presentationuploader_media_sync_start',
+      extraInfo: { presentationId, playbackUrl: authenticatedUrl },
+    }, 'Starting external video for uploaded presentation media');
+
+    startExternalVideo(authenticatedUrl);
+  }
+
+  assignServerPresentationId(tempId, serverPresentationId) {
+    if (!tempId || !serverPresentationId || tempId === serverPresentationId) return;
+
+    this.setState(({ presentations: rawPresentations }) => {
+      const presentations = normalizePresentations(rawPresentations);
+      const fileIndex = presentations.findIndex(
+        (f) => f?.presentationId === tempId || f?.uploadTemporaryId === tempId,
+      );
+      if (fileIndex === -1) return null;
+
+      const pendingSelectionId = this.getPendingSelectionId();
+      if (pendingSelectionId === tempId) {
+        Session.setItem('selectedToBeNextCurrent', serverPresentationId);
+      }
+
+      return {
+        presentations: update(presentations, {
+          [fileIndex]: {
+            $merge: {
+              uploadTemporaryId: tempId,
+              presentationId: serverPresentationId,
+            },
+          },
+        }),
+      };
+    });
   }
 
   handlePresentationRowClick(event, item) {
@@ -911,6 +968,7 @@ class PresentationUploader extends Component {
             const existingIndex = mergedPresentations.findIndex(
               (item) => item.presentationId === presentation.presentationId
                 || item.uploadTemporaryId === presentation.presentationId
+                || item.uploadTemporaryId === presentation.uploadTemporaryId
                 || (item.name === presentation.name && presentation.uploadCompleted),
             );
             if (existingIndex >= 0) {
@@ -922,7 +980,11 @@ class PresentationUploader extends Component {
               mergedPresentations.push(presentation);
             }
           });
-          this.syncExternalVideoForSelection(selectedItem, mergedPresentations);
+          const resolvedId = resolvePresentationId(selectedItem, mergedPresentations);
+          const resolvedSelected = mergedPresentations.find(
+            (p) => p.presentationId === resolvedId,
+          ) || (selectedItem ? { ...selectedItem, presentationId: resolvedId } : null);
+          this.syncExternalVideoForSelection(resolvedSelected, mergedPresentations);
           return;
         }
         Session.setItem('showUploadPresentationView', true);

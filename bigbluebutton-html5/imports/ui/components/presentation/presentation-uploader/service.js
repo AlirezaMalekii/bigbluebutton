@@ -72,7 +72,11 @@ const requestPresentationUploadToken = (
       if (result.data.pres_presentation_uploadToken.length > 0) {
         clearTimeout(recursiveTimeout);
         clearTimeout(timeout);
-        resolve(result.data.pres_presentation_uploadToken[0].uploadToken);
+        const tokenEntry = result.data.pres_presentation_uploadToken[0];
+        resolve({
+          uploadToken: tokenEntry.uploadToken,
+          presentationId: tokenEntry.presentationId,
+        });
       }
     });
     recursiveTimeout = setTimeout(() => {
@@ -92,6 +96,7 @@ const uploadAndConvertPresentation = (
   onUpload,
   onProgress,
   onConversion,
+  onServerPresentationId,
   current,
 ) => {
   if (!file) return Promise.resolve();
@@ -114,7 +119,12 @@ const uploadAndConvertPresentation = (
   };
 
   return requestPresentationUploadToken(temporaryPresentationId, meetingId, filename)
-    .then((token) => futch(endpoint.replace('upload', `${token}/upload`), opts, onProgress))
+    .then(({ uploadToken, presentationId }) => {
+      if (presentationId && typeof onServerPresentationId === 'function') {
+        onServerPresentationId(presentationId);
+      }
+      return futch(endpoint.replace('upload', `${uploadToken}/upload`), opts, onProgress);
+    })
     // Trap the error so we can have parallel upload
     .catch((error) => {
       logger.debug({
@@ -135,7 +145,7 @@ const uploadAndConvertPresentations = (
 ) => Promise.all(presentationsToUpload.map((p) => uploadAndConvertPresentation(
   p.name,
   p.presentationId, p.file, p.downloadable, meetingId, uploadEndpoint,
-  p.onUpload, p.onProgress, p.onConversion, p.current,
+  p.onUpload, p.onProgress, p.onConversion, p.onServerPresentationId, p.current,
 )));
 
 const removePresentations = (
@@ -345,8 +355,15 @@ function handleFiledrop(files, files2, that, intl, intlMessages) {
         onUpload: (upload) => {
           that.deepMergeUpdateFileKey(id, 'upload', upload);
         },
+        onServerPresentationId: (serverPresentationId) => {
+          if (typeof that.assignServerPresentationId === 'function') {
+            that.assignServerPresentationId(id, serverPresentationId);
+          }
+        },
         onDone: (newId) => {
-          that.updateFileKey(id, 'id', newId);
+          if (typeof that.assignServerPresentationId === 'function') {
+            that.assignServerPresentationId(id, newId);
+          }
         },
       };
     });
