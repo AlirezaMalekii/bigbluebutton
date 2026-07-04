@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useMutation, useReactiveVar } from '@apollo/client';
+import { defineMessages, useIntl } from 'react-intl';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import useMeetingSettings from '/imports/ui/core/local-states/useMeetingSettings';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
@@ -13,6 +14,7 @@ import {
   useMyPageSize,
   useStopVideo,
   useVideoStreams,
+  useCameraCapDenialMessageId,
 } from './hooks';
 import { CAMERA_BROADCAST_START } from './mutations';
 import VideoProvider from './component';
@@ -25,6 +27,7 @@ import useSettings from '/imports/ui/services/settings/hooks/useSettings';
 import { SETTINGS } from '/imports/ui/services/settings/enums';
 import { useStorageKey } from '/imports/ui/services/storage/hooks';
 import ConnectionStatus from '/imports/ui/core/graphql/singletons/connectionStatus';
+import { notify } from '/imports/ui/services/notification';
 import {
   useConnectingStream,
   setConnectingStream,
@@ -32,6 +35,17 @@ import {
   useVideoState,
 } from './state';
 import { VIDEO_TYPES } from './enums';
+
+const intlMessages = defineMessages({
+  meetingCamCapReached: {
+    id: 'app.video.meetingCamCapReached',
+    description: 'Meeting camera cap reached notification',
+  },
+  camCapReached: {
+    id: 'app.video.camCapReached',
+    description: 'User camera cap reached notification',
+  },
+});
 
 interface VideoProviderContainerProps {
   focusedId: string;
@@ -45,21 +59,49 @@ const VideoProviderContainer: React.FC<VideoProviderContainerProps> = (props) =>
     focusedId,
     handleVideoFocus,
   } = props;
+  const intl = useIntl();
+  const cameraCapDenialMessageId = useCameraCapDenialMessageId();
+  const stopVideo = useStopVideo();
+
+  const notifyCameraCapReached = useCallback((messageId: string) => {
+    const messageKey = messageId.replace('app.video.', '') as keyof typeof intlMessages;
+    const message = intlMessages[messageKey] || intlMessages.meetingCamCapReached;
+    notify(intl.formatMessage(message), 'info', 'video');
+  }, [intl]);
+
+  const abortLocalCameraShare = useCallback((cameraId: string) => {
+    stopVideo(cameraId);
+    VideoService.exitedVideo();
+    setConnectingStream(null);
+  }, [stopVideo]);
+
   const [cameraBroadcastStart] = useMutation(CAMERA_BROADCAST_START);
-  const [meetingSettings] = useMeetingSettings();
-  const connectingStream = useConnectingStream();
 
-  const sendUserShareWebcam = (cameraId: string) => {
+  const sendUserShareWebcam = useCallback((cameraId: string) => {
     return cameraBroadcastStart({ variables: { cameraId, contentType: 'camera' } });
-  };
+  }, [cameraBroadcastStart]);
 
-  const playStart = (cameraId: string) => {
+  const playStart = useCallback((cameraId: string) => {
     if (VideoService.isLocalStream(cameraId)) {
+      if (cameraCapDenialMessageId) {
+        notifyCameraCapReached(cameraCapDenialMessageId);
+        abortLocalCameraShare(cameraId);
+        return;
+      }
+
       sendUserShareWebcam(cameraId).then(() => {
         VideoService.joinedVideo();
       });
     }
-  };
+  }, [
+    abortLocalCameraShare,
+    cameraCapDenialMessageId,
+    notifyCameraCapReached,
+    sendUserShareWebcam,
+  ]);
+
+  const [meetingSettings] = useMeetingSettings();
+  const connectingStream = useConnectingStream();
 
   const {
     debounceTime: CAMERA_QUALITY_THR_DEBOUNCE = 2500,
@@ -123,7 +165,6 @@ const VideoProviderContainer: React.FC<VideoProviderContainerProps> = (props) =>
   const currentVideoPageIndex = useCurrentVideoPageIndex();
   const exitVideo = useExitVideo();
   const lockUser = useLockUser();
-  const stopVideo = useStopVideo();
   const info = useInfo();
   const myPageSize = useMyPageSize();
   const { numberOfPages } = useVideoState();

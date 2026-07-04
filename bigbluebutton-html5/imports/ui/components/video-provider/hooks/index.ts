@@ -205,7 +205,7 @@ export const useHasCapReached = () => {
     meetingCameraCap: m.meetingCameraCap,
     usersPolicies: m.usersPolicies,
   }));
-  const videoStreamsCount = useVideoStreamsCount();
+  const videoStreamsCount = useLayoutWebcamCount();
   const localVideoStreamsCount = useLocalVideoStreamsCount();
 
   // If the meeting prop data is unreachable, force a safe return
@@ -220,6 +220,33 @@ export const useHasCapReached = () => {
   const userCap = userCameraCap !== 0 && localVideoStreamsCount >= userCameraCap;
 
   return meetingCap || userCap;
+};
+
+export const useCameraCapDenialMessageId = (): string | null => {
+  const { data: meeting } = useMeeting((m) => ({
+    meetingCameraCap: m.meetingCameraCap,
+    usersPolicies: m.usersPolicies,
+  }));
+  const videoStreamsCount = useLayoutWebcamCount();
+  const localVideoStreamsCount = useLocalVideoStreamsCount();
+
+  if (
+    meeting?.usersPolicies === undefined
+    || meeting?.meetingCameraCap === undefined
+  ) return null;
+
+  const { meetingCameraCap } = meeting;
+  const { userCameraCap } = meeting.usersPolicies;
+
+  if (meetingCameraCap !== 0 && videoStreamsCount >= meetingCameraCap) {
+    return 'app.video.meetingCamCapReached';
+  }
+
+  if (userCameraCap !== 0 && localVideoStreamsCount >= userCameraCap) {
+    return 'app.video.camCapReached';
+  }
+
+  return null;
 };
 
 export const useDisableCam = () => {

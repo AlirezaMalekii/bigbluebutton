@@ -39,14 +39,14 @@ jobs:
           echo "Changed files in this push:"
           echo "$FILES"
           has() { grep -qE "$1" <<< "$FILES"; }
-          if has '^bigbluebutton-html5/'; then echo "html5=true"; else echo "html5=false"; fi
+          if has '^bigbluebutton-html5/'; then echo "html5=true" >> "$GITHUB_OUTPUT"; else echo "html5=false" >> "$GITHUB_OUTPUT"; fi
           if has '^(record-and-playback/|bbb-common-web/.*/RecordingAsset|bigbluebutton-web/grails-app/(controllers/org/bigbluebutton/web/controllers/RecordingController\.groovy|controllers/org/bigbluebutton/web/UrlMappings\.groovy|conf/))'; then
-            echo "recording=true"
+            echo "recording=true" >> "$GITHUB_OUTPUT"
           else
-            echo "recording=false"
+            echo "recording=false" >> "$GITHUB_OUTPUT"
           fi
-          if has '^(scripts/|deploy\.sh|deploy\.rsync-excludes)'; then echo "shell=true"; else echo "shell=false"; fi
-          if has '^(akka-bbb-fsesl/|bbb-fsesl-client/)'; then echo "fsesl=true"; else echo "fsesl=false"; fi
+          if has '^(scripts/|deploy\.sh|deploy\.rsync-excludes)'; then echo "shell=true" >> "$GITHUB_OUTPUT"; else echo "shell=false" >> "$GITHUB_OUTPUT"; fi
+          if has '^(akka-bbb-fsesl/|bbb-fsesl-client/)'; then echo "fsesl=true" >> "$GITHUB_OUTPUT"; else echo "fsesl=false" >> "$GITHUB_OUTPUT"; fi
 
   shellcheck:
     needs: changes

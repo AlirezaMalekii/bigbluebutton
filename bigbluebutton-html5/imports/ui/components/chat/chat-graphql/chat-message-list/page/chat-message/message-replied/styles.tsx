@@ -4,37 +4,38 @@ import {
   colorGrayLight,
   colorGrayLightest, colorOffWhite, colorPrimary, colorText, userListBg,
 } from '/imports/ui/stylesheets/styled-components/palette';
-import { $3xlPadding, smPadding } from '/imports/ui/stylesheets/styled-components/general';
+import { smPadding } from '/imports/ui/stylesheets/styled-components/general';
 
 const Container = styled.div`
-  border-top-left-radius: 0.5rem;
-  border-top-right-radius: 0.5rem;
+  border-top-left-radius: 0.375rem;
+  border-top-right-radius: 0.375rem;
   background-color: ${userListBg};
   box-shadow: inset 0 0 0 1px ${colorGrayLightest};
-  padding: ${smPadding} ${$3xlPadding};
+  padding: ${smPadding} 0.625rem;
   position: relative;
   overflow: hidden;
   cursor: pointer;
 
   [dir='ltr'] & {
-    border-right: 0.5rem solid ${colorPrimary};
+    border-right: 0.375rem solid ${colorPrimary};
   }
 
   [dir='rtl'] & {
-    border-left: 0.5rem solid ${colorPrimary};
+    border-left: 0.375rem solid ${colorPrimary};
   }
 `;
 
 const Message = styled.div`
-  line-height: normal;
+  line-height: 1.15;
   overflow: hidden;
+  max-height: 2.4rem;
 `;
 
 const SenderName = styled.div`
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  line-height: 1.2;
-  margin-bottom: 3px;
+  line-height: 1.1;
+  margin-bottom: 1px;
   color: var(--skyroom-panel-accent, #20c7bb);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -50,6 +51,10 @@ export const DeleteMessage = styled.span`
 
 export const HtmlContent = styled.div`
   color: ${colorText};
+  font-size: 0.78rem;
+  line-height: 1.2;
+  max-height: 1.2rem;
+  overflow: hidden;
 
   & img {
     max-width: 100%;

@@ -800,6 +800,34 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
           extension: '.webp',
           mime: 'image/webp',
         },
+        {
+          extension: '.svg',
+          mime: 'image/svg+xml',
+        },
+        {
+          extension: '.mp4',
+          mime: 'video/mp4',
+        },
+        {
+          extension: '.webm',
+          mime: 'video/webm',
+        },
+        {
+          extension: '.mp3',
+          mime: 'audio/mpeg',
+        },
+        {
+          extension: '.ogg',
+          mime: 'audio/ogg',
+        },
+        {
+          extension: '.wav',
+          mime: 'audio/wav',
+        },
+        {
+          extension: '.m4a',
+          mime: 'audio/mp4',
+        },
       ],
     },
     user: {

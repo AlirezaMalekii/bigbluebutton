@@ -455,17 +455,29 @@ const anchorSkyroomMoreMenuAboveTrigger = () => {
   const trigger = root.querySelector('button[data-testid="tools.more"]');
   if (!menu || !trigger) return;
 
-  const gap = 8;
+  const gap = 10;
   const triggerRect = trigger.getBoundingClientRect();
   const stageRect = (
     document.getElementById('presentationInnerWrapper') || root
   ).getBoundingClientRect();
+  const presentationToolbar = document.getElementById('presentationToolbarWrapper');
+  const wbBottomBar = root.querySelector('.tlui-layout__bottom');
+  const reservedBottom = (
+    (presentationToolbar?.getBoundingClientRect().height || 0)
+    + (wbBottomBar?.getBoundingClientRect().height || 0)
+    + gap
+  );
 
   const menuHeight = menu.offsetHeight > 0 ? menu.offsetHeight : menu.scrollHeight;
   const menuWidth = menu.offsetWidth > 0 ? menu.offsetWidth : menu.scrollWidth;
 
   let top = triggerRect.top - menuHeight - gap;
   top = Math.max(stageRect.top + gap, top);
+
+  const viewportMaxBottom = window.innerHeight - reservedBottom - gap;
+  if (top + menuHeight > viewportMaxBottom) {
+    top = Math.max(stageRect.top + gap, viewportMaxBottom - menuHeight);
+  }
 
   let left = triggerRect.left + (triggerRect.width / 2) - (menuWidth / 2);
   left = Math.max(stageRect.left + gap, left);

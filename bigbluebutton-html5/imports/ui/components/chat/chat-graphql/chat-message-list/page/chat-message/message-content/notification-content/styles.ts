@@ -1,13 +1,15 @@
 import styled from 'styled-components';
 import BaseIcon from '/imports/ui/components/common/icon/component';
 import { colorGray } from '/imports/ui/stylesheets/styled-components/palette';
-import { $3xlPadding, smPadding } from '/imports/ui/stylesheets/styled-components/general';
+import { smPadding } from '/imports/ui/stylesheets/styled-components/general';
 
 export const Root = styled.div`
   color: ${colorGray};
-  padding: 0 ${$3xlPadding};
+  padding: 2px 0.625rem;
   width: 100%;
   text-align: center;
+  line-height: 1.15;
+  font-size: 0.68rem;
 `;
 
 export const Icon = styled(BaseIcon)`

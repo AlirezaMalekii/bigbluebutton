@@ -7,6 +7,7 @@ import org.bigbluebutton.core.apps.{ PermissionCheck, RightsManagementTrait }
 import org.bigbluebutton.core.models.{ Users2x, Webcams, WebcamStream }
 import org.bigbluebutton.core.running.{ LiveMeeting, OutMsgRouter }
 import org.bigbluebutton.core2.MeetingStatus2x
+import org.bigbluebutton.core2.message.senders.MsgBuilder
 
 object CameraHdlrHelpers extends SystemConfiguration with RightsManagementTrait {
   def isCameraBroadcastAllowed(
@@ -107,25 +108,75 @@ object CameraHdlrHelpers extends SystemConfiguration with RightsManagementTrait 
     }
   }
 
-  def hasReachedCameraCap(
-      liveMeeting: LiveMeeting,
-      userId:      String
+  def hasReachedMeetingCameraCap(
+      liveMeeting: LiveMeeting
   ): Boolean = {
     val cameras = Webcams.findAll(liveMeeting.webcams).length
-    val meetingCap = liveMeeting.props.meetingProp.meetingCameraCap match {
+    liveMeeting.props.meetingProp.meetingCameraCap match {
       case 0                => false // disabled
       case x if x > cameras => false
       case _                => true
     }
+  }
 
+  def hasReachedUserCameraCap(
+      liveMeeting: LiveMeeting,
+      userId:      String
+  ): Boolean = {
     val userCameras = Webcams.findWebcamsForUser(liveMeeting.webcams, userId).length
-    val userCap = liveMeeting.props.usersProp.userCameraCap match {
+    liveMeeting.props.usersProp.userCameraCap match {
       case 0                    => false // disabled
       case x if x > userCameras => false
       case _                    => true
     }
+  }
 
-    (meetingCap || userCap)
+  def hasReachedCameraCap(
+      liveMeeting: LiveMeeting,
+      userId:      String
+  ): Boolean = {
+    (hasReachedMeetingCameraCap(liveMeeting) || hasReachedUserCameraCap(liveMeeting, userId))
+  }
+
+  def getCameraBroadcastSoftDenialMessageId(
+      liveMeeting: LiveMeeting,
+      userId:      String
+  ): Option[String] = {
+    Users2x.findWithIntId(liveMeeting.users2x, userId) match {
+      case Some(user) => {
+        val camBroadcastLocked = LockSettingsUtil.isCameraBroadcastLocked(user, liveMeeting)
+
+        if (camBroadcastLocked) {
+          Some("app.video.videoLocked")
+        } else if (hasReachedMeetingCameraCap(liveMeeting)) {
+          Some("app.video.meetingCamCapReached")
+        } else if (hasReachedUserCameraCap(liveMeeting, userId)) {
+          Some("app.video.camCapReached")
+        } else {
+          None
+        }
+      }
+      case _ => None
+    }
+  }
+
+  def notifyCameraBroadcastDenied(
+      liveMeeting: LiveMeeting,
+      userId:      String,
+      messageId:   String,
+      outGW:       OutMsgRouter
+  ): Unit = {
+    val notifyEvent = MsgBuilder.buildNotifyUserInMeetingEvtMsg(
+      userId,
+      liveMeeting.props.meetingProp.intId,
+      "info",
+      "video",
+      messageId,
+      "Notification when camera broadcast is denied due to cap or lock",
+      Map.empty
+    )
+
+    outGW.send(notifyEvent)
   }
 
   def stopBroadcastedCam(

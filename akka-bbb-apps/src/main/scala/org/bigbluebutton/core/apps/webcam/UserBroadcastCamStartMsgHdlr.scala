@@ -36,14 +36,32 @@ trait UserBroadcastCamStartMsgHdlr {
     )
 
     if (!allowed) {
-      val reason = "No permission to share camera."
-      PermissionCheck.ejectUserForFailedPermission(
-        meetingId,
-        msg.header.userId,
-        reason,
-        bus.outGW,
-        liveMeeting
-      )
+      CameraHdlrHelpers.getCameraBroadcastSoftDenialMessageId(liveMeeting, msg.header.userId) match {
+        case Some(messageId) => {
+          CameraHdlrHelpers.notifyCameraBroadcastDenied(
+            liveMeeting,
+            msg.header.userId,
+            messageId,
+            bus.outGW
+          )
+          CameraHdlrHelpers.requestBroadcastedCamEjection(
+            meetingId,
+            msg.header.userId,
+            msg.body.stream,
+            bus.outGW
+          )
+        }
+        case None => {
+          val reason = "No permission to share camera."
+          PermissionCheck.ejectUserForFailedPermission(
+            meetingId,
+            msg.header.userId,
+            reason,
+            bus.outGW,
+            liveMeeting
+          )
+        }
+      }
     } else {
       val userIsPresenter = !permissionFailed(PermissionCheck.GUEST_LEVEL, PermissionCheck.PRESENTER_LEVEL, liveMeeting.users2x, msg.header.userId)
       val startAsContent = msg.body.contentType == "screenshare" && userIsPresenter

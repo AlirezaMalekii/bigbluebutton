@@ -9,6 +9,10 @@ import apolloContextHolder from '/imports/ui/core/graphql/apolloContextHolder/ap
 import { getPresentationUploadToken } from './queries';
 import { requestPresentationUploadTokenMutation } from './mutation';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
+import {
+  isFileAccepted,
+  isMediaExtension,
+} from './fileTypes';
 
 const TOKEN_TIMEOUT = 5000;
 const POD_ID = 'DEFAULT_PRESENTATION_POD';
@@ -292,23 +296,21 @@ function handleFiledrop(files, files2, that, intl, intlMessages) {
   if (that) {
     const { fileValidMimeTypes } = that.props;
     const { toUploadCount } = that.state;
-    const validMimes = fileValidMimeTypes.map((fileValid) => fileValid.mime);
-    const validExtentions = fileValidMimeTypes.map((fileValid) => fileValid.extension);
     const [accepted, rejected] = partition(
-      files.concat(files2), (f) => (
-        validMimes.includes(f.type) || validExtentions.includes(`.${f.name.split('.').pop()}`)
-      ),
+      files.concat(files2), (f) => isFileAccepted(f, fileValidMimeTypes),
     );
 
     const presentationsToUpload = accepted.map((file) => {
       const id = uniqueId(uuid());
+      const isMedia = isMediaExtension(file.name);
 
       return {
         file,
-        downloadable: false, // by default new presentations are set not to be downloadable
+        downloadable: isMedia,
         isRemovable: true,
         presentationId: id,
         name: file.name,
+        isMedia,
         current: false,
         conversion: { done: false, error: false },
         upload: { done: false, error: false, progress: 0 },
@@ -374,4 +376,5 @@ export default {
   uploadPendingPresentations,
   handleFiledrop,
   useExternalUploadData,
+  isMediaExtension,
 };

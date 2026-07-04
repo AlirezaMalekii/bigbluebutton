@@ -23,6 +23,10 @@ import {
 } from '../mutations';
 import { useStorageKey } from '/imports/ui/services/storage/hooks';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
+import {
+  EXTERNAL_VIDEO_START,
+  EXTERNAL_VIDEO_STOP,
+} from '/imports/ui/components/external-video-player/mutations';
 
 const PresentationUploaderContainer = (props) => {
   const { data: currentUserData } = useCurrentUser((user) => ({
@@ -38,6 +42,8 @@ const PresentationUploaderContainer = (props) => {
   const [presentationExport] = useMutation(PRESENTATION_EXPORT);
   const [presentationSetCurrent] = useMutation(PRESENTATION_SET_CURRENT);
   const [presentationRemove] = useMutation(PRESENTATION_REMOVE);
+  const [startExternalVideoMutation] = useMutation(EXTERNAL_VIDEO_START);
+  const [stopExternalVideoMutation] = useMutation(EXTERNAL_VIDEO_STOP);
 
   const exportPresentation = (presentationId, fileStateType) => {
     presentationExport({
@@ -66,6 +72,15 @@ const PresentationUploaderContainer = (props) => {
     presentationRemove({ variables: { presentationId } });
   };
 
+  const startExternalVideo = (externalVideoUrl) => {
+    if (!externalVideoUrl) return;
+    startExternalVideoMutation({ variables: { externalVideoUrl } });
+  };
+
+  const stopExternalVideo = () => {
+    stopExternalVideoMutation();
+  };
+
   const presentationEnabled = useIsPresentationEnabled();
   const allowDownloadOriginal = useIsDownloadPresentationOriginalFileEnabled();
   const allowDownloadConverted = useIsDownloadPresentationConvertedToPdfEnabled();
@@ -85,6 +100,8 @@ const PresentationUploaderContainer = (props) => {
         dispatchChangePresentationDownloadable={dispatchChangePresentationDownloadable}
         setPresentation={setPresentation}
         removePresentation={removePresentation}
+        startExternalVideo={startExternalVideo}
+        stopExternalVideo={stopExternalVideo}
         isOpen={isOpen}
         selectedToBeNextCurrent={selectedToBeNextCurrent}
         fileUploadConstraintsHint={PRESENTATION_CONFIG.fileUploadConstraintsHint}

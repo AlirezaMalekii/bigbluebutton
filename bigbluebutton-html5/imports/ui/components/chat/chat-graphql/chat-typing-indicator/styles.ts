@@ -1,6 +1,5 @@
 import styled from 'styled-components';
 import { colorGrayDark } from '/imports/ui/stylesheets/styled-components/palette';
-import { smPaddingY } from '/imports/ui/stylesheets/styled-components/general';
 import { fontSizeSmaller, fontSizeBase } from '/imports/ui/stylesheets/styled-components/typography';
 
 const SingleTyper = styled.span`
@@ -42,11 +41,16 @@ const TypingIndicatorWrapper = styled.div`
   color: ${colorGrayDark};
   text-align: left;
   vertical-align: top;
-  padding: ${smPaddingY} ${smPaddingY} 0;
-  height: 1.5rem;
-  max-height: 1.5rem;
+  padding: 0;
+  height: auto;
+  max-height: 1.1rem;
+  min-height: 0;
   line-height: 1;
   overflow-y: hidden;
+
+  &:empty {
+    display: none;
+  }
 `;
 
 export default {

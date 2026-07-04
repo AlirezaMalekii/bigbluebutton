@@ -560,13 +560,13 @@ class Presentation extends PureComponent {
     if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
       const baseWidth = userIsPresenter ? originalWidth : viewBoxWidth;
       const baseHeight = userIsPresenter ? originalHeight : viewBoxHeight;
-      const coverScale = Math.max(
+      const containScale = Math.min(
         presentationWidth / baseWidth,
         presentationHeight / baseHeight,
       );
       return {
-        width: baseWidth * coverScale,
-        height: baseHeight * coverScale,
+        width: baseWidth * containScale,
+        height: baseHeight * containScale,
       };
     }
 

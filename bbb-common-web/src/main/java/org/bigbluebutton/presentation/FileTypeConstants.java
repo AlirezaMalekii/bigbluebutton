@@ -36,6 +36,11 @@ public final class FileTypeConstants {
     public static final String AVI = "avi";
     public static final String MPG = "mpg";
     public static final String MP3 = "mp3";
+    public static final String MP4 = "mp4";
+    public static final String WEBM = "webm";
+    public static final String OGG = "ogg";
+    public static final String WAV = "wav";
+    public static final String M4A = "m4a";
     public static final String PDF = "pdf";
     public static final String JPG = "jpg";
     public static final String JPEG = "jpeg";

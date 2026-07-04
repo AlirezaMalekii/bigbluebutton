@@ -2,22 +2,26 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { defineMessages, injectIntl } from 'react-intl';
 import { TAB } from '/imports/utils/keyCodes';
-import deviceInfo from '/imports/utils/deviceInfo';
 import Button from '/imports/ui/components/common/button/component';
 import update from 'immutability-helper';
 import logger from '/imports/startup/client/logger';
 import { toast } from 'react-toastify';
+import { unique } from 'radash';
 import { registerTitleView, unregisterTitleView } from '/imports/utils/dom-utils';
 import ModalFullscreen from '/imports/ui/components/common/modal/fullscreen/component';
 import Styled from './styles';
 import PresentationDownloadDropdown from './presentation-download-dropdown/component';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import Radio from '/imports/ui/components/common/radio/component';
-import { unique } from 'radash';
 import Session from '/imports/ui/services/storage/in-memory';
+import Auth from '/imports/ui/services/auth';
+import {
+  buildAcceptList,
+  getPresentationMediaPlaybackUrl,
+  isMediaExtension,
+} from './fileTypes';
 /* eslint-disable react/sort-comp */
 
-const { isMobile } = deviceInfo;
 const propTypes = {
   allowDownloadOriginal: PropTypes.bool.isRequired,
   allowDownloadConverted: PropTypes.bool.isRequired,
@@ -44,10 +48,14 @@ const propTypes = {
   renderPresentationItemStatus: PropTypes.func.isRequired,
   isPresenter: PropTypes.bool.isRequired,
   exportPresentation: PropTypes.func.isRequired,
+  startExternalVideo: PropTypes.func,
+  stopExternalVideo: PropTypes.func,
 };
 
 const defaultProps = {
   selectedToBeNextCurrent: '',
+  startExternalVideo: null,
+  stopExternalVideo: null,
 };
 
 const intlMessages = defineMessages({
@@ -281,6 +289,36 @@ const normalizePresentations = (list) => (
   Array.isArray(list) ? list.filter(Boolean) : []
 );
 
+const applySelectionToPresentations = (list, selectedId) => {
+  const presentations = normalizePresentations(list);
+  if (!selectedId || !presentations.length) {
+    return presentations.map((p) => ({
+      ...p,
+      isMedia: p.isMedia ?? isMediaExtension(p.name),
+    }));
+  }
+  return presentations.map((p) => ({
+    ...p,
+    current: p.presentationId === selectedId,
+    isMedia: p.isMedia ?? isMediaExtension(p.name),
+  }));
+};
+
+const resolvePresentationId = (item, propPresentations = []) => {
+  if (!item?.presentationId) return '';
+  if (propPresentations.some((p) => p.presentationId === item.presentationId)) {
+    return item.presentationId;
+  }
+  const byTemporaryId = propPresentations.find(
+    (p) => p.uploadTemporaryId === item.presentationId,
+  );
+  if (byTemporaryId?.presentationId) return byTemporaryId.presentationId;
+  const byName = propPresentations.find(
+    (p) => p.name === item.name && p.uploadCompleted,
+  );
+  return byName?.presentationId || item.presentationId;
+};
+
 class PresentationUploader extends Component {
   constructor(props) {
     super(props);
@@ -309,7 +347,6 @@ class PresentationUploader extends Component {
     // renders
     this.renderDropzone = this.renderDropzone.bind(this);
     this.renderExternalUpload = this.renderExternalUpload.bind(this);
-    this.renderPicDropzone = this.renderPicDropzone.bind(this);
     this.renderPresentationList = this.renderPresentationList.bind(this);
     this.renderPresentationItem = this.renderPresentationItem.bind(this);
     // utilities
@@ -319,6 +356,37 @@ class PresentationUploader extends Component {
     this.handleDownloadableChange = this.handleDownloadableChange.bind(this);
     this.setupFocusTrap = this.setupFocusTrap.bind(this);
     this.teardownFocusTrap = this.teardownFocusTrap.bind(this);
+    this.getPendingSelectionId = this.getPendingSelectionId.bind(this);
+    this.handlePresentationRowClick = this.handlePresentationRowClick.bind(this);
+    this.syncExternalVideoForSelection = this.syncExternalVideoForSelection.bind(this);
+  }
+
+  getPendingSelectionId() {
+    const { selectedToBeNextCurrent } = this.props;
+    return Session.getItem('selectedToBeNextCurrent') || selectedToBeNextCurrent || '';
+  }
+
+  syncExternalVideoForSelection(selectedItem, propPresentations) {
+    const { startExternalVideo, stopExternalVideo } = this.props;
+    if (!startExternalVideo && !stopExternalVideo) return;
+
+    const isMedia = selectedItem?.isMedia || isMediaExtension(selectedItem?.name);
+    if (!isMedia) {
+      stopExternalVideo?.();
+      return;
+    }
+
+    const presentationId = resolvePresentationId(selectedItem, propPresentations);
+    const playbackUrl = getPresentationMediaPlaybackUrl(presentationId);
+    if (!playbackUrl || !startExternalVideo) return;
+
+    startExternalVideo(Auth.authenticateURL(playbackUrl));
+  }
+
+  handlePresentationRowClick(event, item) {
+    if (event.target.closest('button, [role="button"], a, input, label')) return;
+    if (item?.uploadErrorMsgKey || item?.uploadErrorDetailsJson) return;
+    this.handleCurrentChange(item.presentationId);
   }
 
   setupFocusTrap() {
@@ -415,7 +483,11 @@ class PresentationUploader extends Component {
           || pres.presentationId === p.presentationId),
       );
 
-      let newEntries = JSON.parse(JSON.stringify(propsDiffs));
+      let newEntries = JSON.parse(JSON.stringify(propsDiffs)).map((entry) => ({
+        ...entry,
+        isMedia: isMediaExtension(entry.name),
+      }));
+      const pendingSelectionId = this.getPendingSelectionId();
       if (replacedCurrent) {
         newEntries = newEntries.map((entry) => {
           if (
@@ -427,7 +499,8 @@ class PresentationUploader extends Component {
           return entry;
         });
         if (isOpen) {
-          const nextCurrent = newEntries.find((entry) => entry.current)?.presentationId;
+          const nextCurrent = pendingSelectionId
+            || newEntries.find((entry) => entry.current)?.presentationId;
           if (nextCurrent) {
             Session.setItem('selectedToBeNextCurrent', nextCurrent);
           }
@@ -439,6 +512,10 @@ class PresentationUploader extends Component {
         ...JSON.parse(JSON.stringify(presState)),
         ...newEntries,
       ];
+
+      if (isOpen && pendingSelectionId) {
+        presState = applySelectionToPresentations(presState, pendingSelectionId);
+      }
     }
 
     const presStateFiltered = presState.filter((presentation) => {
@@ -537,8 +614,12 @@ class PresentationUploader extends Component {
           );
         },
       );
+      const pendingSelectionId = isOpen ? this.getPendingSelectionId() : '';
       this.setState({
-        presentations: unique(presStateFiltered, (p) => p.presentationId),
+        presentations: applySelectionToPresentations(
+          unique(presStateFiltered, (p) => p.presentationId),
+          pendingSelectionId,
+        ),
         shouldDisableExportButtonForAllDocuments,
         disableActions: shouldDisableActions,
       });
@@ -553,8 +634,17 @@ class PresentationUploader extends Component {
     if (isOpen && !prevProps.isOpen) {
       registerTitleView(intl.formatMessage(intlMessages.uploadViewTitle));
       this.hasError = null;
+      const currentFromServer = propPresentations.find((p) => p?.current)?.presentationId
+        || currentPresentation
+        || '';
+      if (currentFromServer) {
+        Session.setItem('selectedToBeNextCurrent', currentFromServer);
+      }
       this.setState({
-        presentations: JSON.parse(JSON.stringify(propPresentations)),
+        presentations: applySelectionToPresentations(
+          JSON.parse(JSON.stringify(propPresentations)),
+          currentFromServer,
+        ),
         disableActions: false,
       });
       this.setupFocusTrap();
@@ -566,20 +656,6 @@ class PresentationUploader extends Component {
       );
       if (hasPresentationInState) {
         this.handleCurrentChange(currentPresentation);
-      }
-    }
-
-    if (presentations.length > 0) {
-      if (isOpen) {
-        const selectedLocal = presentations.find((p) => p?.current);
-        if (selectedLocal?.presentationId) {
-          Session.setItem('selectedToBeNextCurrent', selectedLocal.presentationId);
-        }
-      } else {
-        const selected = propPresentations.filter((p) => p?.current);
-        if (selected[0]?.presentationId) {
-          Session.setItem('selectedToBeNextCurrent', selected[0].presentationId);
-        }
       }
     }
 
@@ -693,7 +769,12 @@ class PresentationUploader extends Component {
   handleCurrentChange(id) {
     this.setState(({ presentations: rawPresentations }) => {
       const presentations = normalizePresentations(rawPresentations);
-      if (this.hasError || presentations.length === 0 || !id) return false;
+      if (presentations.length === 0 || !id) return false;
+
+      const target = presentations.find((p) => p?.presentationId === id);
+      if (target && (target.uploadErrorMsgKey || target.uploadErrorDetailsJson)) {
+        return false;
+      }
 
       const newCurrentIndex = presentations.findIndex((p) => p?.presentationId === id);
       if (newCurrentIndex === -1) return false;
@@ -799,6 +880,10 @@ class PresentationUploader extends Component {
     });
 
     Session.setItem('showUploadPresentationView', false);
+    const pendingId = this.getPendingSelectionId();
+    const selectedItem = presentations.find((p) => p.presentationId === pendingId)
+      || presentations.find((p) => p?.current);
+
     return handleSave(
       presentationsToSave,
       true,
@@ -814,6 +899,7 @@ class PresentationUploader extends Component {
           this.setState({
             disableActions: false,
           });
+          this.syncExternalVideoForSelection(selectedItem, propPresentations);
           return;
         }
         Session.setItem('showUploadPresentationView', true);
@@ -921,6 +1007,8 @@ class PresentationUploader extends Component {
     const presentations = Array.isArray(statePresentations) ? statePresentations : [];
     const { intl } = this.props;
 
+    this.hasError = null;
+
     let presentationsSorted = presentations;
 
     try {
@@ -995,9 +1083,10 @@ class PresentationUploader extends Component {
       renderPresentationItemStatus,
     } = this.props;
 
-    const isActualCurrent = (isOpen || !selectedToBeNextCurrent)
-      ? item.current
-      : item.presentationId === selectedToBeNextCurrent;
+    const pendingSelectionId = this.getPendingSelectionId();
+    const isActualCurrent = isOpen && pendingSelectionId
+      ? item.presentationId === pendingSelectionId
+      : (item.current || item.presentationId === selectedToBeNextCurrent);
     const isUploading = !item.uploadCompleted;
     const { uploadInProgress } = item;
     const hasError = !!item.uploadErrorMsgKey || !!item.uploadErrorDetailsJson;
@@ -1041,6 +1130,15 @@ class PresentationUploader extends Component {
         animations={animations}
         data-test="presentationItem"
         data-skyroom-current={isActualCurrent ? 'true' : undefined}
+        onClick={(event) => this.handlePresentationRowClick(event, item)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            this.handlePresentationRowClick(event, item);
+          }
+        }}
+        tabIndex={hasError ? -1 : 0}
+        aria-selected={isActualCurrent}
       >
         <Styled.ColRadio role="cell">
           <Styled.SetCurrentAction>
@@ -1118,6 +1216,7 @@ class PresentationUploader extends Component {
       intl,
       fileValidMimeTypes,
     } = this.props;
+    const acceptList = buildAcceptList(fileValidMimeTypes);
 
     return this.hasError ? (
       <div>
@@ -1138,8 +1237,9 @@ class PresentationUploader extends Component {
       <Styled.UploaderDropzone
         multiple
         activeClassName="dropzoneActive"
-        accept={fileValidMimeTypes.map((fileValid) => fileValid.extension)}
+        accept={acceptList}
         disablepreview="true"
+        data-test="fileUploadDropZone"
         onDrop={(files, files2) => this.handleFiledrop(files, files2, this, intl, intlMessages)}
       >
         <Styled.DropzoneIcon iconName="upload" />
@@ -1179,43 +1279,6 @@ class PresentationUploader extends Component {
           aria-describedby={intl.formatMessage(intlMessages.externalUploadLabel)}
         />
       </Styled.ExternalUpload>
-    );
-  }
-
-  renderPicDropzone() {
-    const {
-      intl,
-    } = this.props;
-
-    return this.hasError ? (
-      <div>
-        <Button
-          color="danger"
-          onClick={() => this.handleRemove(null, true)}
-          label={intl.formatMessage(intlMessages.clearErrors)}
-          aria-describedby="clearErrorDesc"
-        />
-        <div id="clearErrorDesc" style={{ display: 'none' }}>
-          {intl.formatMessage(intlMessages.clearErrorsDesc)}
-        </div>
-      </div>
-    ) : (
-      <Styled.UploaderDropzone
-        multiple
-        accept="image/*"
-        disablepreview="true"
-        data-test="fileUploadDropZone"
-        onDrop={(files, files2) => this.handleFiledrop(files, files2, this, intl, intlMessages)}
-      >
-        <Styled.DropzoneIcon iconName="upload" />
-        <Styled.DropzoneMessage>
-          {intl.formatMessage(intlMessages.dropzoneImagesLabel)}
-          &nbsp;
-          <Styled.DropzoneLink>
-            {intl.formatMessage(intlMessages.browseImagesLabel)}
-          </Styled.DropzoneLink>
-        </Styled.DropzoneMessage>
-      </Styled.UploaderDropzone>
     );
   }
 
@@ -1260,11 +1323,6 @@ class PresentationUploader extends Component {
           </Styled.HintBanner>
           {this.renderPresentationList()}
           {this.renderDownloadableWithAnnotationsHint()}
-          {isMobile ? (
-            <Styled.DropzoneSection>
-              {this.renderPicDropzone()}
-            </Styled.DropzoneSection>
-          ) : null}
           <Styled.DropzoneSection>
             {this.renderDropzone()}
           </Styled.DropzoneSection>

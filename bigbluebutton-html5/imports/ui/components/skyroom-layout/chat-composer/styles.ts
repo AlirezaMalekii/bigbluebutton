@@ -7,7 +7,7 @@ export const Form = styled.form`
   flex-shrink: 0;
   width: 100%;
   margin: 0;
-  padding: 4px 8px;
+  padding: 2px 10px 4px;
   border: none;
   border-top: 1px solid rgba(218, 230, 245, 0.08);
   background: transparent;
@@ -21,8 +21,8 @@ export const Row = styled.div`
   align-items: center;
   gap: 6px;
   width: 100%;
-  min-height: 40px;
-  padding: 2px 3px 2px 8px;
+  min-height: 34px;
+  padding: 2px 4px 2px 6px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   background: rgba(0, 0, 0, 0.25);

@@ -53,6 +53,12 @@ public final class SupportedFileTypes {
 			add(JPEG); add(JPG); add(PNG); add(WEBP); add(SVG);
 		}
 	});
+
+	private static final List<String> MEDIA_FILE_LIST = Collections.unmodifiableList(new ArrayList<String>(6) {
+		{
+			add(MP4); add(WEBM); add(MP3); add(OGG); add(WAV); add(M4A);
+		}
+	});
 	
 	/*
 	 * Returns if the Office file is supported.
@@ -70,6 +76,10 @@ public final class SupportedFileTypes {
 	 */
 	public static boolean isImageFile(String fileExtension) {
 		return IMAGE_FILE_LIST.contains(fileExtension.toLowerCase());
+	}
+
+	public static boolean isMediaFile(String fileExtension) {
+		return MEDIA_FILE_LIST.contains(fileExtension.toLowerCase());
 	}
 
 	public static String detectMimeType(File pres) {

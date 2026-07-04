@@ -26,6 +26,12 @@ public class MimeTypeUtils {
     private  static final String PNG = "image/png";
     private  static final String SVG = "image/svg+xml";
     private  static final String WEBP = "image/webp";
+    private  static final String MP4 = "video/mp4";
+    private  static final String WEBM = "video/webm";
+    private  static final String MPEG = "audio/mpeg";
+    private  static final String OGG = "audio/ogg";
+    private  static final String WAV = "audio/wav";
+    private  static final String M4A = "audio/mp4";
 
     // If the following mime-types are changed, please, make sure to also change:
     // bigbluebutton-html5/private/config/settings.yml: L827
@@ -50,6 +56,12 @@ public class MimeTypeUtils {
             put(FileTypeConstants.PNG, Arrays.asList(PNG));
             put(FileTypeConstants.SVG, Arrays.asList(SVG));
             put(FileTypeConstants.WEBP, Arrays.asList(WEBP));
+            put(FileTypeConstants.MP4, Arrays.asList(MP4));
+            put(FileTypeConstants.WEBM, Arrays.asList(WEBM));
+            put(FileTypeConstants.MP3, Arrays.asList(MPEG));
+            put(FileTypeConstants.OGG, Arrays.asList(OGG, "video/ogg"));
+            put(FileTypeConstants.WAV, Arrays.asList(WAV));
+            put(FileTypeConstants.M4A, Arrays.asList(M4A));
         }
     };
 
@@ -80,7 +92,7 @@ public class MimeTypeUtils {
         List<String> validMimeTypes = Arrays.asList(XLS, XLSX,
                 DOC, DOCX, PPT, PPTX, ODT, RTF, TXT, ODS, ODP, ODG,
                 PDF, JPEG, PNG, TIKA_MSOFFICE, TIKA_MSOFFICE_X,
-                WEBP
+                WEBP, SVG, MP4, WEBM, MPEG, OGG, WAV, M4A, "video/ogg"
         );
         return validMimeTypes;
     }

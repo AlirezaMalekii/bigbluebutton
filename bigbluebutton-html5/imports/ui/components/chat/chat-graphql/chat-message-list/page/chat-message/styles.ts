@@ -243,7 +243,7 @@ export const Container = styled.div<{ $sequence: number }>`
   outline: none;
 
   &:not(:first-of-type) {
-    margin-top: 4px;
+    margin-top: 2px;
   }
 
   &[data-focusable="false"] {
@@ -254,7 +254,7 @@ export const Container = styled.div<{ $sequence: number }>`
 export const MessageItemWrapper = styled.div`
   display: flex;
   flex-direction: row;
-  padding: 4px 8px 6px;
+  padding: 3px 8px 4px;
 `;
 
 export const PluginInformationMetadata = styled.div`

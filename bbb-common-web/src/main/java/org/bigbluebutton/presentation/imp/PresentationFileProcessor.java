@@ -48,6 +48,7 @@ public class PresentationFileProcessor {
     private PageCounterService counterService;
     private PresentationConversionCompletionService presentationConversionCompletionService;
     private ImageSlidesGenerationService imageSlidesGenerationService;
+    private MediaSlidesGenerationService mediaSlidesGenerationService;
     private PdfSlidesGenerationService pdfSlidesGenerationService;
     private S3FileManager s3FileManager;
 
@@ -90,6 +91,8 @@ public class PresentationFileProcessor {
             }
         } else if (SupportedFileTypes.isImageFile(pres.getFileType())) {
             pres.setNumberOfPages(1);
+        } else if (SupportedFileTypes.isMediaFile(pres.getFileType())) {
+            pres.setNumberOfPages(1);
         }
 
         long maxConversionTime = pres.getMaxTotalConversionTime();
@@ -128,6 +131,16 @@ public class PresentationFileProcessor {
         } else if (SupportedFileTypes.isImageFile(pres.getFileType())) {
             sendDocPageConversionStartedProgress(pres);
             Future<?> future = executor.submit(() -> imageSlidesGenerationService.generateSlides(pres));
+
+            supervisor.submit(monitorPresentationConversion(
+                    future,
+                    pres,
+                    null,
+                    pres.getMaxPageConversionTime()
+            ));
+        } else if (SupportedFileTypes.isMediaFile(pres.getFileType())) {
+            sendDocPageConversionStartedProgress(pres);
+            Future<?> future = executor.submit(() -> mediaSlidesGenerationService.generateSlides(pres));
 
             supervisor.submit(monitorPresentationConversion(
                     future,
@@ -181,6 +194,10 @@ public class PresentationFileProcessor {
                 pdfSlidesGenerationService.sendMessage(msg);
             } else if (SupportedFileTypes.isImageFile(pres.getFileType())) {
                 if (createBlanks) imageSlidesGenerationService.createBlanks(pres);
+                notifier.sendConversionUpdateMessage(1, pres, 1);
+                notifier.sendConversionCompletedMessage(pres);
+            } else if (SupportedFileTypes.isMediaFile(pres.getFileType())) {
+                if (createBlanks) mediaSlidesGenerationService.createBlanks(pres);
                 notifier.sendConversionUpdateMessage(1, pres, 1);
                 notifier.sendConversionCompletedMessage(pres);
             }
@@ -437,6 +454,10 @@ public class PresentationFileProcessor {
 
     public void setImageSlidesGenerationService(ImageSlidesGenerationService s) {
         imageSlidesGenerationService = s;
+    }
+
+    public void setMediaSlidesGenerationService(MediaSlidesGenerationService s) {
+        mediaSlidesGenerationService = s;
     }
 
     public void setPresentationConversionCompletionService(PresentationConversionCompletionService s) {

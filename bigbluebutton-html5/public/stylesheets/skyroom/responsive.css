@@ -482,7 +482,7 @@
     overflow-y: hidden !important;
     scrollbar-width: none !important;
     -webkit-overflow-scrolling: touch;
-    padding: 0 8px !important;
+    padding: 0 12px !important;
   }
 
   /* Mobile footer — icon-only logo inside #ActionsBar (left, vertically centered) */
@@ -535,7 +535,12 @@
 
   #layout[data-skyroom-column="true"]:has([data-test="skyroomFooterLogoSlot"][data-mobile-footer="true"]) #ActionsBar > div {
     padding-inline-start: calc(12px + 36px + 10px) !important;
-    padding-inline-end: 10px !important;
+    padding-inline-end: 12px !important;
+  }
+
+  #layout[data-skyroom-column="true"]:not(:has([data-test="skyroomFooterLogoSlot"][data-mobile-footer="true"])) #ActionsBar > div {
+    padding-inline-start: 12px !important;
+    padding-inline-end: 12px !important;
   }
 
   /* Each cluster is its own fixed-size group — never grow into a neighbour. */
@@ -613,6 +618,14 @@
      =================================================================== */
   #layout[data-skyroom-column="true"] [class*="PresentationToolbar"] {
     overflow: visible !important;
+    z-index: 1003 !important;
+    pointer-events: auto !important;
+  }
+
+  #layout[data-skyroom-column="true"] #presentationToolbarWrapper,
+  #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] {
+    z-index: 1003 !important;
+    pointer-events: auto !important;
   }
 
   #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] {
@@ -715,7 +728,7 @@
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu[data-skyroom-more-menu-anchored="true"] {
     z-index: 1105 !important;
     max-width: min(13.5rem, 78vw) !important;
-    max-height: 34vh !important;
+    max-height: min(34vh, calc(100vh - var(--skyroom-footer-h, 56px) - 120px)) !important;
     overflow: auto !important;
     padding: 3px !important;
     background: rgba(10, 18, 30, 0.98) !important;
@@ -935,21 +948,33 @@
     flex-shrink: 0 !important;
     margin-top: auto !important;
     margin-bottom: 0 !important;
-    padding: 4px 8px 1px !important;
+    padding: 2px 10px 2px !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="publicChatPanel"] [class*="TypingIndicatorWrapper"] {
     flex-shrink: 0 !important;
     height: auto !important;
-    max-height: none !important;
+    max-height: 1.1rem !important;
     min-height: 0 !important;
-    padding: 0 8px 2px !important;
+    padding: 0 10px 0 !important;
+    margin: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="publicChatPanel"] [data-test="chatReplyIntentionContainer"] {
+    margin-inline: 0 !important;
+    max-height: 2.5rem !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="publicChatPanel"] [data-test="chatEditingWarningContainer"] {
+    margin-inline: 0 !important;
+    padding: 3px 8px !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="publicChatPanel"] [data-test="chatMessages"] {
     flex: 1 1 auto !important;
     min-height: 0 !important;
     overflow-y: auto !important;
+    padding: 4px 8px 2px !important;
   }
 
   /* ===================================================================

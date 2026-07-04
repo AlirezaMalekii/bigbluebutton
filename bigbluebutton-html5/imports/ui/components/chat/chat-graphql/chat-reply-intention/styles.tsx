@@ -7,7 +7,7 @@ import {
   userListBg,
 } from '/imports/ui/stylesheets/styled-components/palette';
 import {
-  mdPadding, smPadding, smPaddingX, xlPadding,
+  smPadding, smPaddingX,
 } from '/imports/ui/stylesheets/styled-components/general';
 import EmojiButton from '../chat-message-list/page/chat-message/message-toolbar/emoji-button/component';
 
@@ -31,19 +31,24 @@ const Container = styled.div<{ $hidden: boolean; $animations: boolean }>`
     ? css`
         height: 0;
         min-height: 0;
+        margin: 0;
+        padding: 0;
+        border: none;
+        box-shadow: none;
+        overflow: hidden;
+        pointer-events: none;
       `
     : css`
-        min-height: calc(1rlh + ${mdPadding} * 2);
-        height: calc(1rlh + ${mdPadding} * 2);
-        padding: ${mdPadding} calc(${smPaddingX} * 1.25);
-        margin-bottom: ${smPadding};
+        min-height: calc(0.95rlh + ${smPadding} * 2);
+        height: auto;
+        max-height: 2.75rem;
+        padding: ${smPadding} ${smPaddingX};
+        margin: 0 0 ${smPadding};
 
-        [dir='ltr'] & {
-          margin-right: ${xlPadding};
-        }
-
+        [dir='ltr'] &,
         [dir='rtl'] & {
-          margin-left: ${xlPadding};
+          margin-right: 0;
+          margin-left: 0;
         }
       `
   )}
@@ -56,16 +61,17 @@ const Container = styled.div<{ $hidden: boolean; $animations: boolean }>`
 `;
 
 const Message = styled.div`
-  line-height: 1rlh;
+  line-height: 1.15;
   flex-grow: 1;
   min-width: 0;
+  overflow: hidden;
 `;
 
 const Username = styled.div`
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  line-height: 1.2;
-  margin-bottom: 2px;
+  line-height: 1.1;
+  margin-bottom: 1px;
   color: var(--skyroom-panel-accent, #20c7bb);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -74,6 +80,10 @@ const Username = styled.div`
 
 const HtmlContent = styled.div`
   color: ${colorText};
+  font-size: 0.78rem;
+  line-height: 1.2;
+  max-height: 1.2rem;
+  overflow: hidden;
 
   & img {
     max-width: 100%;

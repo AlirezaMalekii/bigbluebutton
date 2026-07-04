@@ -107,6 +107,8 @@ public class DocumentConversionServiceImp implements DocumentConversionService {
         presentationFileProcessor.process(pres);
       } else if (SupportedFileTypes.isImageFile(fileType)) {
         presentationFileProcessor.process(pres);
+      } else if (SupportedFileTypes.isMediaFile(fileType)) {
+        presentationFileProcessor.process(pres);
       } else {
         Map<String, Object> logData = new HashMap<String, Object>();
         logData = new HashMap<String, Object>();

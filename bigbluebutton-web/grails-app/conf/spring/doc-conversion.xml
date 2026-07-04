@@ -141,6 +141,7 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
         <property name="generatePngs" value="${generatePngs}"/>
         <property name="presentationConversionCompletionService" ref="presentationConversionCompletionService"/>
         <property name="imageSlidesGenerationService" ref="imageSlidesGenerationService"/>
+        <property name="mediaSlidesGenerationService" ref="mediaSlidesGenerationService"/>
         <property name="counterService" ref="pageCounterService"/>
         <property name="pdfSlidesGenerationService" ref="pdfSlidesGenerationService"/>
         <property name="s3FileManager" ref="s3FileManager"/>
@@ -158,6 +159,14 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
         <property name="maxImageWidth" value="${maxImageWidth}"/>
         <property name="maxImageHeight" value="${maxImageHeight}"/>
         <property name="generatePngs" value="${generatePngs}"/>
+    </bean>
+
+    <bean id="mediaSlidesGenerationService"
+          class="org.bigbluebutton.presentation.imp.MediaSlidesGenerationService">
+        <property name="svgImageCreator" ref="svgImageCreator"/>
+        <property name="thumbnailCreator" ref="thumbCreator"/>
+        <property name="textFileCreator" ref="textFileCreator"/>
+        <property name="slidesGenerationProgressNotifier" ref="slidesGenerationProgressNotifier"/>
     </bean>
 
     <bean id="slidesGenerationProgressNotifier"

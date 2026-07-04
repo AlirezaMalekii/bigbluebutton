@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { colorGrayLight, userListBg } from '/imports/ui/stylesheets/styled-components/palette';
-import { xlPadding, xsPadding } from '/imports/ui/stylesheets/styled-components/general';
+import { xsPadding } from '/imports/ui/stylesheets/styled-components/general';
 
 export const Root = styled.div`
   position: relative;
@@ -14,13 +14,14 @@ export const Container = styled.div`
   color: ${colorGrayLight};
   z-index: 10;
   background-color: ${userListBg};
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  line-height: 1.15;
 
-  [dir='ltr'] & {
-    margin-right: ${xlPadding};
-  }
-
+  [dir='ltr'] &,
   [dir='rtl'] & {
-    margin-left: ${xlPadding};
+    margin-right: 0;
+    margin-left: 0;
   }
 `;
 

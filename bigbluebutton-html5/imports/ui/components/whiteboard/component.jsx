@@ -1583,7 +1583,7 @@ const Whiteboard = React.memo((props) => {
 
       // eslint-disable-next-line no-param-reassign
       editor.store.onBeforeChange = (prev, next) => {
-        if (isPhone) {
+        if (isPhone && whiteboardToolbarAutoHide) {
           const path = editor.getPath();
           const activePaths = [
             'draw.drawing',
@@ -2384,6 +2384,25 @@ const Whiteboard = React.memo((props) => {
       }
     }
   }, [whiteboardToolbarAutoHide]);
+
+  React.useEffect(() => {
+    if (!isPhone || !toggleToolsAnimations || whiteboardToolbarAutoHide) return undefined;
+    if (!(hasWBAccess || isPresenter)) return undefined;
+
+    const timer = window.setTimeout(() => {
+      toggleToolsAnimations('fade-in', 'fade-out', '0s', true);
+    }, 150);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    presentationId,
+    isMounting,
+    isPhone,
+    hasWBAccess,
+    isPresenter,
+    whiteboardToolbarAutoHide,
+    toggleToolsAnimations,
+  ]);
 
   const hiddenGeoShapes = React.useMemo(() => {
     const bbbMultiUserPenOnly = getFromUserSettings(

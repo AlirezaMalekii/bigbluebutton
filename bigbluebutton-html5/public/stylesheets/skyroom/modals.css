@@ -674,6 +674,40 @@
   margin: -30px -30px 0 !important;
   width: calc(100% + 60px) !important;
   box-sizing: border-box;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+#fsmodal[data-test="managePresentationsModal"] header [class*="Title"] {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+#fsmodal[data-test="managePresentationsModal"] header [class*="Actions"] {
+  flex: 0 0 auto !important;
+  margin-inline-start: auto !important;
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  width: auto !important;
+}
+
+#fsmodal[data-test="managePresentationsModal"] header [class*="Actions"] .buttonWrapper {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+#fsmodal[data-test="managePresentationsModal"] button[data-test="modalDismissButton"],
+#fsmodal[data-test="managePresentationsModal"] button[data-test="modalConfirmButton"] {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 7rem !important;
 }
 
 #fsmodal[data-test="managePresentationsModal"] > header + div:not([hidden]),
@@ -881,6 +915,36 @@
     width: 94vw !important;
     max-height: 92vh !important;
     padding: 20px 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  #fsmodal[data-test="managePresentationsModal"] [data-test="managePresentationsModalBody"] {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  #fsmodal[data-test="managePresentationsModal"] [class*="ListCard"] {
+    flex: 1 1 auto !important;
+    min-height: 120px !important;
+    overflow: visible !important;
+  }
+
+  #fsmodal[data-test="managePresentationsModal"] [data-skyroom="presentation-list"] {
+    min-height: 0 !important;
+  }
+
+  #fsmodal[data-test="managePresentationsModal"] [class*="FileList"] {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+
+  #fsmodal[data-test="managePresentationsModal"] [data-skyroom="presentation-row"] [class*="FileNameCell"] > span {
+    font-size: 0.8125rem !important;
+    line-height: 1.25 !important;
   }
 
   #fsmodal[data-test="managePresentationsModal"] header {

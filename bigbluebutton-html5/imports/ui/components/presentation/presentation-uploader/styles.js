@@ -96,6 +96,17 @@ const ModalBody = styled.div`
   flex-direction: column;
   gap: var(--space-4, 16px);
   min-height: 0;
+  flex: 1 1 auto;
+`;
+
+const mobilePresentationRowLayout = `
+  @media (max-width: 640px) {
+    grid-template-columns: 2rem minmax(0, 1fr) auto !important;
+    column-gap: 8px !important;
+    row-gap: 4px !important;
+    padding: 10px 12px !important;
+    min-height: 0 !important;
+  }
 `;
 
 const HintBanner = styled.div`
@@ -114,6 +125,14 @@ const ListCard = styled.div`
   border: 1px solid ${skyroomBorder};
   background: ${skyroomSurface};
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+
+  @media (max-width: 640px) {
+    min-height: 120px;
+  }
 `;
 
 const presentationListColumns = `
@@ -127,6 +146,8 @@ const PresentationList = styled.div.attrs({
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
   background: transparent;
   color: ${skyroomText};
 `;
@@ -143,6 +164,14 @@ const ListHeader = styled.div`
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+
+  ${mobilePresentationRowLayout}
+
+  @media (max-width: 640px) {
+    [class*="ColStatus"] {
+      display: none;
+    }
+  }
 `;
 
 const ListHeaderCell = styled.span`
@@ -164,7 +193,8 @@ const ListHeaderCell = styled.span`
 
 /* Do not use ScrollboxVertical here — its white fade gradients break dark modal rows */
 const FileList = styled.div`
-  height: 100%;
+  flex: 1 1 auto;
+  min-height: 72px;
   max-height: min(280px, 38vh);
   padding: 0;
   margin-bottom: 0;
@@ -173,6 +203,11 @@ const FileList = styled.div`
   background: transparent;
   scrollbar-width: thin;
   scrollbar-color: rgba(32, 199, 187, 0.35) transparent;
+
+  @media (max-width: 640px) {
+    max-height: min(240px, 42vh);
+    min-height: 96px;
+  }
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -327,6 +362,14 @@ const ColStatus = styled.div`
 
   [dir="rtl"] & {
     justify-content: flex-start;
+  }
+
+  @media (max-width: 640px) {
+    grid-column: 2;
+    grid-row: 2;
+    justify-content: flex-start;
+    font-size: 0.68rem;
+    line-height: 1.2;
   }
 `;
 
@@ -529,12 +572,35 @@ const PresentationItem = styled.div.attrs({
   border-bottom: 1px solid rgba(218, 230, 245, 0.06);
   min-height: 52px;
   box-sizing: border-box;
+  ${mobilePresentationRowLayout}
+
+  @media (max-width: 640px) {
+    [class*="ColRadio"] {
+      grid-row: 1 / span 2;
+      align-self: center;
+    }
+
+    [class*="ColName"] {
+      grid-row: 1;
+    }
+
+    [class*="ColActions"] {
+      grid-row: 1 / span 2;
+      align-self: center;
+    }
+  }
   transition: background 0.15s ease;
   color: ${skyroomText};
   background-color: transparent;
   background-image: none;
   border-radius: 0;
   box-shadow: none;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid rgba(32, 199, 187, 0.55);
+    outline-offset: -2px;
+  }
 
   &:last-child {
     border-bottom: 0;
