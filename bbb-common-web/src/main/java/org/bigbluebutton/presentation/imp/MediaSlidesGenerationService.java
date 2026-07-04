@@ -19,7 +19,6 @@
 
 package org.bigbluebutton.presentation.imp;
 
-import org.bigbluebutton.presentation.SlidesGenerationProgressNotifier;
 import org.bigbluebutton.presentation.TextFileCreator;
 import org.bigbluebutton.presentation.ThumbnailCreator;
 import org.bigbluebutton.presentation.UploadedPresentation;
