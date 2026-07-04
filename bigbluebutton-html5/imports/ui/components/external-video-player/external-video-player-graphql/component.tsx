@@ -213,6 +213,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   const [playerUrl, setPlayerUrl] = React.useState('');
   const lastCursorRef = useRef<{ position: number, updateAt: number }>({ position: 0, updateAt: 0 });
   const [stopExternalVideoShare] = useMutation(EXTERNAL_VIDEO_STOP);
+  const mediaLoadFailedRef = useRef(false);
 
   let currentTime = getServerCurrentTime();
 
@@ -432,16 +433,24 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
     }
   }, [isPresenter]);
 
+  useEffect(() => {
+    mediaLoadFailedRef.current = false;
+  }, [videoUrl, playerKey]);
+
   const handleOnReady = () => {
-    if (!isPresenter || !playing || !playerRef.current) return;
+    if (mediaLoadFailedRef.current || !isPresenter || !playing || !playerRef.current) return;
     playVideo(playerRef.current);
   };
 
   const handleOnError = (error: unknown) => {
+    mediaLoadFailedRef.current = true;
     logger.warn({
       logCode: 'external_video_player_error',
       extraInfo: { videoUrl, error },
     }, 'External video player failed to load media');
+    if (isPresenter && isPresentationMediaUrl(videoUrl)) {
+      stopExternalVideoShare();
+    }
   };
 
   const handleOnStart = async () => {

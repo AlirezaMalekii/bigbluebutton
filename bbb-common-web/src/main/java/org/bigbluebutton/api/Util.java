@@ -17,8 +17,8 @@ public final class Util {
 
 	private static final Pattern MEETING_ID_PATTERN = Pattern.compile("^[a-z0-9-]+$");
 	private static final Pattern PRES_ID_PATTERN = Pattern.compile("^[a-z0-9-]+$");
-	// see https://www.baeldung.com/java-regexp-escape-char#1-escaping-using-backslash
-	private static final Pattern PRES_FILE_ID_PATTERN = Pattern.compile("^[a-z0-9-]+\\.[a-zA-Z]{3,4}$");
+	// Allow numeric extensions such as mp3/mp4/m4a in addition to pdf/doc.
+	private static final Pattern PRES_FILE_ID_PATTERN = Pattern.compile("^[a-z0-9-]+\\.[a-zA-Z0-9]{2,5}$");
 
 	private static final SecureRandom RANDOM = new SecureRandom();
 	private static final String CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
