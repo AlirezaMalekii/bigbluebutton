@@ -67,6 +67,10 @@ class UrlMappings {
       action = [GET: 'downloadFile']
     }
 
+    "/bigbluebutton/presentation/media/$meetingId/$presId"(controller: "presentation") {
+      action = [GET: 'streamMediaFile']
+    }
+
     "/bigbluebutton/api/create"(controller: "api") {
       action = [GET: 'create', POST: 'create']
     }

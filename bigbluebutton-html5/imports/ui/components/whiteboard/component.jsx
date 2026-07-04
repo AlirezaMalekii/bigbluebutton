@@ -1128,10 +1128,21 @@ const Whiteboard = React.memo((props) => {
             baseZoom = zoomWithGap;
           }
 
+          let adjustedXOffset = xOffset;
+          let adjustedYOffset = yOffset;
+          const slideAspectRatio = scaledWidth / scaledHeight;
+          const areaAspectRatio = presentationAreaWidth / presentationAreaHeight;
+
+          if (fitToWidthRef.current && slideAspectRatio < areaAspectRatio) {
+            adjustedYOffset = (presentationAreaHeight - (scaledHeight * baseZoom)) / 2;
+          } else if (fitToWidthRef.current && slideAspectRatio > areaAspectRatio) {
+            adjustedXOffset = (presentationAreaWidth - (scaledWidth * baseZoom)) / 2;
+          }
+
           coreCameraLogic({
             baseZoom,
-            xOffset,
-            yOffset,
+            xOffset: adjustedXOffset,
+            yOffset: adjustedYOffset,
             description: '(presenter)',
           });
         } else if (includeViewerLogic) {

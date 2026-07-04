@@ -575,10 +575,22 @@
 }
 
 /* Reserve space so controls never sit under the logo (legacy portal path) */
-#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar > div {
-  padding-inline-start: calc(12px + 36px + 10px) !important;
-  padding-inline-end: 10px !important;
-}
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar > div {
+    padding-inline-start: calc(12px + 36px + 10px) !important;
+    padding-inline-end: 12px !important;
+  }
+
+  [dir="rtl"] #layout[data-skyroom-column="true"] #ActionsBar [data-test="skyroomFooterLogoSlot"][data-mobile-footer="true"],
+  [dir="rtl"] #layout[data-skyroom-column="true"] #ActionsBar [data-test="skyroomFooterLogoSlot"][data-in-actions-bar="true"] {
+    left: auto !important;
+    right: 12px !important;
+  }
+
+  #layout[data-skyroom-column="true"] #ActionsBar [data-test="restorePresentation"] > span:first-child,
+  #layout[data-skyroom-column="true"] #ActionsBar [data-test="minimizePresentation"] > span:first-child {
+    overflow: visible !important;
+    box-sizing: border-box !important;
+  }
 
 /* Desktop / tablet footer logo stays fixed to viewport bottom chrome */
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="skyroomFooterLogoSlot"] {

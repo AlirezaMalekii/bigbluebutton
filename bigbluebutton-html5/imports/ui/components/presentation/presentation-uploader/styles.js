@@ -94,30 +94,42 @@ const skyroomSurface = 'rgba(0, 0, 0, 0.22)';
 const ModalBody = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--space-4, 16px);
+  gap: var(--space-3, 12px);
   min-height: 0;
   flex: 1 1 auto;
+  height: 100%;
+
+  @media (max-width: 640px) {
+    gap: 8px;
+  }
 `;
 
 const mobilePresentationRowLayout = `
   @media (max-width: 640px) {
-    grid-template-columns: 2rem minmax(0, 1fr) auto !important;
-    column-gap: 8px !important;
-    row-gap: 4px !important;
-    padding: 10px 12px !important;
+    grid-template-columns: 1.75rem minmax(0, 1fr) auto !important;
+    column-gap: 6px !important;
+    row-gap: 2px !important;
+    padding: 8px 10px !important;
     min-height: 0 !important;
   }
 `;
 
 const HintBanner = styled.div`
-  padding: var(--space-3, 12px) var(--space-4, 16px);
+  padding: var(--space-2, 8px) var(--space-3, 12px);
   border-radius: var(--radius-md, 12px);
   background: rgba(32, 199, 187, 0.08);
   border: 1px solid rgba(32, 199, 187, 0.2);
+  flex-shrink: 0;
+
+  @media (max-width: 640px) {
+    padding: 6px 10px;
+    border-radius: 10px;
+  }
 `;
 
 const DropzoneSection = styled.div`
-  margin-top: var(--space-1, 4px);
+  margin-top: 0;
+  flex-shrink: 0;
 `;
 
 const ListCard = styled.div`
@@ -131,7 +143,9 @@ const ListCard = styled.div`
   flex: 1 1 auto;
 
   @media (max-width: 640px) {
-    min-height: 120px;
+    flex: 1 1 60vh;
+    min-height: 180px;
+    max-height: 60vh;
   }
 `;
 
@@ -156,18 +170,22 @@ const ListHeader = styled.div`
   display: grid;
   ${presentationListColumns}
   align-items: center;
-  padding: 10px 14px;
+  padding: 8px 12px;
   background: rgba(255, 255, 255, 0.04);
   border-bottom: 1px solid ${skyroomBorder};
   color: ${skyroomTextMuted};
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+  flex-shrink: 0;
 
   ${mobilePresentationRowLayout}
 
   @media (max-width: 640px) {
+    padding: 6px 10px;
+    font-size: 0.62rem;
+
     [class*="ColStatus"] {
       display: none;
     }
@@ -205,8 +223,9 @@ const FileList = styled.div`
   scrollbar-color: rgba(32, 199, 187, 0.35) transparent;
 
   @media (max-width: 640px) {
-    max-height: min(240px, 42vh);
-    min-height: 96px;
+    max-height: none;
+    min-height: 0;
+    flex: 1 1 auto;
   }
 
   &::-webkit-scrollbar {
@@ -311,8 +330,8 @@ const CurrentBadgeWrap = styled.div`
 const CurrentLabel = styled.span`
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
-  font-size: 0.68rem;
+  padding: 2px 8px;
+  font-size: 0.62rem;
   font-weight: 700;
   line-height: 1.2;
   color: #fff;
@@ -345,7 +364,7 @@ const FileNameCell = styled.div`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     font-weight: 500;
     color: ${skyroomText} !important;
     line-height: 1.35;
@@ -433,8 +452,8 @@ const RemoveButton = styled(Button)`
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border: 0;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.06);
@@ -470,12 +489,17 @@ const UploaderDropzone = styled(Dropzone)`
   border: 2px dashed rgba(32, 199, 187, 0.35);
   color: ${skyroomTextMuted};
   border-radius: var(--radius-lg, 16px);
-  padding: var(--space-6, 24px) var(--space-5, 20px);
+  padding: var(--space-4, 16px) var(--space-3, 12px);
   text-align: center;
   font-size: ${fontSizeLarge};
   cursor: pointer;
   background: rgba(32, 199, 187, 0.04);
   transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+
+  @media (max-width: 640px) {
+    padding: 10px 12px;
+    border-radius: 12px;
+  }
 
   &:hover,
   &:focus-within {
@@ -491,16 +515,26 @@ const UploaderDropzone = styled(Dropzone)`
 `;
 
 const DropzoneIcon = styled(Icon)`
-  font-size: 2.75rem;
+  font-size: 2rem;
   color: var(--skyroom-brand-400, #14a99e);
   opacity: 0.9;
+
+  @media (max-width: 640px) {
+    font-size: 1.5rem;
+  }
 `;
 
 const DropzoneMessage = styled.p`
-  margin: var(--space-3, 12px) 0 0;
+  margin: var(--space-2, 8px) 0 0;
   color: ${skyroomText};
-  font-size: 0.9375rem;
-  line-height: 1.5;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+
+  @media (max-width: 640px) {
+    margin-top: 4px;
+    font-size: 0.72rem;
+    line-height: 1.3;
+  }
 `;
 
 const DropzoneLink = styled.span`
@@ -558,8 +592,13 @@ const ModalHint = styled.div`
   margin: 0;
   color: ${skyroomTextMuted};
   font-weight: normal;
-  font-size: 0.875rem;
-  line-height: 1.55;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+
+  @media (max-width: 640px) {
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
 `;
 
 const PresentationItem = styled.div.attrs({
@@ -568,9 +607,9 @@ const PresentationItem = styled.div.attrs({
   display: grid;
   ${presentationListColumns}
   align-items: center;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border-bottom: 1px solid rgba(218, 230, 245, 0.06);
-  min-height: 52px;
+  min-height: 44px;
   box-sizing: border-box;
   ${mobilePresentationRowLayout}
 
@@ -731,10 +770,13 @@ const ExternalUploadButton = styled(Button)`
 
 const ExportHint = styled(ModalHint)`
   margin: 0;
-  padding: var(--space-3, 12px) var(--space-4, 16px);
-  border-radius: var(--radius-md, 12px);
+  padding: 6px 10px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(218, 230, 245, 0.08);
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
 `;
 
 const ColRadio = styled.div`

@@ -377,7 +377,10 @@ class PresentationUploader extends Component {
     }
 
     const presentationId = resolvePresentationId(selectedItem, propPresentations);
-    const playbackUrl = getPresentationMediaPlaybackUrl(presentationId);
+    const playbackUrl = getPresentationMediaPlaybackUrl(
+      presentationId,
+      selectedItem?.name,
+    );
     if (!playbackUrl || !startExternalVideo) return;
 
     startExternalVideo(Auth.authenticateURL(playbackUrl));
@@ -874,7 +877,11 @@ class PresentationUploader extends Component {
           (p) => p.presentationId === item.presentationId && p.downloadable !== item.downloadable,
         );
         if (didDownloadableStateChange) {
-          dispatchChangePresentationDownloadable(item, item.downloadable);
+          dispatchChangePresentationDownloadable(
+            item.presentationId,
+            item.downloadable,
+            'Original',
+          );
         }
       }
     });
@@ -899,7 +906,23 @@ class PresentationUploader extends Component {
           this.setState({
             disableActions: false,
           });
-          this.syncExternalVideoForSelection(selectedItem, propPresentations);
+          const mergedPresentations = [...propPresentations];
+          presentations.forEach((presentation) => {
+            const existingIndex = mergedPresentations.findIndex(
+              (item) => item.presentationId === presentation.presentationId
+                || item.uploadTemporaryId === presentation.presentationId
+                || (item.name === presentation.name && presentation.uploadCompleted),
+            );
+            if (existingIndex >= 0) {
+              mergedPresentations[existingIndex] = {
+                ...mergedPresentations[existingIndex],
+                ...presentation,
+              };
+            } else {
+              mergedPresentations.push(presentation);
+            }
+          });
+          this.syncExternalVideoForSelection(selectedItem, mergedPresentations);
           return;
         }
         Session.setItem('showUploadPresentationView', true);
@@ -922,9 +945,14 @@ class PresentationUploader extends Component {
   }
 
   handleDownloadableChange(item, fileStateType, downloadable) {
-    const { dispatchChangePresentationDownloadable } = this.props;
+    const { dispatchChangePresentationDownloadable, presentations } = this.props;
+    const presentationId = resolvePresentationId(item, presentations);
 
-    dispatchChangePresentationDownloadable(item, downloadable, fileStateType);
+    dispatchChangePresentationDownloadable(
+      presentationId,
+      downloadable,
+      fileStateType,
+    );
   }
 
   handleDismiss() {

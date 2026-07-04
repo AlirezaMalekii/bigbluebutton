@@ -19,6 +19,11 @@
 
 package org.bigbluebutton.presentation.imp;
 
+import java.io.File;
+import java.io.IOException;
+
+import org.apache.commons.io.FilenameUtils;
+import org.bigbluebutton.api.Util;
 import org.bigbluebutton.presentation.TextFileCreator;
 import org.bigbluebutton.presentation.ThumbnailCreator;
 import org.bigbluebutton.presentation.UploadedPresentation;
@@ -36,9 +41,27 @@ public class MediaSlidesGenerationService {
 
     public void generateSlides(UploadedPresentation pres) {
         log.info("Generating placeholder slide for media presentation {}", pres.getName());
+        if (pres.isDownloadable()) {
+            processMakePresentationDownloadable(pres);
+        }
         createTextFiles(pres, 1);
         createThumbnails(pres, 1);
         createSvgImages(pres, 1);
+    }
+
+    private void processMakePresentationDownloadable(UploadedPresentation pres) {
+        try {
+            File presentationFileDir = pres.getUploadedFile().getParentFile();
+            String fileExtensionOriginal = FilenameUtils.getExtension(pres.getName());
+            Util.makePresentationDownloadable(
+                presentationFileDir,
+                pres.getId(),
+                pres.isDownloadable(),
+                fileExtensionOriginal
+            );
+        } catch (IOException e) {
+            log.error("Failed to make media presentation downloadable: {}", e.getMessage());
+        }
     }
 
     public void createBlanks(UploadedPresentation pres) {

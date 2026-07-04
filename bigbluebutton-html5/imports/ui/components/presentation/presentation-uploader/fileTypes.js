@@ -14,11 +14,32 @@ export const isMediaExtension = (filename) => MEDIA_EXTENSIONS.has(normalizeExte
 
 export const isImageExtension = (filename) => IMAGE_EXTENSIONS.has(normalizeExtension(filename));
 
-export const getPresentationMediaPlaybackUrl = (presentationId) => {
+const getMediaExtensionFromName = (presentationName) => {
+  const fromName = normalizeExtension(presentationName).replace('.', '');
+  if (fromName) return fromName;
+  return 'mp4';
+};
+
+const buildMediaUrl = (presentationId, presentationName, endpoint) => {
   if (!presentationId || !Auth.meetingID) return null;
   const { bbbWebBase } = window.meetingClientSettings.public.app;
-  return `${bbbWebBase}/presentation/download/${Auth.meetingID}/${presentationId}`;
+  const ext = getMediaExtensionFromName(presentationName);
+  const presFilename = `${presentationId}.${ext}`;
+  const filename = presentationName || presFilename;
+  const params = new URLSearchParams({
+    presFilename,
+    filename,
+  });
+  return `${bbbWebBase}/presentation/${endpoint}/${Auth.meetingID}/${presentationId}?${params.toString()}`;
 };
+
+export const getPresentationMediaPlaybackUrl = (presentationId, presentationName) => (
+  buildMediaUrl(presentationId, presentationName, 'media')
+);
+
+export const getPresentationMediaDownloadUrl = (presentationId, presentationName) => (
+  buildMediaUrl(presentationId, presentationName, 'download')
+);
 
 export const buildAcceptList = (fileValidMimeTypes = []) => {
   const extensions = fileValidMimeTypes.map((entry) => entry.extension);
@@ -39,6 +60,7 @@ export default {
   isMediaExtension,
   isImageExtension,
   getPresentationMediaPlaybackUrl,
+  getPresentationMediaDownloadUrl,
   buildAcceptList,
   isFileAccepted,
 };

@@ -764,9 +764,14 @@ class Presentation extends PureComponent {
         && !fullscreenContext
       );
 
-    const containerWidth = isLargePresentation
-      ? svgWidth
-      : presentationToolbarMinWidth;
+    let containerWidth;
+    if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
+      containerWidth = presentationBounds.width;
+    } else if (isLargePresentation) {
+      containerWidth = svgWidth;
+    } else {
+      containerWidth = presentationToolbarMinWidth;
+    }
 
     const slideContent = currentSlide?.content
       ? `${intl.formatMessage(intlMessages.slideContentStart)}

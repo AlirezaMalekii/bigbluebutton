@@ -189,6 +189,10 @@ const uploadPendingPresentations = (
   });
 };
 
+const isMediaPresentation = (presentation) => (
+  presentation?.isMedia || isMediaExtension(presentation?.name)
+);
+
 const persistPresentationChanges = (
   oldState,
   newState,
@@ -226,6 +230,11 @@ const persistPresentationChanges = (
       if (currentPresentation?.uploadInProgress) {
         const currentIndex = presentationsToUpload.findIndex((p) => p === currentPresentation);
         currentPresentation = presentations[currentIndex];
+      }
+
+      // Media files play through External Video — keep the previous slide deck visible.
+      if (isMediaPresentation(currentPresentation)) {
+        return Promise.resolve();
       }
 
       // skip setting as current if error happened

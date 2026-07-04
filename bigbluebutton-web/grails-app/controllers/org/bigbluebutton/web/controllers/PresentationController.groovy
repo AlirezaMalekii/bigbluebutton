@@ -49,6 +49,9 @@ class PresentationController {
   private static final Pattern DOWNLOAD_URI_PATTERN = Pattern.compile(
     '/bigbluebutton/presentation/download/([A-Za-z0-9\\-]+)/([A-Za-z0-9\\-]+)'
   )
+  private static final Pattern MEDIA_URI_PATTERN = Pattern.compile(
+    '/bigbluebutton/presentation/media/([A-Za-z0-9\\-]+)/([A-Za-z0-9\\-]+)'
+  )
   private static final Pattern PDF_URI_PATTERN = Pattern.compile(
     '/bigbluebutton/presentation/([A-Za-z0-9\\-]+)/([A-Za-z0-9\\-]+)/([A-Za-z0-9\\-]+)/pdf/([A-Za-z0-9]+)/annotated_slides\\.pdf'
   )
@@ -113,6 +116,20 @@ class PresentationController {
       def downloadMatcher = DOWNLOAD_URI_PATTERN.matcher(uriPath)
       if (downloadMatcher.matches()) {
         def meetingIdFromUri = downloadMatcher.group(1)
+        if (meetingIdFromUri != userSession.meetingID) {
+          response.setStatus(403)
+          response.outputStream << 'forbidden'
+          return
+        }
+
+        response.setStatus(200)
+        response.outputStream << 'authorized'
+        return
+      }
+
+      def mediaMatcher = MEDIA_URI_PATTERN.matcher(uriPath)
+      if (mediaMatcher.matches()) {
+        def meetingIdFromUri = mediaMatcher.group(1)
         if (meetingIdFromUri != userSession.meetingID) {
           response.setStatus(403)
           response.outputStream << 'forbidden'
@@ -518,35 +535,125 @@ class PresentationController {
 
     log.debug "Controller: Download request for $presFilename"
 
-    InputStream is = null;
-    try {
-      def pres = meetingService.getDownloadablePresentationFile(meetingId, presId, presFilename)
-      if (pres != null && pres.exists()) {
-        log.debug "Controller: Sending pdf reply for $presFilename"
+    sendPresentationMediaResponse(meetingId, presId, presFilename, filename, true)
+  }
 
-        def bytes = pres.readBytes()
-        def responseName = filename;
+  def streamMediaFile = {
+    def userSession = validateSession()
+    if (userSession == null) { response.setStatus(401); return }
+
+    def presId = params.presId
+    def presFilename = params.presFilename
+    def meetingId = params.meetingId
+    def filename = params.filename
+
+    if (meetingId != userSession.meetingID) { response.setStatus(403); return }
+
+    log.debug "Controller: Stream media request for $presFilename"
+
+    sendPresentationMediaResponse(meetingId, presId, presFilename, filename, false)
+  }
+
+  private void sendPresentationMediaResponse(
+    String meetingId,
+    String presId,
+    String presFilename,
+    String filename,
+    boolean attachment
+  ) {
+    try {
+      def pres = resolvePresentationMediaFile(meetingId, presId, presFilename)
+      if (pres != null && pres.exists()) {
+        def responseName = filename ?: presFilename
         def mimeType = grailsMimeUtility.getMimeTypeForURI(responseName)
         def mimeName = mimeType != null ? mimeType.name : 'application/octet-stream'
-
         def encoded = URLEncoder.encode(responseName, StandardCharsets.UTF_8).replace("+", "%20")
 
         response.contentType = mimeName
-        response.addHeader(
-                "content-disposition",
-                "attachment; filename=\"" + responseName + "\"; " +
-                "filename*=UTF-8''" + encoded
-        )
+        response.addHeader("Accept-Ranges", "bytes")
         response.addHeader("Cache-Control", "no-cache")
-        response.outputStream << bytes;
+        if (attachment) {
+          response.addHeader(
+            "content-disposition",
+            "attachment; filename=\"" + responseName + "\"; " +
+            "filename*=UTF-8''" + encoded
+          )
+        } else {
+          response.addHeader(
+            "content-disposition",
+            "inline; filename=\"" + responseName + "\"; " +
+            "filename*=UTF-8''" + encoded
+          )
+        }
+
+        long fileLength = pres.length()
+        String rangeHeader = request.getHeader("Range")
+        if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
+          def rangeParts = rangeHeader.substring(6).split("-")
+          long start = Long.parseLong(rangeParts[0])
+          long end = rangeParts.length > 1 && rangeParts[1] != ""
+            ? Long.parseLong(rangeParts[1])
+            : fileLength - 1
+
+          if (start >= fileLength) {
+            response.setStatus(416)
+            response.addHeader("Content-Range", "bytes */" + fileLength)
+            return
+          }
+
+          end = Math.min(end, fileLength - 1)
+          long contentLength = end - start + 1
+          response.setStatus(206)
+          response.addHeader("Content-Range", "bytes " + start + "-" + end + "/" + fileLength)
+          response.addHeader("Content-Length", String.valueOf(contentLength))
+
+          InputStream inputStream = new FileInputStream(pres)
+          inputStream.skip(start)
+          byte[] buffer = new byte[8192]
+          long remaining = contentLength
+          while (remaining > 0) {
+            int read = inputStream.read(buffer, 0, (int) Math.min(buffer.length, remaining))
+            if (read == -1) break
+            response.outputStream.write(buffer, 0, read)
+            remaining -= read
+          }
+          inputStream.close()
+        } else {
+          response.addHeader("Content-Length", String.valueOf(fileLength))
+          response.outputStream << pres.readBytes()
+        }
       } else {
-        log.warn "$pres does not exist."
-		response.status = 404
+        log.warn "Presentation media file does not exist for presId=${presId}, filename=${presFilename}"
+        response.status = 404
       }
     } catch (IOException e) {
-      log.error("Error reading file.\n" + e.getMessage());
-	  response.status = 404
+      log.error("Error reading media file.\n" + e.getMessage())
+      response.status = 404
     }
+  }
+
+  private File resolvePresentationMediaFile(String meetingId, String presId, String presFilename) {
+    if (presFilename == null || presFilename == "") return null
+
+    def downloadableFile = meetingService.getDownloadablePresentationFile(meetingId, presId, presFilename)
+    if (downloadableFile != null && downloadableFile.exists()) {
+      return downloadableFile
+    }
+
+    if (!Util.isPresFileIdValidFormat(presFilename)) {
+      return null
+    }
+
+    String presFilenameExt = FilenameUtils.getExtension(presFilename)
+    File presDir = Util.getPresentationDir(presentationService.getPresentationDir(), meetingId, presId)
+    if (presDir == null) return null
+
+    File presFile = new File(presDir.getAbsolutePath() + File.separatorChar + presId + "." + presFilenameExt)
+    if (presFile.exists()) {
+      return presFile
+    }
+
+    return null
   }
 
   def thumbnail = {

@@ -1433,6 +1433,7 @@
   width: 1em !important;
   height: 1em !important;
   line-height: 1 !important;
+  margin-right: 8px !important;
 }
 
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] .skyroom-user-actions-trigger i::before,

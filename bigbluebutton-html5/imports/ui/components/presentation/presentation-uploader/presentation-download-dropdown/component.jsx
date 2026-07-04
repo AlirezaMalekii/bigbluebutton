@@ -107,13 +107,19 @@ class PresentationDownloadDropdown extends PureComponent {
     this.menuItems = [];
 
     const { filenameConverted, name, downloadFileUri } = item;
+    const isMediaItem = item?.isMedia
+      || ['mp4', 'webm', 'mp3', 'ogg', 'wav', 'm4a'].includes(
+        name?.split('.').slice(-1)[0]?.toLowerCase(),
+      );
     const convertedFileExtension = filenameConverted?.split('.').slice(-1)[0];
     const downloadableExtension = downloadFileUri?.split('.').slice(-1)[0];
     const originalFileExtension = name?.split('.').slice(-1)[0];
     const changeDownloadOriginalOrConvertedPresentation = (enableDownload, fileStateType) => {
-      handleDownloadableChange(item?.presentationId, fileStateType, enableDownload);
+      handleDownloadableChange(item, fileStateType, enableDownload);
       if (enableDownload) {
-        handleDownloadingOfPresentation(fileStateType);
+        window.setTimeout(() => {
+          handleDownloadingOfPresentation(fileStateType);
+        }, isMediaItem ? 800 : 0);
       }
       closeModal();
     };
@@ -161,7 +167,7 @@ class PresentationDownloadDropdown extends PureComponent {
         }
       }
     }
-    if (allowDownloadWithAnnotations) {
+    if (allowDownloadWithAnnotations && !isMediaItem) {
       this.menuItems.push({
         key: this.actionsKey[1],
         id: 'sendCurrentStateDocument',
