@@ -16,3 +16,4 @@ akka-bbb-apps/*.log
 *.iml
 *~
 .deploy.env
+.deploy-state
