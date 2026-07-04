@@ -78,7 +78,7 @@ path_to_component() {
     bbb-export-annotations/*) echo export ;;
     bbb-shared-notes-server/*) echo notes ;;
     build/packages-template/bbb-playback/*) echo playback ;;
-    scripts/deploy*.sh|deploy.sh|deploy.rsync-excludes) echo _meta ;;
+    scripts/deploy*.sh|deploy.sh) echo _meta ;;
     *) echo "" ;;
   esac
 }
