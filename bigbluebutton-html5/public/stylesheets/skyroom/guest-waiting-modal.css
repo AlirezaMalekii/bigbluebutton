@@ -6,7 +6,6 @@
   background: rgba(4, 10, 20, 0.72) !important;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  z-index: 60 !important;
 }
 
 html[data-skyroom="true"] [data-test="skyroomGuestWaitingModal"].ReactModal__Content {
@@ -182,7 +181,6 @@ html[data-skyroom="true"] [data-test="skyroomGuestWaitingModal"].ReactModal__Con
   background: rgba(4, 10, 20, 0.72) !important;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  z-index: 60 !important;
 }
 
 html[data-skyroom="true"] [data-test="guestPolicySettingsModal"].ReactModal__Content,

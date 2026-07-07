@@ -1010,8 +1010,8 @@
      width, rounded top, scrollable body, safe-area padding. Higher
      specificity (html[...] .ReactModal__Content) beats per-modal rules.
      =================================================================== */
-  html[data-skyroom="true"] .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal):not([data-test="audioModal"]),
-  html[data-skyroom="true"] #modals-container .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal):not([data-test="audioModal"]) {
+  html[data-skyroom="true"] .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal):not([data-test="audioModal"]):not([data-test="skyroomGuestWaitingModal"]),
+  html[data-skyroom="true"] #modals-container .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal):not([data-test="audioModal"]):not([data-test="skyroomGuestWaitingModal"]) {
     position: fixed !important;
     top: auto !important;
     left: 0 !important;

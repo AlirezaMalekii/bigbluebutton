@@ -87,8 +87,13 @@ class ModalSimple extends Component {
       shouldCloseOnOverlayClick,
       onOutsideClick,
     } = this.props;
-    const clickedOutside = this.modalRef.current && e.target?.contains(this.modalRef.current);
-    if (!clickedOutside || !modalIsOpen) return;
+
+    if (!modalIsOpen || !this.modalRef.current) return;
+
+    const { target } = e;
+    if (!target || !(target instanceof Node)) return;
+
+    if (this.modalRef.current.contains(target)) return;
 
     if (shouldCloseOnOverlayClick) {
       this.handleRequestClose(e);
@@ -108,6 +113,7 @@ class ModalSimple extends Component {
       className,
       modalIsOpen,
       onRequestClose,
+      shouldCloseOnOverlayClick,
       shouldShowCloseButton,
       contentLabel,
       headerPosition,
@@ -150,6 +156,7 @@ class ModalSimple extends Component {
         contentLabel={title || contentLabel}
         dataTest={dataTest}
         style={modalStyles}
+        shouldCloseOnOverlayClick={shouldCloseOnOverlayClick}
         {...otherProps}
       >
         <FocusTrap active={modalIsOpen} focusTrapOptions={{ initialFocus: false, fallbackFocus: '#fallback-element' }}>
