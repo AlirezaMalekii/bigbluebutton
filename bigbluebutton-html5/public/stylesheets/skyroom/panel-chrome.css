@@ -19,9 +19,9 @@
   display: flex !important;
   align-items: center !important;
   gap: var(--space-3) !important;
-  flex-wrap: wrap !important;
-  align-content: flex-start !important;
-  row-gap: 6px !important;
+  flex-wrap: nowrap !important;
+  align-content: center !important;
+  row-gap: 0 !important;
   flex-shrink: 0 !important;
   min-height: var(--skyroom-header-height, 56px) !important;
   width: 100% !important;
@@ -57,14 +57,32 @@
   box-shadow: none !important;
 }
 
+/* Title column — same vertical rhythm as users panel */
+#layout[data-skyroom-column="true"] [data-test="userListContainer"] [class*="Container"]:has([data-test-users-count]) h2,
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] [data-test="chatTitle"] h2,
+#layout[data-skyroom-column="true"] [data-test="sharedNotesPanelTitle"] h2 {
+  display: flex !important;
+  align-items: center !important;
+  align-self: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  line-height: 1.2 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="publicChatPanel"] [data-test="hidePublicChat"],
+#layout[data-skyroom-column="true"] [data-test="sharedNotesPanelTitle"] [data-test="hideSharedNotes"] {
+  align-self: center !important;
+}
+
 #layout[data-skyroom-column="true"] [data-test="user-management-options"],
 #layout[data-skyroom-column="true"] [data-test="skyroom-chat-header-options"],
 #layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"],
 #layout[data-skyroom-column="true"] [data-test="sharedNotesPanelTitle"] [class*="OptionsGroup"] {
-  flex: 1 1 auto !important;
+  flex: 0 0 auto !important;
+  align-self: center !important;
   margin-inline-start: auto !important;
   display: flex !important;
-  flex-wrap: wrap !important;
+  flex-wrap: nowrap !important;
   align-items: center !important;
   justify-content: flex-end !important;
   gap: 6px !important;

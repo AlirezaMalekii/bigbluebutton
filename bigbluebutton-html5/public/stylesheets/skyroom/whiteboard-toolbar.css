@@ -288,12 +288,21 @@
   right: calc(50% + 92px) !important;
 }
 
+#skyroom-wb-popover-portal,
+#skyroom-wb-popover-portal [data-skyroom-popover-anchored="true"],
+#skyroom-wb-popover-portal .tlui-popover__content[data-state="open"],
+#skyroom-wb-popover-portal .tlui-menu[data-state="open"],
+#skyroom-wb-popover-portal [role="dialog"][data-state="open"] {
+  z-index: 1201 !important;
+  pointer-events: auto !important;
+}
+
 /* TLDraw toolbar popovers — Radix positions them (side=top) inside .tl-container. */
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content[data-state="open"],
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu[data-state="open"],
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element [role="dialog"][data-state="open"] {
   pointer-events: auto !important;
-  z-index: 1105 !important;
+  z-index: 1201 !important;
 }
 
 #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content,

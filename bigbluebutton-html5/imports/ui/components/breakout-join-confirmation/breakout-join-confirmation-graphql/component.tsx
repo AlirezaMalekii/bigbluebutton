@@ -2,9 +2,7 @@ import { useMutation } from '@apollo/client';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import Styled from './styles';
-import ModalSimple from '/imports/ui/components/common/modal/simple/component';
-import Button from '/imports/ui/components/common/button/component';
-import Icon from '/imports/ui/components/common/icon/component';
+import ModalFullscreen from '/imports/ui/components/common/modal/fullscreen/component';
 import {
   BreakoutRoom,
   getBreakoutData,
@@ -20,6 +18,7 @@ import { useStopMediaOnMainRoom } from '/imports/ui/components/breakout-room/hoo
 import logger from '/imports/startup/client/logger';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
+import Icon from '/imports/ui/components/common/icon/component';
 
 const intlMessages = defineMessages({
   title: {
@@ -42,10 +41,20 @@ const intlMessages = defineMessages({
     description: 'Join confirmation button label',
     defaultMessage: 'Join room',
   },
+  confirmDesc: {
+    id: 'app.breakoutJoinConfirmation.confirmDesc',
+    description: 'adds context to confirm option',
+    defaultMessage: 'Join breakout room',
+  },
   dismissLabel: {
     id: 'app.breakoutJoinConfirmation.dismissLabel',
     description: 'Cancel button label',
     defaultMessage: 'Not now',
+  },
+  dismissDesc: {
+    id: 'app.breakoutJoinConfirmation.dismissDesc',
+    description: 'adds context to dismiss option',
+    defaultMessage: 'Dismiss breakout room invitation',
   },
   generatingURL: {
     id: 'app.createBreakoutRoom.generatingURLMessage',
@@ -82,6 +91,7 @@ const BreakoutJoinConfirmation: React.FC<BreakoutJoinConfirmationProps> = ({
   const stopMediaOnMainRoom = useStopMediaOnMainRoom();
   const intl = useIntl();
   const [waiting, setWaiting] = React.useState(false);
+  const [invitationDismissed, setInvitationDismissed] = React.useState(false);
 
   const {
     close: breakoutJoinConfirmationClose,
@@ -110,38 +120,42 @@ const BreakoutJoinConfirmation: React.FC<BreakoutJoinConfirmationProps> = ({
       || breakouts.find((br) => br.joinURL != null)?.breakoutRoomMeetingId
       || breakouts[0]?.breakoutRoomMeetingId;
 
-  const [selectValue, setSelectValue] = React.useState('');
+  const [selectValue, setSelectValue] = React.useState(defaultSelectedBreakoutId ?? '');
 
-  const requestJoinURL = (breakoutRoomMeetingId: string) => {
+  const requestJoinURL = useCallback((breakoutRoomMeetingId: string) => {
     breakoutRoomRequestJoinURL({ variables: { breakoutRoomMeetingId } });
-  };
-
-  if (defaultSelectedBreakoutId === breakouts[0]?.breakoutRoomMeetingId) {
-    const selectedBreakout = breakouts.find(
-      ({ breakoutRoomMeetingId }) => breakoutRoomMeetingId === defaultSelectedBreakoutId,
-    );
-    if (!selectedBreakout?.joinURL && !waiting) {
-      requestJoinURL(defaultSelectedBreakoutId);
-      setWaiting(true);
-    }
-  }
-
-  const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectValue(event.target.value);
-    const selectedBreakout = breakouts.find(
-      ({ breakoutRoomMeetingId }) => breakoutRoomMeetingId === event.target.value,
-    );
-    if (!selectedBreakout?.joinURL) {
-      requestJoinURL(event.target.value);
-      setWaiting(true);
-    }
-  };
+  }, [breakoutRoomRequestJoinURL]);
 
   useEffect(() => {
     if (defaultSelectedBreakoutId) {
       setSelectValue(defaultSelectedBreakoutId);
     }
   }, [defaultSelectedBreakoutId]);
+
+  // Pre-request join URL for free-join when the default room has no URL yet.
+  useEffect(() => {
+    if (!freeJoin || !defaultSelectedBreakoutId || waiting) return;
+
+    const selectedBreakout = breakouts.find(
+      ({ breakoutRoomMeetingId }) => breakoutRoomMeetingId === defaultSelectedBreakoutId,
+    );
+    if (!selectedBreakout?.joinURL) {
+      requestJoinURL(defaultSelectedBreakoutId);
+      setWaiting(true);
+    }
+  }, [freeJoin, defaultSelectedBreakoutId, breakouts, waiting, requestJoinURL]);
+
+  const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const nextValue = event.target.value;
+    setSelectValue(nextValue);
+    const selectedBreakout = breakouts.find(
+      ({ breakoutRoomMeetingId }) => breakoutRoomMeetingId === nextValue,
+    );
+    if (!selectedBreakout?.joinURL) {
+      requestJoinURL(nextValue);
+      setWaiting(true);
+    }
+  };
 
   const handleJoinBreakoutConfirmation = useCallback(() => {
     stopMediaOnMainRoom(presenter);
@@ -168,6 +182,7 @@ const BreakoutJoinConfirmation: React.FC<BreakoutJoinConfirmationProps> = ({
   }, [breakouts, selectValue, presenter, stopMediaOnMainRoom, setIsOpen]);
 
   const handleDismiss = useCallback(() => {
+    setInvitationDismissed(true);
     setIsOpen(false);
     callHandleInviteDismissedAt();
   }, [setIsOpen, callHandleInviteDismissedAt]);
@@ -203,24 +218,23 @@ const BreakoutJoinConfirmation: React.FC<BreakoutJoinConfirmationProps> = ({
     </Styled.SelectParent>
   ), [breakouts, waiting, selectValue, intl]);
 
-  const roomName = breakouts[0].isDefaultName
+  const roomName = breakouts[0]?.isDefaultName
     ? intl.formatMessage(intlMessages.breakoutRoom, { roomNumber: breakouts[0].sequence })
-    : breakouts[0].shortName;
+    : breakouts[0]?.shortName ?? '';
 
   useEffect(() => {
-    if (waiting) {
-      const breakout = breakouts.find(({ breakoutRoomMeetingId }) => breakoutRoomMeetingId === selectValue);
-      if (breakout?.joinURL) {
-        setWaiting(false);
-      }
+    if (!waiting) return;
+    const breakout = breakouts.find(({ breakoutRoomMeetingId }) => breakoutRoomMeetingId === selectValue);
+    if (breakout?.joinURL) {
+      setWaiting(false);
     }
   }, [breakouts, waiting, selectValue]);
 
   useEffect(() => {
-    if (breakouts?.length > 0 && !currentUserJoined) {
+    if (breakouts?.length > 0 && !currentUserJoined && !invitationDismissed) {
       setIsOpen(true);
     }
-  }, [breakouts, currentUserJoined, setIsOpen]);
+  }, [breakouts, currentUserJoined, invitationDismissed, setIsOpen]);
 
   useEffect(() => {
     if (freeJoin) {
@@ -232,54 +246,39 @@ const BreakoutJoinConfirmation: React.FC<BreakoutJoinConfirmationProps> = ({
   }, [freeJoin, breakouts]);
 
   return (
-    <ModalSimple
-      modalIsOpen={breakoutJoinConfirmationIsOpen}
-      className="skyroom-breakout-join-modal"
-      overlayClassName="skyroom-breakout-join-overlay"
-      onRequestClose={handleDismiss}
+    <ModalFullscreen
       title={intl.formatMessage(intlMessages.title)}
-      shouldShowCloseButton={false}
-      shouldCloseOnOverlayClick={false}
-      data-test="breakoutJoinConfirmationModal"
+      confirm={{
+        callback: handleJoinBreakoutConfirmation,
+        label: intl.formatMessage(intlMessages.confirmLabel),
+        description: intl.formatMessage(intlMessages.confirmDesc),
+        icon: 'popout_window',
+        disabled: waiting,
+      }}
+      dismiss={{
+        callback: handleDismiss,
+        label: intl.formatMessage(intlMessages.dismissLabel),
+        description: intl.formatMessage(intlMessages.dismissDesc),
+      }}
+      setIsOpen={setIsOpen}
+      isOpen={breakoutJoinConfirmationIsOpen}
+      priority="medium"
     >
-      <Styled.JoinModalBody data-test="breakoutJoinModalBody">
-        {freeJoin ? select : (
-          <>
-            <p data-test="breakoutJoinModalMessage">
-              {intl.formatMessage(intlMessages.message)}
-            </p>
-            <Styled.RoomNameHighlight data-test="breakoutJoinRoomName">
-              <Icon iconName="rooms" data-test="breakoutJoinRoomIcon" />
-              <span>{roomName}</span>
-            </Styled.RoomNameHighlight>
-          </>
-        )}
-        <p data-test="breakoutJoinModalHint">
-          {intl.formatMessage(intlMessages.joinHint)}
-        </p>
-        <Styled.JoinModalActions data-test="breakoutJoinModalActions">
-          <Styled.ActionButtonWrap data-test="breakoutJoinConfirmBtn">
-            <Button
-              color="primary"
-              size="md"
-              icon="popout_window"
-              iconRight
-              label={intl.formatMessage(intlMessages.confirmLabel)}
-              disabled={waiting}
-              onClick={handleJoinBreakoutConfirmation}
-            />
-          </Styled.ActionButtonWrap>
-          <Styled.ActionButtonWrap data-test="breakoutJoinDismissBtn">
-            <Button
-              color="default"
-              size="md"
-              label={intl.formatMessage(intlMessages.dismissLabel)}
-              onClick={handleDismiss}
-            />
-          </Styled.ActionButtonWrap>
-        </Styled.JoinModalActions>
-      </Styled.JoinModalBody>
-    </ModalSimple>
+      {freeJoin ? select : (
+        <Styled.ConfirmationBody data-test="breakoutJoinModalBody">
+          <p data-test="breakoutJoinModalMessage">
+            {intl.formatMessage(intlMessages.message)}
+          </p>
+          <Styled.RoomNameHighlight data-test="breakoutJoinRoomName">
+            <Icon iconName="rooms" data-test="breakoutJoinRoomIcon" />
+            <span>{roomName}</span>
+          </Styled.RoomNameHighlight>
+          <p data-test="breakoutJoinModalHint">
+            {intl.formatMessage(intlMessages.joinHint)}
+          </p>
+        </Styled.ConfirmationBody>
+      )}
+    </ModalFullscreen>
   );
 };
 

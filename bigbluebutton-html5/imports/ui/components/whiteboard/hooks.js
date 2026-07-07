@@ -443,20 +443,71 @@ const isSkyroomMobileMoreMenuMode = () => {
   return Boolean(document.getElementById('layout')?.hasAttribute('data-skyroom-mobile'));
 };
 
-// Nudge Radix "more" overflow menu above the bottom toolbar on phone.
+const SKYROOM_MOBILE_POPOVER_Z = '1200';
+
+const getSkyroomMobilePopoverPortal = () => {
+  let portal = document.getElementById('skyroom-wb-popover-portal');
+  if (!portal) {
+    portal = document.createElement('div');
+    portal.id = 'skyroom-wb-popover-portal';
+    portal.setAttribute('data-skyroom-wb-popover-portal', 'true');
+    portal.style.setProperty('position', 'fixed');
+    portal.style.setProperty('inset', '0');
+    portal.style.setProperty('z-index', SKYROOM_MOBILE_POPOVER_Z);
+    portal.style.setProperty('pointer-events', 'none');
+    document.body.appendChild(portal);
+  }
+  return portal;
+};
+
+const findSkyroomMobilePopoverTrigger = (root, popover) => {
+  const popoverId = popover.getAttribute('id');
+  if (popoverId) {
+    const byControls = root.querySelector(`[aria-controls="${popoverId}"]`);
+    if (byControls) return byControls;
+  }
+
+  const testIdTriggers = {
+    'tools.more': 'button[data-testid="tools.more"]',
+    'mobile.styles': 'button[data-testid="mobile.styles"]',
+  };
+  const entries = Object.entries(testIdTriggers);
+  for (let i = 0; i < entries.length; i += 1) {
+    const [needle, selector] = entries[i];
+    if (popover.closest('.tlui-menu') && needle === 'tools.more') {
+      const trigger = root.querySelector(selector);
+      if (trigger) return trigger;
+    }
+    if (popover.querySelector('.tlui-style-panel') && needle === 'mobile.styles') {
+      const trigger = root.querySelector(selector);
+      if (trigger) return trigger;
+    }
+  }
+
+  const openToolbarButtons = Array.from(root.querySelectorAll(
+    '.tlui-layout__bottom button[data-state="open"][aria-expanded="true"], .tlui-layout__bottom button[data-state="open"]',
+  ));
+  if (openToolbarButtons.length === 1) return openToolbarButtons[0];
+  if (openToolbarButtons.length > 1 && popoverId) {
+    const matched = openToolbarButtons.find(
+      (btn) => btn.getAttribute('aria-controls') === popoverId,
+    );
+    if (matched) return matched;
+  }
+
+  return openToolbarButtons[0] || null;
+};
+
+// Nudge Radix toolbar popovers above the bottom bars on phone
+// (body portal escapes slide-bar stacking).
 /* eslint-disable no-param-reassign */
-const anchorSkyroomMoreMenuAboveTrigger = () => {
+const anchorSkyroomMobileToolbarPopovers = () => {
   if (!isSkyroomMobileMoreMenuMode()) return;
 
   const root = document.getElementById('whiteboard-element');
   if (!root) return;
 
-  const menu = root.querySelector('.tlui-menu[data-state="open"]:has(.tlui-buttons__grid)');
-  const trigger = root.querySelector('button[data-testid="tools.more"]');
-  if (!menu || !trigger) return;
-
-  const gap = 10;
-  const triggerRect = trigger.getBoundingClientRect();
+  const gap = 8;
   const stageRect = (
     document.getElementById('presentationInnerWrapper') || root
   ).getBoundingClientRect();
@@ -467,66 +518,85 @@ const anchorSkyroomMoreMenuAboveTrigger = () => {
     + (wbBottomBar?.getBoundingClientRect().height || 0)
     + gap
   );
-
-  const menuHeight = menu.offsetHeight > 0 ? menu.offsetHeight : menu.scrollHeight;
-  const menuWidth = menu.offsetWidth > 0 ? menu.offsetWidth : menu.scrollWidth;
-
-  let top = triggerRect.top - menuHeight - gap;
-  top = Math.max(stageRect.top + gap, top);
-
   const viewportMaxBottom = window.innerHeight - reservedBottom - gap;
-  if (top + menuHeight > viewportMaxBottom) {
-    top = Math.max(stageRect.top + gap, viewportMaxBottom - menuHeight);
-  }
+  const portal = getSkyroomMobilePopoverPortal();
 
-  let left = triggerRect.left + (triggerRect.width / 2) - (menuWidth / 2);
-  left = Math.max(stageRect.left + gap, left);
-  left = Math.min(left, stageRect.right - menuWidth - gap);
+  const popoverSelectors = [
+    '.tlui-menu[data-state="open"]:has(.tlui-buttons__grid)',
+    '.tlui-popover__content[data-state="open"]',
+    '[role="dialog"][data-state="open"]:has(.tlui-style-panel)',
+  ].join(', ');
 
-  const desiredTop = `${Math.round(top)}px`;
-  const desiredLeft = `${Math.round(left)}px`;
+  root.querySelectorAll(popoverSelectors).forEach((popover) => {
+    const anchorTarget = popover.closest('[data-radix-popper-content-wrapper]') || popover;
+    const trigger = findSkyroomMobilePopoverTrigger(root, popover);
+    if (!trigger) return;
 
-  // Idempotent: if the menu is already anchored where we want it, don't rewrite its style.
-  // Rewriting on every mutation nudges the element between touchstart and touchend, which
-  // cancels the tap on phones — that was why the menu items appeared to "do nothing".
-  if (
-    menu.dataset.skyroomMoreMenuAnchored === 'true'
-    && menu.style.top === desiredTop
-    && menu.style.left === desiredLeft
-  ) {
-    return;
-  }
+    if (anchorTarget.parentElement !== portal) {
+      portal.appendChild(anchorTarget);
+    }
 
-  menu.style.setProperty('position', 'fixed', 'important');
-  menu.style.setProperty('top', desiredTop, 'important');
-  menu.style.setProperty('left', desiredLeft, 'important');
-  menu.style.setProperty('right', 'auto', 'important');
-  menu.style.setProperty('bottom', 'auto', 'important');
-  menu.style.setProperty('transform', 'none', 'important');
-  menu.style.setProperty('margin', '0', 'important');
-  menu.style.setProperty('z-index', '1105', 'important');
-  menu.dataset.skyroomMoreMenuAnchored = 'true';
+    const triggerRect = trigger.getBoundingClientRect();
+    const popoverHeight = anchorTarget.offsetHeight > 0
+      ? anchorTarget.offsetHeight
+      : anchorTarget.scrollHeight;
+    const popoverWidth = anchorTarget.offsetWidth > 0
+      ? anchorTarget.offsetWidth
+      : anchorTarget.scrollWidth;
+
+    let top = triggerRect.top - popoverHeight - gap;
+    top = Math.max(stageRect.top + gap, top);
+    if (top + popoverHeight > viewportMaxBottom) {
+      top = Math.max(stageRect.top + gap, viewportMaxBottom - popoverHeight);
+    }
+
+    let left = triggerRect.left + (triggerRect.width / 2) - (popoverWidth / 2);
+    left = Math.max(stageRect.left + gap, left);
+    left = Math.min(left, stageRect.right - popoverWidth - gap);
+
+    const desiredTop = `${Math.round(top)}px`;
+    const desiredLeft = `${Math.round(left)}px`;
+
+    if (
+      anchorTarget.dataset.skyroomPopoverAnchored === 'true'
+      && anchorTarget.style.top === desiredTop
+      && anchorTarget.style.left === desiredLeft
+    ) {
+      return;
+    }
+
+    anchorTarget.style.setProperty('position', 'fixed', 'important');
+    anchorTarget.style.setProperty('top', desiredTop, 'important');
+    anchorTarget.style.setProperty('left', desiredLeft, 'important');
+    anchorTarget.style.setProperty('right', 'auto', 'important');
+    anchorTarget.style.setProperty('bottom', 'auto', 'important');
+    anchorTarget.style.setProperty('transform', 'none', 'important');
+    anchorTarget.style.setProperty('margin', '0', 'important');
+    anchorTarget.style.setProperty('pointer-events', 'auto', 'important');
+    anchorTarget.style.setProperty('z-index', '1201', 'important');
+    anchorTarget.dataset.skyroomPopoverAnchored = 'true';
+
+    if (popover.classList.contains('tlui-menu')) {
+      popover.dataset.skyroomMoreMenuAnchored = 'true';
+    }
+  });
 };
 /* eslint-enable no-param-reassign */
 
-/** Reposition tools.more overflow grid above the trigger; Radix open/close stays native. */
+/** Reposition TLDraw overflow/shape/style popovers above toolbar triggers on phone. */
 const useSkyroomMoreMenuAnchor = (enabled) => {
   React.useEffect(() => {
     if (!enabled) return undefined;
-
-    document.querySelectorAll('#skyroom-wb-popover-portal, [data-skyroom-wb-popover-portal="true"]').forEach((el) => {
-      el.remove();
-    });
 
     let rafId = null;
 
     const schedule = () => {
       if (rafId) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
-        anchorSkyroomMoreMenuAboveTrigger();
+        anchorSkyroomMobileToolbarPopovers();
         rafId = requestAnimationFrame(() => {
           rafId = null;
-          anchorSkyroomMoreMenuAboveTrigger();
+          anchorSkyroomMobileToolbarPopovers();
         });
       });
     };
@@ -551,6 +621,7 @@ const useSkyroomMoreMenuAnchor = (enabled) => {
       observer?.disconnect();
       window.removeEventListener('resize', schedule);
       window.removeEventListener('scroll', schedule, true);
+      document.getElementById('skyroom-wb-popover-portal')?.remove();
     };
   }, [enabled]);
 };

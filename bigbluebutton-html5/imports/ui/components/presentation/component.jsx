@@ -460,7 +460,7 @@ class Presentation extends PureComponent {
 
     presentationSizes.presentationWidth = presentationBounds.width;
     if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
-      const slideToolbarH = getToolbarHeight() || 18;
+      const slideToolbarH = getToolbarHeight() || 14;
       const wbToolbarReserve = getSkyroomMobileWbToolbarReserve();
       presentationSizes.presentationHeight = Math.max(
         80,
@@ -765,7 +765,7 @@ class Presentation extends PureComponent {
 
     const toolbarHeight = getToolbarHeight();
     const isSkyroomMobileStage = isSkyroomColumnLayout() && isSkyroomMobileViewport();
-    const slideToolbarH = toolbarHeight || 18;
+    const slideToolbarH = toolbarHeight || 14;
     const wbToolbarReserve = isSkyroomMobileStage ? getSkyroomMobileWbToolbarReserve() : 0;
     const mobileChromeH = slideToolbarH + wbToolbarReserve;
     const stageReady = isSkyroomMobileStage

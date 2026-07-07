@@ -126,6 +126,16 @@ class ModalController {
     updateState((prev) => this.compute(prev, { concurrency: Math.max(1, Math.floor(n)) }));
   }
 
+  closeAll(): void {
+    updateState((prev) => {
+      const newByKey: Record<string, ModalRegistration> = {};
+      Object.values(prev.byKey).forEach((m) => {
+        newByKey[m.uniqueId] = { ...m, desiredOpen: false };
+      });
+      return this.compute({ ...prev, byKey: newByKey });
+    });
+  }
+
   // eslint-disable-next-line class-methods-use-this
   get state(): ModalState {
     return modalStateVar();
@@ -182,6 +192,11 @@ class ModalController {
 
 // Singleton instance using static weights
 export const controller = new ModalController(PRIORITY_WEIGHTS);
+
+/** Close every modal registered with the controller (e.g. before opening another). */
+export function closeAllRegisteredModals(): void {
+  controller.closeAll();
+}
 
 /**
  * useModalRegistration

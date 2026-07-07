@@ -265,13 +265,14 @@ const BreakoutRoomContainer: React.FC<BreakoutRoomContainerProps> = ({
   presentation: presentationProp,
   onClose,
 }) => {
+  const layoutContextDispatch = layoutDispatch();
   const presentation = presentationProp ?? (
     isSkyroomColumnLayout() && isSkyroomMobileViewport() ? 'mobile' : 'sidebar'
   );
 
   const handleClose = onClose ?? (
     presentation === 'mobile' && isSkyroomColumnLayout() && isSkyroomMobileViewport()
-      ? () => openSkyroomMobileBox(layoutDispatch(), null)
+      ? () => openSkyroomMobileBox(layoutContextDispatch, null)
       : undefined
   );
 

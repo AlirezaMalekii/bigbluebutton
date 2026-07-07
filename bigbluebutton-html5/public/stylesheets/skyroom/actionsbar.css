@@ -465,7 +465,7 @@
 }
 
 /* -----------------------------------------------------------------------
-   Mobile — centered clusters, horizontal scroll if needed
+   Mobile — centered clusters, no horizontal scroll
    ----------------------------------------------------------------------- */
 @media (max-width: 768px) {
   #layout[data-skyroom-column="true"] #ActionsBar {
@@ -475,16 +475,10 @@
   }
 
   #layout[data-skyroom-column="true"] #ActionsBar > div {
-    justify-content: flex-start !important;
-    overflow-x: auto !important;
+    justify-content: center !important;
+    overflow-x: hidden !important;
     overflow-y: hidden !important;
-    scrollbar-width: none !important;
-    -webkit-overflow-scrolling: touch;
     padding: 0 10px !important;
-  }
-
-  #layout[data-skyroom-column="true"] #ActionsBar > div::-webkit-scrollbar {
-    display: none !important;
   }
 
   /* BBB sets display:contents on Right at small breakpoints — keep cluster */
@@ -493,7 +487,7 @@
   }
 
   #layout[data-skyroom-column="true"] #ActionsBar > div > div:not(:last-child) {
-    margin-inline-end: 14px !important;
+    margin-inline-end: 8px !important;
   }
 
   #layout[data-skyroom-column="true"] #ActionsBar > div > div:not(:last-child)::after {
@@ -546,8 +540,7 @@
 }
 
 #layout[data-skyroom-column="true"]:has(#ActionsBar [data-test="skyroomFooterLogoSlot"][data-mobile-footer="true"]) #ActionsBar > div {
-  padding-inline-start: calc(12px + 36px + 10px) !important;
-  padding-inline-end: 10px !important;
+  padding-inline: calc(12px + 36px + 6px) !important;
 }
 
 /* Legacy mobile icon rules (header portal path) */
@@ -576,8 +569,7 @@
 
 /* Reserve space so controls never sit under the logo (legacy portal path) */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar > div {
-    padding-inline-start: calc(12px + 36px + 10px) !important;
-    padding-inline-end: 12px !important;
+    padding-inline: calc(12px + 36px + 6px) !important;
   }
 
   [dir="rtl"] #layout[data-skyroom-column="true"] #ActionsBar [data-test="skyroomFooterLogoSlot"][data-mobile-footer="true"],

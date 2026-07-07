@@ -243,6 +243,7 @@ const CreateBreakoutRoom: React.FC<CreateBreakoutRoomProps> = ({
 }) => {
   const { isMobile } = deviceInfo;
   const intl = useIntl();
+  const layoutContextDispatch = layoutDispatch();
 
   const initialNumberOfRooms = runningRooms.length > 0 ? runningRooms.length : DEFAULT_BREAKOUT_ROOMS;
 
@@ -379,7 +380,7 @@ const CreateBreakoutRoom: React.FC<CreateBreakoutRoomProps> = ({
     );
     setIsOpen(false);
     if (!isUpdate) {
-      openSkyroomBreakoutPanel(layoutDispatch());
+      openSkyroomBreakoutPanel(layoutContextDispatch);
     }
   };
 

@@ -58,12 +58,6 @@ class GuestPolicyComponent extends PureComponent {
     this.handleChangePolicy = this.handleChangePolicy.bind(this);
   }
 
-  componentWillUnmount() {
-    const { setIsOpen } = this.props;
-
-    setIsOpen(false);
-  }
-
   handleChangePolicy(policyRule, messageId) {
     const { intl, changeGuestPolicy } = this.props;
 

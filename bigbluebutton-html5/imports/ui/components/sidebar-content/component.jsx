@@ -56,6 +56,11 @@ const SidebarContent = (props) => {
   const [isResizing, setIsResizing] = useState(false);
   const [resizeStartWidth, setResizeStartWidth] = useState(0);
   const [resizeStartHeight, setResizeStartHeight] = useState(0);
+  const layoutContextDispatch = layoutDispatch();
+
+  const closeMobileContentPanel = () => {
+    openSkyroomMobileBox(layoutContextDispatch, null);
+  };
 
   useEffect(() => {
     if (!isResizing) {
@@ -155,7 +160,7 @@ const SidebarContent = (props) => {
           presentation={isSkyroomColumnLayout() && isSkyroomMobileViewport() ? 'mobile' : 'sidebar'}
           onClose={
             isSkyroomColumnLayout() && isSkyroomMobileViewport()
-              ? () => openSkyroomMobileBox(layoutDispatch(), null)
+              ? closeMobileContentPanel
               : undefined
           }
         />
@@ -166,7 +171,7 @@ const SidebarContent = (props) => {
           presentation={isSkyroomColumnLayout() && isSkyroomMobileViewport() ? 'mobile' : 'sidebar'}
           onClose={
             isSkyroomColumnLayout() && isSkyroomMobileViewport()
-              ? () => openSkyroomMobileBox(layoutDispatch(), null)
+              ? closeMobileContentPanel
               : undefined
           }
         />

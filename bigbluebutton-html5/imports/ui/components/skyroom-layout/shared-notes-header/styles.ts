@@ -1,4 +1,3 @@
-import styled from 'styled-components';
 import {
   PanelHeaderContainer,
   PanelTitle,
@@ -6,14 +5,8 @@ import {
   PanelTitleText,
 } from '../panel-chrome/styles';
 
-const Container = styled(PanelHeaderContainer)`
-  flex-wrap: wrap;
-  align-content: flex-start;
-  row-gap: 6px;
-`;
-
 export default {
-  Container,
+  Container: PanelHeaderContainer,
   SmallTitle: PanelTitle,
   TitleButton: PanelTitleButton,
   TitleText: PanelTitleText,

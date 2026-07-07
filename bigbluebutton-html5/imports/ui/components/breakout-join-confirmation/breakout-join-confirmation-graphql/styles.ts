@@ -19,21 +19,14 @@ const Select = styled.select`
   font-size: 0.9rem;
 `;
 
-const JoinModalBody = styled.div`
+const ConfirmationBody = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.85rem;
   text-align: center;
-`;
-
-const ConfirmationBody = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  text-align: center;
   line-height: 1.5;
+  padding: 0.25rem 0;
 `;
 
 const RoomNameHighlight = styled.div`
@@ -51,36 +44,9 @@ const RoomNameHighlight = styled.div`
   border: 1px solid rgba(32, 199, 187, 0.28);
 `;
 
-const JoinModalActions = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  width: 100%;
-  margin-top: 0.15rem;
-`;
-
-const ActionButtonWrap = styled.div`
-  width: 100%;
-
-  & > span,
-  & .buttonWrapper {
-    width: 100%;
-  }
-
-  button {
-    width: 100%;
-    justify-content: center;
-    min-height: 42px;
-    border-radius: 12px;
-  }
-`;
-
 export default {
   SelectParent,
   Select,
   ConfirmationBody,
   RoomNameHighlight,
-  JoinModalBody,
-  JoinModalActions,
-  ActionButtonWrap,
 };

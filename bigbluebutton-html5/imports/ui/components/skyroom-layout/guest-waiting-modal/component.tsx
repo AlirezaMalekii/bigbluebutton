@@ -1,8 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import ModalSimple from '/imports/ui/components/common/modal/simple/component';
 import GuestUsersManagementPanel from '/imports/ui/components/waiting-users/waiting-users-graphql/component';
-import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
 import {
   SKYROOM_GUEST_WAITING_CLOSE,
   SKYROOM_GUEST_WAITING_OPEN,
@@ -18,25 +17,15 @@ const intlMessages = defineMessages({
 
 const SkyroomGuestWaitingModal: React.FC = () => {
   const intl = useIntl();
-  const {
-    open,
-    close,
-    isOpen,
-  } = useModalRegistration({
-    id: 'skyroomGuestWaitingModal',
-    // Same tier as guest-policy / lock-viewers so one modal does not block the other.
-    priority: 'low',
-  });
-  const isOpenRef = useRef(isOpen);
-  isOpenRef.current = isOpen;
+  const [isOpen, setIsOpen] = useState(false);
+
+  const open = useCallback(() => setIsOpen(true), []);
+  const close = useCallback(() => setIsOpen(false), []);
 
   useEffect(() => {
     const onOpen = () => open();
     const onClose = () => close();
-    const onToggle = () => {
-      if (isOpenRef.current) close();
-      else open();
-    };
+    const onToggle = () => setIsOpen((prev) => !prev);
 
     window.addEventListener(SKYROOM_GUEST_WAITING_OPEN, onOpen);
     window.addEventListener(SKYROOM_GUEST_WAITING_CLOSE, onClose);
