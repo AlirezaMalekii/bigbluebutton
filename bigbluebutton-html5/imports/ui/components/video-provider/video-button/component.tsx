@@ -13,7 +13,7 @@ import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import { CameraSettingsDropdownInterface } from 'bigbluebutton-html-plugin-sdk';
 import VideoService from '../service';
 import Styled from './styles';
-import { useModalRegistration, closeAllRegisteredModals } from '/imports/ui/core/singletons/modalController';
+import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
 
 const intlMessages = defineMessages({
   videoSettings: {
@@ -110,17 +110,12 @@ const JoinVideoButton: React.FC<JoinVideoButtonProps> = ({
   });
 
   const setIsVideoPreviewModalOpen = (isOpen: boolean) => {
-    if (isOpen) {
-      closeAllRegisteredModals();
-      openVideoPreviewModal();
-    } else {
-      closeVideoPreviewModal();
-    }
+    if (isOpen) openVideoPreviewModal();
+    else closeVideoPreviewModal();
   };
 
   useEffect(() => {
     const onOpenRequest = () => {
-      closeAllRegisteredModals();
       openVideoPreviewModal();
     };
     window.addEventListener(OPEN_VIDEO_PREVIEW_MODAL_EVENT, onOpenRequest);

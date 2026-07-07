@@ -18,7 +18,7 @@ import Session from '/imports/ui/services/storage/in-memory';
 import { LAYOUT_TYPE } from '/imports/ui/components/layout/enums';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import Toggle from '/imports/ui/components/common/switch/component';
-import { ModalRegistration, closeAllRegisteredModals } from '/imports/ui/core/singletons/modalController';
+import { ModalRegistration } from '/imports/ui/core/singletons/modalController';
 import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const intlMessages = defineMessages({
@@ -300,10 +300,7 @@ class OptionsDropdown extends PureComponent {
         dataTest: 'settings',
         label: intl.formatMessage(intlMessages.settingsLabel),
         description: intl.formatMessage(intlMessages.settingsDesc),
-        onClick: () => {
-          closeAllRegisteredModals();
-          window.setTimeout(() => this.setOptionsMenuModalIsOpen(), 0);
-        },
+        onClick: () => this.setOptionsMenuModalIsOpen(),
       },
       {
         key: 'list-item-about',

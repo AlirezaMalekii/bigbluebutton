@@ -174,7 +174,7 @@ const RecordingIndicator: React.FC<RecordingIndicatorProps> = ({
     setIsRecordingModalOpen(true);
     const focusedElement = document.activeElement as HTMLElement;
     focusedElement.blur();
-  }, []);
+  }, [intl, setIsRecordingModalOpen]);
 
   useEffect(() => {
     if (recording) {

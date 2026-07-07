@@ -7,7 +7,7 @@ import Icon from '/imports/ui/components/connection-status/icon/component';
 import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import Styled from './styles';
 import { isMobile } from '/imports/utils/deviceInfo';
-import { useModalRegistration, closeAllRegisteredModals } from '/imports/ui/core/singletons/modalController';
+import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
 
 const intlMessages = defineMessages({
   label: {
@@ -64,12 +64,8 @@ const ConnectionStatusButton = ({
   }, [connected, myCurrentStatus, intl]);
 
   const setModalIsOpen = (value) => {
-    if (value) {
-      closeAllRegisteredModals();
-      window.setTimeout(() => open(), 0);
-    } else {
-      close();
-    }
+    if (value) open();
+    else close();
   };
 
   const connectionStatusModal = isOpen ? (

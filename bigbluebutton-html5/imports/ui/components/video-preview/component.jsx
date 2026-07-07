@@ -414,8 +414,13 @@ class VideoPreview extends Component {
     const { viewState, webcamDeviceId } = this.state;
     const { isOpen, isCamLocked } = this.props;
 
-    if (isOpen && isCamLocked === true && !prevProps.isOpen) {
+    if (isOpen && !prevProps.isOpen && isCamLocked === true) {
       this.handleProceed();
+      return;
+    }
+
+    if (isOpen && !prevProps.isOpen && this.shouldSkipVideoPreview()) {
+      this.skipVideoPreview();
       return;
     }
 

@@ -30,7 +30,7 @@ import { GET_USER_NAMES } from '/imports/ui/core/graphql/queries/users';
 import logger from '/imports/startup/client/logger';
 import { filterByMeetingId } from '/imports/ui/core/utils/subscriptionFilters';
 import { notify } from '/imports/ui/services/notification';
-import { useModalRegistration, closeAllRegisteredModals } from '/imports/ui/core/singletons/modalController';
+import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
 
 interface GetUserNamesResponse {
   user: Array<{
@@ -322,10 +322,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         icon: 'user',
         label: intl.formatMessage(intlMessages.guestPolicyLabel),
         description: intl.formatMessage(intlMessages.guestPolicyDesc),
-        onClick: () => {
-          closeAllRegisteredModals();
-          window.setTimeout(guestPolicyModal.open, 0);
-        },
+        onClick: () => guestPolicyModal.open(),
         dataTest: 'guestPolicyLabel',
       },
       {
@@ -356,10 +353,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         icon: 'rooms',
         label: intl.formatMessage(intlMessages.createBreakoutRoom),
         description: intl.formatMessage(intlMessages.createBreakoutRoomDesc),
-        onClick: () => {
-          closeAllRegisteredModals();
-          window.setTimeout(() => createBreakoutRoomModal.open(), 0);
-        },
+        onClick: () => createBreakoutRoomModal.open(),
         dataTest: 'createBreakoutRooms',
       },
       {
@@ -368,10 +362,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         icon: 'rooms',
         label: intl.formatMessage(intlMessages.invitationLabel),
         description: intl.formatMessage(intlMessages.invitationDesc),
-        onClick: () => {
-          closeAllRegisteredModals();
-          window.setTimeout(() => createBreakoutRoomModal.open(), 0);
-        },
+        onClick: () => createBreakoutRoomModal.open(),
         dataTest: 'inviteUsers',
       },
       {
@@ -432,7 +423,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         <CreateBreakoutRoomContainerGraphql
           priority="medium"
           isOpen={createBreakoutRoomModal.isOpen}
-          setIsOpen={createBreakoutRoomModal.isOpen ? createBreakoutRoomModal.close : createBreakoutRoomModal.open}
+          setIsOpen={(value) => (value ? createBreakoutRoomModal.open() : createBreakoutRoomModal.close())}
           isUpdate={isInvitation}
         />
       )}
@@ -442,7 +433,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
           onRequestClose={guestPolicyModal.close}
           priority="medium"
           isOpen={guestPolicyModal.isOpen}
-          setIsOpen={guestPolicyModal.close}
+          setIsOpen={(value) => (value ? guestPolicyModal.open() : guestPolicyModal.close())}
         />
       )}
 
@@ -451,7 +442,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
           onRequestClose={lockViewersModal.close}
           priority="low"
           isOpen={lockViewersModal.isOpen}
-          setIsOpen={lockViewersModal.close}
+          setIsOpen={(value) => (value ? lockViewersModal.open() : lockViewersModal.close())}
         />
       )}
 

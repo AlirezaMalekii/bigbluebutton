@@ -106,14 +106,25 @@ class ModalController {
       if (isFirstOpenAsk) {
         this.requestSeq = nextRequestedSeq;
       }
-      const nextM: ModalRegistration = {
-        ...m,
-        desiredOpen: desired,
-        requestedAt: isFirstOpenAsk ? Date.now() : m.requestedAt,
-        requestedSeq: nextRequestedSeq,
-      };
 
-      return this.compute(prev, { byKey: { ...prev.byKey, [uniqueId]: nextM } });
+      const byKey: Record<string, ModalRegistration> = {};
+      Object.values(prev.byKey).forEach((entry) => {
+        let next = entry;
+        if (desired && entry.uniqueId !== uniqueId && entry.desiredOpen) {
+          next = { ...entry, desiredOpen: false };
+        }
+        if (entry.uniqueId === uniqueId) {
+          next = {
+            ...entry,
+            desiredOpen: desired,
+            requestedAt: isFirstOpenAsk ? Date.now() : entry.requestedAt,
+            requestedSeq: nextRequestedSeq,
+          };
+        }
+        byKey[next.uniqueId] = next;
+      });
+
+      return this.compute(prev, { byKey });
     });
   }
 
@@ -262,7 +273,7 @@ export function useModalRegistration({
   }, []);
 
   return {
-    isOpen: Boolean(my?.actualOpen),
+    isOpen: Boolean(my?.desiredOpen),
     position: my?.position ?? null,
     queuedPosition: my?.queuedPosition ?? null,
     id: my?.id ?? id,
