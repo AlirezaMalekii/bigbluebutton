@@ -173,6 +173,13 @@ const NoPendingUsers = styled.p`
   font-weight: bold;
 `;
 
+const SkyroomEmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+`;
+
 const MainTitle = styled.p`
   color: ${colorGray};
 `;
@@ -198,8 +205,16 @@ const CustomButton = styled(Button)`
 `;
 
 const Panel = styled.div<PanelProps>`
-  background-color: ${({ $presentation }) => ($presentation === 'modal' || $presentation === 'mobile' ? 'transparent' : colorWhite)};
-  padding: ${({ $presentation }) => ($presentation === 'modal' || $presentation === 'mobile' ? '0' : smPaddingX)};
+  background-color: ${({ $presentation }) => (
+    $presentation === 'modal' || $presentation === 'mobile' || $presentation === 'sidebar'
+      ? 'transparent'
+      : colorWhite
+  )};
+  padding: ${({ $presentation }) => (
+    $presentation === 'modal' || $presentation === 'mobile' || $presentation === 'sidebar'
+      ? '0'
+      : smPaddingX
+  )};
   display: flex;
   flex-grow: 1;
   flex-direction: column;
@@ -231,6 +246,15 @@ const LobbyMessage = styled.div`
     padding: 1rem;
     text-align: center;
   }
+`;
+
+const SkyroomLobbyComposer = styled.div``;
+
+const SkyroomLobbyPreview = styled.div`
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.55;
+  word-break: break-word;
 `;
 
 const PrivateLobbyMessage = styled.div`
@@ -266,6 +290,20 @@ const RememberContainer = styled.div`
 const ScrollableArea = styled(ScrollboxVertical)`
   overflow-y: auto;
   padding-right: 0.25rem;
+`;
+
+/** Plain scroll container — avoids BBB ScrollboxVertical white fade leaks in Skyroom. */
+const SkyroomScrollArea = styled.div`
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 12px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(32, 199, 187, 0.35) transparent;
 `;
 
 const ModeratorActions = styled.div`
@@ -494,6 +532,7 @@ export default {
   WaitingUsersButtonMsg,
   PendingUsers,
   NoPendingUsers,
+  SkyroomEmptyState,
   MainTitle,
   UsersWrapper,
   Users,
@@ -501,8 +540,11 @@ export default {
   Panel,
   MobileHeader,
   LobbyMessage,
+  SkyroomLobbyComposer,
+  SkyroomLobbyPreview,
   RememberContainer,
   ScrollableArea,
+  SkyroomScrollArea,
   ModeratorActions,
   Avatar,
 };

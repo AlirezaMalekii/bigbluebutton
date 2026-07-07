@@ -17,7 +17,7 @@ const renderPendingUsers = (
 ) => {
   if (!usersArray.length) return null;
   return (
-    <Styled.PendingUsers>
+    <Styled.PendingUsers data-skyroom-section="queue">
       <Styled.MainTitle>{message}</Styled.MainTitle>
       <Styled.UsersWrapper>
         <Styled.Users role="list">

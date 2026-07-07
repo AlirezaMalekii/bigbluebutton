@@ -333,30 +333,36 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
     ? authGuestButtonsData.concat(guestButtonsData)
     : guestButtonsData;
 
+  const ScrollBody = presentation === 'modal'
+    ? Styled.ScrollableArea
+    : Styled.SkyroomScrollArea;
+
   const panelContent = (
-    <Styled.ScrollableArea>
+    <ScrollBody
+      className="skyroom-gw-scroll"
+      data-skyroom-guest-waiting-scroll="true"
+    >
       {isGuestLobbyMessageEnabled ? (
-        <Styled.LobbyMessage data-test="lobbyMessage">
-          <TextInput
-            maxLength={128}
-            placeholder={intl.formatMessage(intlMessages.inputPlaceholder)}
-            send={setGuestLobbyMessage}
-          />
-          <p>
-            <i>
-              &quot;
-              {
-                guestLobbyMessage && guestLobbyMessage !== ''
-                // eslint-disable-next-line react/no-danger
-                  ? <span dangerouslySetInnerHTML={{ __html: guestLobbyMessage }} />
-                  : intl.formatMessage(intlMessages.emptyMessage)
-              }
-              &quot;
-            </i>
-          </p>
+        <Styled.LobbyMessage data-test="lobbyMessage" data-skyroom-section="broadcast">
+          <Styled.SkyroomLobbyComposer className="skyroom-gw-composer">
+            <TextInput
+              maxLength={128}
+              placeholder={intl.formatMessage(intlMessages.inputPlaceholder)}
+              send={setGuestLobbyMessage}
+            />
+          </Styled.SkyroomLobbyComposer>
+          <Styled.SkyroomLobbyPreview
+            className="skyroom-gw-lobby-preview"
+            data-test="lobbyMessagePreview"
+          >
+            {guestLobbyMessage && guestLobbyMessage !== ''
+              // eslint-disable-next-line react/no-danger
+              ? <span dangerouslySetInnerHTML={{ __html: guestLobbyMessage }} />
+              : intl.formatMessage(intlMessages.emptyMessage)}
+          </Styled.SkyroomLobbyPreview>
         </Styled.LobbyMessage>
       ) : null}
-      <Styled.ModeratorActions>
+      <Styled.ModeratorActions data-skyroom-section="actions">
         <Styled.MainTitle>{intl.formatMessage(intlMessages.optionTitle)}</Styled.MainTitle>
         {
           buttonsData.map((btData: ButtonData) => renderButton(
@@ -396,7 +402,7 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
       {!existPendingUsers && (
         renderNoUserWaitingItem(intl.formatMessage(intlMessages.noPendingUsers))
       )}
-    </Styled.ScrollableArea>
+    </ScrollBody>
   );
 
   return (
@@ -461,7 +467,7 @@ const GuestUsersManagementPanelContainer: React.FC<GuestUsersManagementPanelCont
         isChrome={false}
         $presentation={presentation}
       >
-        <Styled.ScrollableArea />
+        <Styled.SkyroomScrollArea className="skyroom-gw-scroll" />
       </Styled.Panel>
     );
   }
