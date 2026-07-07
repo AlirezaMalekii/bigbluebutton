@@ -45,6 +45,8 @@ INFRA_PATTERNS=(
   'Host key verification failed'
   'Could not resolve host'
   'ssh: connect to host'
+  'Broken pipe'
+  'client_loop: send disconnect'
   'DEPLOY_SSH_PRIVATE_KEY'
   'secrets\..*not found'
   'PRODUCTION_ENV'
@@ -66,7 +68,7 @@ Commit: ${HEAD_SHA}
 Branch: ${HEAD_BRANCH}
 
 Pattern matched: ${pattern}
-" || true
+" 2>/dev/null || echo "Could not open GitHub issue (issues may be disabled on ${REPO_SLUG})."
     exit 0
   fi
 done

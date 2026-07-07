@@ -101,18 +101,30 @@ log() {
 
 _ssh_common_args() {
   local -n _out=$1
-  _out=(-p "$DEPLOY_PORT" -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$KNOWN_HOSTS_FILE")
+  _out=(
+    -p "$DEPLOY_PORT"
+    -o BatchMode=yes
+    -o ConnectTimeout=15
+    -o StrictHostKeyChecking=accept-new
+    -o UserKnownHostsFile="$KNOWN_HOSTS_FILE"
+    -o ServerAliveInterval=30
+    -o ServerAliveCountMax=120
+    -o TCPKeepAlive=yes
+  )
   if [[ -n "$SSH_IDENTITY" ]]; then
     _out+=(-i "$SSH_IDENTITY" -o IdentitiesOnly=yes)
   fi
 }
 
-ssh_rsh() {
-  local rsh="ssh -p ${DEPLOY_PORT} -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=${KNOWN_HOSTS_FILE}"
+_ssh_rsh_opts() {
+  printf '%s' "-p ${DEPLOY_PORT} -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=${KNOWN_HOSTS_FILE} -o ServerAliveInterval=30 -o ServerAliveCountMax=120 -o TCPKeepAlive=yes"
   if [[ -n "$SSH_IDENTITY" ]]; then
-    rsh+=" -i ${SSH_IDENTITY} -o IdentitiesOnly=yes"
+    printf '%s' " -i ${SSH_IDENTITY} -o IdentitiesOnly=yes"
   fi
-  echo "$rsh"
+}
+
+ssh_rsh() {
+  echo "ssh $(_ssh_rsh_opts)"
 }
 
 ssh_cmd() {
@@ -203,8 +215,27 @@ rsync_to_server() {
 }
 
 remote_env_base() {
-  printf "BBB_ROOT='%s' WITH_GRAPHQL='%s' WITH_SHARED_NOTES='%s' WITH_RECORDING='%s' SKIP_AKKA_FSESL='%s'" \
-    "$REMOTE_DIR" "$WITH_GRAPHQL" "$WITH_SHARED_NOTES" "$WITH_RECORDING" "$SKIP_AKKA_FSESL"
+  local skip_build=0
+  if [[ "${CI_HTML5_PREBUILT:-0}" == "1" ]]; then
+    skip_build=1
+  fi
+  printf "BBB_ROOT='%s' WITH_GRAPHQL='%s' WITH_SHARED_NOTES='%s' WITH_RECORDING='%s' SKIP_AKKA_FSESL='%s' SKIP_BUILD='%s'" \
+    "$REMOTE_DIR" "$WITH_GRAPHQL" "$WITH_SHARED_NOTES" "$WITH_RECORDING" "$SKIP_AKKA_FSESL" "$skip_build"
+}
+
+upload_prebuilt_html5_dist() {
+  [[ "${CI_HTML5_PREBUILT:-0}" == "1" ]] || return 0
+  local dist="${SCRIPT_DIR}/bigbluebutton-html5/dist"
+  if [[ ! -d "$dist" ]]; then
+    log "ERROR: CI_HTML5_PREBUILT=1 but ${dist} is missing (run npm run build first)"
+    exit 1
+  fi
+  log "Uploading prebuilt html5 dist/ (skip remote webpack build) ..."
+  ssh_cmd "mkdir -p '${REMOTE_DIR}/bigbluebutton-html5/dist'"
+  rsync -az \
+    -e "$(ssh_rsh)" \
+    "${dist}/" \
+    "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_DIR}/bigbluebutton-html5/dist/"
 }
 
 log "Target: ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PORT} → ${REMOTE_DIR}"
@@ -241,6 +272,8 @@ fi
 if [[ "$DO_SYNC" == "1" ]]; then
   rsync_to_server
 fi
+
+upload_prebuilt_html5_dist
 
 if [[ "$DO_REMOTE" == "0" ]]; then
   log "Sync only — done."

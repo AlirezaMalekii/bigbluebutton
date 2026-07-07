@@ -33,23 +33,32 @@ if $RESET; then
   rm -rf node_modules
 fi
 
-# Install missing dependencies if needed
-if [ ! -d ./node_modules ] || ! npm ls --depth=0 >/dev/null 2>&1; then
-  echo "Running npm install..."
-  npm ci --no-progress
+if [[ "$SKIP_BUILD" != "1" ]]; then
+  if [ ! -d ./node_modules ] || ! npm ls --depth=0 >/dev/null 2>&1; then
+    echo "Running npm install..."
+    npm ci --no-progress
+  fi
 fi
 
-# Build
-rm -rf dist
+SKIP_BUILD="${SKIP_BUILD:-0}"
 
-if $SAFARI; then
-  echo "Running Safari build..."
-  npm run build-safari
-  echo "Running regular build..."
-  npm run build
+if [[ "$SKIP_BUILD" == "1" ]]; then
+  if [[ ! -d dist ]] || [[ -z "$(ls -A dist 2>/dev/null || true)" ]]; then
+    echo "SKIP_BUILD=1 but dist/ is missing or empty — cannot deploy html5"
+    exit 1
+  fi
+  echo "Using prebuilt dist/ (SKIP_BUILD=1) — skipping webpack build"
 else
-  echo "Running regular build (Safari step skipped)..."
-  npm run build
+  rm -rf dist
+  if $SAFARI; then
+    echo "Running Safari build..."
+    npm run build-safari
+    echo "Running regular build..."
+    npm run build
+  else
+    echo "Running regular build (Safari step skipped)..."
+    npm run build
+  fi
 fi
 
 # Safari-specific steps

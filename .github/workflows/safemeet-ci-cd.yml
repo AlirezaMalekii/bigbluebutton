@@ -158,7 +158,8 @@ jobs:
           GITHUB_EVENT_BEFORE: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          LAST="$(ssh -p "$DEPLOY_PORT" -o BatchMode=yes "${DEPLOY_USER}@${DEPLOY_HOST}" "cat '${REMOTE_DIR}/.deploy-state' 2>/dev/null" | head -1 | tr -d '[:space:]' || true)"
+          SSH_OPTS=(-p "$DEPLOY_PORT" -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=120 -o TCPKeepAlive=yes)
+          LAST="$(ssh "${SSH_OPTS[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" "cat '${REMOTE_DIR}/.deploy-state' 2>/dev/null" | head -1 | tr -d '[:space:]' || true)"
           BASELINE="$LAST"
           if [[ -z "$BASELINE" && -n "${GITHUB_EVENT_BEFORE:-}" && "$GITHUB_EVENT_BEFORE" != 0000000000000000000000000000000000000000 ]]; then
             BASELINE="$GITHUB_EVENT_BEFORE"
@@ -182,6 +183,19 @@ jobs:
             echo "Deploy plan: **smart** → ${COMPACT}"
           fi
 
+      - name: Build HTML5 in CI
+        id: html5_ci_build
+        if: >-
+          steps.deploy_plan.outputs.mode == 'full' ||
+          (steps.deploy_plan.outputs.components != '' &&
+           contains(format(' {0} ', steps.deploy_plan.outputs.components), ' html5 '))
+        working-directory: bigbluebutton-html5
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run build
+          test -d dist && test -n "$(ls -A dist)"
+
       - name: Deploy to BBB server
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
@@ -190,6 +204,7 @@ jobs:
           REMOTE_DIR: ${{ secrets.DEPLOY_REMOTE_DIR }}
           GITHUB_EVENT_BEFORE: ${{ github.event.before }}
           DEPLOY_SKIP_AKKA_FSESL: ${{ needs.changes.outputs.fsesl != 'true' && '1' || '0' }}
+          CI_HTML5_PREBUILT: ${{ steps.html5_ci_build.outcome == 'success' && '1' || '0' }}
         run: |
           set -euo pipefail
           ARGS=()
