@@ -170,31 +170,34 @@ const PresentationToolbar = styled.div`
 const ToastSeparator = styled(ToastStyled.Separator)``;
 
 const Button = styled.button`
-  background-color: rgba(243, 246, 249, 0.92);
-  border: 1px solid rgba(15, 112, 215, 0.16);
+  background-color: rgba(18, 28, 46, 0.88);
+  border: 1px solid var(--skyroom-accent-border, rgba(32, 199, 187, 0.36));
   border-radius: 0.7rem;
-  box-shadow: 0 6px 18px rgba(6, 23, 42, 0.14),
-    0 2px 6px rgba(6, 23, 42, 0.1);
-  color: ${colorPrimary};
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  color: rgba(220, 235, 248, 0.88);
   cursor: pointer;
   padding: .3rem .5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   tab-index: 0;
-  transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+  transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease, color 120ms ease;
 
   &:hover,
   &:focus {
-    background-color: rgba(15, 112, 215, 0.12);
-    border-color: rgba(15, 112, 215, 0.32);
-    box-shadow: 0 0 0 2px rgba(15, 112, 215, 0.2),
-      0 8px 18px rgba(6, 23, 42, 0.16);
+    background-color: var(--skyroom-accent-hover-bg, rgba(32, 199, 187, 0.14));
+    border-color: var(--skyroom-accent, #20c7bb);
+    box-shadow:
+      0 0 0 2px var(--skyroom-accent-glow, rgba(32, 199, 187, 0.10)),
+      0 4px 14px rgba(0, 0, 0, 0.30);
+    color: var(--skyroom-brand-300, #3fc2b8);
     outline: none;
   }
 
   &:active {
-    background-color: rgba(15, 112, 215, 0.18);
+    background-color: rgba(13, 136, 126, 0.28);
+    color: #ffffff;
     transform: translateY(1px);
   }
 `;

@@ -13,6 +13,7 @@ import { PluginsContext } from '/imports/ui/components/components-data/plugin-co
 import UserListParticipantsStyles from '/imports/ui/components/user-list/user-list-content/user-participants/user-list-participants/styles';
 import UserActions from '/imports/ui/components/user-list/user-list-content/user-participants/user-list-participants/user-actions/component';
 import ListItem from '/imports/ui/components/user-list/user-list-content/user-participants/user-list-participants/list-item/component';
+import useHiddenTabUserIds from '/imports/ui/components/user-list/user-list-content/user-participants/user-list-participants/useHiddenTabUserIds';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
 import { CURRENT_PRESENTATION_PAGE_SUBSCRIPTION, CurrentPresentationPagesSubscriptionResponse } from '/imports/ui/components/whiteboard/queries';
 import { SKYROOM_USER_SEARCH_SUBSCRIPTION } from './queries';
@@ -88,6 +89,7 @@ const SkyroomUserSearchResults: React.FC<SkyroomUserSearchResultsProps> = ({ sea
     CURRENT_PRESENTATION_PAGE_SUBSCRIPTION,
   );
   const pageId = presentationData?.pres_page_curr[0]?.pageId ?? '';
+  const hiddenTabUserIds = useHiddenTabUserIds();
 
   const users = useMemo(() => {
     const list = [...(usersData ?? [])];
@@ -151,6 +153,7 @@ const SkyroomUserSearchResults: React.FC<SkyroomUserSearchResultsProps> = ({ sea
                 index={idx}
                 user={user}
                 lockSettings={meeting.lockSettings as LockSettings}
+                isMeetingTabHidden={hiddenTabUserIds.has(user.userId)}
               />
             </UserActions>
           </UserListParticipantsStyles.UserListItem>

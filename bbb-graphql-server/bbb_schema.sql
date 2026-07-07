@@ -807,6 +807,8 @@ CREATE UNLOGGED TABLE "user_connectionStatus" (
     "traceLog" varchar(500), --presenter only
     "status" varchar(25),
     "statusUpdatedAt" timestamp with time zone,
+    "clientIsHidden" bool default false,
+    "clientVisibilityUpdatedAt" timestamp with time zone,
     CONSTRAINT "user_connectionStatus_pkey" PRIMARY KEY ("meetingId","userId","sessionToken","clientSessionUUID"),
     FOREIGN KEY ("meetingId", "userId") REFERENCES "user"("meetingId","userId") ON DELETE CASCADE
 );
@@ -825,6 +827,20 @@ CREATE TRIGGER "trigger_update_statusUpdatedAt"
 BEFORE INSERT OR UPDATE ON "user_connectionStatus"
 FOR EACH ROW
 EXECUTE FUNCTION "update_statusUpdatedAt"();
+
+-- user_connectionStatus (on update clientIsHidden: set visibility timestamp)
+CREATE OR REPLACE FUNCTION update_user_connectionStatus_visibility_trigger_func()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW."clientIsHidden" IS DISTINCT FROM OLD."clientIsHidden" THEN
+        NEW."clientVisibilityUpdatedAt" := NOW();
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_user_connectionStatus_visibility_trigger BEFORE UPDATE OF "clientIsHidden" ON "user_connectionStatus"
+    FOR EACH ROW EXECUTE FUNCTION update_user_connectionStatus_visibility_trigger_func();
 
 
 create view "v_user_connectionStatus" as select * from "user_connectionStatus";
@@ -946,6 +962,8 @@ CASE WHEN
     THEN TRUE
     ELSE FALSE
 END AS "clientNotResponding",
+cs."clientIsHidden",
+cs."clientVisibilityUpdatedAt",
 csm."status" as "lastUnstableStatus",
 csm."lastOccurrenceAt" AS "lastUnstableStatusAt"
 FROM "user" u

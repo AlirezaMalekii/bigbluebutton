@@ -299,21 +299,27 @@ function BlockNoteApp(props: BlockNoteAppProps): React.ReactElement {
           }
           .bn-toolbar-row {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             justify-content: flex-start;
-            gap: 4px;
+            gap: 3px;
             padding-block: 4px;
             flex-shrink: 0;
             border-bottom: 1px solid #d4d9df;
+            overflow-x: auto;
+            scrollbar-width: none;
+          }
+          .bn-toolbar-row::-webkit-scrollbar {
+            display: none;
           }
           .bn-toolbar-row .bn-formatting-toolbar,
           .bn-toolbar-row .bn-toolbar {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             align-items: center;
-            gap: 4px;
-            width: 100%;
-            max-width: 100%;
+            gap: 3px;
+            width: auto;
+            max-width: none;
+            flex: 0 0 auto;
             overflow: visible;
             box-shadow: none;
             border: none;

@@ -22,6 +22,7 @@ import {
   resolvePresentationId,
   startPresentationMediaExternalVideo,
 } from './presentationMediaSync';
+import Service from './service';
 /* eslint-disable react/sort-comp */
 
 const propTypes = {
@@ -354,6 +355,29 @@ class PresentationUploader extends Component {
   getPendingSelectionId() {
     const { selectedToBeNextCurrent } = this.props;
     return Session.getItem('selectedToBeNextCurrent') || selectedToBeNextCurrent || '';
+  }
+
+  getSelectedPresentation() {
+    const { presentations } = this.state;
+    const pendingId = this.getPendingSelectionId();
+    return presentations.find((p) => p.presentationId === pendingId)
+      || presentations.find((p) => p?.current);
+  }
+
+  isConfirmDisabled() {
+    const { presentations } = this.state;
+    const selectedItem = this.getSelectedPresentation();
+
+    if (selectedItem) {
+      if (selectedItem.uploadErrorMsgKey || selectedItem.uploadErrorDetailsJson) return true;
+      if (selectedItem.uploadInProgress) return true;
+      if (selectedItem.file && !selectedItem.uploadCompleted) return true;
+      return false;
+    }
+
+    return presentations.some(
+      (p) => p?.file && !p?.uploadCompleted && !p?.uploadErrorMsgKey,
+    );
   }
 
   syncExternalVideoForSelection(selectedItem, propPresentations, options = {}) {
@@ -866,7 +890,6 @@ class PresentationUploader extends Component {
 
   handleConfirm() {
     const {
-      handleSave,
       selectedToBeNextCurrent,
       presentations: propPresentations,
       dispatchChangePresentationDownloadable,
@@ -875,7 +898,6 @@ class PresentationUploader extends Component {
       presentationEnabled,
     } = this.props;
     const { presentations } = this.state;
-    const presentationsToSave = presentations;
 
     if (!presentationEnabled) {
       this.setState(
@@ -885,7 +907,7 @@ class PresentationUploader extends Component {
       return null;
     }
 
-    if (this.hasError) {
+    if (this.hasError || this.isConfirmDisabled()) {
       return null;
     }
 
@@ -905,18 +927,12 @@ class PresentationUploader extends Component {
     });
 
     Session.setItem('showUploadPresentationView', false);
-    const pendingId = this.getPendingSelectionId();
-    const selectedItem = presentations.find((p) => p.presentationId === pendingId)
-      || presentations.find((p) => p?.current);
+    const selectedItem = this.getSelectedPresentation();
 
-    return handleSave(
-      presentationsToSave,
-      true,
-      {},
+    return Service.applyPresentationSelection(
       propPresentations,
-      setPresentation,
+      presentations,
       removePresentation,
-      presentationEnabled,
     )
       .then(() => {
         const hasError = presentations.some((p) => !!p.uploadErrorMsgKey);
@@ -948,13 +964,10 @@ class PresentationUploader extends Component {
           if (resolvedId) {
             setPresentation(resolvedId);
           }
-          const needsUploadDelay = presentations.some(
-            (p) => p.presentationId === pendingId && (p.uploadInProgress || p.file),
-          );
           this.syncExternalVideoForSelection(
             resolvedSelected,
             mergedPresentations,
-            { delayMs: needsUploadDelay ? 800 : 0 },
+            { delayMs: 0 },
           );
           return;
         }
@@ -1385,7 +1398,7 @@ class PresentationUploader extends Component {
         confirm={{
           label: confirmLabel,
           callback: () => this.handleConfirm(),
-          disabled: !!this.hasError,
+          disabled: !!this.hasError || this.isConfirmDisabled(),
         }}
         dismiss={{
           label: intl.formatMessage(intlMessages.dismissLabel),

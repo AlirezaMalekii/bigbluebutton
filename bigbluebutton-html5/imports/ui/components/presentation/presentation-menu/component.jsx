@@ -355,10 +355,26 @@ const PresentationMenu = (props) => {
   function getAvailableOptions() {
     // if any item is changed, please verify the function handleMouseLeave in whiteboard/hooks.js
     // to make sure the menu is closed when clicking on the options
-    const menuItems = [];
+    const actionItems = [];
+    let visibilityItem = null;
+
+    const showVisibilityOption = currentUser?.presenter || hasWBAccess;
+
+    if (showVisibilityOption) {
+      visibilityItem = {
+        key: 'list-item-toolvisibility',
+        dataTest: 'toolVisibility',
+        isVisibilityToggle: true,
+        label: formattedVisibilityLabel(isToolbarVisible),
+        icon: isToolbarVisible ? 'close' : 'pen_tool',
+        onClick: () => {
+          setIsToolbarVisible(!isToolbarVisible);
+        },
+      };
+    }
 
     if (!isIphone) {
-      menuItems.push(
+      actionItems.push(
         {
           key: 'list-item-fullscreen',
           dataTest: 'presentationFullscreen',
@@ -385,7 +401,7 @@ const PresentationMenu = (props) => {
     const { isSafari } = browserInfo;
 
     if (allowSnapshotOfCurrentSlide) {
-      menuItems.push(
+      actionItems.push(
         {
           key: 'list-item-screenshot',
           label: intl.formatMessage(intlMessages.snapshotLabel),
@@ -437,22 +453,8 @@ const PresentationMenu = (props) => {
       );
     }
 
-    const showVisibilityOption = currentUser?.presenter || hasWBAccess;
-
     if (showVisibilityOption) {
-      menuItems.push(
-        {
-          key: 'list-item-toolvisibility',
-          dataTest: 'toolVisibility',
-          label: formattedVisibilityLabel(isToolbarVisible),
-          icon: isToolbarVisible ? 'close' : 'pen_tool',
-          onClick: () => {
-            setIsToolbarVisible(!isToolbarVisible);
-          },
-        },
-      );
-
-      menuItems.push(
+      actionItems.push(
         {
           key: 'list-item-clear-annotations',
           dataTest: 'clearAnnotations',
@@ -466,7 +468,7 @@ const PresentationMenu = (props) => {
     }
 
     // if (props.amIPresenter) {
-    //   menuItems.push({
+    //   actionItems.push({
     //     key: 'list-item-load-shapes',
     //     dataTest: 'loadShapes',
     //     label: 'Load .tldr Data',
@@ -478,7 +480,7 @@ const PresentationMenu = (props) => {
     presentationDropdownItems.forEach((item, index) => {
       switch (item.type) {
         case PresentationDropdownItemType.OPTION:
-          menuItems.push({
+          actionItems.push({
             key: `${item.id}-${index}`,
             label: item.label,
             icon: item.icon,
@@ -487,7 +489,7 @@ const PresentationMenu = (props) => {
           });
           break;
         case PresentationDropdownItemType.SEPARATOR:
-          menuItems.push({
+          actionItems.push({
             key: `${item.id}-${index}`,
             isSeparator: true,
             dataTest: item.dataTest,
@@ -498,7 +500,7 @@ const PresentationMenu = (props) => {
       }
     });
 
-    return menuItems;
+    return { visibilityItem, actionItems };
   }
 
   useEffect(() => {
@@ -513,9 +515,30 @@ const PresentationMenu = (props) => {
     }
   });
 
-  const options = getAvailableOptions();
+  const { visibilityItem, actionItems } = getAvailableOptions();
+  const hasAnyOption = visibilityItem || actionItems.length > 0;
 
-  if (options.length === 0) {
+  const renderToolbarButton = (item) => {
+    if (item.isSeparator) return null;
+    const isDanger = item.dataTest === 'clearAnnotations';
+    const isActive = item.isVisibilityToggle && !isToolbarVisible;
+    return (
+      <TooltipContainer key={item.key} title={item.label}>
+        <Styled.ActionButton
+          type="button"
+          className={`skyroom-wb-action-btn${isDanger ? ' skyroom-wb-action-btn--danger' : ''}${isActive ? ' skyroom-wb-action-btn--active' : ''}`}
+          aria-label={item.label}
+          aria-pressed={item.isVisibilityToggle ? !isToolbarVisible : undefined}
+          data-test={item.dataTest}
+          onClick={item.onClick}
+        >
+          <Icon iconName={item.icon} />
+        </Styled.ActionButton>
+      </TooltipContainer>
+    );
+  };
+
+  if (!hasAnyOption) {
     const undoCtrls = document.getElementById('TD-Styles')?.nextSibling;
     if (undoCtrls?.style) {
       undoCtrls.style = 'padding:0px';
@@ -533,23 +556,8 @@ const PresentationMenu = (props) => {
         id="WhiteboardOptionButton"
         data-skyroom-wb-toolbar="true"
       >
-        {options.map((item) => {
-          if (item.isSeparator) return null;
-          const isDanger = item.dataTest === 'clearAnnotations';
-          return (
-            <TooltipContainer key={item.key} title={item.label}>
-              <Styled.ActionButton
-                type="button"
-                className={`skyroom-wb-action-btn${isDanger ? ' skyroom-wb-action-btn--danger' : ''}`}
-                aria-label={item.label}
-                data-test={item.dataTest}
-                onClick={item.onClick}
-              >
-                <Icon iconName={item.icon} />
-              </Styled.ActionButton>
-            </TooltipContainer>
-          );
-        })}
+        {visibilityItem && renderToolbarButton(visibilityItem)}
+        {isToolbarVisible && actionItems.map((item) => renderToolbarButton(item))}
         <input
           type="file"
           id="hiddenFileInput"

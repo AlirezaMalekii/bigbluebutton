@@ -206,6 +206,8 @@ class NavBar extends Component {
     this.handleToggleSharedNotes = this.handleToggleSharedNotes.bind(this);
     this.splitPluginItems = this.splitPluginItems.bind(this);
     this.setModalIsOpen = () => {};
+    this.tryOpenSessionDetailsOnJoin = this.tryOpenSessionDetailsOnJoin.bind(this);
+    this.sessionDetailsDismissed = false;
   }
 
   componentDidMount() {
@@ -245,17 +247,21 @@ class NavBar extends Component {
         }
       });
     }
+
+    this.tryOpenSessionDetailsOnJoin();
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
     const {
-      showSessionDetailsOnJoin,
       hasSessionDetails,
       meetingId,
     } = this.props;
-    const ShownId = SessionStorage.getItem('alreadyShowSessionDetailsOnJoin');
-    if (showSessionDetailsOnJoin && hasSessionDetails && ShownId !== meetingId) {
-      this.setModalIsOpen(true);
+
+    if (
+      prevProps.meetingId !== meetingId
+      || (!prevProps.hasSessionDetails && hasSessionDetails)
+    ) {
+      this.tryOpenSessionDetailsOnJoin();
     }
   }
 
@@ -351,6 +357,28 @@ class NavBar extends Component {
         layoutContextDispatch,
         isSkyroomNotesOpen() ? 'notes' : null,
       );
+    }
+  }
+
+  tryOpenSessionDetailsOnJoin() {
+    const {
+      showSessionDetailsOnJoin,
+      hasSessionDetails,
+      meetingId,
+    } = this.props;
+
+    if (
+      this.sessionDetailsDismissed
+      || !showSessionDetailsOnJoin
+      || !hasSessionDetails
+      || !meetingId
+    ) {
+      return;
+    }
+
+    const shownId = SessionStorage.getItem('alreadyShowSessionDetailsOnJoin');
+    if (String(shownId) !== String(meetingId)) {
+      this.setModalIsOpen(true);
     }
   }
 
@@ -578,8 +606,11 @@ class NavBar extends Component {
                   }) => {
                     this.setModalIsOpen = (value) => {
                       if (!value) {
+                        this.sessionDetailsDismissed = true;
                         const { meetingId } = this.props;
-                        SessionStorage.setItem('alreadyShowSessionDetailsOnJoin', meetingId);
+                        if (meetingId) {
+                          SessionStorage.setItem('alreadyShowSessionDetailsOnJoin', meetingId);
+                        }
                       }
                       if (value) open();
                       else close();

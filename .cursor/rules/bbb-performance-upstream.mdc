@@ -1,0 +1,33 @@
+---
+description: BBB performance and upstream-mechanism constraints for SafeMeet fork
+alwaysApply: true
+---
+
+# BBB Performance & Upstream Mechanisms
+
+When changing this fork, optimize for **low client/server load** and **upstream BBB compatibility**.
+
+## Required approach
+
+1. **Reuse BBB infrastructure first** — GraphQL mutations/subscriptions, existing services, `Session`, `meetingClientSettings`, debounce/throttle helpers, and component contracts before adding new layers.
+2. **No duplicate realtime work** — avoid second upload paths, extra polling, parallel global state, or redundant `PRESENTATION_SET_ZOOM` / camera publishes.
+3. **Respect existing throttles** — keep `panZoomInterval`, wheel/pinch throttle (~175ms), `zoomSlide` debounce (~500ms), and cursor interval settings unless there is a measured UX reason to change them.
+4. **Publish only when state changes** — skip GraphQL/backend sync when computed camera offsets, zoom ratios, or selection state already match stored values.
+5. **Minimize render/DOM cost** — prefer targeted state updates, refs for interaction guards, and existing BBB layout/camera helpers over new observers or heavy per-frame React updates.
+6. **Preserve upgrade path** — extend via wrappers/adapters; do not rewrite websocket, GraphQL core, mediasoup, or akka contracts.
+
+## Anti-patterns (avoid)
+
+- Upload on Confirm when auto-upload already started
+- `setPresentation` / `current: true` during background upload
+- Unconditional `zoomSlide` on every mount/resize
+- Mixing animated and instant camera APIs without guarding user interaction
+- New timers/debounces that fight BBB's existing ones
+
+## Quick checklist before finishing
+
+- [ ] Uses existing BBB service/mutation path?
+- [ ] Fewer network calls than before, not more?
+- [ ] Interaction guards prevent sync loops during pan/zoom?
+- [ ] Safe for large meetings / mobile CPU?
+- [ ] Upstream merge risk is localized?

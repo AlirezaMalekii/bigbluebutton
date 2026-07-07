@@ -25,7 +25,10 @@ import {
 import {
   GET_WELCOME_MESSAGE,
 } from '/imports/ui/components/session-details/queries';
-import { hasDisplayableSessionDetails } from '/imports/ui/components/session-details/utils';
+import {
+  getFormattedDialIn,
+  hasDisplayableSessionDetails,
+} from '/imports/ui/components/session-details/utils';
 
 const intlMessages = defineMessages({
   defaultViewLabel: {
@@ -100,6 +103,8 @@ const NavBarContainer = ({ children, ...props }) => {
     meetingId: m.meetingId,
     isBreakout: m.isBreakout,
     componentsFlags: m.componentsFlags,
+    loginUrl: m.loginUrl,
+    voiceSettings: m.voiceSettings,
     breakoutPolicies: {
       sequence: m.breakoutPolicies.sequence,
     },
@@ -118,11 +123,16 @@ const NavBarContainer = ({ children, ...props }) => {
   const hasSessionDetails = useMemo(() => {
     const welcomeMessage = welcomeData?.user_welcomeMsgs?.[0]?.welcomeMsg ?? '';
     const welcomeMsgForModerators = welcomeData?.user_welcomeMsgs?.[0]?.welcomeMsgForModerators ?? '';
+    const { formattedDialNum, formattedTelVoice } = getFormattedDialIn(meeting?.voiceSettings);
+    const loginUrl = amIModerator ? (meeting?.loginUrl ?? '') : '';
     return hasDisplayableSessionDetails({
       welcome: welcomeMessage,
       welcomeForModerators: welcomeMsgForModerators,
+      loginUrl,
+      formattedDialNum,
+      formattedTelVoice,
     });
-  }, [welcomeData]);
+  }, [welcomeData, meeting?.loginUrl, meeting?.voiceSettings, amIModerator]);
 
   if (meeting) {
     meetingTitle = meeting.name;

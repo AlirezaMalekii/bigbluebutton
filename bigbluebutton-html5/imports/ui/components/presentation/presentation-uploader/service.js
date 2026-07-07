@@ -5,7 +5,6 @@ import update from 'immutability-helper';
 import { v4 as uuid } from 'uuid';
 import { uniqueId } from '/imports/utils/string-utils';
 import { notify } from '/imports/ui/services/notification';
-import Session from '/imports/ui/services/storage/in-memory';
 import apolloContextHolder from '/imports/ui/core/graphql/apolloContextHolder/apolloContextHolder';
 import { getPresentationUploadToken } from './queries';
 import { requestPresentationUploadTokenMutation } from './mutation';
@@ -179,15 +178,11 @@ const uploadPendingPresentations = (
   const presentationsToUpload = getPresentationsPendingUpload(
     presentations,
     presentationIds,
-  ).map((p) => {
-    const selectedId = Session.getItem('selectedToBeNextCurrent');
-    const isSelected = selectedId
-      && (p.presentationId === selectedId || p.uploadTemporaryId === selectedId);
-    return {
-      ...p,
-      current: isSelected || p.current === true,
-    };
-  });
+  ).map((p) => ({
+    ...p,
+    // Auto-upload must not activate the presentation; Confirm sets current.
+    current: false,
+  }));
 
   if (!presentationsToUpload.length) return Promise.resolve();
 
@@ -252,6 +247,27 @@ const persistPresentationChanges = (
       return setPresentation(currentPresentation?.presentationId);
     })
     .then(removePresentations.bind(null, presentationsToRemove, removePresentation));
+};
+
+const presentationExistsInState = (presentation, state) => state.some(
+  (u) => u.presentationId === presentation.presentationId
+    || (u.uploadTemporaryId
+      && presentation.uploadTemporaryId
+      && u.uploadTemporaryId === presentation.uploadTemporaryId)
+    || (presentation.uploadTemporaryId
+      && u.presentationId === presentation.uploadTemporaryId),
+);
+
+const applyPresentationSelection = (
+  oldState,
+  newState,
+  removePresentation,
+) => {
+  const presentationsToRemove = oldState.filter(
+    (p) => !presentationExistsInState(p, newState),
+  );
+
+  return removePresentations(presentationsToRemove, removePresentation);
 };
 
 const handleSavePresentation = (
@@ -393,6 +409,7 @@ function handleFiledrop(files, files2, that, intl, intlMessages) {
 
 export default {
   handleSavePresentation,
+  applyPresentationSelection,
   persistPresentationChanges,
   requestPresentationUploadToken,
   uploadAndConvertPresentation,

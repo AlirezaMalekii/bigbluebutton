@@ -15,6 +15,7 @@ import getStatus from '../../core/utils/getStatus';
 import logger from '/imports/startup/client/logger';
 import useTimeSync, { setTimeSync } from '/imports/ui/core/local-states/useTimeSync';
 import useMeeting from '../../core/hooks/useMeeting';
+import { throttle } from '/imports/utils/throttle';
 
 const createRttWorker = () => new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
 
@@ -26,10 +27,37 @@ const ConnectionStatus = ({
   const STATS_TIMEOUT = window.meetingClientSettings.public.stats.timeout;
   const networkRttInMs = useRef(0); // Ref to store the last network rtt
   const applicationRttInMs = useRef(0); // Ref to store the last application rtt
+  const clientIsHiddenRef = useRef(typeof document !== 'undefined' ? document.hidden : false);
+  const lastServerRequestIdRef = useRef('');
   const [timeSync] = useTimeSync();
   const timeSyncRef = useRef(timeSync);
 
   const [updateConnectionAliveAtM] = useMutation(UPDATE_CONNECTION_ALIVE_AT);
+  const updateConnectionAliveAtRef = useRef(updateConnectionAliveAtM);
+
+  useEffect(() => {
+    updateConnectionAliveAtRef.current = updateConnectionAliveAtM;
+  }, [updateConnectionAliveAtM]);
+
+  const postConnectionAlive = (networkRtt, serverRequestId, traceLog = '') => {
+    updateConnectionAliveAtRef.current({
+      variables: {
+        serverRequestId,
+        clientSessionUUID: sessionStorage.getItem('clientSessionUUID') || '0',
+        networkRttInMs: networkRtt,
+        applicationRttInMs: applicationRttInMs.current,
+        traceLog,
+        clientIsHidden: clientIsHiddenRef.current,
+      },
+    });
+  };
+
+  const sendVisibilityUpdate = useRef(
+    throttle(() => {
+      const requestId = lastServerRequestIdRef.current || `visibility-${Date.now()}`;
+      postConnectionAlive(networkRttInMs.current || 0, requestId);
+    }, 300, { leading: true, trailing: true }),
+  ).current;
 
   const { data: connectionStatusData } = useDeduplicatedSubscription(
     CONNECTION_STATUS_SUBSCRIPTION,
@@ -102,18 +130,11 @@ const ConnectionStatus = ({
       }
 
       networkRttInMs.current = networkRtt;
+      lastServerRequestIdRef.current = serverRequestId;
       const nowSyncedWithServer = new Date(Date.now() + timeSyncRef.current);
       const traceLog = user.presenter ? `traceLog@client|${nowSyncedWithServer.toISOString()}` : '';
       const rttLevels = window.meetingClientSettings.public.stats.rtt;
-      updateConnectionAliveAtM({
-        variables: {
-          serverRequestId,
-          clientSessionUUID: sessionStorage.getItem('clientSessionUUID') || '0',
-          networkRttInMs: networkRtt,
-          applicationRttInMs: applicationRttInMs.current,
-          traceLog,
-        },
-      });
+      postConnectionAlive(networkRtt, serverRequestId, traceLog);
 
       const rttStatus = getStatus(rttLevels, networkRtt);
       connectionStatus.setConnectionStatus(networkRtt, rttStatus);
@@ -155,6 +176,21 @@ const ConnectionStatus = ({
       window.removeEventListener('audiostats', handleAudioStatsEvent);
     };
   }, []);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const isHidden = document.hidden;
+      if (clientIsHiddenRef.current === isHidden) return;
+      clientIsHiddenRef.current = isHidden;
+      sendVisibilityUpdate();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      sendVisibilityUpdate.cancel?.();
+    };
+  }, [sendVisibilityUpdate]);
 
   useEffect(() => {
     let rttWorker;

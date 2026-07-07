@@ -9,6 +9,7 @@ export default function buildRedisMessage(sessionVariables: Record<string, unkno
         {name: 'networkRttInMs', type: 'number', required: true},
         {name: 'applicationRttInMs', type: 'number', required: false},
         {name: 'traceLog', type: 'string', required: false},
+        {name: 'clientIsHidden', type: 'boolean', required: false},
       ]
   )
 
@@ -33,7 +34,7 @@ export default function buildRedisMessage(sessionVariables: Record<string, unkno
     traceLog = input.traceLog + '@gqlactions|' + new Date().toISOString();
   }
 
-  const body = {
+  const body: Record<string, unknown> = {
     userId: routing.userId,
     sessionToken: sessionToken,
     serverRequestId: input.serverRequestId,
@@ -42,6 +43,10 @@ export default function buildRedisMessage(sessionVariables: Record<string, unkno
     applicationRttInMs: input.applicationRttInMs ?? 0,
     traceLog
   };
+
+  if ('clientIsHidden' in input && input.clientIsHidden != null) {
+    body.clientIsHidden = input.clientIsHidden;
+  }
 
 
 

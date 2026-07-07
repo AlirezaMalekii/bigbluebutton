@@ -245,7 +245,10 @@ const FitToWidthButton = styled(Button)`
 
   ${({ $fitToWidth }) => $fitToWidth && `
     & > span {
-      border: solid ${borderSizeLarge} ${colorGrayDark};
+      background-color: rgba(13, 136, 126, 0.22);
+      border: solid ${borderSizeLarge} #20c7bb;
+      color: #ffffff;
+      box-shadow: 0 0 0 2px rgba(32, 199, 187, 0.12);
     }
   `}
 

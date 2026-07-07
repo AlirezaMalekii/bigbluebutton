@@ -53,6 +53,10 @@ const messages = defineMessages({
     id: 'app.userList.you',
     description: 'Text for identifying your user',
   },
+  meetingTabHidden: {
+    id: 'app.userList.meetingTabHidden',
+    description: 'Tooltip when participant meeting tab is not active',
+  },
 });
 
 const { isChrome, isFirefox, isEdge } = browserInfo;
@@ -101,6 +105,7 @@ interface UserListItemProps {
   user: User;
   lockSettings: LockSettings;
   index: number;
+  isMeetingTabHidden?: boolean;
 }
 
 const renderUserListItemIconsFromPlugin = (
@@ -123,7 +128,9 @@ const Emoji: React.FC<EmojiProps> = ({ emoji, native, size }) => (
   <em-emoji emoji={emoji} native={native} size={size} />
 );
 
-const UserListItem: React.FC<UserListItemProps> = ({ user, lockSettings, index }) => {
+const UserListItem: React.FC<UserListItemProps> = ({
+  user, lockSettings, index, isMeetingTabHidden = false,
+}) => {
   const { pluginsExtensibleAreasAggregatedState } = useContext(PluginsContext);
   let userItemsFromPlugin = [] as PluginSdk.UserListItemAdditionalInformationInterface[];
   if (pluginsExtensibleAreasAggregatedState.userListItemAdditionalInformation) {
@@ -327,6 +334,13 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, lockSettings, index }
         </Styled.UserNameSub>
       </Styled.UserNameContainer>
       {renderUserListItemIconsFromPlugin(userItemsFromPlugin)}
+      {isMeetingTabHidden ? (
+        <Styled.IconRightContainer data-test="meetingTabHiddenIcon">
+          <TooltipContainer title={intl.formatMessage(messages.meetingTabHidden)}>
+            <Styled.MeetingTabHiddenIcon iconName="desktop" />
+          </TooltipContainer>
+        </Styled.IconRightContainer>
+      ) : null}
     </Styled.UserItemContents>
   );
 };

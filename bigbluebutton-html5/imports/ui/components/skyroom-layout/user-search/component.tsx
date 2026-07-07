@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
-import deviceInfo from '/imports/utils/deviceInfo';
 import { SKYROOM_COLUMN_ATTR } from '../column-layout';
 import { useSkyroomUserSearch } from './context';
 import PanelChrome from '../panel-chrome/styles';
@@ -35,10 +34,7 @@ const SkyroomUserSearch: React.FC = () => {
   useEffect(() => {
     const layoutEl = document.getElementById('layout');
     const check = () => {
-      setEnabled(
-        !deviceInfo.isPhone
-        && Boolean(layoutEl?.hasAttribute(SKYROOM_COLUMN_ATTR)),
-      );
+      setEnabled(Boolean(layoutEl?.hasAttribute(SKYROOM_COLUMN_ATTR)));
     };
     check();
     const observer = new MutationObserver(check);

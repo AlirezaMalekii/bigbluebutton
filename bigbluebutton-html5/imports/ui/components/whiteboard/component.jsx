@@ -49,6 +49,44 @@ import {
   isSkyroomMobileViewport,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
+const USER_CAMERA_INTERACTION_MS = (
+  window.meetingClientSettings?.public?.presentation?.panZoomInterval || 200
+);
+
+const CENTER_OFFSET_PUBLISH_EPSILON = 0.5;
+
+const calculateCenteredCameraOffsets = (
+  scaledWidth,
+  scaledHeight,
+  baseZoom,
+  areaWidth,
+  areaHeight,
+  fitToWidthMode,
+) => {
+  const scaledDisplayWidth = scaledWidth * baseZoom;
+  const scaledDisplayHeight = scaledHeight * baseZoom;
+  const slideAspectRatio = scaledWidth / scaledHeight;
+  const areaAspectRatio = areaWidth / areaHeight;
+
+  let xOffset = 0;
+  let yOffset = 0;
+
+  if (fitToWidthMode && slideAspectRatio < areaAspectRatio) {
+    yOffset = (areaHeight - scaledDisplayHeight) / 2;
+  } else if (fitToWidthMode && slideAspectRatio > areaAspectRatio) {
+    xOffset = (areaWidth - scaledDisplayWidth) / 2;
+  } else {
+    if (scaledDisplayWidth < areaWidth) {
+      xOffset = (areaWidth - scaledDisplayWidth) / 2;
+    }
+    if (scaledDisplayHeight < areaHeight) {
+      yOffset = (areaHeight - scaledDisplayHeight) / 2;
+    }
+  }
+
+  return { xOffset, yOffset };
+};
+
 const CAMERA_TYPE = 'camera';
 const colorStyles = [
   'black',
@@ -218,6 +256,8 @@ const Whiteboard = React.memo((props) => {
   const shapeBatchRef = useRef({});
   const isMountedRef = useRef(false);
   const isWheelZoomRef = useRef(false);
+  const isUserPanningRef = useRef(false);
+  const userInteractionTimeoutRef = useRef(null);
   const pageJustChangedRef = useRef(false);
   const isPresenterRef = useRef(isPresenter);
   const viewerCanPanRef = useRef(viewerCanPan);
@@ -360,10 +400,21 @@ const Whiteboard = React.memo((props) => {
     isWheelZoomRef.current = val;
   };
 
+  const markUserCameraInteraction = () => {
+    isUserPanningRef.current = true;
+    if (userInteractionTimeoutRef.current) {
+      clearTimeout(userInteractionTimeoutRef.current);
+    }
+    userInteractionTimeoutRef.current = setTimeout(() => {
+      isUserPanningRef.current = false;
+      userInteractionTimeoutRef.current = null;
+    }, USER_CAMERA_INTERACTION_MS);
+  };
+
   const setWheelZoomTimeout = () => {
     isWheelZoomRef.currentTimeout = setTimeout(() => {
       setIsWheelZoom(false);
-    }, 300);
+    }, USER_CAMERA_INTERACTION_MS);
   };
 
   const cleanupStore = (cpid) => {
@@ -1131,25 +1182,14 @@ const Whiteboard = React.memo((props) => {
             baseZoom = zoomWithGap;
           }
 
-          let adjustedXOffset = xOffset;
-          let adjustedYOffset = yOffset;
-          const scaledDisplayWidth = scaledWidth * baseZoom;
-          const scaledDisplayHeight = scaledHeight * baseZoom;
-          const slideAspectRatio = scaledWidth / scaledHeight;
-          const areaAspectRatio = presentationAreaWidth / presentationAreaHeight;
-
-          if (fitToWidthRef.current && slideAspectRatio < areaAspectRatio) {
-            adjustedYOffset = (presentationAreaHeight - scaledDisplayHeight) / 2;
-          } else if (fitToWidthRef.current && slideAspectRatio > areaAspectRatio) {
-            adjustedXOffset = (presentationAreaWidth - scaledDisplayWidth) / 2;
-          } else {
-            if (scaledDisplayWidth < presentationAreaWidth) {
-              adjustedXOffset = (presentationAreaWidth - scaledDisplayWidth) / 2;
-            }
-            if (scaledDisplayHeight < presentationAreaHeight) {
-              adjustedYOffset = (presentationAreaHeight - scaledDisplayHeight) / 2;
-            }
-          }
+          const { xOffset: adjustedXOffset, yOffset: adjustedYOffset } = calculateCenteredCameraOffsets(
+            scaledWidth,
+            scaledHeight,
+            baseZoom,
+            presentationAreaWidth,
+            presentationAreaHeight,
+            fitToWidthRef.current,
+          );
 
           coreCameraLogic({
             baseZoom,
@@ -1157,6 +1197,35 @@ const Whiteboard = React.memo((props) => {
             yOffset: adjustedYOffset,
             description: '(presenter)',
           });
+
+          const backendX = xOffset ?? 0;
+          const backendY = yOffset ?? 0;
+          const shouldPublishCenteredView = Math.abs(backendX - adjustedXOffset) > CENTER_OFFSET_PUBLISH_EPSILON
+            || Math.abs(backendY - adjustedYOffset) > CENTER_OFFSET_PUBLISH_EPSILON;
+
+          if (shouldPublishCenteredView) {
+            requestAnimationFrame(() => {
+              const viewportPageBounds = tlEditorRef.current?.getViewportPageBounds();
+              if (!viewportPageBounds?.w || !viewportPageBounds?.h) return;
+
+              const viewedRegionW = SlideCalcUtil.calcViewedRegionWidth(
+                viewportPageBounds.w,
+                scaledWidth,
+              );
+              const viewedRegionH = SlideCalcUtil.calcViewedRegionHeight(
+                viewportPageBounds.h,
+                scaledHeight,
+              );
+
+              zoomSlide(
+                viewedRegionW,
+                viewedRegionH,
+                adjustedXOffset,
+                adjustedYOffset,
+                currentPresentationPageRef.current,
+              );
+            });
+          }
         } else if (includeViewerLogic) {
           // Viewer logic
           baseZoom = calculateZoomValueRef.current(scaledViewBoxWidth, scaledViewBoxHeight);
@@ -1463,6 +1532,9 @@ const Whiteboard = React.memo((props) => {
           const panned = prevCam.x !== nextCam.x || prevCam.y !== nextCam.y;
 
           const zoomed = prevCam.z !== nextCam.z;
+          if (panned && !isWheelZoomRef.current) {
+            markUserCameraInteraction();
+          }
           if (isPresenterRef.current && (panned || zoomed) && isMountedRef.current) {
             const baseZ = calculateZoomValueRef.current?.(
               currentPresentationPageRef.current?.scaledWidth,
@@ -1829,35 +1901,45 @@ const Whiteboard = React.memo((props) => {
     const viewportHeight = viewportScreenBounds.height;
     let newCamera;
 
-    if (slideShape) {
-      const prevZoomCamera = camera.z;
-      const prevCenteredCameraX = -slideShape.x
-        + (viewportWidth - slideShape.props.w * prevZoomCamera) / (2 * prevZoomCamera);
-      const prevCenteredCameraY = -slideShape.y
-        + (viewportHeight - slideShape.props.h * prevZoomCamera) / (2 * prevZoomCamera);
+    const page = currentPresentationPageRef.current;
+    const getCenteredCamera = (zoomLevel) => {
+      const { xOffset, yOffset } = calculateCenteredCameraOffsets(
+        page.scaledWidth,
+        page.scaledHeight,
+        zoomLevel,
+        presentationAreaWidth,
+        presentationAreaHeight,
+        fitToWidthRef.current,
+      );
+      return { x: xOffset, y: yOffset, z: zoomLevel };
+    };
 
+    if (slideShape && page) {
       const pageJustChanged = pageJustChangedRef.current;
       if (pageJustChanged) pageJustChangedRef.current = false;
 
-      const panningOffsetX = pageJustChanged ? 0 : (camera.x - prevCenteredCameraX);
-      const panningOffsetY = pageJustChanged ? 0 : (camera.y - prevCenteredCameraY);
+      const backendX = page.xOffset ?? 0;
+      const backendY = page.yOffset ?? 0;
+      const hasStoredPan = backendX !== 0 || backendY !== 0;
 
-      const centeredCameraX = -slideShape.x
-        + (viewportWidth - slideShape.props.w * zoomCamera) / (2 * zoomCamera);
-      const centeredCameraY = -slideShape.y
-        + (viewportHeight - slideShape.props.h * zoomCamera) / (2 * zoomCamera);
-
-      // use stored values if slide has just changed and zoom is not default
-      if (pageJustChanged && zoomValueRef.current !== HUNDRED_PERCENT) {
+      if (pageJustChanged && zoomValueRef.current !== HUNDRED_PERCENT && hasStoredPan) {
         newCamera = {
-          x: currentPresentationPageRef.current.xOffset,
-          y: currentPresentationPageRef.current.yOffset,
+          x: backendX,
+          y: backendY,
           z: zoomCamera,
         };
+      } else if (pageJustChanged) {
+        newCamera = getCenteredCamera(zoomCamera);
       } else {
+        const prevZoomCamera = camera.z;
+        const prevCentered = getCenteredCamera(prevZoomCamera);
+        const panningOffsetX = camera.x - prevCentered.x;
+        const panningOffsetY = camera.y - prevCentered.y;
+        const centeredCamera = getCenteredCamera(zoomCamera);
+
         newCamera = {
-          x: centeredCameraX + panningOffsetX,
-          y: centeredCameraY + panningOffsetY,
+          x: centeredCamera.x + panningOffsetX,
+          y: centeredCamera.y + panningOffsetY,
           z: zoomCamera,
         };
       }
@@ -1875,6 +1957,10 @@ const Whiteboard = React.memo((props) => {
   };
 
   const syncCameraWithPresentationArea = () => {
+    if (isWheelZoomRef.current || isUserPanningRef.current) {
+      return;
+    }
+
     if (
       !tlEditorRef.current
       || !currentPresentationPageRef.current
@@ -2121,6 +2207,7 @@ const Whiteboard = React.memo((props) => {
       && currentPresentationPage
       && isPresenter
       && !isWheelZoomRef.current
+      && !isUserPanningRef.current
     ) {
       if (!isMounting && prevZoomValueRef.current !== zoomValue) {
         syncCameraOnPresenterZoom();

@@ -43,7 +43,8 @@ trait UserConnectionAliveReqMsgHdlr extends RightsManagementTrait {
         msg.body.networkRttInMs,
         msg.body.applicationRttInMs,
         traceLog,
-        getLevelFromRtt(msg.body.networkRttInMs)
+        getLevelFromRtt(msg.body.networkRttInMs),
+        msg.body.clientIsHidden
       )
     }
   }

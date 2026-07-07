@@ -268,7 +268,7 @@ const useMouseEvents = ({
       z: newCameraZoomFactor,
     };
 
-    tlEditorRef.current.setCamera(nextCamera, { duration: 175 });
+    tlEditorRef.current.setCamera(nextCamera);
 
     if (isWheelZoomRef.currentTimeout) {
       clearTimeout(isWheelZoomRef.currentTimeout);
@@ -350,7 +350,7 @@ const useMouseEvents = ({
             z: newCameraZoomFactor,
           };
 
-          tlEditorRef.current.setCamera(nextCamera, { duration: 175 });
+          tlEditorRef.current.setCamera(nextCamera);
 
           // Update initial distance for continuous pinch
           initialPinchDistanceRef.current = currentDistance;

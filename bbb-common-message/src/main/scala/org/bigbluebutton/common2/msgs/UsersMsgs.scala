@@ -261,7 +261,8 @@ case class UserConnectionAliveReqMsgBody(
     clientSessionUUID:  String,
     networkRttInMs:     Double,
     applicationRttInMs: Double,
-    traceLog:           String
+    traceLog:           String,
+    clientIsHidden:     Option[Boolean] = None
 )
 
 /**

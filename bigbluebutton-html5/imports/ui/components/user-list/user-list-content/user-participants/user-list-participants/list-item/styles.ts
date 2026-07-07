@@ -459,6 +459,12 @@ const IconRightContainer = styled.div`
   margin: .25rem;  
 `;
 
+const MeetingTabHiddenIcon = styled(Icon)`
+  color: ${colorGray};
+  font-size: 1rem;
+  opacity: 0.85;
+`;
+
 export default {
   Avatar,
   Skeleton,
@@ -470,4 +476,5 @@ export default {
   SvgContentUserListIcon,
   SvgContentUserListIconMargin,
   IconRightContainer,
+  MeetingTabHiddenIcon,
 };

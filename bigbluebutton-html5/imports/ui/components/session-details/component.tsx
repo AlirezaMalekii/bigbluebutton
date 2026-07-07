@@ -7,7 +7,7 @@ import { useQuery } from '@apollo/client';
 import { GET_WELCOME_MESSAGE, WelcomeMsgsResponse } from './queries';
 import Styled from './styles';
 import deviceInfo from '/imports/utils/deviceInfo';
-import { hasDisplayableSessionDetails, stripHtml } from './utils';
+import { getFormattedDialIn, hasDisplayableSessionDetails, stripHtml } from './utils';
 
 const intlMessages = defineMessages({
   title: {
@@ -108,14 +108,12 @@ const SessionDetails: React.FC<SessionDetailsProps> = (props) => {
         description: intl.formatMessage(intlMessages.dismissDesc),
       }}
       data-test="sessionDetailsModal"
-      {...{
-        isOpen,
-        onRequestClose,
-        priority,
-        anchorElement,
-      }}
+      modalIsOpen={isOpen}
+      onRequestClose={onRequestClose}
+      priority={priority}
+      anchorElement={anchorElement}
     >
-      <Styled.Chevron />
+      {!isMobile && <Styled.Chevron />}
       <Styled.Container
         isFullWidth={isMobile || !(loginUrl || (formattedDialNum && formattedTelVoice))}
       >
@@ -211,20 +209,13 @@ const SessionDetailsContainer: React.FC<SessionDetailsContainerProps> = ({
   if (welcomeError) return <div>{JSON.stringify(welcomeError)}</div>;
   if (!welcomeData || loading || !currentMeeting) return null;
 
-  const invalidDialNumbers = ['0', '613-555-1212', '613-555-1234', '0000'];
+  const { formattedDialNum, formattedTelVoice } = getFormattedDialIn(currentMeeting?.voiceSettings);
 
-  let formattedDialNum = '';
-  let formattedTelVoice = '';
+  const { isMobile } = deviceInfo;
 
-  if (currentMeeting && currentMeeting.voiceSettings) {
-    const { dialNumber, telVoice } = currentMeeting.voiceSettings;
-    if (invalidDialNumbers.indexOf(dialNumber) < 0) {
-      formattedDialNum = dialNumber;
-      formattedTelVoice = telVoice;
-    }
-  }
-
-  const anchorElement = document.getElementById('presentationTitle') as HTMLElement;
+  const anchorElement = isMobile
+    ? null
+    : document.getElementById('presentationTitle') as HTMLElement;
 
   // login url should only be displayed for moderators
   let loginUrl = currentMeeting.loginUrl ?? '';
@@ -240,6 +231,9 @@ const SessionDetailsContainer: React.FC<SessionDetailsContainerProps> = ({
   if (!hasDisplayableSessionDetails({
     welcome: welcomeMessage,
     welcomeForModerators: welcomeMsgForModerators,
+    loginUrl,
+    formattedDialNum,
+    formattedTelVoice,
   })) {
     return null;
   }

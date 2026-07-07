@@ -17,6 +17,7 @@ import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import { LockSettings, Meeting, UsersPolicies } from '/imports/ui/Types/meeting';
 import { filterByMeetingId } from '/imports/ui/core/utils/subscriptionFilters';
 import { USER_LIST_SUBSCRIPTION } from '/imports/ui/core/graphql/queries/users';
+import useHiddenTabUserIds from '../useHiddenTabUserIds';
 
 interface UserListParticipantsContainerProps {
   index: number;
@@ -37,6 +38,7 @@ interface UsersListParticipantsPage {
   pageId: string;
   offset: number;
   isBreakout: boolean;
+  hiddenTabUserIds: Set<string>;
 }
 
 const UsersListParticipantsPage: React.FC<UsersListParticipantsPage> = ({
@@ -46,6 +48,7 @@ const UsersListParticipantsPage: React.FC<UsersListParticipantsPage> = ({
   pageId,
   offset,
   isBreakout,
+  hiddenTabUserIds,
 }) => {
   const [openUserAction, setOpenUserAction] = React.useState<string | null>(null);
   const isRTL = layoutSelect((i: Layout) => i.isRTL);
@@ -75,7 +78,12 @@ const UsersListParticipantsPage: React.FC<UsersListParticipantsPage> = ({
                 isBreakout={isBreakout}
                 type="participant"
               >
-                <ListItem index={offset + idx} user={user} lockSettings={meeting.lockSettings} />
+                <ListItem
+                  index={offset + idx}
+                  user={user}
+                  lockSettings={meeting.lockSettings}
+                  isMeetingTabHidden={hiddenTabUserIds.has(user.userId)}
+                />
               </UserActions>
             </Styled.UserListItem>
           );
@@ -152,6 +160,7 @@ const UserListParticipantsPageContainer: React.FC<UserListParticipantsContainerP
   } = useDeduplicatedSubscription<CurrentPresentationPagesSubscriptionResponse>(CURRENT_PRESENTATION_PAGE_SUBSCRIPTION);
   const presentationPage = presentationData?.pres_page_curr[0];
   const pageId = presentationPage?.pageId;
+  const hiddenTabUserIds = useHiddenTabUserIds();
 
   useEffect(() => {
     setVisibleUsers((prev) => {
@@ -207,6 +216,7 @@ const UserListParticipantsPageContainer: React.FC<UserListParticipantsContainerP
       pageId={pageId ?? ''}
       offset={offset}
       isBreakout={meeting?.isBreakout ?? false}
+      hiddenTabUserIds={hiddenTabUserIds}
     />
   );
 };

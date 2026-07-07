@@ -623,9 +623,27 @@
 #layout[data-skyroom-column="true"] [class*="PresentationSlideControls"] button:hover > span,
 #layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] button:hover > span,
 #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] [class*="toolbarIconButton"]:hover > span {
-  background-color: rgba(32, 199, 187, 0.14) !important;
-  border-color: rgba(32, 199, 187, 0.40) !important;
-  box-shadow: 0 2px 10px rgba(32, 199, 187, 0.12) !important;
+  background-color: var(--skyroom-accent-hover-bg, rgba(32, 199, 187, 0.14)) !important;
+  border-color: var(--skyroom-accent-border, rgba(32, 199, 187, 0.40)) !important;
+  box-shadow: 0 2px 10px var(--skyroom-accent-glow, rgba(32, 199, 187, 0.12)) !important;
+  color: var(--skyroom-brand-300, #3fc2b8) !important;
+}
+
+/* Active / selected — fit-to-width toggle and pressed tools */
+#layout[data-skyroom-column="true"] [class*="PresentationSlideControls"] button:active > span,
+#layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] button:active > span,
+#layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] [class*="toolbarIconButton"]:active > span {
+  background-color: rgba(13, 136, 126, 0.28) !important;
+  border-color: var(--skyroom-accent, #20c7bb) !important;
+  color: #ffffff !important;
+}
+
+#layout[data-skyroom-column="true"] [class*="FitToWidthButton"] > span {
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    color 120ms ease !important;
 }
 
 /* Slide page number / input */
@@ -666,8 +684,18 @@
 
 #layout[data-skyroom-column="true"] [class*="ExtraTools"] > [class*="Button"]:hover,
 #layout[data-skyroom-column="true"] [class*="ExtraTools"] button:hover {
-  background-color: rgba(32, 199, 187, 0.16) !important;
-  border-color: rgba(32, 199, 187, 0.42) !important;
+  background-color: var(--skyroom-accent-hover-bg, rgba(32, 199, 187, 0.16)) !important;
+  border-color: var(--skyroom-accent-border, rgba(32, 199, 187, 0.42)) !important;
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.30),
+    0 0 0 2px var(--skyroom-accent-glow, rgba(32, 199, 187, 0.10)),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
+}
+
+#layout[data-skyroom-column="true"] [class*="ExtraTools"] > [class*="Button"]:active,
+#layout[data-skyroom-column="true"] [class*="ExtraTools"] button:active {
+  background-color: rgba(13, 136, 126, 0.28) !important;
+  border-color: var(--skyroom-accent, #20c7bb) !important;
 }
 
 /* Phone (<600px): the Skyroom CustomLayout mobile split engine now drives geometry

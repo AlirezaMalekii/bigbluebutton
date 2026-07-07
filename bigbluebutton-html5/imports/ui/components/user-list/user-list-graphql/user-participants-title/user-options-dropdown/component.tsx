@@ -30,11 +30,7 @@ import { GET_USER_NAMES } from '/imports/ui/core/graphql/queries/users';
 import logger from '/imports/startup/client/logger';
 import { filterByMeetingId } from '/imports/ui/core/utils/subscriptionFilters';
 import { notify } from '/imports/ui/services/notification';
-import {
-  closeAllRegisteredModals,
-  useModalRegistration,
-} from '/imports/ui/core/singletons/modalController';
-import { closeGuestWaitingModal } from '/imports/ui/components/skyroom-layout/guest-waiting-modal/state';
+import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
 
 interface GetUserNamesResponse {
   user: Array<{
@@ -326,13 +322,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         icon: 'user',
         label: intl.formatMessage(intlMessages.guestPolicyLabel),
         description: intl.formatMessage(intlMessages.guestPolicyDesc),
-        onClick: () => {
-          closeGuestWaitingModal();
-          closeAllRegisteredModals();
-          window.setTimeout(() => {
-            guestPolicyModal.open();
-          }, 0);
-        },
+        onClick: () => guestPolicyModal.open(),
         dataTest: 'guestPolicyLabel',
       },
       {
@@ -438,7 +428,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         />
       )}
 
-      {dynamicGuestPolicy && !isBreakout && (
+      {guestPolicyModal.isOpen && (
         <GuestPolicyContainer
           onRequestClose={guestPolicyModal.close}
           priority="low"
