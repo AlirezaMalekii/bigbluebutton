@@ -66,7 +66,7 @@ const GlobalStyle = createGlobalStyle`
   }
 
   .fullscreenModalOverlay {
-    z-index: 900;
+    z-index: 1350;
     background: #fff;
     display: flex;
     align-items: center;

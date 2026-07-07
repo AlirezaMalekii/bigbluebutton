@@ -6,7 +6,7 @@ import { range } from '/imports/utils/array-utils';
 import { useMeetingIsBreakout } from '/imports/ui/components/app/service';
 import { notify } from '/imports/ui/services/notification';
 import getFromUserSettings from '/imports/ui/services/users-settings';
-import VideoPreviewContainer from '/imports/ui/components/video-preview/container';
+import { requestOpenVideoPreviewModal } from '/imports/ui/components/video-preview/service';
 import lockContextContainer from '/imports/ui/components/lock-viewers/context/container';
 import {
   joinMicrophone,
@@ -133,11 +133,6 @@ const AudioContainer = (props) => {
   const storageMuteState = useStorageKey(Service.getStorageMuteStateKey(), 'session');
   const { microphoneConstraints } = useSettings(SETTINGS.APPLICATION);
 
-  const videoPreviewModal = useModalRegistration({
-    id: 'videoPreviewModal',
-    priority: 'medium',
-  });
-
   const audioModal = useModalRegistration({
     id: 'audioModal',
     priority: 'high',
@@ -179,7 +174,7 @@ const AudioContainer = (props) => {
 
   const openVideoPreviewModal = () => {
     if (userWebcam) return;
-    videoPreviewModal.open();
+    requestOpenVideoPreviewModal();
   };
 
   const joinAudioByRole = useCallback(() => {
@@ -357,18 +352,6 @@ const AudioContainer = (props) => {
             priority: 'high',
             setIsOpen: audioModal.isOpen ? audioModal.close : audioModal.open,
             isOpen: audioModal.isOpen,
-          }}
-        />
-      ) : null}
-      {videoPreviewModal.isOpen ? (
-        <VideoPreviewContainer
-          {...{
-            callbackToClose: () => {
-              videoPreviewModal.close();
-            },
-            priority: 'medium',
-            setIsOpen: videoPreviewModal.isOpen ? videoPreviewModal.close : videoPreviewModal.open,
-            isOpen: videoPreviewModal.isOpen,
           }}
         />
       ) : null}

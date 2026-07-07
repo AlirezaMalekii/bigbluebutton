@@ -7,13 +7,13 @@ import { debounce } from '/imports/utils/debounce';
 import BBBMenu from '/imports/ui/components/common/menu/component';
 import Button from '/imports/ui/components/common/button/component';
 import VideoPreviewContainer from '/imports/ui/components/video-preview/container';
-import PreviewService from '/imports/ui/components/video-preview/service';
+import PreviewService, { OPEN_VIDEO_PREVIEW_MODAL_EVENT } from '/imports/ui/components/video-preview/service';
 import { CameraSettingsDropdownItemType } from 'bigbluebutton-html-plugin-sdk/dist/cjs/extensible-areas/camera-settings-dropdown-item/enums';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import { CameraSettingsDropdownInterface } from 'bigbluebutton-html-plugin-sdk';
 import VideoService from '../service';
 import Styled from './styles';
-import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
+import { useModalRegistration, closeAllRegisteredModals } from '/imports/ui/core/singletons/modalController';
 
 const intlMessages = defineMessages({
   videoSettings: {
@@ -110,9 +110,22 @@ const JoinVideoButton: React.FC<JoinVideoButtonProps> = ({
   });
 
   const setIsVideoPreviewModalOpen = (isOpen: boolean) => {
-    if (isOpen) openVideoPreviewModal();
-    else closeVideoPreviewModal();
+    if (isOpen) {
+      closeAllRegisteredModals();
+      openVideoPreviewModal();
+    } else {
+      closeVideoPreviewModal();
+    }
   };
+
+  useEffect(() => {
+    const onOpenRequest = () => {
+      closeAllRegisteredModals();
+      openVideoPreviewModal();
+    };
+    window.addEventListener(OPEN_VIDEO_PREVIEW_MODAL_EVENT, onOpenRequest);
+    return () => window.removeEventListener(OPEN_VIDEO_PREVIEW_MODAL_EVENT, onOpenRequest);
+  }, [openVideoPreviewModal]);
 
   useEffect(() => {
     const Settings = getSettingsSingletonInstance();

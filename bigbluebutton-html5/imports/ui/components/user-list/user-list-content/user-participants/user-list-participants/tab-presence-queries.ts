@@ -2,7 +2,6 @@ import { gql } from '@apollo/client';
 
 export interface HiddenTabUserReport {
   userId: string;
-  clientIsHidden: boolean;
 }
 
 export interface HiddenTabUsersSubscriptionResponse {
@@ -18,7 +17,6 @@ subscription HiddenTabUsers {
     }
   ) {
     userId
-    clientIsHidden
   }
 }`;
 

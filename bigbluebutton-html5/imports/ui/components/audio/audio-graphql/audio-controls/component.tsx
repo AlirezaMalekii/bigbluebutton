@@ -16,7 +16,7 @@ import { UPDATE_ECHO_TEST_RUNNING } from './queries';
 import { SET_LISTEN_ONLY_INPUT_DEVICE } from '/imports/ui/components/user-list/user-list-content/user-participants/user-list-participants/user-actions/mutations';
 import connectionStatus from '/imports/ui/core/graphql/singletons/connectionStatus';
 import useIsAudioConnected from '/imports/ui/components/audio/audio-graphql/hooks/useIsAudioConnected';
-import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
+import { useModalRegistration, closeAllRegisteredModals } from '/imports/ui/core/singletons/modalController';
 
 const intlMessages = defineMessages({
   joinAudio: {
@@ -82,7 +82,8 @@ const AudioControls: React.FC<AudioControlsProps> = ({
 
   const setIsAudioModalOpen = useCallback((value: boolean) => {
     if (value) {
-      openAudioModal();
+      closeAllRegisteredModals();
+      window.setTimeout(() => openAudioModal(), 0);
     } else {
       closeAudioModal();
     }

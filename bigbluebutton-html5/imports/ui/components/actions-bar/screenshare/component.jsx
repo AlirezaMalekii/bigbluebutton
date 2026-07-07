@@ -189,10 +189,14 @@ const ScreenshareButton = ({
 
     if (localizedError) {
       notify(intl.formatMessage(localizedError, { errorCode }), toastType, 'desktop', { ...helpInfo });
-      logger.error({
+      const isUserDenied = errorCode === SCREENSHARING_ERRORS.NotAllowedError.errorCode;
+      const logFn = isUserDenied ? logger.warn.bind(logger) : logger.error.bind(logger);
+      logFn({
         logCode: 'screenshare_failed',
         extraInfo: { errorCode, errorMessage },
-      }, `Screenshare failed: ${errorMessage} (code=${errorCode})`);
+      }, isUserDenied
+        ? `Screenshare denied by user (code=${errorCode})`
+        : `Screenshare failed: ${errorMessage} (code=${errorCode})`);
     }
 
     screenshareHasEnded();

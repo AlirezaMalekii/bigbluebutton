@@ -304,9 +304,15 @@ class VideoPreview extends Component {
     const {
       webcamDeviceId,
       forceOpen,
+      isCamLocked,
     } = this.props;
 
     this._isMounted = true;
+
+    if (isCamLocked === true) {
+      this.handleProceed();
+      return;
+    }
 
  const populatePreview = ({
       digestedWebcams = [],
@@ -404,8 +410,15 @@ class VideoPreview extends Component {
     }
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
     const { viewState, webcamDeviceId } = this.state;
+    const { isOpen, isCamLocked } = this.props;
+
+    if (isOpen && isCamLocked === true && !prevProps.isOpen) {
+      this.handleProceed();
+      return;
+    }
+
     if (viewState === VIEW_STATES.found && !this.video?.srcObject) {
       this.displayPreview();
     }
@@ -426,7 +439,10 @@ class VideoPreview extends Component {
   }
 
   componentWillUnmount() {
-    const { webcamDeviceId } = this.state;
+    const { webcamDeviceId, isOpen, closeModal } = this.props;
+    if (isOpen) {
+      closeModal();
+    }
     this.terminateCameraStream(this.currentVideoStream, webcamDeviceId);
     this.cleanupStreamAndVideo();
     this._isMounted = false;
@@ -1434,11 +1450,6 @@ class VideoPreview extends Component {
 
     const darkThemeState = AppService.isDarkThemeEnabled();
     const isBlurred = Session.getItem('videoPreviewFirstOpen') && getFromUserSettings('bbb_auto_share_webcam', window.meetingClientSettings.public.kurento.autoShareWebcam);
-
-    if (isCamLocked === true) {
-      this.handleProceed();
-      return null;
-    }
 
     if (this.shouldSkipVideoPreview()) {
       return null;

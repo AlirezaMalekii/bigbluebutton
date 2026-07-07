@@ -45,6 +45,24 @@
   z-index: 1000 !important;
 }
 
+/* Keep the entire modal stack above #app and Skyroom whiteboard layers (up to ~1200). */
+#modals-container {
+  position: relative;
+  z-index: 1400;
+}
+
+#modals-container .ReactModalPortal.modal-low {
+  z-index: 1300;
+}
+
+#modals-container .ReactModalPortal.modal-medium {
+  z-index: 1310;
+}
+
+#modals-container .ReactModalPortal.modal-high {
+  z-index: 1320;
+}
+
 .modal-low {
   z-index: 1300;
 }
@@ -57,20 +75,19 @@
   z-index: 1320;
 }
 
-/* Within a same priority, hide all but first (FIFO) */
-.modal-low ~ .modal-low, 
-.modal-medium ~ .modal-medium, 
-.modal-high ~ .modal-high {
+/* Within a same priority, hide all but first (FIFO) — only while visibly open */
+#modals-container .ReactModalPortal.modal-low:has(.ReactModal__Overlay--after-open) ~ .ReactModalPortal.modal-low,
+#modals-container .ReactModalPortal.modal-medium:has(.ReactModal__Overlay--after-open) ~ .ReactModalPortal.modal-medium,
+#modals-container .ReactModalPortal.modal-high:has(.ReactModal__Overlay--after-open) ~ .ReactModalPortal.modal-high {
   display: none;
 }
 
-/* Hide all low priority modals when a medium or high priority modals are displayed */
-#modals-container:has(.modal-medium) .modal-low, 
-#modals-container:has(.modal-high) .modal-low {
+/* Hide lower-priority modals only while a higher-priority overlay is visibly open */
+#modals-container:has(.ReactModalPortal.modal-medium .ReactModal__Overlay--after-open) .ReactModalPortal.modal-low,
+#modals-container:has(.ReactModalPortal.modal-high .ReactModal__Overlay--after-open) .ReactModalPortal.modal-low {
   display: none;
 }
 
-/* Hide all medium priority modals when a high priority modal is displayed */
-#modals-container:has(.modal-high) .modal-medium {
+#modals-container:has(.ReactModalPortal.modal-high .ReactModal__Overlay--after-open) .ReactModalPortal.modal-medium {
   display: none;
 }

@@ -30,7 +30,7 @@ import { GET_USER_NAMES } from '/imports/ui/core/graphql/queries/users';
 import logger from '/imports/startup/client/logger';
 import { filterByMeetingId } from '/imports/ui/core/utils/subscriptionFilters';
 import { notify } from '/imports/ui/services/notification';
-import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
+import { useModalRegistration, closeAllRegisteredModals } from '/imports/ui/core/singletons/modalController';
 
 interface GetUserNamesResponse {
   user: Array<{
@@ -323,6 +323,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         label: intl.formatMessage(intlMessages.guestPolicyLabel),
         description: intl.formatMessage(intlMessages.guestPolicyDesc),
         onClick: () => {
+          closeAllRegisteredModals();
           window.setTimeout(guestPolicyModal.open, 0);
         },
         dataTest: 'guestPolicyLabel',
@@ -355,7 +356,10 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         icon: 'rooms',
         label: intl.formatMessage(intlMessages.createBreakoutRoom),
         description: intl.formatMessage(intlMessages.createBreakoutRoomDesc),
-        onClick: () => createBreakoutRoomModal.open(),
+        onClick: () => {
+          closeAllRegisteredModals();
+          window.setTimeout(() => createBreakoutRoomModal.open(), 0);
+        },
         dataTest: 'createBreakoutRooms',
       },
       {
@@ -364,7 +368,10 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         icon: 'rooms',
         label: intl.formatMessage(intlMessages.invitationLabel),
         description: intl.formatMessage(intlMessages.invitationDesc),
-        onClick: () => createBreakoutRoomModal.open(),
+        onClick: () => {
+          closeAllRegisteredModals();
+          window.setTimeout(() => createBreakoutRoomModal.open(), 0);
+        },
         dataTest: 'inviteUsers',
       },
       {

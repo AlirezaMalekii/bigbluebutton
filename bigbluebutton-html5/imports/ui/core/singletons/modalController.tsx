@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useLayoutEffect, useRef } from 'react';
 import { makeVar, useReactiveVar } from '@apollo/client';
 
 export type ModalPriority =
@@ -102,11 +102,15 @@ class ModalController {
       if (!m) return prev;
 
       const isFirstOpenAsk = desired && !m.desiredOpen;
+      const nextRequestedSeq = isFirstOpenAsk ? this.requestSeq + 1 : m.requestedSeq;
+      if (isFirstOpenAsk) {
+        this.requestSeq = nextRequestedSeq;
+      }
       const nextM: ModalRegistration = {
         ...m,
         desiredOpen: desired,
         requestedAt: isFirstOpenAsk ? Date.now() : m.requestedAt,
-        requestedSeq: isFirstOpenAsk ? this.requestSeq + 1 : m.requestedSeq,
+        requestedSeq: nextRequestedSeq,
       };
 
       return this.compute(prev, { byKey: { ...prev.byKey, [uniqueId]: nextM } });
@@ -221,13 +225,19 @@ export function useModalRegistration({
   setPriority: (p: ModalPriority) => void;
 } {
   const uniqueRef = useRef<string | null>(null);
+  const pendingOpenRef = useRef(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const uniqueId = controller.register(id, priority);
     uniqueRef.current = uniqueId;
+    if (pendingOpenRef.current) {
+      pendingOpenRef.current = false;
+      controller.setDesiredOpen(uniqueId, true);
+    }
     return () => {
       if (uniqueRef.current) controller.unregister(uniqueRef.current);
       uniqueRef.current = null;
+      pendingOpenRef.current = false;
     };
   }, [id, priority]);
 
@@ -236,7 +246,11 @@ export function useModalRegistration({
   const my = uniqueId ? slice.byKey[uniqueId] : undefined;
 
   const open = useCallback(() => {
-    if (uniqueRef.current) controller.setDesiredOpen(uniqueRef.current, true);
+    if (uniqueRef.current) {
+      controller.setDesiredOpen(uniqueRef.current, true);
+    } else {
+      pendingOpenRef.current = true;
+    }
   }, []);
 
   const close = useCallback(() => {

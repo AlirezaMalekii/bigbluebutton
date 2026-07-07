@@ -1193,6 +1193,7 @@ textarea::placeholder {
    22) SETTINGS MODAL — centered card (from Options → Settings)
    --------------------------------------------------------------------- */
 .fullscreenModalOverlay {
+  z-index: 1350 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;

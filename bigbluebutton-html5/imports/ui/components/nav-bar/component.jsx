@@ -37,7 +37,7 @@ import SessionDetailsModal from '/imports/ui/components/session-details/componen
 import Icon from '/imports/ui/components/common/icon/icon-ts/component';
 import { PluginButtonIcon } from '/imports/ui/components/plugins/plugin-icon/styles';
 import SessionStorage from '../../services/storage/session';
-import { ModalRegistration } from '../../core/singletons/modalController';
+import { ModalRegistration, closeAllRegisteredModals } from '../../core/singletons/modalController';
 
 const intlMessages = defineMessages({
   toggleUserListLabel: {
@@ -611,9 +611,11 @@ class NavBar extends Component {
                         if (meetingId) {
                           SessionStorage.setItem('alreadyShowSessionDetailsOnJoin', meetingId);
                         }
+                        close();
+                        return;
                       }
-                      if (value) open();
-                      else close();
+                      closeAllRegisteredModals();
+                      window.setTimeout(() => open(), 0);
                     };
                     return NavBar.renderModal(isOpen, this.setModalIsOpen, 'low', SessionDetailsModal);
                   }
