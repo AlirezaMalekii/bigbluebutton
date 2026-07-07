@@ -4,7 +4,6 @@ import {
   borderSize,
   borderSizeSmall,
   borderRadius,
-  jumboPaddingY,
   smPaddingX,
   smPaddingY,
 } from '/imports/ui/stylesheets/styled-components/general';
@@ -303,7 +302,9 @@ const ConnectingAnimation = styled.span<ConnectingAnimationProps>`
 `;
 
 const BreakoutsList = styled.div`
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 `;
 
 const JoinedUserNames = styled.div`
@@ -354,6 +355,7 @@ const BreakoutScrollableList = styled(ScrollboxVertical)`
 
 type DurationContainerProps = {
   centeredText: boolean;
+  $presentation?: 'sidebar' | 'mobile';
 };
 
 const DurationContainer = styled.div<DurationContainerProps>`
@@ -361,10 +363,13 @@ const DurationContainer = styled.div<DurationContainerProps>`
     text-align: center;
   `}
 
-  border-radius: ${borderRadius};
-  margin-bottom: ${jumboPaddingY};
-  padding: 10px;
-  box-shadow: 0 0 1px 1px ${colorGrayLightest};
+  border-radius: 12px;
+  margin-bottom: 0;
+  padding: 0.65rem 0.75rem;
+  box-shadow: none;
+  background: ${({ $presentation }) => ($presentation === 'mobile' ? skyroomSurface : 'transparent')};
+  border: 1px solid ${({ $presentation }) => ($presentation === 'mobile' ? skyroomBorder : colorGrayLightest)};
+  color: ${({ $presentation }) => ($presentation === 'mobile' ? skyroomTextMuted : 'inherit')};
 `;
 
 const SetTimeContainer = styled.div`
@@ -415,19 +420,35 @@ const Duration = styled.span`
   align-self: center;
 `;
 
-const Panel = styled(ScrollboxVertical)`
-  background: linear-gradient(${colorWhite} 30%, rgba(255,255,255,0)),
-    linear-gradient(rgba(255,255,255,0), ${colorWhite} 70%) 0 100%,
-    radial-gradient(farthest-side at 50% 0, rgba(0,0,0,.2), rgba(0,0,0,0)),
-    radial-gradient(farthest-side at 50% 100%, rgba(0,0,0,.2), rgba(0,0,0,0)) 0 100%;
+type PanelPresentationProps = {
+  $presentation?: 'sidebar' | 'mobile';
+};
 
-  background-color: #fff;
-  padding: ${mdPaddingX};
+const Panel = styled.div<PanelPresentationProps>`
   display: flex;
-  flex-grow: 1;
   flex-direction: column;
-  overflow: hidden;
   height: 100%;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  background-color: ${({ $presentation }) => ($presentation === 'mobile' ? 'transparent' : colorWhite)};
+  padding: ${({ $presentation }) => ($presentation === 'mobile' ? '0' : mdPaddingX)};
+  color: ${({ $presentation }) => ($presentation === 'mobile' ? skyroomText : colorText)};
+`;
+
+const PanelHeader = styled.div`
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const ScrollableBody = styled.div`
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 `;
 
 const Separator = styled.div`
@@ -542,6 +563,8 @@ export default {
   EndButton,
   Duration,
   Panel,
+  PanelHeader,
+  ScrollableBody,
   Separator,
   FlexRow,
   Form,

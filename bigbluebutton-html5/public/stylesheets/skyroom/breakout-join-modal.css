@@ -1,0 +1,168 @@
+/* =====================================================================
+   Skyroom — Breakout join confirmation modal (mobile-first)
+   ===================================================================== */
+
+.skyroom-breakout-join-overlay {
+  background: rgba(4, 10, 20, 0.78) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 65 !important;
+}
+
+html[data-skyroom="true"] [data-test="breakoutJoinConfirmationModal"].ReactModal__Content {
+  position: fixed !important;
+  inset: auto !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  margin: 0 !important;
+  width: min(400px, calc(100vw - 28px)) !important;
+  max-width: 400px !important;
+  padding: 0 !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(32, 199, 187, 0.28) !important;
+  background: linear-gradient(
+    165deg,
+    rgba(14, 24, 40, 0.98) 0%,
+    rgba(8, 16, 28, 0.99) 100%
+  ) !important;
+  box-shadow:
+    0 28px 72px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+html[data-skyroom="true"] [data-test="breakoutJoinConfirmationModal"].ReactModal__Content::before {
+  display: none !important;
+}
+
+.skyroom-breakout-join-modal [class*="Header"] {
+  flex-shrink: 0 !important;
+  min-height: 52px !important;
+  padding: 14px 18px 10px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  background: transparent !important;
+}
+
+.skyroom-breakout-join-modal [class*="Header"] h2,
+.skyroom-breakout-join-modal [class*="Header"] span {
+  color: #eef4fb !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  width: 100% !important;
+  white-space: normal !important;
+}
+
+.skyroom-breakout-join-modal [data-test="modalSimpleBody"] {
+  padding: 1.1rem 1.15rem 1.25rem !important;
+  color: #dfe9f5 !important;
+}
+
+.skyroom-breakout-join-modal [data-test="breakoutJoinModalBody"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.skyroom-breakout-join-modal [data-test="breakoutJoinModalMessage"] {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: rgba(210, 224, 238, 0.9);
+  margin: 0;
+}
+
+.skyroom-breakout-join-modal [data-test="breakoutJoinRoomName"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #20c7bb;
+  background: rgba(32, 199, 187, 0.12);
+  border: 1px solid rgba(32, 199, 187, 0.28);
+}
+
+.skyroom-breakout-join-modal [data-test="breakoutJoinRoomIcon"] {
+  font-size: 1.25rem;
+  opacity: 0.9;
+}
+
+.skyroom-breakout-join-modal [data-test="breakoutJoinModalHint"] {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: rgba(198, 208, 220, 0.72);
+  margin: 0;
+}
+
+.skyroom-breakout-join-modal [data-test="breakoutJoinModalActions"] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.skyroom-breakout-join-modal [data-test="breakoutJoinConfirmBtn"] button,
+.skyroom-breakout-join-modal [data-test="breakoutJoinDismissBtn"] button {
+  width: 100% !important;
+  min-height: 42px !important;
+  border-radius: 12px !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  justify-content: center !important;
+}
+
+.skyroom-breakout-join-modal [data-test="breakoutJoinConfirmBtn"] button {
+  background: linear-gradient(135deg, #20c7bb, #17a89e) !important;
+  border: none !important;
+  color: #fff !important;
+}
+
+.skyroom-breakout-join-modal [data-test="breakoutJoinDismissBtn"] button {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: rgba(210, 224, 238, 0.85) !important;
+}
+
+.skyroom-breakout-join-modal [data-test="selectBreakoutRoomBtn"] {
+  width: 100% !important;
+  margin: 0.5rem 0 !important;
+  padding: 0.65rem 0.75rem !important;
+  border-radius: 12px !important;
+  background: rgba(5, 10, 18, 0.72) !important;
+  border: 1px solid rgba(32, 199, 187, 0.22) !important;
+  color: #eef4fb !important;
+  font-size: 0.9rem !important;
+}
+
+.skyroom-breakout-join-modal [data-test="labelGeneratingURL"] {
+  font-size: 0.78rem;
+  color: rgba(198, 208, 220, 0.75);
+}
+
+@media (max-width: 599px) {
+  html[data-skyroom="true"] [data-test="breakoutJoinConfirmationModal"].ReactModal__Content {
+    top: auto !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 72px) !important;
+    transform: translateX(-50%) !important;
+    border-radius: 20px 20px 16px 16px !important;
+    max-height: min(78vh, 520px) !important;
+  }
+}
+
+@media (min-width: 600px) {
+  html[data-skyroom="true"] [data-test="breakoutJoinConfirmationModal"].ReactModal__Content {
+    top: 50% !important;
+    bottom: auto !important;
+    transform: translate(-50%, -50%) !important;
+  }
+}

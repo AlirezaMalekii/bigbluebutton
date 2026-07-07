@@ -25,7 +25,9 @@ import {
   toggleSkyroomUserList,
   toggleSkyroomSharedNotesGlobally,
   toggleSkyroomSharedNotesLocally,
+  toggleSkyroomBreakout,
   isPublicChatOpen,
+  isSkyroomBreakoutOpen,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import SkyroomHeaderStatusCluster from '/imports/ui/components/skyroom-layout/active-poll-summary/SkyroomHeaderStatusCluster';
 import LeaveMeetingButtonContainer from './leave-meeting-button/container';
@@ -53,6 +55,11 @@ const intlMessages = defineMessages({
   toggleSharedNotesLabel: {
     id: 'app.notes.title',
     description: 'Toggle shared notes panel in Skyroom layout',
+  },
+  toggleBreakoutLabel: {
+    id: 'app.breakout.manager.navToggleLabel',
+    description: 'Toggle breakout rooms panel in Skyroom layout',
+    defaultMessage: 'Breakout rooms',
   },
   newMessages: {
     id: 'app.navBar.toggleUserList.newMessages',
@@ -317,6 +324,18 @@ class NavBar extends Component {
     }
   }
 
+  handleToggleBreakout() {
+    const {
+      sidebarContent,
+      layoutContextDispatch,
+    } = this.props;
+
+    if (!isSkyroomColumnLayout()) return;
+
+    toggleSkyroomBreakout(layoutContextDispatch, sidebarContent);
+    window.dispatchEvent(new Event('resize'));
+  }
+
   handleToggleSharedNotes() {
     if (!isSkyroomColumnLayout()) return;
 
@@ -395,6 +414,7 @@ class NavBar extends Component {
       isDirectLeaveButtonEnabled,
       isConnected,
       hideTopRow,
+      showBreakoutToggle,
     } = this.props;
 
     const hasNotification = hasUnreadMessages || (hasUnreadNotes && !isPinned);
@@ -405,6 +425,9 @@ class NavBar extends Component {
     const isUserListExpanded = sidebarNavigation.isOpen;
     const isPublicChatExpanded = isSkyroomColumnLayout()
       ? isPublicChatOpen(sidebarContent)
+      : false;
+    const isBreakoutExpanded = isSkyroomColumnLayout()
+      ? isSkyroomBreakoutOpen(sidebarContent)
       : false;
     const { isPhone } = deviceInfo;
 
@@ -486,6 +509,22 @@ class NavBar extends Component {
                   aria-expanded={isPublicChatExpanded}
                   accessKey={TOGGLE_PUBLIC_CHAT_AK}
                   hasNotification={hasUnreadMessages}
+                />
+              )}
+              {showBreakoutToggle && isSkyroomColumnLayout() && shouldShowNavBarToggleButton && (
+                <Styled.NavbarToggleButton
+                  tooltipplacement="right"
+                  onClick={this.handleToggleBreakout}
+                  color={isPhone && isBreakoutExpanded ? 'primary' : 'dark'}
+                  size="md"
+                  circle
+                  hideLabel
+                  data-test="toggleBreakoutNav"
+                  label={intl.formatMessage(intlMessages.toggleBreakoutLabel)}
+                  tooltipLabel={intl.formatMessage(intlMessages.toggleBreakoutLabel)}
+                  aria-label={intl.formatMessage(intlMessages.toggleBreakoutLabel)}
+                  icon="rooms"
+                  aria-expanded={isBreakoutExpanded}
                 />
               )}
               {showSharedNotesToggle && (

@@ -1,11 +1,12 @@
-import React, { useEffect, useReducer } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import ModalSimple from '/imports/ui/components/common/modal/simple/component';
 import GuestUsersManagementPanel from '/imports/ui/components/waiting-users/waiting-users-graphql/component';
+import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
 import {
-  closeGuestWaitingModal,
-  getGuestWaitingModalOpen,
-  subscribeGuestWaitingModal,
+  SKYROOM_GUEST_WAITING_CLOSE,
+  SKYROOM_GUEST_WAITING_OPEN,
+  SKYROOM_GUEST_WAITING_TOGGLE,
 } from './state';
 
 const intlMessages = defineMessages({
@@ -17,12 +18,35 @@ const intlMessages = defineMessages({
 
 const SkyroomGuestWaitingModal: React.FC = () => {
   const intl = useIntl();
-  const [, force] = useReducer((x: number) => x + 1, 0);
-  const isOpen = getGuestWaitingModalOpen();
+  const {
+    open,
+    close,
+    isOpen,
+  } = useModalRegistration({
+    id: 'skyroomGuestWaitingModal',
+    priority: 'medium',
+  });
+  const isOpenRef = useRef(isOpen);
+  isOpenRef.current = isOpen;
 
-  useEffect(() => subscribeGuestWaitingModal(() => force()), []);
+  useEffect(() => {
+    const onOpen = () => open();
+    const onClose = () => close();
+    const onToggle = () => {
+      if (isOpenRef.current) close();
+      else open();
+    };
 
-  if (!isOpen) return null;
+    window.addEventListener(SKYROOM_GUEST_WAITING_OPEN, onOpen);
+    window.addEventListener(SKYROOM_GUEST_WAITING_CLOSE, onClose);
+    window.addEventListener(SKYROOM_GUEST_WAITING_TOGGLE, onToggle);
+
+    return () => {
+      window.removeEventListener(SKYROOM_GUEST_WAITING_OPEN, onOpen);
+      window.removeEventListener(SKYROOM_GUEST_WAITING_CLOSE, onClose);
+      window.removeEventListener(SKYROOM_GUEST_WAITING_TOGGLE, onToggle);
+    };
+  }, [open, close]);
 
   return (
     <ModalSimple
@@ -30,17 +54,19 @@ const SkyroomGuestWaitingModal: React.FC = () => {
       className="skyroom-guest-waiting-modal"
       data-test="skyroomGuestWaitingModal"
       overlayClassName="skyroom-guest-waiting-overlay"
-      onRequestClose={closeGuestWaitingModal}
+      onRequestClose={close}
       title={intl.formatMessage(intlMessages.title)}
       shouldShowCloseButton
       shouldCloseOnOverlayClick
     >
-      <div className="skyroom-guest-waiting-modal__body">
-        <GuestUsersManagementPanel
-          presentation="modal"
-          onClose={closeGuestWaitingModal}
-        />
-      </div>
+      {isOpen ? (
+        <div className="skyroom-guest-waiting-modal__body">
+          <GuestUsersManagementPanel
+            presentation="modal"
+            onClose={close}
+          />
+        </div>
+      ) : null}
     </ModalSimple>
   );
 };

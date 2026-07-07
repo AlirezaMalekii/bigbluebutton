@@ -29,26 +29,6 @@ export const isSkyroomColumnLayout = () => {
   return Boolean(layoutEl?.hasAttribute(SKYROOM_COLUMN_ATTR));
 };
 
-/**
- * Vertical space inside the whiteboard content area reserved for the floating
- * TLDraw bottom toolbar (above the slide-nav bar, which is subtracted separately).
- */
-export const getSkyroomMobileWbToolbarReserve = () => {
-  const layoutEl = document.getElementById('layout');
-  if (!layoutEl) return 40;
-  const styles = getComputedStyle(layoutEl);
-  const scale = parseFloat(styles.getPropertyValue('--skyroom-wb-scale')) || 0.68;
-  const wbToolbarH = Math.ceil(36 * scale * 0.92);
-  return wbToolbarH + 4;
-};
-
-/** Slide-nav + (on phone) TLDraw chrome subtracted from presentation bounds. */
-export const getSkyroomPresentationChromeHeight = (slideToolbarHeight = 0) => {
-  const slideH = slideToolbarHeight || 0;
-  if (!isSkyroomColumnLayout() || !isSkyroomMobileViewport()) return slideH;
-  return slideH + getSkyroomMobileWbToolbarReserve();
-};
-
 /** True during bootstrap before #layout mounts (see main.html data-skyroom). */
 export const isSkyroomTheme = () => {
   if (isSkyroomColumnLayout()) return true;
@@ -190,6 +170,37 @@ export const openSkyroomPrivateChat = (layoutContextDispatch, chatId = '') => {
 /** Show the breakout management/join panel in the mobile bottom zone (moderator or invitee). */
 export const openSkyroomBreakout = (layoutContextDispatch) => {
   openSkyroomMobileBox(layoutContextDispatch, 'breakout');
+};
+
+/** Open breakout panel on desktop content sidebar or mobile bottom zone. */
+export const openSkyroomBreakoutPanel = (layoutContextDispatch) => {
+  if (isSkyroomMobileViewport()) {
+    openSkyroomBreakout(layoutContextDispatch);
+    return;
+  }
+  layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN, value: true });
+  layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL, value: PANELS.BREAKOUT });
+  dispatchSkyroomLayoutResize();
+};
+
+export const isSkyroomBreakoutOpen = (sidebarContent) => (
+  sidebarContent.isOpen && sidebarContent.sidebarContentPanel === PANELS.BREAKOUT
+);
+
+/** Toggle breakout management panel (Skyroom desktop + mobile). */
+export const toggleSkyroomBreakout = (layoutContextDispatch, sidebarContent) => {
+  const isOpen = isSkyroomBreakoutOpen(sidebarContent);
+  if (isSkyroomMobileViewport()) {
+    openSkyroomMobileBox(layoutContextDispatch, isOpen ? null : 'breakout');
+    return;
+  }
+  if (isOpen) {
+    layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN, value: false });
+    layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL, value: PANELS.NONE });
+    dispatchSkyroomLayoutResize();
+    return;
+  }
+  openSkyroomBreakoutPanel(layoutContextDispatch);
 };
 
 /** Show the guest waiting-room approval panel in the mobile bottom zone (moderator). */

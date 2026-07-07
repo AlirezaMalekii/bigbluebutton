@@ -2,7 +2,9 @@ import { useMutation } from '@apollo/client';
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import Styled from './styles';
-import ModalFullscreen from '/imports/ui/components/common/modal/fullscreen/component';
+import ModalSimple from '/imports/ui/components/common/modal/simple/component';
+import Button from '/imports/ui/components/common/button/component';
+import Icon from '/imports/ui/components/common/icon/component';
 import {
   BreakoutRoom,
   getBreakoutData,
@@ -23,42 +25,42 @@ const intlMessages = defineMessages({
   title: {
     id: 'app.breakoutJoinConfirmation.title',
     description: 'Join breakout room title',
+    defaultMessage: 'Join breakout room',
   },
   message: {
     id: 'app.breakoutJoinConfirmation.message',
     description: 'Join breakout confirm message',
+    defaultMessage: 'You have been invited to join a breakout room.',
   },
   freeJoinMessage: {
     id: 'app.breakoutJoinConfirmation.freeJoinMessage',
     description: 'Join breakout confirm message',
+    defaultMessage: 'Choose a breakout room to join:',
   },
   confirmLabel: {
     id: 'app.createBreakoutRoom.join',
     description: 'Join confirmation button label',
-  },
-  confirmDesc: {
-    id: 'app.breakoutJoinConfirmation.confirmDesc',
-    description: 'adds context to confirm option',
+    defaultMessage: 'Join room',
   },
   dismissLabel: {
     id: 'app.breakoutJoinConfirmation.dismissLabel',
     description: 'Cancel button label',
-  },
-  dismissDesc: {
-    id: 'app.breakoutJoinConfirmation.dismissDesc',
-    description: 'adds context to dismiss option',
+    defaultMessage: 'Not now',
   },
   generatingURL: {
     id: 'app.createBreakoutRoom.generatingURLMessage',
     description: 'label for generating breakout room url',
+    defaultMessage: 'Preparing your join link…',
   },
   breakoutRoom: {
     id: 'app.createBreakoutRoom.room',
     description: 'breakout room',
+    defaultMessage: 'Group {roomNumber}',
   },
-  roomNameHighlight: {
-    id: 'app.breakoutJoinConfirmation.roomNameHighlight',
-    description: 'Highlighted room name in join confirmation',
+  joinHint: {
+    id: 'app.breakoutJoinConfirmation.joinHint',
+    description: 'Hint that breakout opens in a new tab',
+    defaultMessage: 'The room opens in a new browser tab. You can return here anytime.',
   },
 });
 
@@ -114,8 +116,7 @@ const BreakoutJoinConfirmation: React.FC<BreakoutJoinConfirmationProps> = ({
     breakoutRoomRequestJoinURL({ variables: { breakoutRoomMeetingId } });
   };
 
-  // request join url if free join is enabled and user is not assigned to any room
-  if (defaultSelectedBreakoutId === breakouts[0].breakoutRoomMeetingId) {
+  if (defaultSelectedBreakoutId === breakouts[0]?.breakoutRoomMeetingId) {
     const selectedBreakout = breakouts.find(
       ({ breakoutRoomMeetingId }) => breakoutRoomMeetingId === defaultSelectedBreakoutId,
     );
@@ -137,7 +138,6 @@ const BreakoutJoinConfirmation: React.FC<BreakoutJoinConfirmationProps> = ({
   };
 
   useEffect(() => {
-    // If User is Moved to a new room, the select value is updated
     if (defaultSelectedBreakoutId) {
       setSelectValue(defaultSelectedBreakoutId);
     }
@@ -156,45 +156,52 @@ const BreakoutJoinConfirmation: React.FC<BreakoutJoinConfirmationProps> = ({
     } else {
       const selectedBreakout = breakouts.find(({ breakoutRoomMeetingId }) => breakoutRoomMeetingId === selectValue);
       if (selectedBreakout?.joinURL) {
-        // log which breakout room the user is joining
         logger.info({
           logCode: 'breakoutroom_freejoin_selected',
           extraInfo: { selectedBreakout },
         }, 'User selected breakout room to join');
 
         window.open(selectedBreakout.joinURL, '_blank');
+        setIsOpen(false);
       }
     }
-  }, [breakouts, selectValue, presenter, stopMediaOnMainRoom]);
+  }, [breakouts, selectValue, presenter, stopMediaOnMainRoom, setIsOpen]);
 
-  const select = useMemo(() => {
-    return (
-      <Styled.SelectParent>
-        {`${intl.formatMessage(intlMessages.freeJoinMessage)}`}
-        <Styled.Select
-          value={selectValue}
-          onChange={handleSelectChange}
-          disabled={waiting}
-          data-test="selectBreakoutRoomBtn"
-        >
-          {
-            breakouts.sort((a, b) => a.sequence - b.sequence).map(({
-              shortName, breakoutRoomMeetingId, isDefaultName, sequence,
-            }) => (
-              <option
-                data-test="roomOption"
-                key={breakoutRoomMeetingId}
-                value={breakoutRoomMeetingId}
-              >
-                {isDefaultName ? intl.formatMessage(intlMessages.breakoutRoom, { roomNumber: sequence }) : shortName}
-              </option>
-            ))
-          }
-        </Styled.Select>
-        { waiting ? <span data-test="labelGeneratingURL">{intl.formatMessage(intlMessages.generatingURL)}</span> : null}
-      </Styled.SelectParent>
-    );
-  }, [breakouts, waiting, selectValue]);
+  const handleDismiss = useCallback(() => {
+    setIsOpen(false);
+    callHandleInviteDismissedAt();
+  }, [setIsOpen, callHandleInviteDismissedAt]);
+
+  const select = useMemo(() => (
+    <Styled.SelectParent>
+      <p data-test="breakoutJoinModalMessage">
+        {intl.formatMessage(intlMessages.freeJoinMessage)}
+      </p>
+      <Styled.Select
+        value={selectValue}
+        onChange={handleSelectChange}
+        disabled={waiting}
+        data-test="selectBreakoutRoomBtn"
+      >
+        {
+          breakouts.sort((a, b) => a.sequence - b.sequence).map(({
+            shortName, breakoutRoomMeetingId, isDefaultName, sequence,
+          }) => (
+            <option
+              data-test="roomOption"
+              key={breakoutRoomMeetingId}
+              value={breakoutRoomMeetingId}
+            >
+              {isDefaultName ? intl.formatMessage(intlMessages.breakoutRoom, { roomNumber: sequence }) : shortName}
+            </option>
+          ))
+        }
+      </Styled.Select>
+      {waiting ? (
+        <span data-test="labelGeneratingURL">{intl.formatMessage(intlMessages.generatingURL)}</span>
+      ) : null}
+    </Styled.SelectParent>
+  ), [breakouts, waiting, selectValue, intl]);
 
   const roomName = breakouts[0].isDefaultName
     ? intl.formatMessage(intlMessages.breakoutRoom, { roomNumber: breakouts[0].sequence })
@@ -207,57 +214,72 @@ const BreakoutJoinConfirmation: React.FC<BreakoutJoinConfirmationProps> = ({
         setWaiting(false);
       }
     }
-  }, [breakouts, waiting]);
+  }, [breakouts, waiting, selectValue]);
 
   useEffect(() => {
     if (breakouts?.length > 0 && !currentUserJoined) {
       setIsOpen(true);
     }
-  }, [breakouts, currentUserJoined]);
+  }, [breakouts, currentUserJoined, setIsOpen]);
 
   useEffect(() => {
-    // log which breakout rooms the user has the option to join
     if (freeJoin) {
       logger.info({
         logCode: 'breakoutroom_freejoin_options',
         extraInfo: { breakouts },
       }, 'User is given the option to join these breakout rooms');
     }
-  }, []);
+  }, [freeJoin, breakouts]);
 
   return (
-    <ModalFullscreen
+    <ModalSimple
+      modalIsOpen={breakoutJoinConfirmationIsOpen}
+      className="skyroom-breakout-join-modal"
+      overlayClassName="skyroom-breakout-join-overlay"
+      onRequestClose={handleDismiss}
       title={intl.formatMessage(intlMessages.title)}
-      confirm={{
-        callback: handleJoinBreakoutConfirmation,
-        label: intl.formatMessage(intlMessages.confirmLabel),
-        description: intl.formatMessage(intlMessages.confirmDesc),
-        icon: 'popout_window',
-        disabled: waiting,
-      }}
-      dismiss={{
-        callback: () => {
-          setIsOpen(false);
-          callHandleInviteDismissedAt();
-        },
-        label: intl.formatMessage(intlMessages.dismissLabel),
-        description: intl.formatMessage(intlMessages.dismissDesc),
-      }}
-      {...{
-        setIsOpen,
-        isOpen: breakoutJoinConfirmationIsOpen,
-        priority: 'medium',
-      }}
+      shouldShowCloseButton={false}
+      shouldCloseOnOverlayClick={false}
+      data-test="breakoutJoinConfirmationModal"
     >
-      {freeJoin ? select : (
-        <Styled.ConfirmationBody>
-          <span>{intl.formatMessage(intlMessages.message)}</span>
-          <Styled.RoomNameHighlight data-test="breakoutJoinRoomName">
-            {roomName}
-          </Styled.RoomNameHighlight>
-        </Styled.ConfirmationBody>
-      )}
-    </ModalFullscreen>
+      <Styled.JoinModalBody data-test="breakoutJoinModalBody">
+        {freeJoin ? select : (
+          <>
+            <p data-test="breakoutJoinModalMessage">
+              {intl.formatMessage(intlMessages.message)}
+            </p>
+            <Styled.RoomNameHighlight data-test="breakoutJoinRoomName">
+              <Icon iconName="rooms" data-test="breakoutJoinRoomIcon" />
+              <span>{roomName}</span>
+            </Styled.RoomNameHighlight>
+          </>
+        )}
+        <p data-test="breakoutJoinModalHint">
+          {intl.formatMessage(intlMessages.joinHint)}
+        </p>
+        <Styled.JoinModalActions data-test="breakoutJoinModalActions">
+          <Styled.ActionButtonWrap data-test="breakoutJoinConfirmBtn">
+            <Button
+              color="primary"
+              size="md"
+              icon="popout_window"
+              iconRight
+              label={intl.formatMessage(intlMessages.confirmLabel)}
+              disabled={waiting}
+              onClick={handleJoinBreakoutConfirmation}
+            />
+          </Styled.ActionButtonWrap>
+          <Styled.ActionButtonWrap data-test="breakoutJoinDismissBtn">
+            <Button
+              color="default"
+              size="md"
+              label={intl.formatMessage(intlMessages.dismissLabel)}
+              onClick={handleDismiss}
+            />
+          </Styled.ActionButtonWrap>
+        </Styled.JoinModalActions>
+      </Styled.JoinModalBody>
+    </ModalSimple>
   );
 };
 
@@ -283,7 +305,7 @@ const BreakoutJoinConfirmationContainer: React.FC = () => {
     return () => {
       breakoutExitObserver.removeCallback('rejoinAudio');
     };
-  }, []);
+  }, [breakoutExitObserver]);
 
   const {
     data: breakoutData,

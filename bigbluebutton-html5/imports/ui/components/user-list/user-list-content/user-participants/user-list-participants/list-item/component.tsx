@@ -157,32 +157,31 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, lockSettings, index }
   if ((user.locked || user.userLockSettings?.disablePublicChat)
       && (user.userLockSettings?.disablePublicChat || lockSettings?.hasActiveLockSetting) && !user.isModerator) {
     subs.push(
-      <span key={uniqueId('lock-')}>
+      <span key={uniqueId('lock-')} className="skyroom-user-sub-item">
         <Icon iconName="lock" />
-        &nbsp;
-        {intl.formatMessage(messages.locked)}
+        <span className="skyroom-user-sub-text">{intl.formatMessage(messages.locked)}</span>
       </span>,
     );
   }
   if (user.lastBreakoutRoom?.isUserCurrentlyInRoom) {
     subs.push(
-      <span key={uniqueId('breakout-')}>
+      <span key={uniqueId('breakout-')} className="skyroom-user-sub-item">
         <Icon iconName="rooms" />
-        &nbsp;
-        {user.lastBreakoutRoom?.isDefaultName
-          ? intl.formatMessage(messages.breakoutRoom, { roomNumber: user.lastBreakoutRoom?.sequence })
-          : user.lastBreakoutRoom?.shortName}
+        <span className="skyroom-user-sub-text">
+          {user.lastBreakoutRoom?.isDefaultName
+            ? intl.formatMessage(messages.breakoutRoom, { roomNumber: user.lastBreakoutRoom?.sequence })
+            : user.lastBreakoutRoom?.shortName}
+        </span>
       </span>,
     );
   }
   if (user?.cameras?.length > 0 && LABEL.sharingWebcam) {
     subs.push(
-      <span key={uniqueId('webcam-')}>
+      <span key={uniqueId('webcam-')} className="skyroom-user-sub-item">
         {user?.pinned === true
           ? <Icon iconName="pin-video_on" />
           : <Icon iconName="video" />}
-        &nbsp;
-        {intl.formatMessage(messages.sharingWebcam)}
+        <span className="skyroom-user-sub-text">{intl.formatMessage(messages.sharingWebcam)}</span>
       </span>,
     );
   }
@@ -191,10 +190,10 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, lockSettings, index }
   ).forEach((item) => {
     const itemToRender = item as PluginSdk.UserListItemLabel;
     subs.push(
-      <span key={itemToRender.id} data-test={itemToRender.dataTest}>
+      <span key={itemToRender.id} data-test={itemToRender.dataTest} className="skyroom-user-sub-item">
         { itemToRender.icon
           && getIconComponent(itemToRender.icon, true) }
-        {itemToRender.label}
+        <span className="skyroom-user-sub-text">{itemToRender.label}</span>
       </span>,
     );
   });
@@ -261,16 +260,21 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, lockSettings, index }
     elements.forEach((element, index) => {
       if (typeof element === 'string' && skyroomCompact) {
         modifiedElements.push(
-          <span key={uniqueId('sub-')} className="skyroom-user-sub-label">{element}</span>,
+          <span key={uniqueId('sub-')} className="skyroom-user-sub-item skyroom-user-sub-label">{element}</span>,
+        );
+      } else if (skyroomCompact && React.isValidElement(element)) {
+        const existingClass = (element.props as { className?: string }).className || '';
+        modifiedElements.push(
+          React.cloneElement(element, {
+            className: `skyroom-user-sub-item ${existingClass}`.trim(),
+          } as { className: string }),
         );
       } else {
         modifiedElements.push(element);
       }
-      if (index !== elements.length - 1) {
+      if (!skyroomCompact && index !== elements.length - 1) {
         modifiedElements.push(
-          skyroomCompact
-            ? <span key={uniqueId('separator-')} className="skyroom-user-sub-sep" aria-hidden="true" />
-            : <span key={uniqueId('separator-')}> | </span>,
+          <span key={uniqueId('separator-')}> | </span>,
         );
       }
     });

@@ -22,6 +22,8 @@ import BreakoutRoomUserAssignment from './breakout-room-user-assignment/componen
 import deviceInfo from '/imports/utils/deviceInfo';
 import BreakoutRoomUserAssignmentMobile from './breakout-room-user-assignment-mobile/component';
 import RoomManagmentState from './room-managment-state/component';
+import { layoutDispatch } from '/imports/ui/components/layout/context';
+import { openSkyroomBreakoutPanel } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import {
   Rooms,
   RoomToWithSettings,
@@ -376,6 +378,9 @@ const CreateBreakoutRoom: React.FC<CreateBreakoutRoomProps> = ({
       },
     );
     setIsOpen(false);
+    if (!isUpdate) {
+      openSkyroomBreakoutPanel(layoutDispatch());
+    }
   };
 
   const userUpdate = () => {

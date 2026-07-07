@@ -8,18 +8,22 @@ const intlMessages = defineMessages({
   manageUsers: {
     id: 'app.breakout.manager.manageUsers',
     description: 'Manage breakout room users',
+    defaultMessage: 'Manage users',
   },
   changeTime: {
     id: 'app.breakout.manager.changeTime',
     description: 'Change breakout room duration',
+    defaultMessage: 'Change time',
   },
   endAll: {
     id: 'app.breakout.manager.endAll',
     description: 'End all breakout rooms',
+    defaultMessage: 'End all',
   },
   toolbarTitle: {
     id: 'app.breakout.manager.toolbarTitle',
     description: 'Breakout manager toolbar title',
+    defaultMessage: 'Breakout room management',
   },
 });
 

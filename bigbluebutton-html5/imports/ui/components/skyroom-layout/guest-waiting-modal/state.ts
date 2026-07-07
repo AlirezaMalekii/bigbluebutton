@@ -1,36 +1,15 @@
-type GuestWaitingModalListener = (open: boolean) => void;
-
-let guestWaitingModalOpen = false;
-const listeners = new Set<GuestWaitingModalListener>();
-
-const notify = (): void => {
-  listeners.forEach((fn) => fn(guestWaitingModalOpen));
-};
-
-export const getGuestWaitingModalOpen = (): boolean => guestWaitingModalOpen;
+export const SKYROOM_GUEST_WAITING_OPEN = 'skyroom:guestWaitingOpen';
+export const SKYROOM_GUEST_WAITING_CLOSE = 'skyroom:guestWaitingClose';
+export const SKYROOM_GUEST_WAITING_TOGGLE = 'skyroom:guestWaitingToggle';
 
 export const openGuestWaitingModal = (): void => {
-  if (guestWaitingModalOpen) return;
-  guestWaitingModalOpen = true;
-  notify();
+  window.dispatchEvent(new Event(SKYROOM_GUEST_WAITING_OPEN));
 };
 
 export const closeGuestWaitingModal = (): void => {
-  if (!guestWaitingModalOpen) return;
-  guestWaitingModalOpen = false;
-  notify();
+  window.dispatchEvent(new Event(SKYROOM_GUEST_WAITING_CLOSE));
 };
 
 export const toggleGuestWaitingModal = (): void => {
-  if (guestWaitingModalOpen) {
-    closeGuestWaitingModal();
-  } else {
-    openGuestWaitingModal();
-  }
-};
-
-export const subscribeGuestWaitingModal = (listener: GuestWaitingModalListener): (() => void) => {
-  listeners.add(listener);
-  listener(guestWaitingModalOpen);
-  return () => listeners.delete(listener);
+  window.dispatchEvent(new Event(SKYROOM_GUEST_WAITING_TOGGLE));
 };

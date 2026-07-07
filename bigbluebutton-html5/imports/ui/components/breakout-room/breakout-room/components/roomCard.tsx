@@ -89,6 +89,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
   return (
     <Styled.RoomCard
       data-test={`breakoutRoomCard-${breakout.sequence}`}
+      data-skyroom-highlighted={isYourRoom ? 'true' : 'false'}
       $highlighted={isYourRoom}
     >
       <Styled.RoomCardHeader>

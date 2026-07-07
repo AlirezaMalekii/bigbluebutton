@@ -802,6 +802,8 @@
     "app.breakout.manager.participantsLabel": "{count} people",
     "app.breakout.manager.noParticipants": "No one assigned yet",
     "app.breakout.manager.sidebarHint": "Manage & monitor",
+    "app.breakout.manager.navToggleLabel": "Breakout rooms",
+    "app.breakoutJoinConfirmation.joinHint": "The room opens in a new browser tab. You can return here anytime.",
     "app.breakoutJoinConfirmation.roomNameHighlight": "Breakout room name",
     "app.calculatingBreakoutTimeRemaining": "Calculating remaining time ...",
     "app.audioModal.ariaTitle": "Join audio modal",

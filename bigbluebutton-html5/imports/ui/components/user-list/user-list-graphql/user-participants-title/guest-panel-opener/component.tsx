@@ -12,7 +12,7 @@ import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedS
 import { notify } from '/imports/ui/services/notification';
 import {
   isSkyroomColumnLayout,
-  toggleSkyroomWaitingUsersDesktop,
+  openSkyroomWaitingUsersDesktop,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 interface GuestPanelOpenerProps {
@@ -36,7 +36,7 @@ const GuestPanelOpener: React.FC<GuestPanelOpenerProps> = ({
 
   const openWaitingPanel = useCallback(() => {
     if (isSkyroomColumnLayout()) {
-      toggleSkyroomWaitingUsersDesktop();
+      openSkyroomWaitingUsersDesktop(layoutContextDispatch);
       return;
     }
     layoutContextDispatch({

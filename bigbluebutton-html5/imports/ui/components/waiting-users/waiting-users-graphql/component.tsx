@@ -212,6 +212,7 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
   }, []);
 
   const existPendingUsers = authedGuestUsers.length > 0 || unauthedGuestUsers.length > 0;
+  const wasLobbyEnabledRef = React.useRef(guestLobbyEnabled);
 
   const closePanel = useCallback(() => {
     if (onClose) {
@@ -260,7 +261,7 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
     notify(intl.formatMessage(intlMessages.feedbackMessage) + message.toUpperCase(), 'success');
 
     return cb();
-  }, []);
+  }, [closePanel, intl, setPolicy]);
 
   const renderButton = useCallback((message: string,
     {
@@ -281,10 +282,11 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
   ), [rememberChoice]);
 
   useEffect(() => {
-    if (!guestLobbyEnabled) {
+    if (wasLobbyEnabledRef.current && !guestLobbyEnabled) {
       closePanel();
     }
-  }, [guestLobbyEnabled]);
+    wasLobbyEnabledRef.current = guestLobbyEnabled;
+  }, [guestLobbyEnabled, closePanel]);
 
   const authGuestButtonsData = useMemo(() => [
     {
@@ -451,7 +453,15 @@ const GuestUsersManagementPanelContainer: React.FC<GuestUsersManagementPanelCont
   });
 
   if (guestWaitingUsersLoading || !currentMeeting) {
-    return null;
+    return (
+      <Styled.Panel
+        data-test="guestUsersManagementPanel"
+        isChrome={false}
+        $presentation={presentation}
+      >
+        <Styled.ScrollableArea />
+      </Styled.Panel>
+    );
   }
 
   if (guestWaitingUsersError) {

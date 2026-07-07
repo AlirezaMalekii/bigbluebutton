@@ -150,7 +150,16 @@ const SidebarContent = (props) => {
           isToSharedNotesBeShow={sidebarContentPanel === PANELS.SHARED_NOTES}
         />
       )}
-      {sidebarContentPanel === PANELS.BREAKOUT && <BreakoutRoomContainer />}
+      {sidebarContentPanel === PANELS.BREAKOUT && (
+        <BreakoutRoomContainer
+          presentation={isSkyroomColumnLayout() && isSkyroomMobileViewport() ? 'mobile' : 'sidebar'}
+          onClose={
+            isSkyroomColumnLayout() && isSkyroomMobileViewport()
+              ? () => openSkyroomMobileBox(layoutDispatch(), null)
+              : undefined
+          }
+        />
+      )}
       {sidebarContentPanel === PANELS.TIMER && <TimerContainer isModerator={amIModerator} />}
       {sidebarContentPanel === PANELS.WAITING_USERS && (
         <GuestUsersManagementPanel

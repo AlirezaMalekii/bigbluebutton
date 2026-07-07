@@ -25,7 +25,6 @@ import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
-  getSkyroomPresentationChromeHeight,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const intlMessages = defineMessages({
@@ -454,14 +453,17 @@ class Presentation extends PureComponent {
     if (newPresentationAreaSize) {
       presentationSizes.presentationWidth = newPresentationAreaSize.presentationAreaWidth;
       presentationSizes.presentationHeight = newPresentationAreaSize.presentationAreaHeight
-        - getSkyroomPresentationChromeHeight(getToolbarHeight() || 0);
+        - (getToolbarHeight() || 0);
       return presentationSizes;
     }
 
     presentationSizes.presentationWidth = presentationBounds.width;
     if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
-      presentationSizes.presentationHeight = presentationBounds.height
-        - getSkyroomPresentationChromeHeight(getToolbarHeight() || 0);
+      const slideToolbarH = getToolbarHeight() || 24;
+      presentationSizes.presentationHeight = Math.max(
+        80,
+        presentationBounds.height - slideToolbarH,
+      );
     } else {
       presentationSizes.presentationHeight = presentationBounds.height;
     }
@@ -760,7 +762,14 @@ class Presentation extends PureComponent {
     const svgWidth = svgDimensions.width;
 
     const toolbarHeight = getToolbarHeight();
-    const presentationChromeHeight = getSkyroomPresentationChromeHeight(toolbarHeight);
+    const isSkyroomMobileStage = isSkyroomColumnLayout() && isSkyroomMobileViewport();
+    const stageReady = isSkyroomMobileStage
+      ? presentationBounds.width > 0 && presentationBounds.height > 0
+      : presentationWidth > 0;
+    const wbPresentationWidth = isSkyroomMobileStage ? presentationBounds.width : svgWidth;
+    const wbPresentationHeight = isSkyroomMobileStage
+      ? Math.max(80, presentationBounds.height - toolbarHeight)
+      : svgHeight;
 
     const { presentationToolbarMinWidth } = DEFAULT_VALUES;
 
@@ -828,15 +837,21 @@ class Presentation extends PureComponent {
             }}
           >
             <Styled.SvgContainer
+              data-test="presentationSvgContainer"
               style={{
-                height: svgHeight + toolbarHeight,
+                height: isSkyroomMobileStage ? '100%' : svgHeight + toolbarHeight,
+                width: isSkyroomMobileStage ? '100%' : undefined,
               }}
             >
               <div
                 style={{
                   position: 'absolute',
-                  width: svgDimensions.width < 0 ? 0 : svgDimensions.width,
-                  height: svgDimensions.height < 0 ? 0 : svgDimensions.height,
+                  width: isSkyroomMobileStage
+                    ? '100%'
+                    : Math.max(0, svgDimensions.width),
+                  height: isSkyroomMobileStage
+                    ? `calc(100% - ${toolbarHeight || 24}px)`
+                    : Math.max(0, svgDimensions.height),
                   textAlign: 'center',
                   display: !presentationIsOpen ? 'none' : 'block',
                   zIndex: 1,
@@ -844,7 +859,7 @@ class Presentation extends PureComponent {
                 id="presentationInnerWrapper"
               >
                 {((userIsPresenter || hasWBAccess)
-                  && (!tldrawIsMounting && presentationWidth > 0 && currentSlide)) && (
+                  && (!tldrawIsMounting && stageReady && currentSlide)) && (
                   <Styled.ExtraTools {...{ isToolbarVisible }}>
                     <TooltipContainer title={intl?.messages['app.shortcut-help.undo']}>
                       <Styled.Button
@@ -867,7 +882,7 @@ class Presentation extends PureComponent {
                   </Styled.ExtraTools>
                 )}
                 {!tldrawIsMounting
-                  && presentationWidth > 0
+                  && stageReady
                   && currentSlide
                   && this.renderPresentationMenu()}
                 {this.renderPresentationDownload()}
@@ -884,9 +899,9 @@ class Presentation extends PureComponent {
                     curPageId={currentSlide?.num.toString() || '0'}
                     svgUri={currentSlide?.svgUri}
                     intl={intl}
-                    presentationWidth={svgWidth}
-                    presentationHeight={svgHeight}
-                    presentationAreaHeight={presentationBounds.height - presentationChromeHeight}
+                    presentationWidth={wbPresentationWidth}
+                    presentationHeight={wbPresentationHeight}
+                    presentationAreaHeight={presentationBounds.height - toolbarHeight}
                     presentationAreaWidth={presentationBounds.width}
                     isPanning={isPanning}
                     zoomChanger={this.zoomChanger}
@@ -911,7 +926,7 @@ class Presentation extends PureComponent {
                 </LocatedErrorBoundary>
                 {isFullscreen && <PollingContainer />}
               </div>
-              {!tldrawIsMounting && presentationWidth > 0 && (
+              {!tldrawIsMounting && stageReady && (
                 <Styled.PresentationToolbar
                   ref={(ref) => {
                     this.refPresentationToolbar = ref;

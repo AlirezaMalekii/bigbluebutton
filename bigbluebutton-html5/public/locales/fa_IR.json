@@ -814,6 +814,8 @@
   "app.breakout.manager.participantsLabel": "{count} نفر",
   "app.breakout.manager.noParticipants": "هنوز کسی تخصیص نیافته",
   "app.breakout.manager.sidebarHint": "مدیریت و نظارت",
+  "app.breakout.manager.navToggleLabel": "اتاق‌های گروهی",
+  "app.breakoutJoinConfirmation.joinHint": "اتاق در تب جدید مرورگر باز می‌شود. هر زمان می‌توانید به اینجا برگردید.",
   "app.breakoutJoinConfirmation.roomNameHighlight": "نام اتاق گروهی",
   "app.calculatingBreakoutTimeRemaining": "در حال محاسبه زمان باقی‌مانده...",
   "app.audioModal.ariaTitle": "تنظیمات اتصال صدا",

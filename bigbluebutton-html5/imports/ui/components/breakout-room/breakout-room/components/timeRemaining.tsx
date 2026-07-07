@@ -80,6 +80,7 @@ interface TimeRemainingPanelProps {
   durationInSeconds: number;
   toggleShowChangeTimeForm: (value: boolean) => void;
   createdTime: number;
+  presentation?: 'sidebar' | 'mobile';
 }
 
 const TimeRemaingPanel: React.FC<TimeRemainingPanelProps> = ({
@@ -88,6 +89,7 @@ const TimeRemaingPanel: React.FC<TimeRemainingPanelProps> = ({
   durationInSeconds,
   toggleShowChangeTimeForm,
   createdTime,
+  presentation = 'sidebar',
 }) => {
   const intl = useIntl();
   const durationContainerRef = React.useRef(null);
@@ -107,6 +109,8 @@ const TimeRemaingPanel: React.FC<TimeRemainingPanelProps> = ({
     <Styled.DurationContainer
       centeredText={!showChangeTimeForm}
       ref={durationContainerRef}
+      $presentation={presentation}
+      data-test="breakoutDurationBox"
     >
       <BreakoutRemainingTime
         boldText
