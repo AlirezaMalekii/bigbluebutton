@@ -14,11 +14,6 @@ import {
 import { broadcastSkyroomNotesGlobalOpen } from './notes-panel-sync/useSkyroomNotesPanelSync';
 import { setSkyroomMobileActiveBox } from './mobile-bottom-state';
 import { dispatchSkyroomLayoutResize, dispatchSkyroomLayoutResizeNextFrame } from './layout-resize';
-import {
-  closeGuestWaitingModal,
-  openGuestWaitingModal,
-  toggleGuestWaitingModal,
-} from './guest-waiting-modal/state';
 
 /** Phone breakpoint — matches layout/utils.js isMobile (clientWidth <= 599). */
 export const isSkyroomMobileViewport = () => typeof window !== 'undefined'
@@ -217,18 +212,31 @@ export const openSkyroomWaitingUsers = (layoutContextDispatch) => {
   openSkyroomMobileBox(layoutContextDispatch, 'waiting');
 };
 
-/** Open guest waiting-room panel on desktop (centered modal). */
-// eslint-disable-next-line no-unused-vars
+/** Open guest waiting-room panel in the content sidebar (desktop Skyroom + stock BBB). */
 export const openSkyroomWaitingUsersDesktop = (layoutContextDispatch) => {
-  openGuestWaitingModal();
+  openSkyroomWaitingUsersContent(layoutContextDispatch);
+  dispatchSkyroomLayoutResize();
 };
 
-/** Toggle guest waiting modal on desktop. */
-export const toggleSkyroomWaitingUsersDesktop = () => {
-  toggleGuestWaitingModal();
-};
+export const isSkyroomWaitingUsersOpen = (sidebarContent) => (
+  sidebarContent.isOpen && sidebarContent.sidebarContentPanel === PANELS.WAITING_USERS
+);
 
-export { closeGuestWaitingModal, openGuestWaitingModal };
+/** Toggle guest waiting panel — BBB sidebar on desktop, bottom zone on mobile. */
+export const toggleSkyroomWaitingUsers = (layoutContextDispatch, sidebarContent) => {
+  const isOpen = isSkyroomWaitingUsersOpen(sidebarContent);
+  if (isSkyroomMobileViewport()) {
+    openSkyroomMobileBox(layoutContextDispatch, isOpen ? null : 'waiting');
+    return;
+  }
+  if (isOpen) {
+    layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN, value: false });
+    layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL, value: PANELS.NONE });
+    dispatchSkyroomLayoutResize();
+    return;
+  }
+  openSkyroomWaitingUsersDesktop(layoutContextDispatch);
+};
 
 export const toggleSkyroomUserList = (layoutContextDispatch, sidebarNavigation) => {
   if (isSkyroomMobileViewport()) {

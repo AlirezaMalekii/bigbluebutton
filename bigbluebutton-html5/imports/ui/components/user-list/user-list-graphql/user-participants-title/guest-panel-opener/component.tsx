@@ -4,16 +4,12 @@ import { useMeeting } from '/imports/ui/core/hooks/useMeeting';
 import { GET_GUESTS_COUNT, GuestUsersCountResponse } from './queries';
 import { layoutDispatch, layoutSelectInput } from '/imports/ui/components/layout/context';
 import { Input } from '/imports/ui/components/layout/layoutTypes';
-import { ACTIONS, PANELS } from '/imports/ui/components/layout/enums';
 import Icon from '/imports/ui/components/common/icon/icon-ts/component';
 import Styled from './styles';
 import logger from '/imports/startup/client/logger';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
 import { notify } from '/imports/ui/services/notification';
-import {
-  isSkyroomColumnLayout,
-  openGuestWaitingModal,
-} from '/imports/ui/components/skyroom-layout/panel-toggles';
+import { toggleSkyroomWaitingUsers } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 interface GuestPanelOpenerProps {
   count: number;
@@ -31,25 +27,11 @@ const GuestPanelOpener: React.FC<GuestPanelOpenerProps> = ({
 }) => {
   const layoutContextDispatch = layoutDispatch();
   const sidebarContent = layoutSelectInput((i: Input) => i.sidebarContent);
-  const { sidebarContentPanel } = sidebarContent;
   const intl = useIntl();
 
   const openWaitingPanel = useCallback(() => {
-    if (isSkyroomColumnLayout()) {
-      openGuestWaitingModal();
-      return;
-    }
-    layoutContextDispatch({
-      type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
-      value: sidebarContentPanel !== PANELS.WAITING_USERS,
-    });
-    layoutContextDispatch({
-      type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL,
-      value: sidebarContentPanel === PANELS.WAITING_USERS
-        ? PANELS.NONE
-        : PANELS.WAITING_USERS,
-    });
-  }, [sidebarContentPanel, layoutContextDispatch]);
+    toggleSkyroomWaitingUsers(layoutContextDispatch, sidebarContent);
+  }, [layoutContextDispatch, sidebarContent]);
 
   return (
     <Styled.CompactRow data-test="skyroomGuestWaiting">
