@@ -25,6 +25,7 @@ import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
+  getSkyroomPresentationChromeHeight,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const intlMessages = defineMessages({
@@ -453,12 +454,17 @@ class Presentation extends PureComponent {
     if (newPresentationAreaSize) {
       presentationSizes.presentationWidth = newPresentationAreaSize.presentationAreaWidth;
       presentationSizes.presentationHeight = newPresentationAreaSize.presentationAreaHeight
-        - (getToolbarHeight() || 0);
+        - getSkyroomPresentationChromeHeight(getToolbarHeight() || 0);
       return presentationSizes;
     }
 
     presentationSizes.presentationWidth = presentationBounds.width;
-    presentationSizes.presentationHeight = presentationBounds.height;
+    if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
+      presentationSizes.presentationHeight = presentationBounds.height
+        - getSkyroomPresentationChromeHeight(getToolbarHeight() || 0);
+    } else {
+      presentationSizes.presentationHeight = presentationBounds.height;
+    }
     return presentationSizes;
   }
 
@@ -754,6 +760,7 @@ class Presentation extends PureComponent {
     const svgWidth = svgDimensions.width;
 
     const toolbarHeight = getToolbarHeight();
+    const presentationChromeHeight = getSkyroomPresentationChromeHeight(toolbarHeight);
 
     const { presentationToolbarMinWidth } = DEFAULT_VALUES;
 
@@ -879,7 +886,7 @@ class Presentation extends PureComponent {
                     intl={intl}
                     presentationWidth={svgWidth}
                     presentationHeight={svgHeight}
-                    presentationAreaHeight={presentationBounds.height - toolbarHeight}
+                    presentationAreaHeight={presentationBounds.height - presentationChromeHeight}
                     presentationAreaWidth={presentationBounds.width}
                     isPanning={isPanning}
                     zoomChanger={this.zoomChanger}

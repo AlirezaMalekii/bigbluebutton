@@ -393,7 +393,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
           <Styled.OptionsButton
             label={intl.formatMessage(intlMessages.optionsLabel)}
             data-test="manageUsers"
-            icon="more"
+            icon="settings"
             color="light"
             hideLabel
             size="sm"

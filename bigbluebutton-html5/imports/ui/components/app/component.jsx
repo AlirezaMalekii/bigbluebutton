@@ -42,6 +42,7 @@ import PresentationUploaderToastContainer from '/imports/ui/components/presentat
 import BreakoutJoinConfirmationContainerGraphQL from '../breakout-join-confirmation/breakout-join-confirmation-graphql/component';
 import FloatingWindowContainer from '/imports/ui/components/floating-window/container';
 import ChatAlertContainerGraphql from '../chat/chat-graphql/alert/component';
+import PrivateChatIncomingHandler from '../chat/chat-graphql/private-chat-incoming/component';
 import { notify } from '/imports/ui/services/notification';
 import VoiceActivityAdapter from '../../core/adapters/voice-activity';
 import LayoutObserver from '../layout/observer';
@@ -445,6 +446,7 @@ class App extends Component {
             !hideNotificationToasts
             && isNotificationEnabled) && <ToastContainer rtl /> }
           <ChatAlertContainerGraphql />
+          <PrivateChatIncomingHandler />
           {isRaiseHandEnabled && <RaiseHandNotifier />}
           <ManyWebcamsNotifier />
           <PollingContainer />

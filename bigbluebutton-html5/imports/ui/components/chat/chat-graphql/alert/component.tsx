@@ -29,6 +29,10 @@ const intlMessages = defineMessages({
     id: 'app.toast.chat.private',
     description: 'when entry various message',
   },
+  appToastChatPrivateFrom: {
+    id: 'app.toast.chat.privateFrom',
+    description: 'private chat toast title with sender name',
+  },
   appToastChatSystem: {
     id: 'app.toast.chat.system',
     description: 'system for use',
@@ -69,16 +73,16 @@ interface ChatAlertGraphqlProps {
   idChatOpen: string;
   layoutContextDispatch: () => void;
   chatUnreadMessages: Array<Message> | null;
-  audioAlertEnabled: boolean;
-  pushAlertEnabled: boolean;
+  publicAudioAlertEnabled: boolean;
+  publicPushAlertEnabled: boolean;
 }
 
 const ChatAlertGraphql: React.FC<ChatAlertGraphqlProps> = (props) => {
   const {
-    audioAlertEnabled,
+    publicAudioAlertEnabled,
     idChatOpen,
     layoutContextDispatch,
-    pushAlertEnabled,
+    publicPushAlertEnabled,
     chatUnreadMessages,
   } = props;
   const intl = useIntl();
@@ -88,15 +92,26 @@ const ChatAlertGraphql: React.FC<ChatAlertGraphqlProps> = (props) => {
   const shouldRenderChatAlerts = chatMessagesDidChange
     && !!chatUnreadMessages
     && chatUnreadMessages.length > 0;
-  const shouldPlayAudioAlert = useCallback(
-    (m: Message) => m.senderId !== Auth.userID
-      && m.chatId !== idChatOpen && !history.current.has(m.messageId),
-    [history.current, idChatOpen],
-  );
 
   const CHAT_CONFIG = window.meetingClientSettings.public.chat;
   const PUBLIC_CHAT_ID = CHAT_CONFIG.public_id;
   const PUBLIC_GROUP_CHAT_ID = CHAT_CONFIG.public_group_id;
+
+  const isPublicStreamMessage = useCallback(
+    (m: Message) => m.chatId === PUBLIC_GROUP_CHAT_ID,
+    [PUBLIC_GROUP_CHAT_ID],
+  );
+
+  const shouldPlayAudioAlert = useCallback(
+    (m: Message) => {
+      if (m.senderId === Auth.userID) return false;
+      if (m.chatId === idChatOpen) return false;
+      if (history.current.has(m.messageId)) return false;
+      if (isPublicStreamMessage(m)) return publicAudioAlertEnabled;
+      return true;
+    },
+    [history.current, idChatOpen, isPublicStreamMessage, publicAudioAlertEnabled],
+  );
 
   useEffect(() => {
     if (shouldRenderChatAlerts) {
@@ -112,7 +127,7 @@ const ChatAlertGraphql: React.FC<ChatAlertGraphqlProps> = (props) => {
     playAudioAlert = chatUnreadMessages.some(shouldPlayAudioAlert);
   }
 
-  if (audioAlertEnabled && playAudioAlert) {
+  if (playAudioAlert) {
     Service.playAlertSound();
   }
 
@@ -157,6 +172,9 @@ const ChatAlertGraphql: React.FC<ChatAlertGraphqlProps> = (props) => {
     if (message.chatId === idChatOpen) return null;
 
     const messageChatId = message.chatId === PUBLIC_GROUP_CHAT_ID ? PUBLIC_CHAT_ID : message.chatId;
+    const isPublicMessage = messageChatId === PUBLIC_CHAT_ID;
+    if (isPublicMessage && !publicPushAlertEnabled) return null;
+
     const isPollResult = message.messageType === ChatMessageType.POLL;
     let content;
 
@@ -166,15 +184,21 @@ const ChatAlertGraphql: React.FC<ChatAlertGraphqlProps> = (props) => {
       content = createMessage(message);
     }
 
+    const privateTitle = message.senderName
+      ? intl.formatMessage(intlMessages.appToastChatPrivateFrom, {
+        senderName: message.senderName,
+      })
+      : intl.formatMessage(intlMessages.appToastChatPrivate);
+
     return (
       <ChatPushAlert
-        key={messageChatId}
+        key={`${message.messageId}-${messageChatId}`}
         chatId={messageChatId}
         content={content}
         title={
-          messageChatId === PUBLIC_CHAT_ID
+          isPublicMessage
             ? <span>{intl.formatMessage(intlMessages.appToastChatPublic)}</span>
-            : <span>{intl.formatMessage(intlMessages.appToastChatPrivate)}</span>
+            : <span>{privateTitle}</span>
         }
         alertDuration={ALERT_DURATION}
         layoutContextDispatch={layoutContextDispatch}
@@ -182,11 +206,9 @@ const ChatAlertGraphql: React.FC<ChatAlertGraphqlProps> = (props) => {
     );
   };
 
-  return pushAlertEnabled
-    ? [
-      shouldRenderChatAlerts && chatUnreadMessages.map(renderToast),
-    ]
-    : null;
+  if (!shouldRenderChatAlerts) return null;
+
+  return chatUnreadMessages.map(renderToast);
 };
 
 const ChatAlertContainerGraphql: React.FC = () => {
@@ -198,18 +220,11 @@ const ChatAlertContainerGraphql: React.FC = () => {
     chatPushAlerts: boolean;
   };
 
-  const skipSubscriptions = !chatPushAlerts && !chatAudioAlerts;
-  const previousSkipSubscriptions = usePreviousValue(skipSubscriptions);
   const cursor = useRef(new Date());
-
-  if (previousSkipSubscriptions && !skipSubscriptions) {
-    cursor.current = new Date();
-  }
 
   const { data: chatMessages } = useDeduplicatedSubscription<ChatMessageStreamResponse>(
     CHAT_MESSAGE_STREAM,
     {
-      skip: skipSubscriptions,
       variables: {
         createdAt: cursor.current.toISOString(),
       },
@@ -221,18 +236,16 @@ const ChatAlertContainerGraphql: React.FC = () => {
   const { sidebarContentPanel } = sidebarContent;
   const layoutContextDispatch = layoutDispatch();
 
-  if (!(chatAudioAlerts || chatPushAlerts)) return null;
-
   const idChat = sidebarContentPanel === PANELS.CHAT ? idChatOpen : '';
 
   if (!chatMessages) return null;
 
   return (
     <ChatAlertGraphql
-      audioAlertEnabled={chatAudioAlerts}
+      publicAudioAlertEnabled={chatAudioAlerts}
       idChatOpen={idChat}
       layoutContextDispatch={layoutContextDispatch}
-      pushAlertEnabled={chatPushAlerts}
+      publicPushAlertEnabled={chatPushAlerts}
       chatUnreadMessages={chatMessages?.chat_message_stream ?? null}
     />
   );

@@ -44,11 +44,11 @@
     justify-content: center !important;
   }
 
+  /* Keep inline width/height from calculateSize(); auto !important collapses this
+     absolute container to ~0 when children are positioned. */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationInnerWrapper {
-    width: auto !important;
-    height: auto !important;
     max-width: 100% !important;
-    max-height: 100% !important;
+    max-height: calc(100% - var(--skyroom-presentation-toolbar-h, 24px)) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -1010,8 +1010,8 @@
      width, rounded top, scrollable body, safe-area padding. Higher
      specificity (html[...] .ReactModal__Content) beats per-modal rules.
      =================================================================== */
-  html[data-skyroom="true"] .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal),
-  html[data-skyroom="true"] #modals-container .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal) {
+  html[data-skyroom="true"] .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal):not([data-test="audioModal"]),
+  html[data-skyroom="true"] #modals-container .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal):not([data-test="audioModal"]) {
     position: fixed !important;
     top: auto !important;
     left: 0 !important;
@@ -1340,18 +1340,46 @@
     padding: 6px 10px !important;
   }
 
-  /* Audio choice modal (mic vs listen-only) — compact sheet; vertical options */
+  /* Audio choice modal (mic vs listen-only) — centered compact card on phone */
   html[data-skyroom="true"] [data-test="audioModal"].ReactModal__Content {
-    padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
-    max-height: min(88dvh, 480px) !important;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: translate(-50%, -50%) !important;
+    width: min(88vw, 300px) !important;
+    min-width: 0 !important;
+    max-width: min(88vw, 300px) !important;
+    height: auto !important;
+    max-height: min(78dvh, 400px) !important;
+    margin: 0 !important;
+    border-radius: 16px !important;
+    padding: 14px 14px 16px !important;
     overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
+    box-shadow:
+      0 20px 52px rgba(0, 0, 0, 0.48),
+      0 0 0 1px rgba(32, 199, 187, 0.14) !important;
   }
 
   html[data-skyroom="true"] [data-test="audioModal"].ReactModal__Content::before {
-    width: 32px !important;
-    margin: -2px auto 6px !important;
+    display: none !important;
+  }
+
+  html[data-skyroom="true"] [data-test="audioModal"].ReactModal__Content--after-open,
+  html[data-skyroom="true"] [data-test="audioModal"].ReactModal__Content--before-close {
+    transform: translate(-50%, -50%) !important;
+  }
+
+  html[data-skyroom="true"] [data-test="audioModal"] [class*="Header"] {
+    margin-bottom: 0.35rem !important;
+    padding-bottom: 0 !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    line-height: 1.35 !important;
+    text-align: center !important;
   }
 
   html[data-skyroom="true"] [data-test="audioModal"] [class*="Content"] {
@@ -1359,22 +1387,26 @@
     min-height: 0 !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
-    justify-content: flex-start !important;
-    padding: 0.25rem 0 !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 0.15rem 0 !important;
   }
 
   html[data-skyroom="true"] [data-test="audioModal"] [class*="AudioChoiceIntro"] {
-    margin-bottom: 0.75rem !important;
-    font-size: 0.82rem !important;
+    margin-bottom: 0.65rem !important;
+    font-size: 0.76rem !important;
     line-height: 1.45 !important;
-    padding: 0 !important;
+    padding: 0 0.15rem !important;
+    text-align: center !important;
+    color: var(--skyroom-modal-text-muted, #aab6c7) !important;
   }
 
   html[data-skyroom="true"] [data-test="audioModal"] [class*="AudioOptions"] {
     flex-direction: column !important;
     align-items: stretch !important;
-    gap: 0.75rem !important;
+    gap: 0.5rem !important;
     width: 100% !important;
+    margin: 0 !important;
   }
 
   html[data-skyroom="true"] [data-test="audioModal"] [class*="AudioOption"] {
@@ -1383,39 +1415,88 @@
     flex-direction: row !important;
     align-items: center !important;
     justify-content: flex-start !important;
-    gap: 0.75rem !important;
+    gap: 0.6rem !important;
     text-align: start !important;
-    padding: 0.5rem 0.65rem !important;
-    border-radius: 12px !important;
-    border: 1px solid rgba(32, 199, 187, 0.14) !important;
-    background: rgba(13, 22, 38, 0.55) !important;
+    padding: 0.45rem 0.55rem !important;
+    border-radius: 11px !important;
+    border: 1px solid rgba(32, 199, 187, 0.12) !important;
+    background: rgba(13, 22, 38, 0.42) !important;
   }
 
-  html[data-skyroom="true"] [class*="AudioModalButton"] i,
-  html[data-skyroom="true"] [class*="audioModalButton"] i {
-    font-size: 1.75rem !important;
+  html[data-skyroom="true"] [data-test="audioModal"] [class*="AudioModalButton"] i,
+  html[data-skyroom="true"] [data-test="audioModal"] [class*="audioModalButton"] i {
+    font-size: 1.05rem !important;
   }
 
   html[data-skyroom="true"] [data-test="audioModal"] [class*="AudioModalButton"] span:first-child,
   html[data-skyroom="true"] [data-test="audioModal"] [class*="audioModalButton"] span:first-child {
-    font-size: 1.75rem !important;
-    border-width: 3px !important;
+    font-size: 1.05rem !important;
+    border-width: 2px !important;
     margin: 0 !important;
+    flex-shrink: 0 !important;
+    width: 2.1rem !important;
+    height: 2.1rem !important;
+    min-width: 2.1rem !important;
+    min-height: 2.1rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
   }
 
   html[data-skyroom="true"] [data-test="audioModal"] [class*="AudioModalButton"] span:last-child,
   html[data-skyroom="true"] [data-test="audioModal"] [class*="audioModalButton"] span:last-child {
     margin-top: 0 !important;
-    font-size: 0.88rem !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
     text-align: start !important;
   }
 
   html[data-skyroom="true"] [data-test="audioModal"] [class*="AudioOptionDesc"] {
-    font-size: 0.72rem !important;
+    font-size: 0.68rem !important;
     line-height: 1.35 !important;
-    margin: 0.25rem 0 0 !important;
+    margin: 0.12rem 0 0 !important;
     text-align: start !important;
     max-width: none !important;
+    color: var(--skyroom-modal-text-muted, #aab6c7) !important;
+  }
+
+  /* Connecting / finding devices — compact centered status */
+  html[data-skyroom="true"] [data-test="audioModal"] [class*="Connecting"] {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.35rem !important;
+    margin: 0.25rem 0 !important;
+    font-size: 0.88rem !important;
+    font-weight: 500 !important;
+    line-height: 1.45 !important;
+    text-align: center !important;
+    color: var(--skyroom-modal-text, #eef4fb) !important;
+  }
+
+  html[data-skyroom="true"] [data-test="audioModal"] [class*="Connecting"] > span,
+  html[data-skyroom="true"] [data-test="audioModal"] [data-test="establishingAudioLabel"],
+  html[data-skyroom="true"] [data-test="audioModal"] [data-test="findingDevicesLabel"],
+  html[data-skyroom="true"] [data-test="audioModal"] [data-test="connectingToEchoTest"] {
+    font-size: 0.88rem !important;
+    font-weight: 500 !important;
+    line-height: 1.45 !important;
+  }
+
+  html[data-skyroom="true"] [data-test="audioModal"] [class*="ConnectingSubtext"] {
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
+    margin: 0 !important;
+    color: var(--skyroom-modal-text-muted, #aab6c7) !important;
+  }
+
+  html[data-skyroom="true"] [data-test="audioModal"] [class*="ConnectingAnimation"] {
+    font-size: 0.88rem !important;
+    width: auto !important;
+    margin-top: 0.1rem !important;
   }
 
   html[data-skyroom="true"] [class*="AudioOptions"]:not([data-test="audioModalOptions"]) {
@@ -2012,6 +2093,16 @@
     line-height: 1 !important;
     pointer-events: none !important;
     box-shadow: 0 0 0 2px var(--skyroom-surface-1, #0f1826) !important;
+  }
+
+  .skyroom-mobile-zone-tab-badge--count {
+    background: linear-gradient(135deg, #20c7bb 0%, #14a99e 100%) !important;
+    box-shadow:
+      0 0 0 2px var(--skyroom-surface-1, #0f1826),
+      0 2px 8px rgba(20, 169, 158, 0.35) !important;
+    min-width: 16px !important;
+    height: 16px !important;
+    font-size: 0.58rem !important;
   }
 
   /* ===================================================================

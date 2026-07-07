@@ -63,6 +63,14 @@ const AudioButton = styled(Button)`
   font-weight: inherit;
 `;
 
+const skyroomText = 'var(--skyroom-panel-text, #eef4fb)';
+const skyroomTextMuted = 'var(--skyroom-panel-text-muted, rgba(210, 224, 238, 0.82))';
+const skyroomTextDim = 'var(--skyroom-panel-text-dim, rgba(198, 208, 220, 0.62))';
+const skyroomAccent = 'var(--skyroom-panel-accent, #20c7bb)';
+const skyroomAccentSoft = 'var(--skyroom-panel-accent-soft, rgba(32, 199, 187, 0.14))';
+const skyroomBorder = 'var(--skyroom-panel-border, rgba(32, 199, 187, 0.12))';
+const skyroomSurface = 'var(--skyroom-panel-solid, rgba(255, 255, 255, 0.03))';
+
 const BreakoutItems = styled.div`
   margin-bottom: 1rem;
 `;
@@ -91,6 +99,178 @@ const UsersAssignedNumberLabel = styled.span`
   [dir="rtl"] & {
     margin: 0 .25em 0 0;
   }
+`;
+
+const ModeratorToolbar = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.75rem;
+  border-radius: 12px;
+  background: ${skyroomAccentSoft};
+  border: 1px solid ${skyroomBorder};
+`;
+
+const ModeratorToolbarTitle = styled.div`
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: ${skyroomTextMuted};
+`;
+
+const ModeratorToolbarActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+`;
+
+// @ts-ignore - Button comes from JS
+const ToolbarButton = styled(Button)`
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.72rem !important;
+  padding: 0.35rem 0.5rem !important;
+  border-radius: 8px !important;
+  white-space: nowrap;
+`;
+
+const SummaryBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  margin-bottom: 0.65rem;
+  border-radius: 10px;
+  background: ${skyroomSurface};
+  border: 1px solid ${skyroomBorder};
+  font-size: 0.78rem;
+  color: ${skyroomTextMuted};
+`;
+
+const UserGuideBanner = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.75rem;
+  border-radius: 10px;
+  background: ${skyroomAccentSoft};
+  border: 1px solid ${skyroomBorder};
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: ${skyroomText};
+`;
+
+type RoomCardProps = {
+  $highlighted?: boolean;
+};
+
+const RoomCard = styled.div<RoomCardProps>`
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.55rem;
+  border-radius: 12px;
+  background: ${skyroomSurface};
+  border: 1px solid ${({ $highlighted }) => ($highlighted ? skyroomAccent : skyroomBorder)};
+  box-shadow: ${({ $highlighted }) => ($highlighted ? `0 0 0 1px ${skyroomAccentSoft}` : 'none')};
+  transition: border-color 0.15s ease;
+`;
+
+const RoomCardHeader = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+`;
+
+const RoomCardTitle = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: ${skyroomText};
+`;
+
+const YourRoomBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  background: ${skyroomAccentSoft};
+  color: ${skyroomAccent};
+  border: 1px solid ${skyroomBorder};
+`;
+
+const ParticipantCount = styled.span`
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: ${skyroomTextDim};
+  white-space: nowrap;
+`;
+
+const ParticipantList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+`;
+
+const ParticipantChip = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: ${skyroomTextMuted};
+  border: 1px solid rgba(255, 255, 255, 0.06);
+`;
+
+const NoParticipants = styled.span`
+  font-size: 0.72rem;
+  font-style: italic;
+  color: ${skyroomTextDim};
+`;
+
+const RoomCardActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.15rem;
+`;
+
+const GeneratingURL = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  color: ${skyroomTextMuted};
+`;
+
+type StatusBadgeProps = {
+  $status: 'connected' | 'pending';
+};
+
+const StatusBadge = styled.span<StatusBadgeProps>`
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.55rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: ${({ $status }) => ($status === 'connected' ? '#34d399' : skyroomTextMuted)};
+  background: ${({ $status }) => ($status === 'connected' ? 'rgba(52, 211, 153, 0.12)' : 'rgba(255,255,255,0.05)')};
+  border: 1px solid ${({ $status }) => ($status === 'connected' ? 'rgba(52, 211, 153, 0.25)' : skyroomBorder)};
 `;
 
 const ellipsis = keyframes`
@@ -370,4 +550,21 @@ export default {
   SendButton,
   ErrorMessage,
   BreakoutsList,
+  ModeratorToolbar,
+  ModeratorToolbarTitle,
+  ModeratorToolbarActions,
+  ToolbarButton,
+  SummaryBar,
+  UserGuideBanner,
+  RoomCard,
+  RoomCardHeader,
+  RoomCardTitle,
+  YourRoomBadge,
+  ParticipantCount,
+  ParticipantList,
+  ParticipantChip,
+  NoParticipants,
+  RoomCardActions,
+  GeneratingURL,
+  StatusBadge,
 };

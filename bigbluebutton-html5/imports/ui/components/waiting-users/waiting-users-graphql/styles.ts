@@ -30,6 +30,7 @@ type ListItemProps = {
 
 type PanelProps = {
   isChrome: boolean;
+  $presentation?: 'sidebar' | 'modal' | 'mobile';
 };
 
 type AvatarProps = {
@@ -197,8 +198,8 @@ const CustomButton = styled(Button)`
 `;
 
 const Panel = styled.div<PanelProps>`
-  background-color: ${colorWhite};
-  padding: ${smPaddingX};
+  background-color: ${({ $presentation }) => ($presentation === 'modal' || $presentation === 'mobile' ? 'transparent' : colorWhite)};
+  padding: ${({ $presentation }) => ($presentation === 'modal' || $presentation === 'mobile' ? '0' : smPaddingX)};
   display: flex;
   flex-grow: 1;
   flex-direction: column;
@@ -213,6 +214,10 @@ const Panel = styled.div<PanelProps>`
   @media ${smallOnly} {
     transform: none !important;
   }
+`;
+
+const MobileHeader = styled.div`
+  flex-shrink: 0;
 `;
 
 const LobbyMessage = styled.div`
@@ -494,6 +499,7 @@ export default {
   Users,
   CustomButton,
   Panel,
+  MobileHeader,
   LobbyMessage,
   RememberContainer,
   ScrollableArea,

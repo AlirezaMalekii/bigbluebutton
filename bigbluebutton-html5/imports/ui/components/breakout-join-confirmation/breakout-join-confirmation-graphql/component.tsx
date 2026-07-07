@@ -56,6 +56,10 @@ const intlMessages = defineMessages({
     id: 'app.createBreakoutRoom.room',
     description: 'breakout room',
   },
+  roomNameHighlight: {
+    id: 'app.breakoutJoinConfirmation.roomNameHighlight',
+    description: 'Highlighted room name in join confirmation',
+  },
 });
 
 interface BreakoutJoinConfirmationProps {
@@ -245,7 +249,14 @@ const BreakoutJoinConfirmation: React.FC<BreakoutJoinConfirmationProps> = ({
         priority: 'medium',
       }}
     >
-      {freeJoin ? select : `${intl.formatMessage(intlMessages.message)} ${roomName}?`}
+      {freeJoin ? select : (
+        <Styled.ConfirmationBody>
+          <span>{intl.formatMessage(intlMessages.message)}</span>
+          <Styled.RoomNameHighlight data-test="breakoutJoinRoomName">
+            {roomName}
+          </Styled.RoomNameHighlight>
+        </Styled.ConfirmationBody>
+      )}
     </ModalFullscreen>
   );
 };

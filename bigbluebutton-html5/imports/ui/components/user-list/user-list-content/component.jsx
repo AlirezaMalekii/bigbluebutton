@@ -12,7 +12,7 @@ import UserTitleContainer from '../user-list-graphql/user-participants-title/com
 import SkyroomUserSearch from '../../skyroom-layout/user-search/component';
 import RaisedHandsContainer from './raised-hands/component';
 import GenericSidekickContentNavButtonContainer from './generic-sidekick-content-button/container';
-import { isSkyroomColumnLayout } from '../../skyroom-layout/panel-toggles';
+import { isSkyroomColumnLayout, isSkyroomMobileViewport } from '../../skyroom-layout/panel-toggles';
 import deviceInfo from '/imports/utils/deviceInfo';
 
 const { isMobile, isPortrait } = deviceInfo;
@@ -45,6 +45,8 @@ class UserContent extends PureComponent {
     } = this.props;
 
     const ROLE_MODERATOR = window.meetingClientSettings.public.user.role_moderator;
+    const showGuestPanelOpener = currentUser?.role === ROLE_MODERATOR
+      && !isSkyroomMobileViewport();
 
     // Skyroom drives its own mobile bottom-zone layout (one box at a time), so use the
     // clean column structure even on phones — not the stock crammed mobile scroll list.
@@ -60,7 +62,7 @@ class UserContent extends PureComponent {
               <UserNotesContainer />
               {isTimerActive
               && <TimerContainer isModerator={currentUser?.role === ROLE_MODERATOR} />}
-              {currentUser?.role === ROLE_MODERATOR ? <GuestPanelOpenerContainer /> : null}
+              {showGuestPanelOpener ? <GuestPanelOpenerContainer /> : null}
               <UserPollsContainer isPresenter={currentUser?.presenter} />
               <BreakoutRoomContainer />
               <GenericSidekickContentNavButtonContainer />
@@ -75,7 +77,7 @@ class UserContent extends PureComponent {
             <ChatList />
             <UserNotesContainer />
             {isTimerActive && <TimerContainer isModerator={currentUser?.role === ROLE_MODERATOR} />}
-            {currentUser?.role === ROLE_MODERATOR ? <GuestPanelOpenerContainer /> : null}
+            {showGuestPanelOpener ? <GuestPanelOpenerContainer /> : null}
             <UserPollsContainer isPresenter={currentUser?.presenter} />
             <BreakoutRoomContainer />
             <GenericSidekickContentNavButtonContainer />

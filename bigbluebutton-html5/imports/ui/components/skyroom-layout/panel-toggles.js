@@ -14,6 +14,11 @@ import {
 import { broadcastSkyroomNotesGlobalOpen } from './notes-panel-sync/useSkyroomNotesPanelSync';
 import { setSkyroomMobileActiveBox } from './mobile-bottom-state';
 import { dispatchSkyroomLayoutResize, dispatchSkyroomLayoutResizeNextFrame } from './layout-resize';
+import {
+  closeGuestWaitingModal,
+  openGuestWaitingModal,
+  toggleGuestWaitingModal,
+} from './guest-waiting-modal/state';
 
 /** Phone breakpoint — matches layout/utils.js isMobile (clientWidth <= 599). */
 export const isSkyroomMobileViewport = () => typeof window !== 'undefined'
@@ -22,6 +27,26 @@ export const isSkyroomMobileViewport = () => typeof window !== 'undefined'
 export const isSkyroomColumnLayout = () => {
   const layoutEl = document.getElementById('layout');
   return Boolean(layoutEl?.hasAttribute(SKYROOM_COLUMN_ATTR));
+};
+
+/**
+ * Vertical space inside the whiteboard content area reserved for the floating
+ * TLDraw bottom toolbar (above the slide-nav bar, which is subtracted separately).
+ */
+export const getSkyroomMobileWbToolbarReserve = () => {
+  const layoutEl = document.getElementById('layout');
+  if (!layoutEl) return 40;
+  const styles = getComputedStyle(layoutEl);
+  const scale = parseFloat(styles.getPropertyValue('--skyroom-wb-scale')) || 0.68;
+  const wbToolbarH = Math.ceil(36 * scale * 0.92);
+  return wbToolbarH + 4;
+};
+
+/** Slide-nav + (on phone) TLDraw chrome subtracted from presentation bounds. */
+export const getSkyroomPresentationChromeHeight = (slideToolbarHeight = 0) => {
+  const slideH = slideToolbarHeight || 0;
+  if (!isSkyroomColumnLayout() || !isSkyroomMobileViewport()) return slideH;
+  return slideH + getSkyroomMobileWbToolbarReserve();
 };
 
 /** True during bootstrap before #layout mounts (see main.html data-skyroom). */
@@ -172,11 +197,18 @@ export const openSkyroomWaitingUsers = (layoutContextDispatch) => {
   openSkyroomMobileBox(layoutContextDispatch, 'waiting');
 };
 
-/** Open guest waiting-room panel on desktop (content sidebar). */
+/** Open guest waiting-room panel on desktop (centered modal). */
+// eslint-disable-next-line no-unused-vars
 export const openSkyroomWaitingUsersDesktop = (layoutContextDispatch) => {
-  openSkyroomWaitingUsersContent(layoutContextDispatch);
-  dispatchSkyroomLayoutResizeNextFrame();
+  openGuestWaitingModal();
 };
+
+/** Toggle guest waiting modal on desktop. */
+export const toggleSkyroomWaitingUsersDesktop = () => {
+  toggleGuestWaitingModal();
+};
+
+export { closeGuestWaitingModal, openGuestWaitingModal };
 
 export const toggleSkyroomUserList = (layoutContextDispatch, sidebarNavigation) => {
   if (isSkyroomMobileViewport()) {

@@ -40,12 +40,16 @@ interface LayoutDispatchProps {
   value: boolean | string,
 }
 
+export type GuestWaitingPresentation = 'sidebar' | 'modal' | 'mobile';
+
 interface GuestUsersManagementPanelProps {
   authedGuestUsers: GuestWaitingUser[];
   unauthedGuestUsers: GuestWaitingUser[];
   guestLobbyMessage: string | null;
   guestLobbyEnabled: boolean;
   layoutContextDispatch: (action: LayoutDispatchProps) => void;
+  presentation?: GuestWaitingPresentation;
+  onClose?: () => void;
 }
 
 type SeparatedUsers = {
@@ -157,6 +161,8 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
   layoutContextDispatch,
   guestLobbyEnabled,
   guestLobbyMessage,
+  presentation = 'sidebar',
+  onClose,
 }) => {
   // @ts-ignore - temporary, while meteor exists in the project
   const isGuestLobbyMessageEnabled = window.meetingClientSettings.public.app.enableGuestLobbyMessage;
@@ -208,6 +214,10 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
   const existPendingUsers = authedGuestUsers.length > 0 || unauthedGuestUsers.length > 0;
 
   const closePanel = useCallback(() => {
+    if (onClose) {
+      onClose();
+      return;
+    }
     layoutContextDispatch({
       type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
       value: false,
@@ -216,7 +226,7 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
       type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL,
       value: PANELS.NONE,
     });
-  }, []);
+  }, [layoutContextDispatch, onClose]);
 
   const onCheckBoxChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { checked } = e.target;
@@ -321,86 +331,109 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
     ? authGuestButtonsData.concat(guestButtonsData)
     : guestButtonsData;
 
-  return (
-    <Styled.Panel data-test="note" isChrome={isChrome}>
-      <Header
-        leftButtonProps={{
-          onClick: () => closePanel(),
-          label: intl.formatMessage(intlMessages.title),
-        }}
-        rightButtonProps={null}
-        data-test="guestUsersManagementPanel"
-        customRightButton={null}
-        x="guestUsersManagementPanel"
-      />
-      <Styled.ScrollableArea>
-        {isGuestLobbyMessageEnabled ? (
-          <Styled.LobbyMessage data-test="lobbyMessage">
-            <TextInput
-              maxLength={128}
-              placeholder={intl.formatMessage(intlMessages.inputPlaceholder)}
-              send={setGuestLobbyMessage}
-            />
-            <p>
-              <i>
-                &quot;
-                {
-                  guestLobbyMessage && guestLobbyMessage !== ''
-                  // eslint-disable-next-line react/no-danger
-                    ? <span dangerouslySetInnerHTML={{ __html: guestLobbyMessage }} />
-                    : intl.formatMessage(intlMessages.emptyMessage)
-                }
-                &quot;
-              </i>
-            </p>
-          </Styled.LobbyMessage>
+  const panelContent = (
+    <Styled.ScrollableArea>
+      {isGuestLobbyMessageEnabled ? (
+        <Styled.LobbyMessage data-test="lobbyMessage">
+          <TextInput
+            maxLength={128}
+            placeholder={intl.formatMessage(intlMessages.inputPlaceholder)}
+            send={setGuestLobbyMessage}
+          />
+          <p>
+            <i>
+              &quot;
+              {
+                guestLobbyMessage && guestLobbyMessage !== ''
+                // eslint-disable-next-line react/no-danger
+                  ? <span dangerouslySetInnerHTML={{ __html: guestLobbyMessage }} />
+                  : intl.formatMessage(intlMessages.emptyMessage)
+              }
+              &quot;
+            </i>
+          </p>
+        </Styled.LobbyMessage>
+      ) : null}
+      <Styled.ModeratorActions>
+        <Styled.MainTitle>{intl.formatMessage(intlMessages.optionTitle)}</Styled.MainTitle>
+        {
+          buttonsData.map((btData: ButtonData) => renderButton(
+            intl.formatMessage(btData.messageId),
+            btData,
+          ))
+        }
+        {allowRememberChoice ? (
+          <Styled.RememberContainer>
+            <input id="rememberCheckboxId" type="checkbox" onChange={onCheckBoxChange} />
+            <label htmlFor="rememberCheckboxId">
+              {intl.formatMessage(intlMessages.rememberChoice)}
+            </label>
+          </Styled.RememberContainer>
         ) : null}
-        <Styled.ModeratorActions>
-          <Styled.MainTitle>{intl.formatMessage(intlMessages.optionTitle)}</Styled.MainTitle>
-          {
-            buttonsData.map((btData: ButtonData) => renderButton(
-              intl.formatMessage(btData.messageId),
-              btData,
-            ))
-          }
-          {allowRememberChoice ? (
-            <Styled.RememberContainer>
-              <input id="rememberCheckboxId" type="checkbox" onChange={onCheckBoxChange} />
-              <label htmlFor="rememberCheckboxId">
-                {intl.formatMessage(intlMessages.rememberChoice)}
-              </label>
-            </Styled.RememberContainer>
-          ) : null}
-        </Styled.ModeratorActions>
-        {renderPendingUsers(
-          intl.formatMessage(intlMessages.pendingUsers,
-            { usersCount: authedGuestUsers.length }),
-          authedGuestUsers,
-          guestUsersCall,
-          privateMessageVisible,
-          setPrivateGuestLobbyMessage,
-          getPrivateGuestLobbyMessage,
-          isGuestLobbyMessageEnabled,
-        )}
-        {renderPendingUsers(
-          intl.formatMessage(intlMessages.pendingGuestUsers,
-            { usersCount: unauthedGuestUsers.length }),
-          unauthedGuestUsers,
-          guestUsersCall,
-          privateMessageVisible,
-          setPrivateGuestLobbyMessage,
-          getPrivateGuestLobbyMessage,
-          isGuestLobbyMessageEnabled,
-        )}
-        {!existPendingUsers && (
-          renderNoUserWaitingItem(intl.formatMessage(intlMessages.noPendingUsers))
-        )}
-      </Styled.ScrollableArea>
+      </Styled.ModeratorActions>
+      {renderPendingUsers(
+        intl.formatMessage(intlMessages.pendingUsers,
+          { usersCount: authedGuestUsers.length }),
+        authedGuestUsers,
+        guestUsersCall,
+        privateMessageVisible,
+        setPrivateGuestLobbyMessage,
+        getPrivateGuestLobbyMessage,
+        isGuestLobbyMessageEnabled,
+      )}
+      {renderPendingUsers(
+        intl.formatMessage(intlMessages.pendingGuestUsers,
+          { usersCount: unauthedGuestUsers.length }),
+        unauthedGuestUsers,
+        guestUsersCall,
+        privateMessageVisible,
+        setPrivateGuestLobbyMessage,
+        getPrivateGuestLobbyMessage,
+        isGuestLobbyMessageEnabled,
+      )}
+      {!existPendingUsers && (
+        renderNoUserWaitingItem(intl.formatMessage(intlMessages.noPendingUsers))
+      )}
+    </Styled.ScrollableArea>
+  );
+
+  return (
+    <Styled.Panel
+      data-test={presentation === 'modal' ? 'guestUsersManagementPanel' : 'note'}
+      isChrome={isChrome}
+      $presentation={presentation}
+    >
+      {presentation === 'sidebar' ? (
+        <Header
+          leftButtonProps={{
+            onClick: () => closePanel(),
+            label: intl.formatMessage(intlMessages.title),
+          }}
+          rightButtonProps={null}
+          data-test="guestUsersManagementPanel"
+          customRightButton={null}
+          x="guestUsersManagementPanel"
+        />
+      ) : null}
+      {presentation === 'mobile' ? (
+        <Styled.MobileHeader data-test="guestUsersManagementPanel">
+          <h2>{intl.formatMessage(intlMessages.title)}</h2>
+        </Styled.MobileHeader>
+      ) : null}
+      {panelContent}
     </Styled.Panel>
   );
 };
 
-const GuestUsersManagementPanelContainer: React.FC = () => {
+interface GuestUsersManagementPanelContainerProps {
+  presentation?: GuestWaitingPresentation;
+  onClose?: () => void;
+}
+
+const GuestUsersManagementPanelContainer: React.FC<GuestUsersManagementPanelContainerProps> = ({
+  presentation = 'sidebar',
+  onClose,
+}) => {
   const layoutContextDispatch = layoutDispatch();
 
   const {
@@ -454,6 +487,8 @@ const GuestUsersManagementPanelContainer: React.FC = () => {
       guestLobbyEnabled={(currentMeeting?.usersPolicies?.guestPolicy === 'ASK_MODERATOR')
       || !!(guestWaitingUsersData?.user_guest?.length)}
       layoutContextDispatch={layoutContextDispatch}
+      presentation={presentation}
+      onClose={onClose}
     />
   );
 };

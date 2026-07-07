@@ -1,11 +1,14 @@
 import React, { useEffect } from 'react';
 import injectNotify from '/imports/ui/components/common/toast/inject-notify/component';
-import { PANELS, ACTIONS } from '/imports/ui/components/layout/enums';
 import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
-  openSkyroomPrivateChat,
+  openSkyroomPublicChat,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import {
+  openPrivateChatConversation,
+  reopenPrivateChatFromClosed,
+} from '/imports/ui/components/chat/private-chat-navigation';
 
 interface ChatPushAlertProps {
   notify: (...args: unknown[]) => void;
@@ -21,42 +24,34 @@ const ChatPushAlert: React.FC<ChatPushAlertProps> = (props) => {
     showNotify();
   });
 
-  const link = (title: React.ReactNode, chatId: string) => {
+  const openChat = (chatId: string) => {
     const { layoutContextDispatch } = props;
+    const PUBLIC_CHAT_ID = window.meetingClientSettings.public.chat.public_id;
+    const isPublicChat = chatId === PUBLIC_CHAT_ID;
 
-    return (
-      <div
-        key={chatId}
-        role="button"
-        tabIndex={0}
-        onClick={() => {
-          // On a Skyroom phone the bottom zone shows one box at a time; route the tap through
-          // the mobile helper so it switches to the chat box (and closes users/notes) and opens
-          // this conversation. Otherwise the toast would open the chat panel but keep the wrong
-          // box visible, so the receiver could never reach the private message.
-          if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
-            openSkyroomPrivateChat(layoutContextDispatch, chatId);
-            return;
-          }
-          layoutContextDispatch({
-            type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
-            value: true,
-          });
-          layoutContextDispatch({
-            type: ACTIONS.SET_ID_CHAT_OPEN,
-            value: chatId,
-          });
-          layoutContextDispatch({
-            type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL,
-            value: PANELS.CHAT,
-          });
-        }}
-        onKeyDown={() => null}
-      >
-        {title}
-      </div>
-    );
+    if (!isPublicChat) {
+      reopenPrivateChatFromClosed(chatId);
+    }
+
+    if (isSkyroomColumnLayout() && isSkyroomMobileViewport() && isPublicChat) {
+      openSkyroomPublicChat(layoutContextDispatch);
+      return;
+    }
+
+    openPrivateChatConversation(layoutContextDispatch, chatId);
   };
+
+  const link = (title: React.ReactNode, chatId: string) => (
+    <div
+      key={chatId}
+      role="button"
+      tabIndex={0}
+      onClick={() => openChat(chatId)}
+      onKeyDown={() => null}
+    >
+      {title}
+    </div>
+  );
 
   const showNotify = () => {
     const {

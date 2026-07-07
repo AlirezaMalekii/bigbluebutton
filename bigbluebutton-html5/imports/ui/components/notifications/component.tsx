@@ -51,6 +51,13 @@ const Notifications: React.FC = () => {
     isModerator: u.isModerator,
   }));
 
+  const autoOpenGuestWaitingPanel = useCallback(() => {
+    if (!currentUser?.isModerator) return;
+    if (isSkyroomMobileViewport()) {
+      openSkyroomWaitingUsers(layoutContextDispatch);
+    }
+  }, [layoutContextDispatch, currentUser?.isModerator]);
+
   const {
     data: notificationsStream,
   } = useDeduplicatedSubscription<NotificationResponse>(getNotificationsStream, {
@@ -60,6 +67,7 @@ const Notifications: React.FC = () => {
   const notifier = (notification: Notification) => {
     // special guest alert notification, with user name as title
     if (notification.messageId === 'app.userList.guest.pendingGuestAlert') {
+      autoOpenGuestWaitingPanel();
       notify(
         <Styled.TitleMessage>{notification.messageValues['0']}</Styled.TitleMessage>,
         notification.notificationType,

@@ -62,7 +62,7 @@
   margin-inline-start: auto !important;
 }
 
-/* --- Settings / options trigger (⋯) --- */
+/* --- Settings / options trigger --- */
 #layout[data-skyroom-column="true"] [data-test="manageUsers"],
 #layout[data-skyroom-column="true"] [data-test="chatOptionsMenu"],
 #layout[data-skyroom-column="true"] [data-test="notesOptionsMenu"] {

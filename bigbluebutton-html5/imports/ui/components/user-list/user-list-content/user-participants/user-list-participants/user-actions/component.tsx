@@ -30,20 +30,22 @@ import {
 
 import { useIsChatEnabled, useIsPrivateChatEnabled } from '/imports/ui/services/features';
 import { layoutDispatch } from '/imports/ui/components/layout/context';
-import { PANELS, ACTIONS } from '/imports/ui/components/layout/enums';
 
 import ConfirmationModal from '/imports/ui/components/common/modal/confirmation/component';
 
 import Icon from '/imports/ui/components/common/icon/icon-ts/component';
 import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import { setPendingChat } from '/imports/ui/core/local-states/usePendingChat';
+import useChat from '/imports/ui/core/hooks/useChat';
+import { Chat } from '/imports/ui/Types/chat';
+import { GraphqlDataHookSubscriptionResponse } from '/imports/ui/Types/hook';
+import {
+  openPrivateChatConversation,
+  reopenPrivateChatFromClosed,
+} from '/imports/ui/components/chat/private-chat-navigation';
+import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import Styled from './styles';
 import BBBMenu from '/imports/ui/components/common/menu/component';
-import {
-  isSkyroomColumnLayout,
-  isSkyroomMobileViewport,
-  openSkyroomPrivateChat,
-} from '/imports/ui/components/skyroom-layout/panel-toggles';
 import { useMutation } from '@apollo/client';
 import { USER_SET_WHITEBOARD_WRITE_ACCESS } from '/imports/ui/components/presentation/mutations';
 import useToggleVoice from '/imports/ui/components/audio/audio-graphql/hooks/useToggleVoice';
@@ -325,6 +327,10 @@ const UserActions: React.FC<UserActionsProps> = ({
 
   const [setRole] = useMutation(SET_ROLE);
   const [chatCreateWithUser] = useMutation(CHAT_CREATE_WITH_USER);
+  const { data: chats } = useChat((chat) => ({
+    chatId: chat.chatId,
+    participant: chat.participant,
+  })) as GraphqlDataHookSubscriptionResponse<Partial<Chat>[]>;
   const [setCameraPinned] = useMutation(SET_CAMERA_PINNED);
   const [ejectFromMeeting] = useMutation(EJECT_FROM_MEETING);
   const [ejectFromVoice] = useMutation(EJECT_FROM_VOICE);
@@ -409,33 +415,24 @@ const UserActions: React.FC<UserActionsProps> = ({
       key: 'activeChat',
       label: intl.formatMessage(messages.StartPrivateChat),
       onClick: () => {
-        setPendingChat(user.userId);
         setOpenUserAction(null);
+        const existingChat = chats?.find(
+          (chat) => chat.participant?.userId === user.userId,
+        );
+
+        if (existingChat?.chatId) {
+          reopenPrivateChatFromClosed(existingChat.chatId);
+          openPrivateChatConversation(layoutContextDispatch, existingChat.chatId);
+          return;
+        }
+
+        setPendingChat(user.userId);
         chatCreateWithUser({
           variables: {
             userId: user.userId,
           },
         });
-        // On a Skyroom phone the bottom zone shows one box at a time; dispatching the CHAT
-        // panel alone leaves the active box on 'users'. Route through the mobile helper so it
-        // switches to the chat box (and closes users). idChatOpen stays '' — ChatContainer
-        // resolves the newly created private chat via pendingChat.
-        if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
-          openSkyroomPrivateChat(layoutContextDispatch, '');
-          return;
-        }
-        layoutContextDispatch({
-          type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
-          value: true,
-        });
-        layoutContextDispatch({
-          type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL,
-          value: PANELS.CHAT,
-        });
-        layoutContextDispatch({
-          type: ACTIONS.SET_ID_CHAT_OPEN,
-          value: '',
-        });
+        openPrivateChatConversation(layoutContextDispatch, '');
       },
       icon: 'chat',
       dataTest: 'startPrivateChat',

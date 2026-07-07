@@ -12,7 +12,8 @@ import Styled from './styles';
 import ErrorBoundary from '/imports/ui/components/common/error-boundary/component';
 import FallbackView from '/imports/ui/components/common/fallback-errors/fallback-view/component';
 import GenericContentSidekickContainer from '/imports/ui/components/generic-content/generic-sidekick-content/container';
-import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import { isSkyroomColumnLayout, isSkyroomMobileViewport, openSkyroomMobileBox } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import { layoutDispatch } from '/imports/ui/components/layout/context';
 
 const propTypes = {
   top: PropTypes.number.isRequired,
@@ -151,7 +152,16 @@ const SidebarContent = (props) => {
       )}
       {sidebarContentPanel === PANELS.BREAKOUT && <BreakoutRoomContainer />}
       {sidebarContentPanel === PANELS.TIMER && <TimerContainer isModerator={amIModerator} />}
-      {sidebarContentPanel === PANELS.WAITING_USERS && <GuestUsersManagementPanel />}
+      {sidebarContentPanel === PANELS.WAITING_USERS && (
+        <GuestUsersManagementPanel
+          presentation={isSkyroomColumnLayout() && isSkyroomMobileViewport() ? 'mobile' : 'sidebar'}
+          onClose={
+            isSkyroomColumnLayout() && isSkyroomMobileViewport()
+              ? () => openSkyroomMobileBox(layoutDispatch(), null)
+              : undefined
+          }
+        />
+      )}
       {sidebarContentPanel === PANELS.POLL && (
         <Styled.Poll
           style={{ minWidth, top: '0', display: pollDisplay }}

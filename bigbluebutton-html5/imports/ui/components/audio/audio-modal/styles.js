@@ -109,6 +109,13 @@ const Connecting = styled.div`
   font-size: 2rem;
   text-align: center;
   color: var(--skyroom-text-primary, #eef4fb);
+
+  @media ${smallOnly} {
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.45;
+    margin: 0.35rem 0;
+  }
 `;
 
 const ConnectingSubtext = styled.p`
@@ -117,6 +124,12 @@ const ConnectingSubtext = styled.p`
   font-size: 1.5rem;
   text-align: center;
   color: var(--skyroom-text-secondary, #aab6c7);
+
+  @media ${smallOnly} {
+    font-size: 0.75rem;
+    margin-top: 0.3rem;
+    line-height: 1.35;
+  }
 `;
 
 const ellipsis = keyframes`

@@ -12,9 +12,7 @@ import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedS
 import { notify } from '/imports/ui/services/notification';
 import {
   isSkyroomColumnLayout,
-  isSkyroomMobileViewport,
-  openSkyroomMobileBox,
-  openSkyroomWaitingUsers,
+  toggleSkyroomWaitingUsersDesktop,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 interface GuestPanelOpenerProps {
@@ -22,10 +20,6 @@ interface GuestPanelOpenerProps {
 }
 
 const intlMessages = defineMessages({
-  waitingUsersTitle: {
-    id: 'app.userList.guest.waitingUsersTitle',
-    description: 'Title for the notes list',
-  },
   title: {
     id: 'app.userList.guest.waitingUsers',
     description: 'Title for the waiting users',
@@ -39,13 +33,10 @@ const GuestPanelOpener: React.FC<GuestPanelOpenerProps> = ({
   const sidebarContent = layoutSelectInput((i: Input) => i.sidebarContent);
   const { sidebarContentPanel } = sidebarContent;
   const intl = useIntl();
-  const toggleWaitingPanel = useCallback(() => {
-    if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
-      if (sidebarContentPanel === PANELS.WAITING_USERS) {
-        openSkyroomMobileBox(layoutContextDispatch, null);
-        return;
-      }
-      openSkyroomWaitingUsers(layoutContextDispatch);
+
+  const openWaitingPanel = useCallback(() => {
+    if (isSkyroomColumnLayout()) {
+      toggleSkyroomWaitingUsersDesktop();
       return;
     }
     layoutContextDispatch({
@@ -61,38 +52,27 @@ const GuestPanelOpener: React.FC<GuestPanelOpenerProps> = ({
   }, [sidebarContentPanel, layoutContextDispatch]);
 
   return (
-    <Styled.Messages data-test="skyroomGuestWaiting">
-      <Styled.Container>
-        <Styled.SmallTitle data-test="userManagementTitle">
-          {intl.formatMessage(intlMessages.waitingUsersTitle)}
-        </Styled.SmallTitle>
-      </Styled.Container>
-      <Styled.ScrollableList>
-        <Styled.List>
-          <Styled.ListItem
-            role="button"
-            data-test="waitingUsersBtn"
-            tabIndex={0}
-            onClick={toggleWaitingPanel}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                toggleWaitingPanel();
-              }
-            }}
-          >
-            <Icon iconName="user" />
-            <span>{intl.formatMessage(intlMessages.title)}</span>
-            {pendingUsers > 0 && (
-              <Styled.UnreadMessages>
-                <Styled.UnreadMessagesText>
-                  {pendingUsers}
-                </Styled.UnreadMessagesText>
-              </Styled.UnreadMessages>
-            )}
-          </Styled.ListItem>
-        </Styled.List>
-      </Styled.ScrollableList>
-    </Styled.Messages>
+    <Styled.CompactRow data-test="skyroomGuestWaiting">
+      <Styled.CompactButton
+        type="button"
+        data-test="waitingUsersBtn"
+        onClick={openWaitingPanel}
+        aria-label={intl.formatMessage(intlMessages.title)}
+      >
+        <Styled.CompactIcon>
+          <Icon iconName="user" />
+        </Styled.CompactIcon>
+        <Styled.CompactLabel>{intl.formatMessage(intlMessages.title)}</Styled.CompactLabel>
+        {pendingUsers > 0 ? (
+          <Styled.CountBadge aria-label={String(pendingUsers)}>
+            {pendingUsers > 9 ? '9+' : pendingUsers}
+          </Styled.CountBadge>
+        ) : null}
+        <Styled.ChevronIcon aria-hidden="true">
+          <Icon iconName="right_arrow" />
+        </Styled.ChevronIcon>
+      </Styled.CompactButton>
+    </Styled.CompactRow>
   );
 };
 

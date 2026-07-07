@@ -32,6 +32,16 @@ const BreakoutDuration = styled.p`
   font-style: italic;
 `;
 
+const BreakoutModeratorHint = styled.p`
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--skyroom-panel-accent, #20c7bb);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
 export default {
   Messages,
   Container,
@@ -41,4 +51,5 @@ export default {
   ListItem,
   BreakoutTitle,
   BreakoutDuration,
+  BreakoutModeratorHint,
 };

@@ -44,6 +44,7 @@ const BreakoutRoomContainer = ({ breakoutRoom }) => {
       sidebarContentPanel,
       hasBreakoutRoom: hasBreakoutRoom
       && (hasInvitation || currentUser?.isModerator),
+      isModerator: currentUser?.isModerator ?? false,
       breakoutRoom,
     }}
     />

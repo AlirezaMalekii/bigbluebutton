@@ -5,6 +5,8 @@ import SkyroomMobileZoneTabs from './mobile-zone-tabs/component';
 import SkyroomMobileZoneFullscreenButtons from './mobile-zone-fullscreen/component';
 import SkyroomMobileStatusRail from './mobile-status-rail/component';
 import SkyroomMobileTalkingRail from './mobile-talking-rail/component';
+import SkyroomGuestWaitingModal from './guest-waiting-modal/component';
+import useGuestWaitingAutoFocus from './guest-waiting-auto-focus/hook';
 import useSkyroomWebcamZoneSync from './webcam-zone-sync/useSkyroomWebcamZoneSync';
 import useSkyroomNotesPanelSync from './notes-panel-sync/useSkyroomNotesPanelSync';
 import useSkyroomMobileLayoutLoading from './loading/useSkyroomMobileLayoutLoading';
@@ -18,9 +20,11 @@ const SkyroomColumnController: React.FC = () => {
   useSkyroomWebcamZoneSync();
   useSkyroomNotesPanelSync();
   useSkyroomMobileLayoutLoading();
+  useGuestWaitingAutoFocus();
   return (
     <>
       <SkyroomSharedNotesColumn />
+      <SkyroomGuestWaitingModal />
       <SkyroomMobileZoneTabs />
       <SkyroomMobileZoneFullscreenButtons />
       <SkyroomMobileTalkingRail />

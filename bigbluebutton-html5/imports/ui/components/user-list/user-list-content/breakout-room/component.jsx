@@ -16,6 +16,10 @@ const intlMessages = defineMessages({
     id: 'app.createBreakoutRoom.title',
     description: 'breakout title',
   },
+  moderatorHint: {
+    id: 'app.breakout.manager.sidebarHint',
+    description: 'Hint for moderators in sidebar breakout entry',
+  },
 });
 
 const BreakoutRoomItem = ({
@@ -23,6 +27,7 @@ const BreakoutRoomItem = ({
   sidebarContentPanel,
   layoutContextDispatch,
   intl,
+  isModerator,
 }) => {
   const toggleBreakoutPanel = () => {
     // On a Skyroom phone the breakout panel must take over the single bottom box; the raw
@@ -72,6 +77,11 @@ const BreakoutRoomItem = ({
                 <Styled.BreakoutTitle>
                   {intl.formatMessage(intlMessages.breakoutTitle)}
                 </Styled.BreakoutTitle>
+                {isModerator ? (
+                  <Styled.BreakoutModeratorHint data-test="breakoutModeratorHint">
+                    {intl.formatMessage(intlMessages.moderatorHint)}
+                  </Styled.BreakoutModeratorHint>
+                ) : null}
                 <Styled.BreakoutDuration>
                   <BreakoutRemainingTime />
                 </Styled.BreakoutDuration>
@@ -92,4 +102,9 @@ BreakoutRoomItem.propTypes = {
     formatMessage: PropTypes.func.isRequired,
   }).isRequired,
   hasBreakoutRoom: PropTypes.bool.isRequired,
+  isModerator: PropTypes.bool,
+};
+
+BreakoutRoomItem.defaultProps = {
+  isModerator: false,
 };

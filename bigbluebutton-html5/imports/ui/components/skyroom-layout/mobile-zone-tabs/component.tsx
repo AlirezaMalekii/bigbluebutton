@@ -10,8 +10,17 @@ import Icon from '/imports/ui/components/common/icon/component';
 import useChat from '/imports/ui/core/hooks/useChat';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
+import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
 import { useIsSharedNotesEnabled } from '/imports/ui/services/features';
 import { useLayoutWebcamCount } from '/imports/ui/components/video-provider/hooks';
+import {
+  USER_AGGREGATE_COUNT_SUBSCRIPTION,
+  UsersCountSubscriptionResponse,
+} from '/imports/ui/core/graphql/queries/users';
+import {
+  GET_GUESTS_COUNT,
+  GuestUsersCountResponse,
+} from '/imports/ui/components/user-list/user-list-graphql/user-participants-title/guest-panel-opener/queries';
 import {
   SKYROOM_FOOTER_H,
   SKYROOM_MOBILE_EDGE,
@@ -57,6 +66,11 @@ const messages = defineMessages({
     description: 'Skyroom mobile bottom tab — breakout rooms',
     defaultMessage: 'Breakout rooms',
   },
+  waiting: {
+    id: 'app.skyroom.mobileTabs.waiting',
+    description: 'Skyroom mobile bottom tab — lobby waiting guests',
+    defaultMessage: 'Lobby waiting',
+  },
 });
 
 type TabKey = Exclude<SkyroomMobileBox, null>;
@@ -78,9 +92,19 @@ const SkyroomMobileZoneTabs: React.FC = () => {
     breakoutRoomsSummary: u.breakoutRoomsSummary,
   }));
 
+  const { data: usersCountData } = useDeduplicatedSubscription<UsersCountSubscriptionResponse>(
+    USER_AGGREGATE_COUNT_SUBSCRIPTION,
+  );
+  const { data: guestsCountData } = useDeduplicatedSubscription<GuestUsersCountResponse>(
+    GET_GUESTS_COUNT,
+  );
+
   const [notesOpen, setNotesOpen] = useState(getSkyroomNotesOpen);
   const [, force] = useReducer((x: number) => x + 1, 0);
   const [isMobile, setIsMobile] = useState(isSkyroomMobileViewport);
+
+  const usersCount = usersCountData?.user_aggregate?.aggregate?.count ?? 0;
+  const guestCount = guestsCountData?.user_guest_aggregate.aggregate.count ?? 0;
 
   // Total unread across all conversations (public + privates) drives the chat-tab badge so a
   // received private message is noticeable before the chat box is opened.
@@ -110,25 +134,25 @@ const SkyroomMobileZoneTabs: React.FC = () => {
   const chatOpen = isPublicChatOpen(sidebarContent);
   const breakoutOpen = sidebarContent.isOpen
     && sidebarContent.sidebarContentPanel === PANELS.BREAKOUT;
+  const waitingUsersOpen = sidebarContent.isOpen
+    && sidebarContent.sidebarContentPanel === PANELS.WAITING_USERS;
   const activeBox = resolveSkyroomMobileBox({
-    usersOpen, chatOpen, notesOpen, breakoutOpen,
+    usersOpen, chatOpen, notesOpen, breakoutOpen, waitingUsersOpen,
   });
 
   const hasStage = Boolean(presentation.isOpen || screenShare.hasScreenShare);
   const hasCameras = layoutWebcamCount > 0;
-  // Webcams are a bottom box only while something is shared on the stage;
-  // otherwise they live in the top zone and need no tab.
   const showWebcams = hasCameras && hasStage;
 
-  // Breakout tab appears only while a breakout is active, and only for people who have
-  // something to do there (the moderator, or a viewer holding a join invitation).
   const hasBreakoutRoom = Boolean(meeting?.componentsFlags?.hasBreakoutRoom);
   const hasBreakoutInvite = (currentUser?.breakoutRoomsSummary?.totalOfJoinURL ?? 0) > 0;
   const showBreakout = hasBreakoutRoom && (Boolean(currentUser?.isModerator) || hasBreakoutInvite);
+  const showWaiting = Boolean(currentUser?.isModerator) && guestCount > 0;
 
   const tabs: { key: TabKey; icon: string; label: string }[] = [
     showWebcams ? { key: 'webcams', icon: 'video', label: intl.formatMessage(messages.webcams) } : null,
     { key: 'chat', icon: 'chat', label: intl.formatMessage(messages.chat) },
+    showWaiting ? { key: 'waiting', icon: 'time', label: intl.formatMessage(messages.waiting) } : null,
     { key: 'users', icon: 'user', label: intl.formatMessage(messages.users) },
     notesEnabled ? { key: 'notes', icon: 'copy', label: intl.formatMessage(messages.notes) } : null,
     showBreakout ? { key: 'breakout', icon: 'rooms', label: intl.formatMessage(messages.breakout) } : null,
@@ -154,6 +178,13 @@ const SkyroomMobileZoneTabs: React.FC = () => {
       {tabs.map(({ key, icon, label }) => {
         const active = activeBox === key;
         const showUnread = key === 'chat' && !active && totalUnread > 0;
+        const showWaitingBadge = key === 'waiting' && !active && guestCount > 0;
+        const showUsersBadge = key === 'users' && !active && usersCount > 0;
+        const badgeCount = key === 'waiting' ? guestCount : usersCount;
+        const badgeClass = key === 'users'
+          ? 'skyroom-mobile-zone-tab-badge skyroom-mobile-zone-tab-badge--count'
+          : 'skyroom-mobile-zone-tab-badge';
+
         return (
           <button
             key={key}
@@ -165,9 +196,9 @@ const SkyroomMobileZoneTabs: React.FC = () => {
             onClick={() => handleTab(key, active)}
           >
             <Icon iconName={icon} />
-            {showUnread ? (
-              <span className="skyroom-mobile-zone-tab-badge" aria-hidden="true">
-                {totalUnread > 9 ? '9+' : totalUnread}
+            {showUnread || showWaitingBadge || showUsersBadge ? (
+              <span className={badgeClass} aria-hidden="true">
+                {badgeCount > 9 ? '9+' : badgeCount}
               </span>
             ) : null}
           </button>
