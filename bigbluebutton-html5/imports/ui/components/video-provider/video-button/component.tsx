@@ -106,7 +106,7 @@ const JoinVideoButton: React.FC<JoinVideoButtonProps> = ({
     close: closeVideoPreviewModal,
   } = useModalRegistration({
     id: 'videoPreviewModal',
-    priority: 'low',
+    priority: 'medium',
   });
 
   const setIsVideoPreviewModalOpen = (isOpen: boolean) => {
@@ -270,7 +270,7 @@ const JoinVideoButton: React.FC<JoinVideoButtonProps> = ({
               setForceOpen(false);
             },
             forceOpen,
-            priority: 'low',
+            priority: 'medium',
             setIsOpen: setIsVideoPreviewModalOpen,
             isOpen: isVideoPreviewModalOpen,
           }}

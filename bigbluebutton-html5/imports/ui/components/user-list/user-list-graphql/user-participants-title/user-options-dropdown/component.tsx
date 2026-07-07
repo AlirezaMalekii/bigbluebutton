@@ -194,7 +194,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
   ]);
 
   const createBreakoutRoomModal = useModalRegistration({ id: 'createBreakoutRoomModal', priority: 'medium' });
-  const guestPolicyModal = useModalRegistration({ id: 'guestPolicyModal', priority: 'low' });
+  const guestPolicyModal = useModalRegistration({ id: 'guestPolicyModal', priority: 'medium' });
   const lockViewersModal = useModalRegistration({ id: 'lockViewersModal', priority: 'low' });
 
   const [setMuted] = useMutation(SET_MUTED);
@@ -322,7 +322,9 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         icon: 'user',
         label: intl.formatMessage(intlMessages.guestPolicyLabel),
         description: intl.formatMessage(intlMessages.guestPolicyDesc),
-        onClick: () => guestPolicyModal.open(),
+        onClick: () => {
+          window.setTimeout(guestPolicyModal.open, 0);
+        },
         dataTest: 'guestPolicyLabel',
       },
       {
@@ -431,7 +433,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
       {guestPolicyModal.isOpen && (
         <GuestPolicyContainer
           onRequestClose={guestPolicyModal.close}
-          priority="low"
+          priority="medium"
           isOpen={guestPolicyModal.isOpen}
           setIsOpen={guestPolicyModal.close}
         />

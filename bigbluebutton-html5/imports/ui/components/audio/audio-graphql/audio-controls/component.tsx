@@ -72,7 +72,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
     isOpen: isAudioModalOpen,
   } = useModalRegistration({
     id: 'AudioModal',
-    priority: 'low',
+    priority: 'high',
   });
 
   const [audioModalContent, setAudioModalContent] = React.useState<string | null>(null);
@@ -156,7 +156,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({
       {!inAudio ? joinButton : <InputStreamLiveSelectorContainer openAudioSettings={openAudioSettings} />}
       {isAudioModalOpen && (
         <AudioModalContainer
-          priority="low"
+          priority="high"
           setIsOpen={setIsOpen}
           isOpen={isAudioModalOpen}
           content={audioModalContent}

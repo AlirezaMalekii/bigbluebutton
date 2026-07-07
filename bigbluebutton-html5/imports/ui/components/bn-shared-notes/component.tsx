@@ -301,6 +301,7 @@ function BlockNoteApp(props: BlockNoteAppProps): React.ReactElement {
             display: flex;
             flex-wrap: nowrap;
             justify-content: flex-start;
+            align-items: center;
             gap: 3px;
             padding-block: 4px;
             flex-shrink: 0;
@@ -324,6 +325,22 @@ function BlockNoteApp(props: BlockNoteAppProps): React.ReactElement {
             box-shadow: none;
             border: none;
             padding: 0;
+          }
+          .bn-toolbar-row .mantine-Button-root,
+          .bn-toolbar-row .mantine-ActionIcon-root {
+            flex: 0 0 24px;
+            min-width: 24px;
+            min-height: 24px;
+            width: 24px;
+            height: 24px;
+            padding: 0 !important;
+          }
+          .bn-toolbar-row .mantine-Button-section {
+            margin: 0;
+          }
+          .bn-toolbar-row svg {
+            width: 14px;
+            height: 14px;
           }
           .bn-toolbar-row [data-test="colors"] .bn-color-icon {
             font-weight: 700;
