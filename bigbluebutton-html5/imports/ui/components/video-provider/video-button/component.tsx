@@ -7,7 +7,7 @@ import { debounce } from '/imports/utils/debounce';
 import BBBMenu from '/imports/ui/components/common/menu/component';
 import Button from '/imports/ui/components/common/button/component';
 import VideoPreviewContainer from '/imports/ui/components/video-preview/container';
-import PreviewService, { OPEN_VIDEO_PREVIEW_MODAL_EVENT } from '/imports/ui/components/video-preview/service';
+import PreviewService from '/imports/ui/components/video-preview/service';
 import { CameraSettingsDropdownItemType } from 'bigbluebutton-html-plugin-sdk/dist/cjs/extensible-areas/camera-settings-dropdown-item/enums';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import { CameraSettingsDropdownInterface } from 'bigbluebutton-html-plugin-sdk';
@@ -113,14 +113,6 @@ const JoinVideoButton: React.FC<JoinVideoButtonProps> = ({
     if (isOpen) openVideoPreviewModal();
     else closeVideoPreviewModal();
   };
-
-  useEffect(() => {
-    const onOpenRequest = () => {
-      openVideoPreviewModal();
-    };
-    window.addEventListener(OPEN_VIDEO_PREVIEW_MODAL_EVENT, onOpenRequest);
-    return () => window.removeEventListener(OPEN_VIDEO_PREVIEW_MODAL_EVENT, onOpenRequest);
-  }, [openVideoPreviewModal]);
 
   useEffect(() => {
     const Settings = getSettingsSingletonInstance();
@@ -278,7 +270,7 @@ const JoinVideoButton: React.FC<JoinVideoButtonProps> = ({
               setForceOpen(false);
             },
             forceOpen,
-            priority: 'medium',
+            priority: 'low',
             setIsOpen: setIsVideoPreviewModalOpen,
             isOpen: isVideoPreviewModalOpen,
           }}

@@ -423,7 +423,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         <CreateBreakoutRoomContainerGraphql
           priority="medium"
           isOpen={createBreakoutRoomModal.isOpen}
-          setIsOpen={(value: boolean) => (value ? createBreakoutRoomModal.open() : createBreakoutRoomModal.close())}
+          setIsOpen={createBreakoutRoomModal.isOpen ? createBreakoutRoomModal.close : createBreakoutRoomModal.open}
           isUpdate={isInvitation}
         />
       )}
@@ -431,9 +431,9 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
       {guestPolicyModal.isOpen && (
         <GuestPolicyContainer
           onRequestClose={guestPolicyModal.close}
-          priority="medium"
+          priority="low"
           isOpen={guestPolicyModal.isOpen}
-          setIsOpen={(value: boolean) => (value ? guestPolicyModal.open() : guestPolicyModal.close())}
+          setIsOpen={guestPolicyModal.close}
         />
       )}
 
@@ -442,7 +442,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
           onRequestClose={lockViewersModal.close}
           priority="low"
           isOpen={lockViewersModal.isOpen}
-          setIsOpen={(value: boolean) => (value ? lockViewersModal.open() : lockViewersModal.close())}
+          setIsOpen={lockViewersModal.close}
         />
       )}
 
