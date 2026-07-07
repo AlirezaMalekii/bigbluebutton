@@ -67,7 +67,7 @@
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
-    height: calc(100% - var(--skyroom-presentation-toolbar-h, 24px)) !important;
+    height: calc(100% - var(--skyroom-presentation-toolbar-h, 18px)) !important;
     max-width: 100% !important;
     max-height: none !important;
     display: flex !important;
@@ -652,9 +652,9 @@
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] {
-    --skyroom-presentation-toolbar-h: 24px;
-    /* Slide-nav sits outside #whiteboard-element; TLDraw hugs the inner bottom. */
-    --skyroom-wb-toolbar-gap: 4px;
+    --skyroom-presentation-toolbar-h: 18px;
+    --skyroom-wb-toolbar-h: 32px;
+    --skyroom-wb-toolbar-gap: calc(var(--skyroom-presentation-toolbar-h) + 2px);
   }
 
   #layout[data-skyroom-column="true"] #presentationToolbarWrapper,
@@ -664,7 +664,7 @@
     width: 100% !important;
     max-width: 100% !important;
     min-height: 0 !important;
-    padding-block: 1px !important;
+    padding-block: 0 !important;
   }
 
   #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] {
@@ -672,10 +672,18 @@
     box-sizing: border-box !important;
     width: 100% !important;
     max-width: 100% !important;
-    padding-inline: 4px !important;
+    padding-inline: 6px !important;
     gap: 0 !important;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
-    min-height: 24px !important;
+    min-height: var(--skyroom-presentation-toolbar-h, 18px) !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] {
+    grid-template-columns: minmax(0, 1fr) auto minmax(36px, 1fr) !important;
+  }
+
+  [dir="rtl"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] {
+    grid-template-columns: minmax(36px, 1fr) auto minmax(0, 1fr) !important;
   }
 
   #layout[data-skyroom-column="true"] [class*="QuickPollButtonWrapper"],
@@ -691,24 +699,28 @@
 
   /* Compact slide/zoom control buttons so the three clusters fit ~360px */
   #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] button > span:first-child {
-    min-width: 18px !important;
-    min-height: 18px !important;
-    width: 18px !important;
-    height: 18px !important;
+    min-width: 14px !important;
+    min-height: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
     padding: 0 !important;
   }
 
   #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] select,
   #layout[data-skyroom-column="true"] [class*="SkipSlideSelect"] {
-    min-height: 20px !important;
-    height: 20px !important;
-    font-size: 0.62rem !important;
+    min-height: 16px !important;
+    height: 16px !important;
+    font-size: 0.58rem !important;
     padding-block: 0 !important;
   }
 
   #layout[data-skyroom-column="true"] [data-test="fitToWidthButton"] {
     margin-inline: 0 !important;
     flex-shrink: 0 !important;
+  }
+
+  [dir="rtl"] #layout[data-skyroom-column="true"] [data-test="fitToWidthButton"] {
+    margin-inline-start: 4px !important;
   }
 
   #layout[data-skyroom-column="true"] [class*="PresentationSlideControls"],
@@ -724,7 +736,7 @@
 
   [dir="rtl"] #layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] {
     justify-content: flex-start !important;
-    padding-inline-start: 8px !important;
+    padding-inline-start: 14px !important;
     padding-inline-end: 0 !important;
   }
 
@@ -733,6 +745,12 @@
   }
 
   /* TLDraw toolbar sits above the slide-nav bar on phone. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"]:not([data-skyroom-toolbar-hidden="true"]) #whiteboard-element .tlui-layout__bottom,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"]:not([data-skyroom-toolbar-hidden="true"]) #whiteboard-element .tlui-layout__bottom .tlui-toolbar__tools {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
 
   /* Let fixed-position toolbar popovers escape the presentation clip on phone. */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationInnerWrapper,
@@ -1031,8 +1049,8 @@
      width, rounded top, scrollable body, safe-area padding. Higher
      specificity (html[...] .ReactModal__Content) beats per-modal rules.
      =================================================================== */
-  html[data-skyroom="true"] .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal):not([data-test="audioModal"]):not([data-test="skyroomGuestWaitingModal"]),
-  html[data-skyroom="true"] #modals-container .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal):not([data-test="audioModal"]):not([data-test="skyroomGuestWaitingModal"]) {
+  html[data-skyroom="true"] .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal):not([data-test="audioModal"]):not([data-test="skyroomGuestWaitingModal"]):not([data-test="guestPolicySettingsModal"]),
+  html[data-skyroom="true"] #modals-container .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal):not([data-test="audioModal"]):not([data-test="skyroomGuestWaitingModal"]):not([data-test="guestPolicySettingsModal"]) {
     position: fixed !important;
     top: auto !important;
     left: 0 !important;
@@ -1342,11 +1360,32 @@
     grid-template-columns: 1fr !important;
   }
 
-  /* ---- Mic / audio settings modal: compact so it fits without scrolling ---- */
+  /* ---- Mic / audio settings modal: single column on mobile; settings scrolls on overflow ---- */
   html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="Form"] {
     grid-template-columns: 1fr !important;
     row-gap: 10px !important;
     column-gap: 0 !important;
+  }
+
+  html[data-skyroom="true"] [data-test="audioSettingsModal"] {
+    width: 100% !important;
+    min-height: min-content !important;
+  }
+
+  /* Audio settings modal only — taller card with vertical scroll */
+  html[data-skyroom="true"] [data-test="audioModal"]:has([data-test="audioSettingsModal"]) {
+    width: min(92vw, 340px) !important;
+    min-width: 0 !important;
+    max-width: min(92vw, 340px) !important;
+    max-height: min(92dvh, 560px) !important;
+  }
+
+  html[data-skyroom="true"] [data-test="audioModal"]:has([data-test="audioSettingsModal"]) [class*="Content"] {
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.25rem 0 !important;
   }
 
   html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="LabelSmall"],

@@ -17,6 +17,13 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
   box-shadow: none !important;
   padding: 6px 8px !important;
+  overflow: visible !important;
+}
+
+.show-more-icon-btn,
+#showMoreIcon,
+.toolbar .showMoreButton {
+  display: none !important;
 }
 
 #editbar .menu_left,
@@ -24,8 +31,29 @@
 .toolbar .menu_left,
 .toolbar .menu_right {
   display: flex !important;
+  flex-wrap: wrap !important;
   align-items: center !important;
   gap: 3px !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+}
+
+#editbar .menu_left > ul,
+#editbar .menu_right > ul,
+.toolbar .menu_left > ul,
+.toolbar .menu_right > ul {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 3px !important;
+  max-width: 100% !important;
+}
+
+#editbar .menu_left li,
+#editbar .menu_right li,
+.toolbar .menu_left li,
+.toolbar .menu_right li {
+  display: inline-flex !important;
 }
 
 /* ── Toolbar buttons + icons ───────────────────────────────────────────────── */

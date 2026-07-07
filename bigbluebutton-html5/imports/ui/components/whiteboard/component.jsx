@@ -44,7 +44,10 @@ import {
 import NoopTool from './custom-tools/noop-tool/component';
 import DeleteSelectedItemsTool from './custom-tools/delete-selected-items/component';
 import SessionStorage from '/imports/ui/services/storage/session';
-import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import {
+  isSkyroomColumnLayout,
+  isSkyroomMobileViewport,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const CAMERA_TYPE = 'camera';
 const colorStyles = [
@@ -2409,7 +2412,15 @@ const Whiteboard = React.memo((props) => {
     if (!isPhone || !toggleToolsAnimations || whiteboardToolbarAutoHide) return undefined;
     if (!(hasWBAccess || isPresenter)) return undefined;
 
+    const isSkyroomMobilePresenter = isSkyroomColumnLayout()
+      && isSkyroomMobileViewport()
+      && isPresenter;
+
     const timer = window.setTimeout(() => {
+      if (isSkyroomMobilePresenter) {
+        toggleToolsAnimations('fade-out', 'fade-in', '0s', true);
+        return;
+      }
       toggleToolsAnimations('fade-in', 'fade-out', '0s', true);
     }, 150);
 

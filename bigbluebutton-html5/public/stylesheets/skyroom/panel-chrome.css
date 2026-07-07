@@ -19,6 +19,9 @@
   display: flex !important;
   align-items: center !important;
   gap: var(--space-3) !important;
+  flex-wrap: wrap !important;
+  align-content: flex-start !important;
+  row-gap: 6px !important;
   flex-shrink: 0 !important;
   min-height: var(--skyroom-header-height, 56px) !important;
   width: 100% !important;
@@ -58,8 +61,46 @@
 #layout[data-skyroom-column="true"] [data-test="skyroom-chat-header-options"],
 #layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"],
 #layout[data-skyroom-column="true"] [data-test="sharedNotesPanelTitle"] [class*="OptionsGroup"] {
-  flex: 0 0 auto !important;
+  flex: 1 1 auto !important;
   margin-inline-start: auto !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 6px !important;
+  max-width: 100% !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="moveNotesToWhiteboard"],
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="exportNotesAsPDF"],
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="pinNotes"] {
+  align-items: center !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.018)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  color: var(--skyroom-panel-text-muted) !important;
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  height: 28px !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  min-height: 28px !important;
+  min-width: 28px !important;
+  padding: 0 !important;
+  width: 28px !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="moveNotesToWhiteboard"]:hover,
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="exportNotesAsPDF"]:hover,
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="pinNotes"]:hover,
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="moveNotesToWhiteboard"]:focus,
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="exportNotesAsPDF"]:focus,
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="pinNotes"]:focus {
+  background: linear-gradient(180deg, var(--skyroom-accent-hover-bg, rgba(32, 199, 187, 0.18)), rgba(32, 199, 187, 0.08)) !important;
+  border-color: var(--skyroom-accent-border, rgba(32, 199, 187, 0.30)) !important;
+  box-shadow: 0 0 0 2px var(--skyroom-accent-glow, rgba(32, 199, 187, 0.08)) !important;
+  color: #ffffff !important;
 }
 
 /* --- Settings / options trigger --- */

@@ -304,10 +304,32 @@
   border: none !important;
   background-color: transparent !important;
   box-shadow: none !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   flex-shrink: 0 !important;
   align-self: center !important;
   transition: none !important;
+}
+
+#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="userNameContainer"] {
+  overflow: visible !important;
+}
+
+#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::after,
+#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::after,
+#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::before,
+#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::before {
+  width: 11px !important;
+  height: 11px !important;
+  min-width: 11px !important;
+  max-width: 11px !important;
+  max-height: 11px !important;
+  font-size: 7px !important;
+  letter-spacing: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  border-width: 1px !important;
+  z-index: 2 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35) !important;
 }
 
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [data-test="moderatorAvatar"],

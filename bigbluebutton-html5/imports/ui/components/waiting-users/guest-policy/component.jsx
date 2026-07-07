@@ -84,18 +84,16 @@ class GuestPolicyComponent extends PureComponent {
 
     return (
       <Styled.GuestPolicyModal
-        onRequestClose={() => setIsOpen(false)}
+        modalIsOpen={isOpen}
+        className="skyroom-guest-policy-modal"
+        data-test="guestPolicySettingsModal"
+        overlayClassName="skyroom-guest-policy-overlay"
+        onRequestClose={onRequestClose}
         contentLabel={intl.formatMessage(intlMessages.ariaModalTitle)}
         title={intl.formatMessage(intlMessages.guestPolicyTitle)}
-        {...{
-          isOpen,
-          onRequestClose,
-          priority,
-        }}
+        priority={priority}
       >
-        <Styled.Container
-          data-test="guestPolicySettingsModal"
-        >
+        <Styled.Container>
           <Styled.Description>
             {intl.formatMessage(intlMessages.guestPolicyDescription)}
           </Styled.Description>

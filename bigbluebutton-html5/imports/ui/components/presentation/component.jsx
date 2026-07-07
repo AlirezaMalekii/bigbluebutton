@@ -25,6 +25,7 @@ import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
+  getSkyroomMobileWbToolbarReserve,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const intlMessages = defineMessages({
@@ -459,10 +460,11 @@ class Presentation extends PureComponent {
 
     presentationSizes.presentationWidth = presentationBounds.width;
     if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
-      const slideToolbarH = getToolbarHeight() || 24;
+      const slideToolbarH = getToolbarHeight() || 18;
+      const wbToolbarReserve = getSkyroomMobileWbToolbarReserve();
       presentationSizes.presentationHeight = Math.max(
         80,
-        presentationBounds.height - slideToolbarH,
+        presentationBounds.height - slideToolbarH - wbToolbarReserve,
       );
     } else {
       presentationSizes.presentationHeight = presentationBounds.height;
@@ -763,13 +765,19 @@ class Presentation extends PureComponent {
 
     const toolbarHeight = getToolbarHeight();
     const isSkyroomMobileStage = isSkyroomColumnLayout() && isSkyroomMobileViewport();
+    const slideToolbarH = toolbarHeight || 18;
+    const wbToolbarReserve = isSkyroomMobileStage ? getSkyroomMobileWbToolbarReserve() : 0;
+    const mobileChromeH = slideToolbarH + wbToolbarReserve;
     const stageReady = isSkyroomMobileStage
       ? presentationBounds.width > 0 && presentationBounds.height > 0
       : presentationWidth > 0;
     const wbPresentationWidth = isSkyroomMobileStage ? presentationBounds.width : svgWidth;
     const wbPresentationHeight = isSkyroomMobileStage
-      ? Math.max(80, presentationBounds.height - toolbarHeight)
+      ? Math.max(80, presentationBounds.height - mobileChromeH)
       : svgHeight;
+    const wbPresentationAreaHeight = isSkyroomMobileStage
+      ? Math.max(80, presentationBounds.height - mobileChromeH)
+      : presentationBounds.height - toolbarHeight;
 
     const { presentationToolbarMinWidth } = DEFAULT_VALUES;
 
@@ -850,7 +858,7 @@ class Presentation extends PureComponent {
                     ? '100%'
                     : Math.max(0, svgDimensions.width),
                   height: isSkyroomMobileStage
-                    ? `calc(100% - ${toolbarHeight || 24}px)`
+                    ? `calc(100% - ${slideToolbarH}px)`
                     : Math.max(0, svgDimensions.height),
                   textAlign: 'center',
                   display: !presentationIsOpen ? 'none' : 'block',
@@ -901,7 +909,7 @@ class Presentation extends PureComponent {
                     intl={intl}
                     presentationWidth={wbPresentationWidth}
                     presentationHeight={wbPresentationHeight}
-                    presentationAreaHeight={presentationBounds.height - toolbarHeight}
+                    presentationAreaHeight={wbPresentationAreaHeight}
                     presentationAreaWidth={presentationBounds.width}
                     isPanning={isPanning}
                     zoomChanger={this.zoomChanger}

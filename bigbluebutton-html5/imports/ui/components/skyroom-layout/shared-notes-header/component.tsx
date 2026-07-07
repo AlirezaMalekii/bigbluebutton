@@ -1,7 +1,7 @@
 import React from 'react';
 import { defineMessages, useIntl } from 'react-intl';
-import NotesDropdown from '/imports/ui/components/notes/notes-dropdown/component';
 import { dismissSkyroomSharedNotes } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import SkyroomSharedNotesHeaderActions from '../shared-notes-header-actions/component';
 import Styled from './styles';
 
 const intlMessages = defineMessages({
@@ -40,15 +40,12 @@ const SkyroomSharedNotesHeader: React.FC<SkyroomSharedNotesHeaderProps> = ({
         </Styled.TitleButton>
       </Styled.SmallTitle>
       {padId ? (
-        <Styled.OptionsGroup data-test="sharedNotesHeaderOptions">
-          <NotesDropdown
-            padId={padId}
-            isEtherpadSharedNotes={Boolean(isEtherpadSharedNotes)}
-            handlePinSharedNotes={handlePinSharedNotes}
-            presentationEnabled={presentationEnabled}
-            menuClassName="skyroom-notes-options-menu"
-          />
-        </Styled.OptionsGroup>
+        <SkyroomSharedNotesHeaderActions
+          padId={padId}
+          isEtherpadSharedNotes={Boolean(isEtherpadSharedNotes)}
+          handlePinSharedNotes={handlePinSharedNotes}
+          presentationEnabled={presentationEnabled}
+        />
       ) : null}
     </Styled.Container>
   );

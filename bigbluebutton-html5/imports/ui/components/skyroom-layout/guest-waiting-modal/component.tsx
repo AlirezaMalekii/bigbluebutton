@@ -24,7 +24,8 @@ const SkyroomGuestWaitingModal: React.FC = () => {
     isOpen,
   } = useModalRegistration({
     id: 'skyroomGuestWaitingModal',
-    priority: 'medium',
+    // Same tier as guest-policy / lock-viewers so one modal does not block the other.
+    priority: 'low',
   });
   const isOpenRef = useRef(isOpen);
   isOpenRef.current = isOpen;
@@ -48,6 +49,8 @@ const SkyroomGuestWaitingModal: React.FC = () => {
     };
   }, [open, close]);
 
+  if (!isOpen) return null;
+
   return (
     <ModalSimple
       modalIsOpen={isOpen}
@@ -59,14 +62,12 @@ const SkyroomGuestWaitingModal: React.FC = () => {
       shouldShowCloseButton
       shouldCloseOnOverlayClick
     >
-      {isOpen ? (
-        <div className="skyroom-guest-waiting-modal__body">
-          <GuestUsersManagementPanel
-            presentation="modal"
-            onClose={close}
-          />
-        </div>
-      ) : null}
+      <div className="skyroom-guest-waiting-modal__body">
+        <GuestUsersManagementPanel
+          presentation="modal"
+          onClose={close}
+        />
+      </div>
     </ModalSimple>
   );
 };

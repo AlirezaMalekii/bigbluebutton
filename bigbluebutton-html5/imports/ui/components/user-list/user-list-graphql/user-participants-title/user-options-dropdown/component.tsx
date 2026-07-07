@@ -31,6 +31,7 @@ import logger from '/imports/startup/client/logger';
 import { filterByMeetingId } from '/imports/ui/core/utils/subscriptionFilters';
 import { notify } from '/imports/ui/services/notification';
 import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
+import { closeGuestWaitingModal } from '/imports/ui/components/skyroom-layout/guest-waiting-modal/state';
 
 interface GetUserNamesResponse {
   user: Array<{
@@ -322,7 +323,10 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         icon: 'user',
         label: intl.formatMessage(intlMessages.guestPolicyLabel),
         description: intl.formatMessage(intlMessages.guestPolicyDesc),
-        onClick: () => guestPolicyModal.open(),
+        onClick: () => {
+          closeGuestWaitingModal();
+          guestPolicyModal.open();
+        },
         dataTest: 'guestPolicyLabel',
       },
       {

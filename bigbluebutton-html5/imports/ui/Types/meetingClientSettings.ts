@@ -38,6 +38,7 @@ export interface App {
   mobileFontSize: string
   desktopFontSize: string
   autoJoin: boolean
+  silentAudioJoin: boolean
   listenOnlyMode: boolean
   forceListenOnly: boolean
   skipCheck: boolean

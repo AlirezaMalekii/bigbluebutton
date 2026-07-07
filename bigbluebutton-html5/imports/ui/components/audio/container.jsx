@@ -120,6 +120,8 @@ const AudioContainer = (props) => {
   const KURENTO_CONFIG = window.meetingClientSettings.public.kurento;
 
   const autoJoin = getFromUserSettings('bbb_auto_join_audio', APP_CONFIG.autoJoin);
+  const silentAudioJoin = getFromUserSettings('bbb_silent_audio_join', APP_CONFIG.silentAudioJoin);
+  const forceListenOnly = getFromUserSettings('bbb_force_listen_only', APP_CONFIG.forceListenOnly);
   const enableVideo = getFromUserSettings('bbb_enable_video', KURENTO_CONFIG.enableVideo);
   const autoShareWebcam = getFromUserSettings('bbb_auto_share_webcam', KURENTO_CONFIG.autoShareWebcam);
   const { userWebcam } = userLocks;
@@ -157,6 +159,7 @@ const AudioContainer = (props) => {
     name: u.name,
     speechLocale: u.speechLocale,
     breakoutRoomsSummary: u.breakoutRoomsSummary,
+    isModerator: u.isModerator,
   }));
 
   const hasBreakoutRooms = (currentUser?.breakoutRoomsSummary?.totalOfBreakoutRooms ?? 0) > 0;
@@ -179,6 +182,43 @@ const AudioContainer = (props) => {
     videoPreviewModal.open();
   };
 
+  const joinAudioByRole = useCallback(() => {
+    const isModerator = currentUser?.isModerator;
+    const micLocked = userLocks.userMic;
+    const forceListenOnlyAttendee = forceListenOnly && !isModerator;
+
+    if (userSelectedMicrophone && !micLocked && !forceListenOnlyAttendee) {
+      joinMicrophone({
+        skipEchoTest: true,
+        muted: storageMuteState ?? meeting?.voiceSettings?.muteOnStart,
+      });
+      return;
+    }
+
+    if (userSelectedListenOnly || micLocked || forceListenOnlyAttendee) {
+      joinListenOnly();
+      return;
+    }
+
+    if (isModerator && !micLocked) {
+      joinMicrophone({
+        skipEchoTest: true,
+        muted: true,
+      });
+      return;
+    }
+
+    joinListenOnly();
+  }, [
+    currentUser?.isModerator,
+    forceListenOnly,
+    meeting?.voiceSettings?.muteOnStart,
+    storageMuteState,
+    userLocks.userMic,
+    userSelectedListenOnly,
+    userSelectedMicrophone,
+  ]);
+
   const init = async () => {
     await Service.init(
       messages,
@@ -196,6 +236,18 @@ const AudioContainer = (props) => {
       }
       return Promise.resolve(false);
     }
+
+    if (silentAudioJoin) {
+      if (!currentUserHasVoice) {
+        joinAudioByRole();
+      }
+      if (enableVideo && autoShareWebcam) {
+        openVideoPreviewModal();
+      }
+      didMountAutoJoin = true;
+      return Promise.resolve(true);
+    }
+
     Session.setItem('audioModalIsOpen', true);
     if (enableVideo && autoShareWebcam) {
       if (!currentUserHasVoice) {

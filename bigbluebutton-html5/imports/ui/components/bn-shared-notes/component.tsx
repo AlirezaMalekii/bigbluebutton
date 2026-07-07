@@ -300,13 +300,21 @@ function BlockNoteApp(props: BlockNoteAppProps): React.ReactElement {
           .bn-toolbar-row {
             display: flex;
             flex-wrap: wrap;
-            justify-content: center;
+            justify-content: flex-start;
             gap: 4px;
             padding-block: 4px;
             flex-shrink: 0;
             border-bottom: 1px solid #d4d9df;
           }
-          .bn-toolbar-row .bn-formatting-toolbar {
+          .bn-toolbar-row .bn-formatting-toolbar,
+          .bn-toolbar-row .bn-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+            max-width: 100%;
+            overflow: visible;
             box-shadow: none;
             border: none;
             padding: 0;
@@ -363,8 +371,6 @@ function BlockNoteApp(props: BlockNoteAppProps): React.ReactElement {
               <BasicTextStyleButton basicTextStyle="italic" key="italicStyleButton" />
               <BasicTextStyleButton basicTextStyle="underline" key="underlineStyleButton" />
               <BasicTextStyleButton basicTextStyle="strike" key="strikeStyleButton" />
-            </FormattingToolbar>
-            <FormattingToolbar>
               <ColorStyleButton key="colorStyleButton" />
               <TextAlignSelect key="textAlignSelect" />
               <NestBlockButton key="nestBlockButton" />

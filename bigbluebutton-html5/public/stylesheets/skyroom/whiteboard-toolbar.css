@@ -156,6 +156,11 @@
   padding-bottom: 0 !important;
 }
 
+#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__bottom {
+  bottom: var(--skyroom-wb-toolbar-gap) !important;
+  z-index: 1004 !important;
+}
+
 /* Show/hide pen toolbar — the top-right "toolVisibility" toggle sets
    data-skyroom-toolbar-hidden on #layout (presentation/component.jsx). Desktop + mobile. */
 #layout[data-skyroom-column="true"][data-skyroom-toolbar-hidden="true"] #whiteboard-element .tlui-layout__bottom {

@@ -14,7 +14,7 @@ const GuestPolicyContainer = (props) => {
     data: currentMeeting,
   } = useMeeting((m) => ({
     usersPolicies: {
-      guestPolicy: m.usersPolicies.guestPolicy,
+      guestPolicy: m.usersPolicies?.guestPolicy,
     },
   }));
 
@@ -34,7 +34,7 @@ const GuestPolicyContainer = (props) => {
     && (
     <GuestPolicyComponent
       changeGuestPolicy={changeGuestPolicy}
-      guestPolicy={currentMeeting?.usersPolicies.guestPolicy}
+      guestPolicy={currentMeeting?.usersPolicies?.guestPolicy ?? 'ALWAYS_ACCEPT'}
       {...props}
     />
     );

@@ -29,6 +29,15 @@ export const isSkyroomColumnLayout = () => {
   return Boolean(layoutEl?.hasAttribute(SKYROOM_COLUMN_ATTR));
 };
 
+/** Scaled TLDraw bottom toolbar height reserved inside the whiteboard on phone. */
+export const getSkyroomMobileWbToolbarReserve = () => {
+  const layoutEl = document.getElementById('layout');
+  if (!layoutEl) return 34;
+  const styles = getComputedStyle(layoutEl);
+  const scale = parseFloat(styles.getPropertyValue('--skyroom-wb-scale')) || 0.68;
+  return Math.ceil(36 * scale * 0.92) + 2;
+};
+
 /** True during bootstrap before #layout mounts (see main.html data-skyroom). */
 export const isSkyroomTheme = () => {
   if (isSkyroomColumnLayout()) return true;
