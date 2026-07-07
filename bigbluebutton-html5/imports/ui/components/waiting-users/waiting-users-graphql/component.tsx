@@ -402,6 +402,7 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
   return (
     <Styled.Panel
       data-test={presentation === 'modal' ? 'guestUsersManagementPanel' : 'note'}
+      data-skyroom-guest-waiting-panel="true"
       isChrome={isChrome}
       $presentation={presentation}
     >
@@ -456,6 +457,7 @@ const GuestUsersManagementPanelContainer: React.FC<GuestUsersManagementPanelCont
     return (
       <Styled.Panel
         data-test="guestUsersManagementPanel"
+        data-skyroom-guest-waiting-panel="true"
         isChrome={false}
         $presentation={presentation}
       >

@@ -1381,20 +1381,6 @@
   min-height: 0 !important;
 }
 
-/* Guest waiting room panel */
-#layout[data-skyroom-column="true"] [data-test="guestUsersManagementPanel"] {
-  background: transparent !important;
-  color: var(--skyroom-panel-text, #eef4fb) !important;
-}
-
-#layout[data-skyroom-column="true"] [data-test="acceptGuest"] {
-  color: #34d399 !important;
-}
-
-#layout[data-skyroom-column="true"] [data-test="denyGuest"] {
-  color: #f87171 !important;
-}
-
 #layout[data-skyroom-column="true"] [data-test="waitingUsersBtn"] {
   min-height: 36px !important;
   padding: 6px 10px !important;
