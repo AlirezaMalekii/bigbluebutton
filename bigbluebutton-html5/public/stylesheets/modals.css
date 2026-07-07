@@ -5,14 +5,6 @@
   overflow-x: hidden;
   overflow-y: auto;
   background-color: rgba(0, 0, 0, 0.5);
-  position: fixed;
-  inset: 0;
-  z-index: 1500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  box-sizing: border-box;
 }
 
 .ReactModal__Overlay--after-open {
@@ -53,50 +45,43 @@
   z-index: 1000 !important;
 }
 
-/* Keep the entire modal stack above #app and Skyroom whiteboard layers. */
+/*
+ * Stack modals above Skyroom whiteboard popovers (z-index ~1200).
+ * Keep upstream class names; only raise numeric layers for this fork.
+ */
 #modals-container {
-  position: fixed;
-  inset: 0;
-  z-index: 1500;
-  pointer-events: none;
-}
-
-#modals-container .ReactModalPortal {
-  pointer-events: auto;
-}
-
-#modals-container .ReactModalPortal.modal-low {
-  z-index: 1500;
-}
-
-#modals-container .ReactModalPortal.modal-low .ReactModal__Overlay {
-  z-index: 1500;
-}
-
-#modals-container .ReactModalPortal.modal-medium {
-  z-index: 1510;
-}
-
-#modals-container .ReactModalPortal.modal-medium .ReactModal__Overlay {
-  z-index: 1510;
-}
-
-#modals-container .ReactModalPortal.modal-high {
-  z-index: 1520;
-}
-
-#modals-container .ReactModalPortal.modal-high .ReactModal__Overlay {
-  z-index: 1520;
+  position: relative;
+  z-index: 1400;
 }
 
 .modal-low {
-  z-index: 1500;
+  z-index: 1300;
 }
 
 .modal-medium {
-  z-index: 1510;
+  z-index: 1310;
 }
 
 .modal-high {
-  z-index: 1520;
+  z-index: 1320;
+}
+
+/* Within a same priority, hide all but first (FIFO) — only while visibly open */
+.modal-low ~ .modal-low,
+.modal-medium ~ .modal-medium,
+.modal-high ~ .modal-high {
+  display: none;
+}
+
+/*
+ * Only suppress lower-priority stacks when a higher one is actively open
+ * (avoid stale portal nodes blocking clicks on newly opened modals).
+ */
+#modals-container:has(.modal-medium .ReactModal__Overlay--after-open) .modal-low,
+#modals-container:has(.modal-high .ReactModal__Overlay--after-open) .modal-low {
+  display: none;
+}
+
+#modals-container:has(.modal-high .ReactModal__Overlay--after-open) .modal-medium {
+  display: none;
 }

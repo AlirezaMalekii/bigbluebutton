@@ -1040,41 +1040,34 @@
 }
 
 /* ---------------------------------------------------------------------
-   12) #modals-container — ModalSimple / ConfirmationModal (not #fsmodal)
-   Settings & breakout use ModalFullscreen (#fsmodal); connection status,
-   guest policy, recording confirm, and webcam preview use ReactModal here.
+   12) Modal interaction — block whiteboard pointer capture while open
+   Without this, tldraw keeps the pen cursor and eats clicks under the overlay.
    --------------------------------------------------------------------- */
+html[data-skyroom="true"]:has(#modals-container .ReactModal__Overlay--after-open) #layout #whiteboard-element,
+html[data-skyroom="true"]:has(#modals-container .ReactModal__Overlay--after-open) #layout #whiteboard-element .tl-container,
+html[data-skyroom="true"]:has(#modals-container .ReactModal__Overlay--after-open) #layout #whiteboard-element .tl-canvas,
+html[data-skyroom="true"]:has(#modals-container .ReactModal__Overlay--after-open) #layout #whiteboard-element canvas,
+html[data-skyroom="true"] body.ReactModal__Body--open #layout #whiteboard-element,
+html[data-skyroom="true"] body.ReactModal__Body--open #layout #whiteboard-element .tl-container,
+html[data-skyroom="true"] body.ReactModal__Body--open #layout #whiteboard-element canvas {
+  pointer-events: none !important;
+  cursor: default !important;
+}
+
+html[data-skyroom="true"] #modals-container .ReactModalPortal,
+html[data-skyroom="true"] #modals-container .ReactModal__Overlay,
+html[data-skyroom="true"] #modals-container .ReactModal__Content {
+  pointer-events: auto !important;
+}
+
+html[data-skyroom="true"] #modals-container .ReactModalPortal {
+  z-index: 1400 !important;
+}
+
 html[data-skyroom="true"] #modals-container .ReactModal__Overlay {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 1500 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 16px !important;
-  box-sizing: border-box !important;
-  background-color: rgba(2, 6, 14, 0.62) !important;
-  backdrop-filter: blur(12px) saturate(1.12) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(1.12) !important;
+  z-index: 1400 !important;
 }
 
 html[data-skyroom="true"] #modals-container .ReactModal__Content {
-  position: relative !important;
-  top: auto !important;
-  left: auto !important;
-  right: auto !important;
-  bottom: auto !important;
-  margin: auto !important;
-  transform: none !important;
-  max-height: min(90vh, 720px) !important;
-  overflow: auto !important;
-}
-
-html[data-skyroom="true"] #modals-container .ReactModal__Content--after-open,
-html[data-skyroom="true"] #modals-container .ReactModal__Content--before-close {
-  transform: none !important;
-}
-
-html[data-skyroom="true"] #modals-container .ReactModal__Overlay--after-open {
-  opacity: 1 !important;
+  z-index: 1401 !important;
 }

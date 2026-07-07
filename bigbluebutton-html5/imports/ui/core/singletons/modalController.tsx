@@ -1,6 +1,4 @@
-import React, {
-  useCallback, useLayoutEffect, useRef, useState,
-} from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { makeVar, useReactiveVar } from '@apollo/client';
 
 export type ModalPriority =
@@ -108,25 +106,14 @@ class ModalController {
       if (isFirstOpenAsk) {
         this.requestSeq = nextRequestedSeq;
       }
+      const nextM: ModalRegistration = {
+        ...m,
+        desiredOpen: desired,
+        requestedAt: isFirstOpenAsk ? Date.now() : m.requestedAt,
+        requestedSeq: nextRequestedSeq,
+      };
 
-      const byKey: Record<string, ModalRegistration> = {};
-      Object.values(prev.byKey).forEach((entry) => {
-        let next = entry;
-        if (desired && entry.uniqueId !== uniqueId && entry.desiredOpen) {
-          next = { ...entry, desiredOpen: false };
-        }
-        if (entry.uniqueId === uniqueId) {
-          next = {
-            ...entry,
-            desiredOpen: desired,
-            requestedAt: isFirstOpenAsk ? Date.now() : entry.requestedAt,
-            requestedSeq: nextRequestedSeq,
-          };
-        }
-        byKey[next.uniqueId] = next;
-      });
-
-      return this.compute(prev, { byKey });
+      return this.compute(prev, { byKey: { ...prev.byKey, [uniqueId]: nextM } });
     });
   }
 
@@ -141,16 +128,6 @@ class ModalController {
 
   setConcurrency(n: number): void {
     updateState((prev) => this.compute(prev, { concurrency: Math.max(1, Math.floor(n)) }));
-  }
-
-  closeAll(): void {
-    updateState((prev) => {
-      const newByKey: Record<string, ModalRegistration> = {};
-      Object.values(prev.byKey).forEach((entry) => {
-        newByKey[entry.uniqueId] = { ...entry, desiredOpen: false };
-      });
-      return this.compute({ ...prev, byKey: newByKey });
-    });
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -170,7 +147,7 @@ class ModalController {
     };
 
     const all = Object.values(next.byKey);
-    const candidates = all.filter((entry) => entry.desiredOpen);
+    const candidates = all.filter((m) => m.desiredOpen);
 
     candidates.sort((a, b) => {
       const wa = this.weightOf(a.priority);
@@ -182,23 +159,23 @@ class ModalController {
 
     const concurrency = Math.max(1, Math.floor(next.concurrency));
     const open = candidates.slice(0, concurrency);
-    const openKeys = open.map((entry) => entry.uniqueId);
+    const openKeys = open.map((m) => m.uniqueId);
 
     const candidateIndex: Record<string, number> = {};
-    candidates.forEach((entry, idx) => {
-      candidateIndex[entry.uniqueId] = idx;
+    candidates.forEach((m, idx) => {
+      candidateIndex[m.uniqueId] = idx;
     });
 
     const newByKey: Record<string, ModalRegistration> = {};
-    all.forEach((entry) => {
-      const isOpen = openKeys.includes(entry.uniqueId);
-      const stackIndex = isOpen ? openKeys.indexOf(entry.uniqueId) : null;
-      const qPos = entry.desiredOpen ? (candidateIndex[entry.uniqueId] ?? null) : null;
+    all.forEach((m) => {
+      const isOpen = openKeys.includes(m.uniqueId);
+      const stackIndex = isOpen ? openKeys.indexOf(m.uniqueId) : null;
+      const qPos = m.desiredOpen ? (candidateIndex[m.uniqueId] ?? null) : null;
 
-      newByKey[entry.uniqueId] = {
-        ...entry,
+      newByKey[m.uniqueId] = {
+        ...m,
         actualOpen: isOpen,
-        position: entry.desiredOpen ? ((isOpen && (stackIndex as number)) || (qPos as number)) : null,
+        position: m.desiredOpen ? ((isOpen && (stackIndex as number)) || (qPos as number)) : null,
         queuedPosition: qPos,
       };
     });
@@ -208,10 +185,6 @@ class ModalController {
 }
 
 export const controller = new ModalController(PRIORITY_WEIGHTS);
-
-export function closeAllRegisteredModals(): void {
-  controller.closeAll();
-}
 
 export function useModalRegistration({
   id,
@@ -230,23 +203,14 @@ export function useModalRegistration({
   setPriority: (p: ModalPriority) => void;
 } {
   const uniqueRef = useRef<string | null>(null);
-  const pendingOpenRef = useRef(false);
   const previousFocusRef = useRef<Element | null>(null);
-  const [registrationReady, setRegistrationReady] = useState(false);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const uniqueId = controller.register(id, priority);
     uniqueRef.current = uniqueId;
-    setRegistrationReady(true);
-    if (pendingOpenRef.current) {
-      pendingOpenRef.current = false;
-      controller.setDesiredOpen(uniqueId, true);
-    }
     return () => {
       if (uniqueRef.current) controller.unregister(uniqueRef.current);
       uniqueRef.current = null;
-      pendingOpenRef.current = false;
-      setRegistrationReady(false);
     };
   }, [id, priority]);
 
@@ -256,11 +220,7 @@ export function useModalRegistration({
 
   const open = useCallback(() => {
     previousFocusRef.current = document.activeElement;
-    if (uniqueRef.current) {
-      controller.setDesiredOpen(uniqueRef.current, true);
-    } else {
-      pendingOpenRef.current = true;
-    }
+    if (uniqueRef.current) controller.setDesiredOpen(uniqueRef.current, true);
   }, []);
 
   const close = useCallback(() => {
@@ -279,7 +239,7 @@ export function useModalRegistration({
   }, []);
 
   return {
-    isOpen: registrationReady && Boolean(my?.actualOpen),
+    isOpen: Boolean(my?.actualOpen),
     position: my?.position ?? null,
     queuedPosition: my?.queuedPosition ?? null,
     id: my?.id ?? id,
