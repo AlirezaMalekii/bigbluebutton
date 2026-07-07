@@ -251,10 +251,18 @@ const LobbyMessage = styled.div`
 const SkyroomLobbyComposer = styled.div``;
 
 const SkyroomLobbyPreview = styled.div`
-  margin-top: 10px;
   font-size: 12px;
   line-height: 1.55;
   word-break: break-word;
+`;
+
+const SkyroomLobbyFooter = styled.div`
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  margin-top: auto;
 `;
 
 const PrivateLobbyMessage = styled.div`
@@ -542,6 +550,7 @@ export default {
   LobbyMessage,
   SkyroomLobbyComposer,
   SkyroomLobbyPreview,
+  SkyroomLobbyFooter,
   RememberContainer,
   ScrollableArea,
   SkyroomScrollArea,

@@ -151,11 +151,10 @@
 }
 
 /* --- Section cards --- */
-#layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] [data-skyroom-section="broadcast"] {
+#layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-scroll [data-skyroom-section="broadcast"] {
   margin: 0 !important;
   padding: 14px !important;
   border: 1px solid rgba(32, 199, 187, 0.2) !important;
-  border-bottom: 1px solid rgba(32, 199, 187, 0.2) !important;
   border-radius: 14px !important;
   background:
     linear-gradient(145deg, rgba(32, 199, 187, 0.11) 0%, rgba(32, 199, 187, 0.03) 100%) !important;
@@ -175,35 +174,79 @@
   margin: 0 !important;
 }
 
-/* --- Broadcast composer (unified pill) --- */
+/* --- Broadcast footer (pinned bottom, chat-composer style) --- */
+#layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-broadcast-footer {
+  flex-shrink: 0 !important;
+  margin-top: auto !important;
+  padding: 0 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.12)) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-broadcast-footer [data-skyroom-section="broadcast"] {
+  margin: 0 !important;
+  padding: 10px 12px 12px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-lobby-preview {
+  margin: 0 0 8px !important;
+  padding: 8px 10px !important;
+  border-radius: 8px !important;
+  text-align: start !important;
+  font-size: 11px !important;
+  line-height: 1.5 !important;
+  font-style: normal !important;
+  color: var(--skyroom-panel-text-dim, rgba(198, 208, 220, 0.72)) !important;
+  background: rgba(0, 0, 0, 0.18) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-inline-start: 2px solid rgba(32, 199, 187, 0.45) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-lobby-preview span {
+  color: inherit !important;
+}
+
+/* --- Broadcast composer (compact row — matches public chat) --- */
 #layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer {
   display: flex !important;
-  align-items: flex-end !important;
-  gap: 6px !important;
-  padding: 5px 5px 5px 10px !important;
-  border-radius: 14px !important;
-  background: rgba(0, 0, 0, 0.28) !important;
-  border: 1px solid rgba(32, 199, 187, 0.22) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+  align-items: center !important;
+  gap: 0 !important;
+  padding: 3px 4px 3px 10px !important;
+  min-height: 36px !important;
+  border-radius: 12px !important;
+  background: rgba(0, 0, 0, 0.32) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer:focus-within {
+  border-color: rgba(32, 199, 187, 0.35) !important;
+  box-shadow: 0 0 0 2px rgba(32, 199, 187, 0.1) !important;
 }
 
 #layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer > div,
 #layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer [class*="Wrapper"] {
   display: flex !important;
-  align-items: flex-end !important;
-  gap: 6px !important;
+  align-items: center !important;
+  gap: 4px !important;
   flex: 1 1 auto !important;
   width: 100% !important;
+  min-width: 0 !important;
 }
 
 #layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer textarea {
   flex: 1 1 auto !important;
-  min-height: 2.25rem !important;
-  max-height: 7rem !important;
+  min-width: 0 !important;
+  min-height: 1.75rem !important;
+  max-height: 5rem !important;
   margin: 0 !important;
-  padding: 8px 4px 8px 2px !important;
-  font-size: 13px !important;
-  line-height: 1.45 !important;
+  padding: 6px 0 !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
   color: var(--skyroom-panel-text, #eef4fb) !important;
   background: transparent !important;
   border: none !important;
@@ -213,7 +256,7 @@
 }
 
 #layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer textarea::placeholder {
-  color: var(--skyroom-panel-text-dim, rgba(198, 208, 220, 0.62)) !important;
+  color: var(--skyroom-panel-text-dim, rgba(198, 208, 220, 0.55)) !important;
   opacity: 1 !important;
 }
 
@@ -222,62 +265,69 @@
   box-shadow: none !important;
 }
 
+#layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer .buttonWrapper {
+  flex: 0 0 28px !important;
+  width: 28px !important;
+  height: 28px !important;
+  margin: 0 !important;
+}
+
 #layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer .buttonWrapper > button,
 #layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer button {
-  flex: 0 0 auto !important;
-  width: 34px !important;
-  height: 34px !important;
-  min-width: 34px !important;
-  min-height: 34px !important;
+  flex: 0 0 28px !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
   margin: 0 !important;
   padding: 0 !important;
   border: none !important;
-  border-radius: 10px !important;
-  background: var(--skyroom-gradient-primary, linear-gradient(135deg, #20c7bb 0%, #0d887e 100%)) !important;
-  box-shadow: 0 2px 8px rgba(13, 136, 126, 0.28) !important;
+  border-radius: 8px !important;
+  background: rgba(32, 199, 187, 0.18) !important;
+  box-shadow: none !important;
   transform: none !important;
 }
 
 #layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer .buttonWrapper > button:hover,
 #layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer button:hover {
-  filter: brightness(1.06) !important;
-  box-shadow: 0 4px 12px rgba(13, 136, 126, 0.32) !important;
+  background: var(--skyroom-gradient-primary, linear-gradient(135deg, #20c7bb 0%, #0d887e 100%)) !important;
+  box-shadow: 0 2px 8px rgba(13, 136, 126, 0.25) !important;
+  filter: none !important;
 }
 
 #layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer .buttonWrapper > button > span,
 #layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer button > span {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  height: 28px !important;
   margin: 0 !important;
   padding: 0 !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
+  color: var(--skyroom-panel-accent, #20c7bb) !important;
+  font-size: 0 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer .buttonWrapper > button:hover > span,
+#layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer button:hover > span {
   color: #fff !important;
 }
 
 #layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer i,
 #layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer i::before {
-  color: #fff !important;
+  color: inherit !important;
+  font-size: 13px !important;
   filter: none !important;
   text-shadow: none !important;
+  transform: none !important;
 }
 
-/* --- Lobby message preview --- */
-#layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-lobby-preview {
-  margin-top: 10px !important;
-  padding: 10px 12px !important;
-  border-radius: 10px !important;
-  text-align: start !important;
-  font-size: 12px !important;
-  line-height: 1.55 !important;
-  font-style: normal !important;
-  color: var(--skyroom-panel-text-muted, rgba(210, 224, 238, 0.82)) !important;
-  background: rgba(0, 0, 0, 0.22) !important;
-  border: 1px solid rgba(255, 255, 255, 0.06) !important;
-  border-inline-start: 3px solid var(--skyroom-panel-accent, #20c7bb) !important;
-}
-
-#layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-lobby-preview span {
-  color: inherit !important;
+[dir="rtl"] #layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer i,
+[dir="rtl"] #layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer i::before {
+  transform: scale(-1, 1) !important;
 }
 
 /* --- Section titles --- */

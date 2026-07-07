@@ -23,6 +23,12 @@ import {
 import browserInfo from '/imports/utils/browserInfo';
 import Header from '/imports/ui/components/common/control-header/component';
 import TextInput from '/imports/ui/components/text-input/component';
+import {
+  isSkyroomColumnLayout,
+  isSkyroomMobileViewport,
+  openSkyroomMobileBox,
+  returnToSkyroomPublicChat,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 import renderNoUserWaitingItem from './guest-items/noPendingGuestUser';
 import renderPendingUsers from './guest-items/guestPendingUser';
 import logger from '/imports/startup/client/logger';
@@ -229,6 +235,18 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
     });
   }, [layoutContextDispatch, onClose]);
 
+  const navigateBackToPublicChat = useCallback(() => {
+    if (isSkyroomColumnLayout()) {
+      if (isSkyroomMobileViewport()) {
+        openSkyroomMobileBox(layoutContextDispatch, 'chat');
+      } else {
+        returnToSkyroomPublicChat(layoutContextDispatch);
+      }
+      return;
+    }
+    closePanel();
+  }, [layoutContextDispatch, closePanel]);
+
   const onCheckBoxChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { checked } = e.target;
     setRememberChoice(checked);
@@ -337,31 +355,10 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
     ? Styled.ScrollableArea
     : Styled.SkyroomScrollArea;
 
-  const panelContent = (
-    <ScrollBody
-      className="skyroom-gw-scroll"
-      data-skyroom-guest-waiting-scroll="true"
-    >
-      {isGuestLobbyMessageEnabled ? (
-        <Styled.LobbyMessage data-test="lobbyMessage" data-skyroom-section="broadcast">
-          <Styled.SkyroomLobbyComposer className="skyroom-gw-composer">
-            <TextInput
-              maxLength={128}
-              placeholder={intl.formatMessage(intlMessages.inputPlaceholder)}
-              send={setGuestLobbyMessage}
-            />
-          </Styled.SkyroomLobbyComposer>
-          <Styled.SkyroomLobbyPreview
-            className="skyroom-gw-lobby-preview"
-            data-test="lobbyMessagePreview"
-          >
-            {guestLobbyMessage && guestLobbyMessage !== ''
-              // eslint-disable-next-line react/no-danger
-              ? <span dangerouslySetInnerHTML={{ __html: guestLobbyMessage }} />
-              : intl.formatMessage(intlMessages.emptyMessage)}
-          </Styled.SkyroomLobbyPreview>
-        </Styled.LobbyMessage>
-      ) : null}
+  const usePinnedBroadcastFooter = presentation === 'sidebar' || presentation === 'mobile';
+
+  const moderatorAndQueueContent = (
+    <>
       <Styled.ModeratorActions data-skyroom-section="actions">
         <Styled.MainTitle>{intl.formatMessage(intlMessages.optionTitle)}</Styled.MainTitle>
         {
@@ -402,6 +399,54 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
       {!existPendingUsers && (
         renderNoUserWaitingItem(intl.formatMessage(intlMessages.noPendingUsers))
       )}
+    </>
+  );
+
+  const broadcastContent = isGuestLobbyMessageEnabled ? (
+    <Styled.LobbyMessage data-test="lobbyMessage" data-skyroom-section="broadcast">
+      <Styled.SkyroomLobbyPreview
+        className="skyroom-gw-lobby-preview"
+        data-test="lobbyMessagePreview"
+      >
+        {guestLobbyMessage && guestLobbyMessage !== ''
+          // eslint-disable-next-line react/no-danger
+          ? <span dangerouslySetInnerHTML={{ __html: guestLobbyMessage }} />
+          : intl.formatMessage(intlMessages.emptyMessage)}
+      </Styled.SkyroomLobbyPreview>
+      <Styled.SkyroomLobbyComposer
+        className="skyroom-gw-composer"
+        data-test="skyroomGuestLobbyComposer"
+      >
+        <TextInput
+          maxLength={128}
+          placeholder={intl.formatMessage(intlMessages.inputPlaceholder)}
+          send={setGuestLobbyMessage}
+        />
+      </Styled.SkyroomLobbyComposer>
+    </Styled.LobbyMessage>
+  ) : null;
+
+  const panelContent = usePinnedBroadcastFooter ? (
+    <>
+      <ScrollBody
+        className="skyroom-gw-scroll"
+        data-skyroom-guest-waiting-scroll="true"
+      >
+        {moderatorAndQueueContent}
+      </ScrollBody>
+      {broadcastContent ? (
+        <Styled.SkyroomLobbyFooter className="skyroom-gw-broadcast-footer">
+          {broadcastContent}
+        </Styled.SkyroomLobbyFooter>
+      ) : null}
+    </>
+  ) : (
+    <ScrollBody
+      className="skyroom-gw-scroll"
+      data-skyroom-guest-waiting-scroll="true"
+    >
+      {broadcastContent}
+      {moderatorAndQueueContent}
     </ScrollBody>
   );
 
@@ -415,7 +460,7 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
       {presentation === 'sidebar' ? (
         <Header
           leftButtonProps={{
-            onClick: () => closePanel(),
+            onClick: () => navigateBackToPublicChat(),
             label: intl.formatMessage(intlMessages.title),
           }}
           rightButtonProps={null}
