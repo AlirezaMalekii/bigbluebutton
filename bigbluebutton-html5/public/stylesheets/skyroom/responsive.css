@@ -632,8 +632,18 @@
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] {
-    --skyroom-presentation-toolbar-h: 24px;
-    --skyroom-wb-toolbar-gap: calc(var(--skyroom-presentation-toolbar-h, 24px) + 4px);
+    --skyroom-presentation-toolbar-h: 18px;
+    --skyroom-wb-toolbar-gap: 2px;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbar"] {
+    z-index: 1001 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationInnerWrapper:has(.tlui-menu[data-state="open"]),
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationInnerWrapper:has(.tlui-popover__content[data-state="open"]),
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationInnerWrapper:has([role="dialog"][data-state="open"]) {
+    z-index: 1006 !important;
   }
 
   #layout[data-skyroom-column="true"] #presentationToolbarWrapper,
@@ -651,10 +661,15 @@
     box-sizing: border-box !important;
     width: 100% !important;
     max-width: 100% !important;
-    padding-inline: 4px !important;
+    padding-inline: 3px !important;
     gap: 0 !important;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
-    min-height: 24px !important;
+    min-height: 18px !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] {
+    min-height: var(--skyroom-presentation-toolbar-h, 18px) !important;
+    padding-block: 0 !important;
   }
 
   #layout[data-skyroom-column="true"] [class*="QuickPollButtonWrapper"],
@@ -670,19 +685,20 @@
 
   /* Compact slide/zoom control buttons so the three clusters fit ~360px */
   #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] button > span:first-child {
-    min-width: 18px !important;
-    min-height: 18px !important;
-    width: 18px !important;
-    height: 18px !important;
+    min-width: 14px !important;
+    min-height: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
     padding: 0 !important;
   }
 
   #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] select,
   #layout[data-skyroom-column="true"] [class*="SkipSlideSelect"] {
-    min-height: 20px !important;
-    height: 20px !important;
-    font-size: 0.62rem !important;
+    min-height: 16px !important;
+    height: 16px !important;
+    font-size: 0.54rem !important;
     padding-block: 0 !important;
+    padding-inline: 2px !important;
   }
 
   #layout[data-skyroom-column="true"] [data-test="fitToWidthButton"] {
@@ -749,11 +765,13 @@
     overflow: visible !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element [role="dialog"][data-state="open"]:has(.tlui-style-panel),
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content[data-state="open"]:has(.tlui-style-panel),
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu[data-state="open"]:has(.tlui-buttons__grid),
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu[data-skyroom-more-menu-anchored="true"] {
-    z-index: 1105 !important;
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu[data-skyroom-toolbar-popover-anchored="true"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu[data-skyroom-more-menu-anchored="true"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element [role="dialog"][data-state="open"]:has(.tlui-style-panel) {
+    z-index: 1500 !important;
+    position: fixed !important;
     max-width: min(13.5rem, 78vw) !important;
     max-height: min(34vh, calc(100vh - var(--skyroom-footer-h, 56px) - 120px)) !important;
     overflow: auto !important;
@@ -1324,20 +1342,55 @@
   /* ---- Mic / audio settings modal: compact so it fits without scrolling ---- */
   html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="Form"] {
     grid-template-columns: 1fr !important;
-    row-gap: 10px !important;
+    row-gap: 8px !important;
     column-gap: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
   }
 
   html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="LabelSmall"],
   html[data-skyroom="true"] [data-test="audioSettingsModal"] label {
-    font-size: 0.78rem !important;
-    margin-bottom: 2px !important;
+    font-size: 0.74rem !important;
+    margin-bottom: 1px !important;
   }
 
   html[data-skyroom="true"] [data-test="audioSettingsModal"] select,
   html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="Select"] {
-    min-height: 38px !important;
-    padding: 6px 10px !important;
+    min-height: 34px !important;
+    padding: 5px 8px !important;
+    font-size: 0.78rem !important;
+  }
+
+  html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="AudioNote"] {
+    margin-bottom: 0.35rem !important;
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
+  }
+
+  html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"] {
+    margin-top: 0.5rem !important;
+    padding-top: 0.35rem !important;
+  }
+
+  /* Audio settings view — taller card so mic/speaker/test fit without scroll */
+  html[data-skyroom="true"] [data-test="audioModal"]:has([data-test="audioSettingsModal"]).ReactModal__Content {
+    width: min(92vw, 340px) !important;
+    min-width: 0 !important;
+    max-width: min(92vw, 340px) !important;
+    max-height: min(92dvh, 580px) !important;
+    padding: 12px 12px 14px !important;
+  }
+
+  html[data-skyroom="true"] [data-test="audioModal"]:has([data-test="audioSettingsModal"]) [class*="Content"] {
+    overflow-y: visible !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    padding: 0 !important;
+  }
+
+  html[data-skyroom="true"] [data-test="audioModal"]:has([data-test="audioSettingsModal"]) [class*="Header"] {
+    margin-bottom: 0.25rem !important;
+    font-size: 0.85rem !important;
   }
 
   /* Audio choice modal (mic vs listen-only) — centered compact card on phone */
@@ -1803,13 +1856,13 @@
      Compact top chrome on phone; bottom toolbar stays touch-friendly.
      =================================================================== */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] {
-    --skyroom-wb-btn-size: 26px;
-    --skyroom-wb-scale: clamp(0.68, calc(var(--skyroom-stage-width-num, 820) / 820), 1);
-    --skyroom-wb-popover-scale: calc(0.76 * var(--skyroom-wb-scale, 1));
+    --skyroom-wb-btn-size: 22px;
+    --skyroom-wb-scale: clamp(0.62, calc(var(--skyroom-stage-width-num, 820) / 820), 0.92);
+    --skyroom-wb-popover-scale: calc(0.72 * var(--skyroom-wb-scale, 1));
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__inner {
-    transform: scale(calc(0.92 * var(--skyroom-wb-scale, 1))) !important;
+    transform: scale(calc(0.78 * var(--skyroom-wb-scale, 1))) !important;
     transform-origin: bottom center !important;
   }
 
@@ -1985,11 +2038,11 @@
     display: none !important;
   }
 
-  /* Open toolbar popovers sit above canvas and corner chrome. */
+  /* Open toolbar popovers sit above canvas, corner chrome, and slide bar. */
   #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content[data-state="open"],
   #layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"][data-state="open"],
   #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu[data-state="open"] {
-    z-index: 1105 !important;
+    z-index: 1500 !important;
   }
 
   /* ===================================================================

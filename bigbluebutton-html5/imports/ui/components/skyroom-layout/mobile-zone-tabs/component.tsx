@@ -86,7 +86,11 @@ const SkyroomMobileZoneTabs: React.FC = () => {
   const notesEnabled = useIsSharedNotesEnabled();
   const { data: meeting } = useMeeting((m: {
     componentsFlags?: { hasBreakoutRoom?: boolean };
-  }) => ({ componentsFlags: m.componentsFlags }));
+    usersPolicies?: { guestPolicy?: string };
+  }) => ({
+    componentsFlags: m.componentsFlags,
+    usersPolicies: m.usersPolicies,
+  }));
   const { data: currentUser } = useCurrentUser((u) => ({
     isModerator: u.isModerator,
     breakoutRoomsSummary: u.breakoutRoomsSummary,
@@ -147,7 +151,13 @@ const SkyroomMobileZoneTabs: React.FC = () => {
   const hasBreakoutRoom = Boolean(meeting?.componentsFlags?.hasBreakoutRoom);
   const hasBreakoutInvite = (currentUser?.breakoutRoomsSummary?.totalOfJoinURL ?? 0) > 0;
   const showBreakout = hasBreakoutRoom && (Boolean(currentUser?.isModerator) || hasBreakoutInvite);
-  const showWaiting = Boolean(currentUser?.isModerator) && guestCount > 0;
+  const { usersPolicies } = meeting ?? {};
+  const isAskModeratorPolicy = usersPolicies?.guestPolicy === 'ASK_MODERATOR';
+  const showWaiting = Boolean(currentUser?.isModerator) && (
+    guestCount > 0 || (
+      window.meetingClientSettings.public.app.alwaysShowWaitingRoomUI && isAskModeratorPolicy
+    )
+  );
 
   const tabs: { key: TabKey; icon: string; label: string }[] = [
     showWebcams ? { key: 'webcams', icon: 'video', label: intl.formatMessage(messages.webcams) } : null,

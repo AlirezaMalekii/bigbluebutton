@@ -288,7 +288,7 @@
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu[data-state="open"],
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element [role="dialog"][data-state="open"] {
   pointer-events: auto !important;
-  z-index: 1105 !important;
+  z-index: 1500 !important;
 }
 
 #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content,

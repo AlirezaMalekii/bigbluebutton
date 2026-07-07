@@ -30,7 +30,7 @@ export const getSkyroomMobileWbToolbarReserve = () => {
   if (!layoutEl) return 34;
   const styles = getComputedStyle(layoutEl);
   const scale = parseFloat(styles.getPropertyValue('--skyroom-wb-scale')) || 0.68;
-  return Math.ceil(36 * scale * 0.92) + 2;
+  return Math.ceil(30 * scale * 0.88) + 2;
 };
 
 /** True during bootstrap before #layout mounts (see main.html data-skyroom). */

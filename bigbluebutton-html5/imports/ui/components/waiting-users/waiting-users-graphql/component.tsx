@@ -357,25 +357,8 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
 
   const usePinnedBroadcastFooter = presentation === 'sidebar' || presentation === 'mobile';
 
-  const moderatorAndQueueContent = (
+  const queueContent = (
     <>
-      <Styled.ModeratorActions data-skyroom-section="actions">
-        <Styled.MainTitle>{intl.formatMessage(intlMessages.optionTitle)}</Styled.MainTitle>
-        {
-          buttonsData.map((btData: ButtonData) => renderButton(
-            intl.formatMessage(btData.messageId),
-            btData,
-          ))
-        }
-        {allowRememberChoice ? (
-          <Styled.RememberContainer>
-            <input id="rememberCheckboxId" type="checkbox" onChange={onCheckBoxChange} />
-            <label htmlFor="rememberCheckboxId">
-              {intl.formatMessage(intlMessages.rememberChoice)}
-            </label>
-          </Styled.RememberContainer>
-        ) : null}
-      </Styled.ModeratorActions>
       {renderPendingUsers(
         intl.formatMessage(intlMessages.pendingUsers,
           { usersCount: authedGuestUsers.length }),
@@ -399,6 +382,33 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
       {!existPendingUsers && (
         renderNoUserWaitingItem(intl.formatMessage(intlMessages.noPendingUsers))
       )}
+    </>
+  );
+
+  const moderatorActionsContent = (
+    <Styled.ModeratorActions data-skyroom-section="actions">
+      <Styled.MainTitle>{intl.formatMessage(intlMessages.optionTitle)}</Styled.MainTitle>
+      {
+        buttonsData.map((btData: ButtonData) => renderButton(
+          intl.formatMessage(btData.messageId),
+          btData,
+        ))
+      }
+      {allowRememberChoice ? (
+        <Styled.RememberContainer>
+          <input id="rememberCheckboxId" type="checkbox" onChange={onCheckBoxChange} />
+          <label htmlFor="rememberCheckboxId">
+            {intl.formatMessage(intlMessages.rememberChoice)}
+          </label>
+        </Styled.RememberContainer>
+      ) : null}
+    </Styled.ModeratorActions>
+  );
+
+  const scrollMainContent = (
+    <>
+      {queueContent}
+      {moderatorActionsContent}
     </>
   );
 
@@ -432,7 +442,7 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
         className="skyroom-gw-scroll"
         data-skyroom-guest-waiting-scroll="true"
       >
-        {moderatorAndQueueContent}
+        {scrollMainContent}
       </ScrollBody>
       {broadcastContent ? (
         <Styled.SkyroomLobbyFooter className="skyroom-gw-broadcast-footer">
@@ -445,8 +455,8 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
       className="skyroom-gw-scroll"
       data-skyroom-guest-waiting-scroll="true"
     >
+      {scrollMainContent}
       {broadcastContent}
-      {moderatorAndQueueContent}
     </ScrollBody>
   );
 
@@ -457,7 +467,7 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
       isChrome={isChrome}
       $presentation={presentation}
     >
-      {presentation === 'sidebar' ? (
+      {(presentation === 'sidebar' || presentation === 'mobile') ? (
         <Header
           leftButtonProps={{
             onClick: () => navigateBackToPublicChat(),
@@ -468,11 +478,6 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
           customRightButton={null}
           x="guestUsersManagementPanel"
         />
-      ) : null}
-      {presentation === 'mobile' ? (
-        <Styled.MobileHeader data-test="guestUsersManagementPanel">
-          <h2>{intl.formatMessage(intlMessages.title)}</h2>
-        </Styled.MobileHeader>
       ) : null}
       {panelContent}
     </Styled.Panel>
