@@ -189,6 +189,9 @@ needs_heavy_toolchain() {
 
 preflight() {
   log "Preflight in $BBB_ROOT"
+  if [[ -f "$BBB_ROOT/scripts/deploy-server-cleanup.sh" ]]; then
+    bash "$BBB_ROOT/scripts/deploy-server-cleanup.sh"
+  fi
   command -v java >/dev/null || { echo "java not found"; exit 1; }
   command -v npm >/dev/null || { echo "npm not found"; exit 1; }
   [[ -d "$BBB_ROOT" ]] || { echo "BBB_ROOT missing: $BBB_ROOT"; exit 1; }

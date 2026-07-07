@@ -81,8 +81,12 @@ if $SAFARI; then
   cd ..
 fi
 
-echo "Copying dist/* to /usr/share/bigbluebutton/html5-client/..."
-sudo cp -rf dist/* /usr/share/bigbluebutton/html5-client/
+echo "Syncing dist/ to /usr/share/bigbluebutton/html5-client/ (prune stale assets, keep private/) ..."
+HTML5_DEST="/usr/share/bigbluebutton/html5-client"
+sudo mkdir -p "$HTML5_DEST"
+sudo rsync -a --delete \
+  --exclude 'private/' \
+  dist/ "$HTML5_DEST/"
 
 echo "Switching nginx config to static and restarting nginx..."
 sudo ln -sf /usr/share/bigbluebutton/nginx/bbb-html5.nginx.static /usr/share/bigbluebutton/nginx/bbb-html5.nginx

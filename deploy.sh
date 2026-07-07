@@ -251,10 +251,11 @@ rsync -az \
   -e "$(ssh_rsh)" \
   "${SCRIPT_DIR}/scripts/deploy-remote.sh" \
   "${SCRIPT_DIR}/scripts/deploy-server-prerequisites.sh" \
+  "${SCRIPT_DIR}/scripts/deploy-server-cleanup.sh" \
   "${SCRIPT_DIR}/scripts/deploy-detect-components.sh" \
   "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_DIR}/scripts/"
 
-ssh_cmd "chmod +x '${REMOTE_DIR}/scripts/deploy-remote.sh' '${REMOTE_DIR}/scripts/deploy-detect-components.sh'"
+ssh_cmd "chmod +x '${REMOTE_DIR}/scripts/deploy-remote.sh' '${REMOTE_DIR}/scripts/deploy-detect-components.sh' '${REMOTE_DIR}/scripts/deploy-server-cleanup.sh'"
 
 DEPLOY_MODE="full"
 DEPLOY_COMPONENTS=""
