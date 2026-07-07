@@ -647,6 +647,11 @@
     transform: none !important;
   }
 
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar [data-test="raiseHandBtn"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar [data-test="lowerHandBtn"] {
+    transform: translateX(-4px) !important;
+  }
+
   /* ===================================================================
      4) Whiteboard slide-nav toolbar — fit the narrow stage, no clipping.
      In RTL the zoom cluster (fit-width) lands in column 1 visually; keep
@@ -666,9 +671,9 @@
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] {
-    --skyroom-presentation-toolbar-h: 14px;
+    --skyroom-presentation-toolbar-h: 20px;
     --skyroom-wb-toolbar-h: 32px;
-    --skyroom-wb-toolbar-gap: calc(var(--skyroom-presentation-toolbar-h) + 2px);
+    --skyroom-wb-toolbar-gap: 0px;
   }
 
   #layout[data-skyroom-column="true"] #presentationToolbarWrapper,
@@ -724,6 +729,7 @@
     padding-inline: 4px !important;
     gap: 0 !important;
     grid-template-columns: minmax(0, 1fr) auto minmax(40px, 1fr) !important;
+    align-items: center !important;
   }
 
   [dir="rtl"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] {
@@ -747,10 +753,10 @@
 
   /* Compact slide/zoom control buttons — mobile only */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button > span:first-child {
-    min-width: 12px !important;
-    min-height: 12px !important;
-    width: 12px !important;
-    height: 12px !important;
+    min-width: 16px !important;
+    min-height: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
     padding: 0 !important;
     box-shadow: none !important;
     border-width: 0 !important;
@@ -758,10 +764,10 @@
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] select,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="SkipSlideSelect"] {
-    min-height: 14px !important;
-    height: 14px !important;
-    max-height: 14px !important;
-    font-size: 0.52rem !important;
+    min-height: 18px !important;
+    height: 18px !important;
+    max-height: 18px !important;
+    font-size: 0.58rem !important;
     line-height: 1 !important;
     padding-block: 0 !important;
     padding-inline: 2px !important;
@@ -772,9 +778,9 @@
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] i,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] [class^="icon-bbb-"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] svg {
-    font-size: 0.62rem !important;
-    width: 10px !important;
-    height: 10px !important;
+    font-size: 0.68rem !important;
+    width: 11px !important;
+    height: 11px !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="fitToWidthButton"] {

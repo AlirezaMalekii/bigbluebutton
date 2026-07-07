@@ -320,7 +320,11 @@
   right: calc(50% + 92px) !important;
 }
 
-#skyroom-wb-popover-portal,
+#skyroom-wb-popover-portal {
+  z-index: 1200 !important;
+  pointer-events: none !important;
+}
+
 #skyroom-wb-popover-portal [data-skyroom-popover-anchored="true"],
 #skyroom-wb-popover-portal .tlui-popover__content[data-state="open"],
 #skyroom-wb-popover-portal .tlui-menu[data-state="open"],

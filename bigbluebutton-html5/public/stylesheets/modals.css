@@ -46,15 +46,15 @@
 }
 
 .modal-low {
-  z-index: 1001;
+  z-index: 1300;
 }
 
 .modal-medium {
-  z-index: 1002;
+  z-index: 1310;
 }
 
 .modal-high {
-  z-index: 1003;
+  z-index: 1320;
 }
 
 /* Within a same priority, hide all but first (FIFO) */
