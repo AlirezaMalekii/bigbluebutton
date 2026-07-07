@@ -102,15 +102,11 @@ class ModalController {
       if (!m) return prev;
 
       const isFirstOpenAsk = desired && !m.desiredOpen;
-      const nextRequestedSeq = isFirstOpenAsk ? this.requestSeq + 1 : m.requestedSeq;
-      if (isFirstOpenAsk) {
-        this.requestSeq = nextRequestedSeq;
-      }
       const nextM: ModalRegistration = {
         ...m,
         desiredOpen: desired,
         requestedAt: isFirstOpenAsk ? Date.now() : m.requestedAt,
-        requestedSeq: nextRequestedSeq,
+        requestedSeq: isFirstOpenAsk ? this.requestSeq + 1 : m.requestedSeq,
       };
 
       return this.compute(prev, { byKey: { ...prev.byKey, [uniqueId]: nextM } });
@@ -184,8 +180,15 @@ class ModalController {
   }
 }
 
+// Singleton instance using static weights
 export const controller = new ModalController(PRIORITY_WEIGHTS);
 
+/**
+ * useModalRegistration
+ *
+ * Hook to connect a React component (modal) with the ModalController.
+ * Each hook call creates its own modal instance (even if `id` matches another instance).
+ */
 export function useModalRegistration({
   id,
   priority = 'normal',
@@ -203,7 +206,6 @@ export function useModalRegistration({
   setPriority: (p: ModalPriority) => void;
 } {
   const uniqueRef = useRef<string | null>(null);
-  const previousFocusRef = useRef<Element | null>(null);
 
   useEffect(() => {
     const uniqueId = controller.register(id, priority);
@@ -219,19 +221,11 @@ export function useModalRegistration({
   const my = uniqueId ? slice.byKey[uniqueId] : undefined;
 
   const open = useCallback(() => {
-    previousFocusRef.current = document.activeElement;
     if (uniqueRef.current) controller.setDesiredOpen(uniqueRef.current, true);
   }, []);
 
   const close = useCallback(() => {
     if (uniqueRef.current) controller.setDesiredOpen(uniqueRef.current, false);
-    const el = previousFocusRef.current as HTMLElement | null;
-    previousFocusRef.current = null;
-    if (el && typeof el.focus === 'function' && document.body.contains(el)) {
-      window.setTimeout(() => {
-        el.focus();
-      }, 0);
-    }
   }, []);
 
   const setMyPriority = useCallback((p: ModalPriority) => {
@@ -250,6 +244,10 @@ export function useModalRegistration({
   } as const;
 }
 
+/**
+ * ModalRegistration (render-prop component)
+ * Allows usage in class components or JSX without hooks.
+ */
 type ModalRegistrationProps = {
   id: string;
   priority?: ModalPriority;
@@ -265,6 +263,10 @@ export const ModalRegistration: React.FC<ModalRegistrationProps> = ({ id, priori
   );
 };
 
+/**
+ * withModalRegistration (HOC)
+ * Wraps a component and injects modal controls as props.
+ */
 export function withModalRegistration<P extends object>(
   Wrapped: React.ComponentType<P & ReturnType<typeof useModalRegistration>>,
   id: string,

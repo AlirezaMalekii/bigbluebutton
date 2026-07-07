@@ -25,10 +25,7 @@ import {
 import {
   GET_WELCOME_MESSAGE,
 } from '/imports/ui/components/session-details/queries';
-import {
-  getFormattedDialIn,
-  hasDisplayableSessionDetails,
-} from '/imports/ui/components/session-details/utils';
+import { hasDisplayableSessionDetails } from '/imports/ui/components/session-details/utils';
 
 const intlMessages = defineMessages({
   defaultViewLabel: {
@@ -72,10 +69,8 @@ const NavBarContainer = ({ children, ...props }) => {
 
   const { data: currentUserData } = useCurrentUser((user) => ({
     isModerator: user.isModerator,
-    breakoutRoomsSummary: user.breakoutRoomsSummary,
   }));
   const amIModerator = currentUserData?.isModerator;
-  const hasBreakoutInvitation = (currentUserData?.breakoutRoomsSummary?.totalOfJoinURL ?? 0) > 0;
 
   const isExpanded = !!sidebarContentPanel || !!sidebarNavPanel;
 
@@ -101,38 +96,21 @@ const NavBarContainer = ({ children, ...props }) => {
   const { data: meeting } = useMeeting((m) => ({
     name: m.name,
     meetingId: m.meetingId,
-    isBreakout: m.isBreakout,
-    componentsFlags: m.componentsFlags,
-    loginUrl: m.loginUrl,
-    voiceSettings: m.voiceSettings,
     breakoutPolicies: {
       sequence: m.breakoutPolicies.sequence,
     },
   }));
-
-  const hasBreakoutRooms = meeting?.componentsFlags?.hasBreakoutRoom ?? false;
-  const showBreakoutToggle = Boolean(
-    isSkyroomColumnLayout()
-    && !meeting?.isBreakout
-    && hasBreakoutRooms
-    && (amIModerator || hasBreakoutInvitation),
-  );
 
   const { data: welcomeData } = useQuery(GET_WELCOME_MESSAGE);
 
   const hasSessionDetails = useMemo(() => {
     const welcomeMessage = welcomeData?.user_welcomeMsgs?.[0]?.welcomeMsg ?? '';
     const welcomeMsgForModerators = welcomeData?.user_welcomeMsgs?.[0]?.welcomeMsgForModerators ?? '';
-    const { formattedDialNum, formattedTelVoice } = getFormattedDialIn(meeting?.voiceSettings);
-    const loginUrl = amIModerator ? (meeting?.loginUrl ?? '') : '';
     return hasDisplayableSessionDetails({
       welcome: welcomeMessage,
       welcomeForModerators: welcomeMsgForModerators,
-      loginUrl,
-      formattedDialNum,
-      formattedTelVoice,
     });
-  }, [welcomeData, meeting?.loginUrl, meeting?.voiceSettings, amIModerator]);
+  }, [welcomeData]);
 
   if (meeting) {
     meetingTitle = meeting.name;
@@ -187,7 +165,6 @@ const NavBarContainer = ({ children, ...props }) => {
         hideTopRow: navBar.hideTopRow,
         showSessionDetailsOnJoin: SHOW_SESSION_DETAILS_ON_JOIN,
         hasSessionDetails,
-        showBreakoutToggle,
         ...props,
       }}
       style={{ ...navBar }}

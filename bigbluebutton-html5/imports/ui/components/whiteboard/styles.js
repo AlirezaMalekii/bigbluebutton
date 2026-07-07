@@ -19,8 +19,8 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     .tlui-style-panel__wrapper {
       visibility: hidden;
     }
-    #WhiteboardOptionButton .skyroom-wb-action-btn:not([data-test="toolVisibility"]) {
-      display: none !important;
+    #WhiteboardOptionButton {
+      opacity: 0.2;
     }
   `}
 
@@ -219,7 +219,7 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     }
 
     .tlui-button__tool:hover {
-      background: var(--skyroom-accent-hover-bg, rgba(32, 199, 187, 0.14)) !important;
+      background: rgba(32, 199, 187, 0.14) !important;
     }
 
     .tl-container {
@@ -234,7 +234,7 @@ const TldrawV2GlobalStyle = createGlobalStyle`
 
     .tlui-button__tool[data-state="selected"]:not(:disabled)::after,
     .tlui-button__tool[aria-pressed="true"]:not(:disabled)::after {
-      background: var(--skyroom-accent-soft, rgba(32, 199, 187, 0.38)) !important;
+      background: rgba(32, 199, 187, 0.38) !important;
       opacity: 1 !important;
     }
 

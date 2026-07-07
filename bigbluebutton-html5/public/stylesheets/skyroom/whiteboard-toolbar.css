@@ -61,7 +61,7 @@
   color: #e8edf4;
   background:
     linear-gradient(165deg, rgba(28, 40, 62, 0.95) 0%, rgba(16, 24, 40, 0.92) 100%);
-  border: 1px solid var(--skyroom-accent-border, rgba(32, 199, 187, 0.36));
+  border: 1px solid rgba(20, 169, 158, 0.32);
   box-shadow:
     0 6px 18px rgba(0, 0, 0, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -69,20 +69,14 @@
 }
 
 #WhiteboardOptionButton .skyroom-wb-action-btn:hover {
-  border-color: var(--skyroom-accent, #20c7bb);
+  border-color: var(--skyroom-accent-border, rgba(32, 199, 187, 0.55));
   background:
-    linear-gradient(165deg, var(--skyroom-accent-hover-bg, rgba(32, 199, 187, 0.14)) 0%, rgba(16, 24, 40, 0.95) 100%);
-  box-shadow:
-    0 6px 18px rgba(0, 0, 0, 0.35),
-    0 0 0 2px var(--skyroom-accent-glow, rgba(32, 199, 187, 0.10)),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    linear-gradient(165deg, var(--skyroom-accent-hover-bg, rgba(32, 199, 187, 0.22)) 0%, rgba(16, 24, 40, 0.95) 100%);
   transform: translateY(-1px);
 }
 
 #WhiteboardOptionButton .skyroom-wb-action-btn:active {
   transform: translateY(0);
-  background:
-    linear-gradient(165deg, rgba(13, 136, 126, 0.28) 0%, rgba(16, 24, 40, 0.95) 100%);
 }
 
 #WhiteboardOptionButton .skyroom-wb-action-btn:focus-visible {
@@ -90,24 +84,8 @@
   outline-offset: 2px;
 }
 
-#WhiteboardOptionButton .skyroom-wb-action-btn--active {
-  border-color: var(--skyroom-accent, #20c7bb);
-  background: var(--skyroom-accent-active-bg, linear-gradient(145deg, rgba(13, 136, 126, 0.88), rgba(10, 111, 103, 0.92)));
-  color: #ffffff;
-  box-shadow:
-    0 6px 18px rgba(0, 0, 0, 0.35),
-    0 0 0 2px var(--skyroom-accent-glow, rgba(32, 199, 187, 0.10)),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
-}
-
-#WhiteboardOptionButton .skyroom-wb-action-btn--active:hover {
-  border-color: var(--skyroom-brand-300, #3fc2b8);
-  background: var(--skyroom-accent-active-bg, linear-gradient(145deg, rgba(13, 136, 126, 0.88), rgba(10, 111, 103, 0.92)));
-  transform: translateY(-1px);
-}
-
 #WhiteboardOptionButton .skyroom-wb-action-btn--danger:hover {
-  border-color: var(--skyroom-danger-border, rgba(223, 39, 33, 0.38));
+  border-color: rgba(255, 106, 102, 0.55);
   background: linear-gradient(165deg, rgba(223, 39, 33, 0.28) 0%, rgba(16, 24, 40, 0.95) 100%);
 }
 
@@ -178,19 +156,9 @@
   padding-bottom: 0 !important;
 }
 
-#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__bottom {
-  bottom: var(--skyroom-wb-toolbar-gap) !important;
-  z-index: 1004 !important;
-}
-
 /* Show/hide pen toolbar — the top-right "toolVisibility" toggle sets
    data-skyroom-toolbar-hidden on #layout (presentation/component.jsx). Desktop + mobile. */
 #layout[data-skyroom-column="true"][data-skyroom-toolbar-hidden="true"] #whiteboard-element .tlui-layout__bottom {
-  display: none !important;
-}
-
-/* When toolbar is hidden, keep only the visibility toggle; hide action chips. */
-#layout[data-skyroom-column="true"][data-skyroom-toolbar-hidden="true"] #WhiteboardOptionButton .skyroom-wb-action-btn:not([data-test="toolVisibility"]) {
   display: none !important;
 }
 #layout[data-skyroom-column="true"] #whiteboard-element .tlui-layout__bottom .tlui-toolbar {
@@ -239,14 +207,9 @@
   color: #fff !important;
 }
 
-#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__tool:hover:not(:disabled)::after {
-  background: var(--skyroom-accent-hover-bg, rgba(32, 199, 187, 0.14)) !important;
-  opacity: 1 !important;
-}
-
 #layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__tool[data-state="selected"]:not(:disabled)::after,
 #layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__tool[aria-pressed="true"]:not(:disabled)::after {
-  background: var(--skyroom-accent-soft, rgba(32, 199, 187, 0.38)) !important;
+  background: rgba(32, 199, 187, 0.38) !important;
   opacity: 1 !important;
 }
 
@@ -320,25 +283,12 @@
   right: calc(50% + 92px) !important;
 }
 
-#skyroom-wb-popover-portal {
-  z-index: 1200 !important;
-  pointer-events: none !important;
-}
-
-#skyroom-wb-popover-portal [data-skyroom-popover-anchored="true"],
-#skyroom-wb-popover-portal .tlui-popover__content[data-state="open"],
-#skyroom-wb-popover-portal .tlui-menu[data-state="open"],
-#skyroom-wb-popover-portal [role="dialog"][data-state="open"] {
-  z-index: 1201 !important;
-  pointer-events: auto !important;
-}
-
 /* TLDraw toolbar popovers — Radix positions them (side=top) inside .tl-container. */
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content[data-state="open"],
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu[data-state="open"],
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element [role="dialog"][data-state="open"] {
   pointer-events: auto !important;
-  z-index: 1201 !important;
+  z-index: 1105 !important;
 }
 
 #layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content,

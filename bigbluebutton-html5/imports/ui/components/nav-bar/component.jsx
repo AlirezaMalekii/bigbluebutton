@@ -25,9 +25,7 @@ import {
   toggleSkyroomUserList,
   toggleSkyroomSharedNotesGlobally,
   toggleSkyroomSharedNotesLocally,
-  toggleSkyroomBreakout,
   isPublicChatOpen,
-  isSkyroomBreakoutOpen,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import SkyroomHeaderStatusCluster from '/imports/ui/components/skyroom-layout/active-poll-summary/SkyroomHeaderStatusCluster';
 import LeaveMeetingButtonContainer from './leave-meeting-button/container';
@@ -55,11 +53,6 @@ const intlMessages = defineMessages({
   toggleSharedNotesLabel: {
     id: 'app.notes.title',
     description: 'Toggle shared notes panel in Skyroom layout',
-  },
-  toggleBreakoutLabel: {
-    id: 'app.breakout.manager.navToggleLabel',
-    description: 'Toggle breakout rooms panel in Skyroom layout',
-    defaultMessage: 'Breakout rooms',
   },
   newMessages: {
     id: 'app.navBar.toggleUserList.newMessages',
@@ -206,8 +199,6 @@ class NavBar extends Component {
     this.handleToggleSharedNotes = this.handleToggleSharedNotes.bind(this);
     this.splitPluginItems = this.splitPluginItems.bind(this);
     this.setModalIsOpen = () => {};
-    this.tryOpenSessionDetailsOnJoin = this.tryOpenSessionDetailsOnJoin.bind(this);
-    this.sessionDetailsDismissed = false;
   }
 
   componentDidMount() {
@@ -247,21 +238,17 @@ class NavBar extends Component {
         }
       });
     }
-
-    this.tryOpenSessionDetailsOnJoin();
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate() {
     const {
+      showSessionDetailsOnJoin,
       hasSessionDetails,
       meetingId,
     } = this.props;
-
-    if (
-      prevProps.meetingId !== meetingId
-      || (!prevProps.hasSessionDetails && hasSessionDetails)
-    ) {
-      this.tryOpenSessionDetailsOnJoin();
+    const ShownId = SessionStorage.getItem('alreadyShowSessionDetailsOnJoin');
+    if (showSessionDetailsOnJoin && hasSessionDetails && ShownId !== meetingId) {
+      this.setModalIsOpen(true);
     }
   }
 
@@ -330,18 +317,6 @@ class NavBar extends Component {
     }
   }
 
-  handleToggleBreakout() {
-    const {
-      sidebarContent,
-      layoutContextDispatch,
-    } = this.props;
-
-    if (!isSkyroomColumnLayout()) return;
-
-    toggleSkyroomBreakout(layoutContextDispatch, sidebarContent);
-    window.dispatchEvent(new Event('resize'));
-  }
-
   handleToggleSharedNotes() {
     if (!isSkyroomColumnLayout()) return;
 
@@ -357,28 +332,6 @@ class NavBar extends Component {
         layoutContextDispatch,
         isSkyroomNotesOpen() ? 'notes' : null,
       );
-    }
-  }
-
-  tryOpenSessionDetailsOnJoin() {
-    const {
-      showSessionDetailsOnJoin,
-      hasSessionDetails,
-      meetingId,
-    } = this.props;
-
-    if (
-      this.sessionDetailsDismissed
-      || !showSessionDetailsOnJoin
-      || !hasSessionDetails
-      || !meetingId
-    ) {
-      return;
-    }
-
-    const shownId = SessionStorage.getItem('alreadyShowSessionDetailsOnJoin');
-    if (String(shownId) !== String(meetingId)) {
-      this.setModalIsOpen(true);
     }
   }
 
@@ -442,7 +395,6 @@ class NavBar extends Component {
       isDirectLeaveButtonEnabled,
       isConnected,
       hideTopRow,
-      showBreakoutToggle,
     } = this.props;
 
     const hasNotification = hasUnreadMessages || (hasUnreadNotes && !isPinned);
@@ -453,9 +405,6 @@ class NavBar extends Component {
     const isUserListExpanded = sidebarNavigation.isOpen;
     const isPublicChatExpanded = isSkyroomColumnLayout()
       ? isPublicChatOpen(sidebarContent)
-      : false;
-    const isBreakoutExpanded = isSkyroomColumnLayout()
-      ? isSkyroomBreakoutOpen(sidebarContent)
       : false;
     const { isPhone } = deviceInfo;
 
@@ -539,22 +488,6 @@ class NavBar extends Component {
                   hasNotification={hasUnreadMessages}
                 />
               )}
-              {showBreakoutToggle && isSkyroomColumnLayout() && shouldShowNavBarToggleButton && (
-                <Styled.NavbarToggleButton
-                  tooltipplacement="right"
-                  onClick={this.handleToggleBreakout}
-                  color={isPhone && isBreakoutExpanded ? 'primary' : 'dark'}
-                  size="md"
-                  circle
-                  hideLabel
-                  data-test="toggleBreakoutNav"
-                  label={intl.formatMessage(intlMessages.toggleBreakoutLabel)}
-                  tooltipLabel={intl.formatMessage(intlMessages.toggleBreakoutLabel)}
-                  aria-label={intl.formatMessage(intlMessages.toggleBreakoutLabel)}
-                  icon="rooms"
-                  aria-expanded={isBreakoutExpanded}
-                />
-              )}
               {showSharedNotesToggle && (
                 <Styled.NavbarToggleButton
                   tooltipplacement="right"
@@ -606,15 +539,11 @@ class NavBar extends Component {
                   }) => {
                     this.setModalIsOpen = (value) => {
                       if (!value) {
-                        this.sessionDetailsDismissed = true;
                         const { meetingId } = this.props;
-                        if (meetingId) {
-                          SessionStorage.setItem('alreadyShowSessionDetailsOnJoin', meetingId);
-                        }
-                        close();
-                        return;
+                        SessionStorage.setItem('alreadyShowSessionDetailsOnJoin', meetingId);
                       }
-                      open();
+                      if (value) open();
+                      else close();
                     };
                     return NavBar.renderModal(isOpen, this.setModalIsOpen, 'low', SessionDetailsModal);
                   }

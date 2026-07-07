@@ -122,8 +122,12 @@ const getSkipVideoPreview = () => {
   );
 };
 
-// Takes a raw list of media devices from enumerateDevices and a deviceId
-// to prioritize. Outputs webcams, areLabelled, and areIdentified flags.
+// Takes a raw list of media devices of any media type coming enumerateDevices
+// and a deviceId to be prioritized
+// Outputs an object containing:
+//  webcams: videoinput media devices, priorityDevice first when it exists
+//  areLabelled: whether all videoinput devices are labelled
+//  areIdentified: whether all videoinput devices have deviceIds
 const digestVideoDevices = (devices, priorityDevice) => {
   const webcams = [];
   let areLabelled = true;
@@ -278,12 +282,6 @@ const doEnumerateDevices = ({ priorityDeviceId }) => navigator.mediaDevices.enum
       areIdentified,
     };
   });
-
-export const OPEN_VIDEO_PREVIEW_MODAL_EVENT = 'bbb:open-video-preview-modal';
-
-export const requestOpenVideoPreviewModal = () => {
-  window.dispatchEvent(new CustomEvent(OPEN_VIDEO_PREVIEW_MODAL_EVENT));
-};
 
 export default {
   promiseTimeout,

@@ -1038,36 +1038,3 @@
 .poll-creation-modal .recharts-cartesian-axis-tick-value {
   fill: var(--skyroom-modal-text-muted, #aab6c7) !important;
 }
-
-/* ---------------------------------------------------------------------
-   12) Modal interaction — block whiteboard pointer capture while open
-   Without this, tldraw keeps the pen cursor and eats clicks under the overlay.
-   --------------------------------------------------------------------- */
-html[data-skyroom="true"]:has(#modals-container .ReactModal__Overlay--after-open) #layout #whiteboard-element,
-html[data-skyroom="true"]:has(#modals-container .ReactModal__Overlay--after-open) #layout #whiteboard-element .tl-container,
-html[data-skyroom="true"]:has(#modals-container .ReactModal__Overlay--after-open) #layout #whiteboard-element .tl-canvas,
-html[data-skyroom="true"]:has(#modals-container .ReactModal__Overlay--after-open) #layout #whiteboard-element canvas,
-html[data-skyroom="true"] body.ReactModal__Body--open #layout #whiteboard-element,
-html[data-skyroom="true"] body.ReactModal__Body--open #layout #whiteboard-element .tl-container,
-html[data-skyroom="true"] body.ReactModal__Body--open #layout #whiteboard-element canvas {
-  pointer-events: none !important;
-  cursor: default !important;
-}
-
-html[data-skyroom="true"] #modals-container .ReactModalPortal,
-html[data-skyroom="true"] #modals-container .ReactModal__Overlay,
-html[data-skyroom="true"] #modals-container .ReactModal__Content {
-  pointer-events: auto !important;
-}
-
-html[data-skyroom="true"] #modals-container .ReactModalPortal {
-  z-index: 1400 !important;
-}
-
-html[data-skyroom="true"] #modals-container .ReactModal__Overlay {
-  z-index: 1400 !important;
-}
-
-html[data-skyroom="true"] #modals-container .ReactModal__Content {
-  z-index: 1401 !important;
-}

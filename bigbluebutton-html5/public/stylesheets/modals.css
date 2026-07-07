@@ -45,43 +45,32 @@
   z-index: 1000 !important;
 }
 
-/*
- * Stack modals above Skyroom whiteboard popovers (z-index ~1200).
- * Keep upstream class names; only raise numeric layers for this fork.
- */
-#modals-container {
-  position: relative;
-  z-index: 1400;
-}
-
 .modal-low {
-  z-index: 1300;
+  z-index: 1001;
 }
 
 .modal-medium {
-  z-index: 1310;
+  z-index: 1002;
 }
 
 .modal-high {
-  z-index: 1320;
+  z-index: 1003;
 }
 
-/* Within a same priority, hide all but first (FIFO) — only while visibly open */
-.modal-low ~ .modal-low,
-.modal-medium ~ .modal-medium,
+/* Within a same priority, hide all but first (FIFO) */
+.modal-low ~ .modal-low, 
+.modal-medium ~ .modal-medium, 
 .modal-high ~ .modal-high {
   display: none;
 }
 
-/*
- * Only suppress lower-priority stacks when a higher one is actively open
- * (avoid stale portal nodes blocking clicks on newly opened modals).
- */
-#modals-container:has(.modal-medium .ReactModal__Overlay--after-open) .modal-low,
-#modals-container:has(.modal-high .ReactModal__Overlay--after-open) .modal-low {
+/* Hide all low priority modals when a medium or high priority modals are displayed */
+#modals-container:has(.modal-medium) .modal-low, 
+#modals-container:has(.modal-high) .modal-low {
   display: none;
 }
 
-#modals-container:has(.modal-high .ReactModal__Overlay--after-open) .modal-medium {
+/* Hide all medium priority modals when a high priority modal is displayed */
+#modals-container:has(.modal-high) .modal-medium {
   display: none;
 }

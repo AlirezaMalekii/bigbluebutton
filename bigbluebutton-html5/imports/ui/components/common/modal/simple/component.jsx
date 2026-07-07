@@ -27,13 +27,8 @@ const propTypes = {
   shouldShowCloseButton: PropTypes.bool,
   overlayClassName: PropTypes.string,
   modalIsOpen: PropTypes.bool,
-  isOpen: PropTypes.bool,
   onOutsideClick: PropTypes.func,
 };
-
-const resolveModalOpenState = ({ modalIsOpen, isOpen }) => (
-  typeof modalIsOpen === 'boolean' ? modalIsOpen : Boolean(isOpen)
-);
 
 const defaultProps = {
   title: '',
@@ -59,12 +54,10 @@ class ModalSimple extends Component {
 
   componentDidMount() {
     document.addEventListener('mousedown', this.handleOutsideClick, false);
-    document.addEventListener('touchstart', this.handleOutsideClick, false);
   }
 
   componentWillUnmount() {
     document.removeEventListener('mousedown', this.handleOutsideClick, false);
-    document.removeEventListener('touchstart', this.handleOutsideClick, false);
   }
 
   handleDismiss() {
@@ -90,13 +83,12 @@ class ModalSimple extends Component {
 
   handleOutsideClick(e) {
     const {
+      modalIsOpen,
       shouldCloseOnOverlayClick,
       onOutsideClick,
     } = this.props;
-    const modalIsOpen = resolveModalOpenState(this.props);
-    const clickedInside = this.modalRef.current?.contains(e.target);
-
-    if (!modalIsOpen || clickedInside) return;
+    const clickedOutside = this.modalRef.current && e.target?.contains(this.modalRef.current);
+    if (!clickedOutside || !modalIsOpen) return;
 
     if (shouldCloseOnOverlayClick) {
       this.handleRequestClose(e);
@@ -115,7 +107,6 @@ class ModalSimple extends Component {
       dismiss,
       className,
       modalIsOpen,
-      isOpen,
       onRequestClose,
       shouldShowCloseButton,
       contentLabel,
@@ -125,8 +116,6 @@ class ModalSimple extends Component {
       anchorElement,
       ...otherProps
     } = this.props;
-
-    const resolvedModalIsOpen = resolveModalOpenState({ modalIsOpen, isOpen });
 
     let modalStyles = {};
 
@@ -155,7 +144,7 @@ class ModalSimple extends Component {
     return (
       <Styled.SimpleModal
         id={id || 'simpleModal'}
-        isOpen={resolvedModalIsOpen}
+        isOpen={modalIsOpen}
         className={className}
         onRequestClose={this.handleRequestClose}
         contentLabel={title || contentLabel}
@@ -163,7 +152,7 @@ class ModalSimple extends Component {
         style={modalStyles}
         {...otherProps}
       >
-        <FocusTrap active={resolvedModalIsOpen} focusTrapOptions={{ initialFocus: false, fallbackFocus: '#fallback-element' }}>
+        <FocusTrap active={modalIsOpen} focusTrapOptions={{ initialFocus: false, fallbackFocus: '#fallback-element' }}>
           <div ref={this.modalRef}>
             <Styled.Header
               hideBorder={hideBorder}
