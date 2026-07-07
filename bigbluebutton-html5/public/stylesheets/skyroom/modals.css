@@ -1038,3 +1038,43 @@
 .poll-creation-modal .recharts-cartesian-axis-tick-value {
   fill: var(--skyroom-modal-text-muted, #aab6c7) !important;
 }
+
+/* ---------------------------------------------------------------------
+   12) #modals-container — ModalSimple / ConfirmationModal (not #fsmodal)
+   Settings & breakout use ModalFullscreen (#fsmodal); connection status,
+   guest policy, recording confirm, and webcam preview use ReactModal here.
+   --------------------------------------------------------------------- */
+html[data-skyroom="true"] #modals-container .ReactModal__Overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1500 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  box-sizing: border-box !important;
+  background-color: rgba(2, 6, 14, 0.62) !important;
+  backdrop-filter: blur(12px) saturate(1.12) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.12) !important;
+}
+
+html[data-skyroom="true"] #modals-container .ReactModal__Content {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: auto !important;
+  transform: none !important;
+  max-height: min(90vh, 720px) !important;
+  overflow: auto !important;
+}
+
+html[data-skyroom="true"] #modals-container .ReactModal__Content--after-open,
+html[data-skyroom="true"] #modals-container .ReactModal__Content--before-close {
+  transform: none !important;
+}
+
+html[data-skyroom="true"] #modals-container .ReactModal__Overlay--after-open {
+  opacity: 1 !important;
+}

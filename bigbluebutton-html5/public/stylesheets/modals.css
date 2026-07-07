@@ -5,7 +5,14 @@
   overflow-x: hidden;
   overflow-y: auto;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1300;
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
 }
 
 .ReactModal__Overlay--after-open {
@@ -46,44 +53,50 @@
   z-index: 1000 !important;
 }
 
-/* Keep the entire modal stack above #app and Skyroom whiteboard layers (up to ~1200). */
+/* Keep the entire modal stack above #app and Skyroom whiteboard layers. */
 #modals-container {
-  position: relative;
-  z-index: 1400;
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  pointer-events: none;
+}
+
+#modals-container .ReactModalPortal {
+  pointer-events: auto;
 }
 
 #modals-container .ReactModalPortal.modal-low {
-  z-index: 1300;
+  z-index: 1500;
 }
 
 #modals-container .ReactModalPortal.modal-low .ReactModal__Overlay {
-  z-index: 1300;
+  z-index: 1500;
 }
 
 #modals-container .ReactModalPortal.modal-medium {
-  z-index: 1310;
+  z-index: 1510;
 }
 
 #modals-container .ReactModalPortal.modal-medium .ReactModal__Overlay {
-  z-index: 1310;
+  z-index: 1510;
 }
 
 #modals-container .ReactModalPortal.modal-high {
-  z-index: 1320;
+  z-index: 1520;
 }
 
 #modals-container .ReactModalPortal.modal-high .ReactModal__Overlay {
-  z-index: 1320;
+  z-index: 1520;
 }
 
 .modal-low {
-  z-index: 1300;
+  z-index: 1500;
 }
 
 .modal-medium {
-  z-index: 1310;
+  z-index: 1510;
 }
 
 .modal-high {
-  z-index: 1320;
+  z-index: 1520;
 }

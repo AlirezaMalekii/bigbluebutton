@@ -194,7 +194,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
   ]);
 
   const createBreakoutRoomModal = useModalRegistration({ id: 'createBreakoutRoomModal', priority: 'medium' });
-  const guestPolicyModal = useModalRegistration({ id: 'guestPolicyModal', priority: 'medium' });
+  const guestPolicyModal = useModalRegistration({ id: 'guestPolicyModal', priority: 'low' });
   const lockViewersModal = useModalRegistration({ id: 'lockViewersModal', priority: 'low' });
 
   const [setMuted] = useMutation(SET_MUTED);

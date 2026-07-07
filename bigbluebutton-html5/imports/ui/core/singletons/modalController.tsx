@@ -1,4 +1,6 @@
-import React, { useCallback, useLayoutEffect, useRef } from 'react';
+import React, {
+  useCallback, useLayoutEffect, useRef, useState,
+} from 'react';
 import { makeVar, useReactiveVar } from '@apollo/client';
 
 export type ModalPriority =
@@ -144,8 +146,8 @@ class ModalController {
   closeAll(): void {
     updateState((prev) => {
       const newByKey: Record<string, ModalRegistration> = {};
-      Object.values(prev.byKey).forEach((m) => {
-        newByKey[m.uniqueId] = { ...m, desiredOpen: false };
+      Object.values(prev.byKey).forEach((entry) => {
+        newByKey[entry.uniqueId] = { ...entry, desiredOpen: false };
       });
       return this.compute({ ...prev, byKey: newByKey });
     });
@@ -168,7 +170,7 @@ class ModalController {
     };
 
     const all = Object.values(next.byKey);
-    const candidates = all.filter((m) => m.desiredOpen);
+    const candidates = all.filter((entry) => entry.desiredOpen);
 
     candidates.sort((a, b) => {
       const wa = this.weightOf(a.priority);
@@ -180,23 +182,23 @@ class ModalController {
 
     const concurrency = Math.max(1, Math.floor(next.concurrency));
     const open = candidates.slice(0, concurrency);
-    const openKeys = open.map((m) => m.uniqueId);
+    const openKeys = open.map((entry) => entry.uniqueId);
 
     const candidateIndex: Record<string, number> = {};
-    candidates.forEach((m, idx) => {
-      candidateIndex[m.uniqueId] = idx;
+    candidates.forEach((entry, idx) => {
+      candidateIndex[entry.uniqueId] = idx;
     });
 
     const newByKey: Record<string, ModalRegistration> = {};
-    all.forEach((m) => {
-      const isOpen = openKeys.includes(m.uniqueId);
-      const stackIndex = isOpen ? openKeys.indexOf(m.uniqueId) : null;
-      const qPos = m.desiredOpen ? (candidateIndex[m.uniqueId] ?? null) : null;
+    all.forEach((entry) => {
+      const isOpen = openKeys.includes(entry.uniqueId);
+      const stackIndex = isOpen ? openKeys.indexOf(entry.uniqueId) : null;
+      const qPos = entry.desiredOpen ? (candidateIndex[entry.uniqueId] ?? null) : null;
 
-      newByKey[m.uniqueId] = {
-        ...m,
+      newByKey[entry.uniqueId] = {
+        ...entry,
         actualOpen: isOpen,
-        position: m.desiredOpen ? ((isOpen && (stackIndex as number)) || (qPos as number)) : null,
+        position: entry.desiredOpen ? ((isOpen && (stackIndex as number)) || (qPos as number)) : null,
         queuedPosition: qPos,
       };
     });
@@ -205,20 +207,12 @@ class ModalController {
   }
 }
 
-// Singleton instance using static weights
 export const controller = new ModalController(PRIORITY_WEIGHTS);
 
-/** Close every modal registered with the controller (e.g. before opening another). */
 export function closeAllRegisteredModals(): void {
   controller.closeAll();
 }
 
-/**
- * useModalRegistration
- *
- * Hook to connect a React component (modal) with the ModalController.
- * Each hook call creates its own modal instance (even if `id` matches another instance).
- */
 export function useModalRegistration({
   id,
   priority = 'normal',
@@ -237,10 +231,13 @@ export function useModalRegistration({
 } {
   const uniqueRef = useRef<string | null>(null);
   const pendingOpenRef = useRef(false);
+  const previousFocusRef = useRef<Element | null>(null);
+  const [registrationReady, setRegistrationReady] = useState(false);
 
   useLayoutEffect(() => {
     const uniqueId = controller.register(id, priority);
     uniqueRef.current = uniqueId;
+    setRegistrationReady(true);
     if (pendingOpenRef.current) {
       pendingOpenRef.current = false;
       controller.setDesiredOpen(uniqueId, true);
@@ -249,6 +246,7 @@ export function useModalRegistration({
       if (uniqueRef.current) controller.unregister(uniqueRef.current);
       uniqueRef.current = null;
       pendingOpenRef.current = false;
+      setRegistrationReady(false);
     };
   }, [id, priority]);
 
@@ -257,6 +255,7 @@ export function useModalRegistration({
   const my = uniqueId ? slice.byKey[uniqueId] : undefined;
 
   const open = useCallback(() => {
+    previousFocusRef.current = document.activeElement;
     if (uniqueRef.current) {
       controller.setDesiredOpen(uniqueRef.current, true);
     } else {
@@ -266,6 +265,13 @@ export function useModalRegistration({
 
   const close = useCallback(() => {
     if (uniqueRef.current) controller.setDesiredOpen(uniqueRef.current, false);
+    const el = previousFocusRef.current as HTMLElement | null;
+    previousFocusRef.current = null;
+    if (el && typeof el.focus === 'function' && document.body.contains(el)) {
+      window.setTimeout(() => {
+        el.focus();
+      }, 0);
+    }
   }, []);
 
   const setMyPriority = useCallback((p: ModalPriority) => {
@@ -273,7 +279,7 @@ export function useModalRegistration({
   }, []);
 
   return {
-    isOpen: Boolean(my?.desiredOpen),
+    isOpen: registrationReady && Boolean(my?.actualOpen),
     position: my?.position ?? null,
     queuedPosition: my?.queuedPosition ?? null,
     id: my?.id ?? id,
@@ -284,10 +290,6 @@ export function useModalRegistration({
   } as const;
 }
 
-/**
- * ModalRegistration (render-prop component)
- * Allows usage in class components or JSX without hooks.
- */
 type ModalRegistrationProps = {
   id: string;
   priority?: ModalPriority;
@@ -303,10 +305,6 @@ export const ModalRegistration: React.FC<ModalRegistrationProps> = ({ id, priori
   );
 };
 
-/**
- * withModalRegistration (HOC)
- * Wraps a component and injects modal controls as props.
- */
 export function withModalRegistration<P extends object>(
   Wrapped: React.ComponentType<P & ReturnType<typeof useModalRegistration>>,
   id: string,
