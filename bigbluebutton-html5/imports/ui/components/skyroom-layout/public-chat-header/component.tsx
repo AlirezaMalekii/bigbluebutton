@@ -7,6 +7,7 @@ import {
   toggleSkyroomPublicChat,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import SkyroomChatHeaderActions from '../chat-header-actions/component';
+import ScreenShareChatOverlayHeaderButton from '/imports/ui/components/screen-share-chat-overlay/overlay-header-button';
 import Styled from './styles';
 
 const intlMessages = defineMessages({
@@ -45,6 +46,7 @@ const SkyroomPublicChatHeader: React.FC<SkyroomPublicChatHeaderProps> = ({ title
           <Styled.TitleText>{title}</Styled.TitleText>
         </Styled.TitleButton>
       </Styled.SmallTitle>
+      <ScreenShareChatOverlayHeaderButton />
       <SkyroomChatHeaderActions />
     </Styled.Container>
   );

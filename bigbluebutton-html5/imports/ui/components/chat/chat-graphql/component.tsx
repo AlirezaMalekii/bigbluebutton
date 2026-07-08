@@ -22,6 +22,7 @@ import browserInfo from '/imports/utils/browserInfo';
 import { GraphqlDataHookSubscriptionResponse } from '/imports/ui/Types/hook';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import { ChatEvents } from '/imports/ui/core/enums/chat';
+import ScreenShareChatOverlayButton from '/imports/ui/components/screen-share-chat-overlay/overlay-button';
 
 interface ChatProps {
   isRTL: boolean;
@@ -78,6 +79,7 @@ const Chat: React.FC<ChatProps> = ({ isRTL }) => {
 
   const chatBody = (
     <>
+      <ScreenShareChatOverlayButton />
       <ChatHeader />
       <ChatMessageListContainer />
       <ChatTypingIndicatorContainer />

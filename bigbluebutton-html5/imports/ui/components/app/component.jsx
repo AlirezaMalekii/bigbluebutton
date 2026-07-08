@@ -49,6 +49,7 @@ import LayoutObserver from '../layout/observer';
 import BBBLiveKitRoomContainer from '/imports/ui/components/livekit/component';
 import RaiseHandNotifier from '/imports/ui/components/raisehand-notifier/container';
 import SkyroomColumnController from '/imports/ui/components/skyroom-layout/component';
+import ScreenShareChatOverlayContainer from '/imports/ui/components/screen-share-chat-overlay/container';
 import SkyroomHeaderLogos from '/imports/ui/components/skyroom-layout/header-logo/SkyroomHeaderLogos';
 
 const intlMessages = defineMessages({
@@ -456,6 +457,7 @@ class App extends Component {
           <EmojiRainContainer />
           <VoiceActivityAdapter />
           <SkyroomColumnController />
+          <ScreenShareChatOverlayContainer />
         </Styled.Layout>
       </>
     );
