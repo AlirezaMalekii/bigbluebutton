@@ -182,7 +182,7 @@
     "app.userList.mobile": "Mobile",
     "app.userList.guest": "Guest",
     "app.userList.sharingWebcam": "Webcam",
-    "app.userList.meetingTabHidden": "Meeting tab is not active",
+    "app.userList.meetingTabHidden": "This user is on another tab or has minimized the meeting",
     "app.userList.menuTitleContext": "Available options",
     "app.userList.userActions.menu": "User actions",
     "app.userList.chatListItem.unreadSingular": "One new message",

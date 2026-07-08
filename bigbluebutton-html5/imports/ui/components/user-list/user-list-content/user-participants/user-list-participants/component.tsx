@@ -10,6 +10,7 @@ import {
   UsersCountSubscriptionResponse,
 } from './queries';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
+import useHiddenTabUserIds from './useHiddenTabUserIds';
 import UserListParticipantsPageContainer from './page/component';
 import IntersectionWatcher from './intersection-watcher/intersectionWatcher';
 import { setLocalUserList } from '/imports/ui/core/hooks/useLoadedUserList';
@@ -25,6 +26,7 @@ const UserListParticipants: React.FC<UserListParticipantsProps> = ({
   count,
 }) => {
   const { searchTerm, isSearching } = useSkyroomUserSearch();
+  const hiddenTabUserIds = useHiddenTabUserIds();
 
   const [visibleUsers, setVisibleUsers] = React.useState<{
     [key: number]: User[];
@@ -109,6 +111,7 @@ const UserListParticipants: React.FC<UserListParticipantsProps> = ({
                     isLastItem={isLastItem}
                     restOfUsers={isLastItem ? restOfUsers : 50}
                     setVisibleUsers={setVisibleUsers}
+                    hiddenTabUserIds={hiddenTabUserIds}
                   />
                 )
                 : (
@@ -125,6 +128,7 @@ const UserListParticipants: React.FC<UserListParticipantsProps> = ({
                       isLastItem={isLastItem}
                       restOfUsers={isLastItem ? restOfUsers : 50}
                       setVisibleUsers={setVisibleUsers}
+                      hiddenTabUserIds={hiddenTabUserIds}
                     />
                   </IntersectionWatcher>
                 );

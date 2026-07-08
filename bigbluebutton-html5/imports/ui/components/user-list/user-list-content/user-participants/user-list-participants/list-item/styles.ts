@@ -459,10 +459,20 @@ const IconRightContainer = styled.div`
   margin: .25rem;  
 `;
 
+const MeetingTabHiddenIconWrap = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  min-height: 1.25rem;
+  cursor: help;
+`;
+
 const MeetingTabHiddenIcon = styled(Icon)`
   color: ${colorGray};
   font-size: 1rem;
   opacity: 0.85;
+  pointer-events: none;
 `;
 
 export default {
@@ -476,5 +486,6 @@ export default {
   SvgContentUserListIcon,
   SvgContentUserListIconMargin,
   IconRightContainer,
+  MeetingTabHiddenIconWrap,
   MeetingTabHiddenIcon,
 };

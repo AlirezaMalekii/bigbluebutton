@@ -336,8 +336,17 @@ const UserListItem: React.FC<UserListItemProps> = ({
       {renderUserListItemIconsFromPlugin(userItemsFromPlugin)}
       {isMeetingTabHidden ? (
         <Styled.IconRightContainer data-test="meetingTabHiddenIcon">
-          <TooltipContainer title={intl.formatMessage(messages.meetingTabHidden)}>
-            <Styled.MeetingTabHiddenIcon iconName="desktop" />
+          <TooltipContainer
+            title={intl.formatMessage(messages.meetingTabHidden)}
+            placement="top"
+          >
+            <Styled.MeetingTabHiddenIconWrap
+              role="img"
+              aria-label={intl.formatMessage(messages.meetingTabHidden)}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Styled.MeetingTabHiddenIcon iconName="desktop" />
+            </Styled.MeetingTabHiddenIconWrap>
           </TooltipContainer>
         </Styled.IconRightContainer>
       ) : null}

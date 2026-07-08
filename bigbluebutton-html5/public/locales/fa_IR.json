@@ -201,7 +201,7 @@
   "app.userList.mobile": "موبایل",
   "app.userList.guest": "مهمان",
   "app.userList.sharingWebcam": "دوربین",
-  "app.userList.meetingTabHidden": "تب جلسه برای این کاربر فعال نیست",
+  "app.userList.meetingTabHidden": "این کاربر در تب دیگری است یا پنجره جلسه را به حداقل کرده",
   "app.userList.menuTitleContext": "گزینه‌های موجود",
   "app.userList.userActions.menu": "تنظیمات کاربر",
   "app.userList.chatListItem.unreadSingular": "یک پیام جدید",
