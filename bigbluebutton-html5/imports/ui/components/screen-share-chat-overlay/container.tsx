@@ -4,7 +4,6 @@ import { useIntl } from 'react-intl';
 import { layoutSelect } from '/imports/ui/components/layout/context';
 import { Layout } from '/imports/ui/components/layout/layoutTypes';
 import { useIsSharing } from '/imports/ui/components/screenshare/service';
-import { notify } from '/imports/ui/services/notification';
 import useCurrentLocale from '/imports/ui/core/local-states/useCurrentLocale';
 import { setupOverlayRenderer } from './overlay-root';
 import {
@@ -25,30 +24,8 @@ const ensureRendererRegistered = (): void => {
 };
 
 const ScreenShareChatOverlayContainer: React.FC = () => {
-  const intl = useIntl();
-  const [currentLocale] = useCurrentLocale();
   const isSharing = useIsSharing();
-  const isRTL = layoutSelect((i: Layout) => i.isRTL);
-  const autoOpenAttemptedRef = useRef(false);
   const wasSharingRef = useRef(false);
-
-  const buildOpenOptions = useCallback(() => ({
-    isRTL,
-    locale: currentLocale,
-    messages: intl.messages as Record<string, string>,
-  }), [currentLocale, intl.messages, isRTL]);
-
-  const handleOpenOverlay = useCallback(async () => {
-    ensureRendererRegistered();
-    const opened = await openOverlay(buildOpenOptions());
-    if (!opened) {
-      notify(intl.formatMessage({
-        id: 'app.screenShareChatOverlay.openFailed',
-        description: 'Toast when floating chat overlay cannot be opened',
-      }), 'warning', 'main', 5000);
-    }
-    return opened;
-  }, [buildOpenOptions, intl]);
 
   useEffect(() => {
     ensureRendererRegistered();
@@ -66,32 +43,12 @@ const ScreenShareChatOverlayContainer: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (isSharing && !wasSharingRef.current) {
-      autoOpenAttemptedRef.current = false;
-    }
-
     if (!isSharing && wasSharingRef.current) {
       closeOverlayOnScreenshareEnd();
-      autoOpenAttemptedRef.current = false;
     }
 
     wasSharingRef.current = isSharing;
   }, [isSharing]);
-
-  useEffect(() => {
-    if (!isSharing || autoOpenAttemptedRef.current || isOverlayOpen()) return;
-
-    autoOpenAttemptedRef.current = true;
-
-    handleOpenOverlay().then((opened) => {
-      if (!opened) {
-        notify(intl.formatMessage({
-          id: 'app.screenShareChatOverlay.promptOpen',
-          description: 'Prompt to manually open floating chat during screen share',
-        }), 'info', 'chat', 8000);
-      }
-    });
-  }, [handleOpenOverlay, intl, isSharing]);
 
   return null;
 };

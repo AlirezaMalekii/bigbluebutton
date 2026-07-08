@@ -5,7 +5,12 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-STAGED="$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(js|jsx|ts|tsx)$' || true)"
+STAGED="$(
+  git diff --cached --name-only --diff-filter=ACM \
+    | grep -E '^bigbluebutton-html5/.*\.(js|jsx|ts|tsx)$' \
+    | sed 's#^bigbluebutton-html5/##' \
+    || true
+)"
 
 if [[ -n "$STAGED" ]]; then
   echo "pre-commit: eslint --fix on staged files..."

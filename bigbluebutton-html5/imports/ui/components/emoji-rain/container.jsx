@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import EmojiRain from './component';
 import StageReactionOverlay from './stage-reaction-overlay';
 import { getEmojisToRain } from './queries';
+import { normalizeReactionStream, reactionStreamVar } from './reaction-stream';
 import useDeduplicatedSubscription from '../../core/hooks/useDeduplicatedSubscription';
 
 const EmojiRainContainer = () => {
@@ -16,13 +17,11 @@ const EmojiRainContainer = () => {
   });
   const emojisArray = emojisToRainData?.user_reaction_stream || [];
 
-  const reactions = emojisArray.length === 0 ? []
-    : emojisArray.map((reaction) => ({
-      reaction: reaction.reactionEmoji,
-      creationDate: new Date(reaction.createdAt),
-      userId: reaction.userId,
-      userName: reaction.user?.name || '',
-    }));
+  const reactions = normalizeReactionStream(emojisArray);
+
+  useEffect(() => {
+    reactionStreamVar(reactions);
+  }, [reactions]);
 
   return (
     <>

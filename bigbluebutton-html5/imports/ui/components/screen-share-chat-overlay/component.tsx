@@ -3,6 +3,7 @@ import { useReactiveVar } from '@apollo/client';
 import OverlayChatMessages from './overlay-chat-messages';
 import OverlayChatForm from './overlay-chat-form';
 import OverlayHeaderBar from './overlay-header';
+import ScreenShareChatReactionOverlay from './reaction-overlay';
 import { overlayVisibilityVar } from './service';
 import {
   OverlayShell,
@@ -33,6 +34,7 @@ const ScreenShareChatOverlayPanel: React.FC<ScreenShareChatOverlayPanelProps> = 
           <OverlayChatPanel $isRTL={isRTL} $compact={compact}>
             <OverlayChatMessages compact={compact} />
             {!compact && <OverlayChatForm isRTL={isRTL} />}
+            <ScreenShareChatReactionOverlay />
           </OverlayChatPanel>
         </OverlayBody>
       )}

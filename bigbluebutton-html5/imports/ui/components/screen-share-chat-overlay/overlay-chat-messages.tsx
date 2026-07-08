@@ -115,11 +115,11 @@ const OverlayChatMessages: React.FC<OverlayChatMessagesProps> = ({
           <OverlayMessageItem key={message.messageId} $compact={compact}>
             <OverlayMessageMeta>
               <OverlayMessageAuthor>{author}</OverlayMessageAuthor>
-              <OverlayMessageTime>
-                <FormattedTime value={new Date(message.createdAt)} />
-              </OverlayMessageTime>
             </OverlayMessageMeta>
             <ChatMessageTextContent text={content} dataTest="overlayMessageContent" />
+            <OverlayMessageTime>
+              <FormattedTime value={new Date(message.createdAt)} />
+            </OverlayMessageTime>
           </OverlayMessageItem>
         );
       })}

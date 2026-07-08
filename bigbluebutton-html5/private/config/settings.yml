@@ -794,6 +794,10 @@ public:
         native: '👍'
       - id: 'clap'
         native: '👏'
+      - id: 'heart'
+        native: '❤️'
+      - id: 'heart_eyes'
+        native: '😍'
   notes:
     enabled: true
     id: notes

@@ -580,6 +580,14 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
           id: 'clap',
           native: '👏',
         },
+        {
+          id: 'heart',
+          native: '❤️',
+        },
+        {
+          id: 'heart_eyes',
+          native: '😍',
+        },
       ],
     },
     notes: {

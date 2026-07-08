@@ -10,7 +10,7 @@ import { layoutSelectOutput } from '../layout/context';
 import Styled from './stage-reaction-overlay-styles';
 
 const MAX_VISIBLE_REACTIONS = 10;
-const REACTION_TTL_MS = 5200;
+const REACTION_TTL_MS = 7600;
 
 const hasVisibleBounds = (bounds) => (
   bounds
@@ -78,7 +78,7 @@ const StageReactionOverlay = ({ reactions }) => {
 
       const lane = 12 + Math.random() * 76;
       const drift = Math.round((Math.random() * 72) - 36);
-      const duration = Math.round(3900 + Math.random() * 900);
+      const duration = Math.round(6200 + Math.random() * 900);
 
       acc.push({
         id: key,

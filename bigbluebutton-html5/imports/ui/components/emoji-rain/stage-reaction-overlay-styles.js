@@ -4,12 +4,10 @@ const rise = keyframes`
   0% {
     opacity: 0;
     transform: translate3d(-50%, 12px, 0) scale(0.88);
-    filter: blur(1px);
   }
 
   12% {
     opacity: 1;
-    filter: blur(0);
   }
 
   78% {
@@ -23,7 +21,6 @@ const rise = keyframes`
       calc(-1 * var(--reaction-travel)),
       0
     ) scale(1.02);
-    filter: blur(1.5px);
   }
 `;
 
@@ -54,7 +51,7 @@ const Bubble = styled.div.attrs(({
   position: absolute;
   left: var(--reaction-left);
   bottom: clamp(0.75rem, 6%, 2rem);
-  will-change: transform, opacity, filter;
+  will-change: transform, opacity;
   animation: ${rise} var(--reaction-duration) cubic-bezier(0.19, 1, 0.22, 1)
     var(--reaction-delay) forwards;
 `;
@@ -74,8 +71,6 @@ const BubbleCard = styled.div`
   box-shadow:
     0 0.75rem 2rem rgba(15, 23, 42, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px) saturate(1.28);
-  -webkit-backdrop-filter: blur(10px) saturate(1.28);
 
   @media (max-width: 640px) {
     gap: 0.2rem;
