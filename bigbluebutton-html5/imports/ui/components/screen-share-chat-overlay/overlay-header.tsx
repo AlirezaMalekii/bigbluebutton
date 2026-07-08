@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { useReactiveVar } from '@apollo/client';
 import { defineMessages, useIntl } from 'react-intl';
 import Icon from '/imports/ui/components/common/icon/component';
 import {
@@ -6,6 +7,8 @@ import {
   hideOverlay,
   closeOverlay,
   showOverlay,
+  toggleCompactOverlay,
+  overlayVisibilityVar,
 } from './service';
 import {
   OverlayHeader,
@@ -24,7 +27,7 @@ const intlMessages = defineMessages({
   },
   hide: {
     id: 'app.screenShareChatOverlay.hide',
-    description: 'Hide floating chat overlay',
+    description: 'Hide floating chat overlay to title bar',
   },
   close: {
     id: 'app.screenShareChatOverlay.close',
@@ -32,7 +35,15 @@ const intlMessages = defineMessages({
   },
   restore: {
     id: 'app.screenShareChatOverlay.restore',
-    description: 'Restore floating chat overlay',
+    description: 'Restore floating chat overlay from hidden',
+  },
+  compact: {
+    id: 'app.screenShareChatOverlay.compact',
+    description: 'Shrink floating chat to compact size',
+  },
+  expand: {
+    id: 'app.screenShareChatOverlay.expand',
+    description: 'Expand floating chat to full size',
   },
   collapsedHint: {
     id: 'app.screenShareChatOverlay.collapsedHint',
@@ -46,21 +57,20 @@ const intlMessages = defineMessages({
 
 interface OverlayHeaderBarProps {
   isRTL: boolean;
-  collapsed?: boolean;
 }
 
 const attachWindowDrag = (
   event: React.PointerEvent<HTMLElement>,
-  externalWindow: Window,
+  win: Window,
 ): void => {
   const startScreenX = event.screenX;
   const startScreenY = event.screenY;
-  const startWinX = externalWindow.screenX;
-  const startWinY = externalWindow.screenY;
-  const dragDoc = externalWindow.document;
+  const startWinX = win.screenX;
+  const startWinY = win.screenY;
+  const dragDoc = win.document;
 
   const onPointerMove = (moveEvent: PointerEvent) => {
-    externalWindow.moveTo(
+    win.moveTo(
       startWinX + (moveEvent.screenX - startScreenX),
       startWinY + (moveEvent.screenY - startScreenY),
     );
@@ -77,11 +87,11 @@ const attachWindowDrag = (
   dragDoc.addEventListener('pointercancel', onPointerUp);
 };
 
-const OverlayHeaderBar: React.FC<OverlayHeaderBarProps> = ({
-  isRTL,
-  collapsed = false,
-}) => {
+const OverlayHeaderBar: React.FC<OverlayHeaderBarProps> = ({ isRTL }) => {
   const intl = useIntl();
+  const visibility = useReactiveVar(overlayVisibilityVar);
+  const collapsed = visibility === 'hidden';
+  const compact = visibility === 'compact';
 
   const handlePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     if ((event.target as HTMLElement).closest('button')) return;
@@ -123,14 +133,29 @@ const OverlayHeaderBar: React.FC<OverlayHeaderBarProps> = ({
             <Icon iconName="undo" />
           </HeaderButton>
         ) : (
-          <HeaderButton
-            type="button"
-            aria-label={intl.formatMessage(intlMessages.hide)}
-            title={intl.formatMessage(intlMessages.hide)}
-            onClick={() => hideOverlay()}
-          >
-            <Icon iconName="minus" />
-          </HeaderButton>
+          <>
+            <HeaderButton
+              type="button"
+              aria-label={intl.formatMessage(
+                compact ? intlMessages.expand : intlMessages.compact,
+              )}
+              title={intl.formatMessage(
+                compact ? intlMessages.expand : intlMessages.compact,
+              )}
+              data-test="screenShareChatOverlayCompact"
+              onClick={() => toggleCompactOverlay()}
+            >
+              <Icon iconName={compact ? 'fullscreen' : 'exit_fullscreen'} />
+            </HeaderButton>
+            <HeaderButton
+              type="button"
+              aria-label={intl.formatMessage(intlMessages.hide)}
+              title={intl.formatMessage(intlMessages.hide)}
+              onClick={() => hideOverlay()}
+            >
+              <Icon iconName="minus" />
+            </HeaderButton>
+          </>
         )}
         <HeaderButton
           type="button"

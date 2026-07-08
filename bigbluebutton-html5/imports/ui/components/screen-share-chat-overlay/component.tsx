@@ -1,10 +1,7 @@
 import React from 'react';
 import { useReactiveVar } from '@apollo/client';
-import ChatMessageListContainer from '/imports/ui/components/chat/chat-graphql/chat-message-list/component';
-import ChatMessageFormContainer from '/imports/ui/components/chat/chat-graphql/chat-message-form/component';
-import ChatTypingIndicatorContainer from '/imports/ui/components/chat/chat-graphql/chat-typing-indicator/component';
-import { SkyroomChatMessageFilterProvider } from '/imports/ui/components/skyroom-layout/chat-message-filter/context';
-import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import OverlayChatMessages from './overlay-chat-messages';
+import OverlayChatForm from './overlay-chat-form';
 import OverlayHeaderBar from './overlay-header';
 import { overlayVisibilityVar } from './service';
 import {
@@ -22,27 +19,20 @@ const ScreenShareChatOverlayPanel: React.FC<ScreenShareChatOverlayPanelProps> = 
 }) => {
   const visibility = useReactiveVar(overlayVisibilityVar);
   const collapsed = visibility === 'hidden';
-  const skyroomColumn = isSkyroomColumnLayout();
-
-  const chatBody = (
-    <>
-      <ChatMessageListContainer />
-      <ChatTypingIndicatorContainer />
-      <ChatMessageFormContainer />
-    </>
-  );
+  const compact = visibility === 'compact';
 
   return (
-    <OverlayShell $isRTL={isRTL} data-test="screenShareChatOverlay">
-      <OverlayHeaderBar isRTL={isRTL} collapsed={collapsed} />
+    <OverlayShell
+      $isRTL={isRTL}
+      $compact={compact}
+      data-test="screenShareChatOverlay"
+    >
+      <OverlayHeaderBar isRTL={isRTL} />
       {!collapsed && (
-        <OverlayBody>
-          <OverlayChatPanel $isRTL={isRTL}>
-            {skyroomColumn ? (
-              <SkyroomChatMessageFilterProvider>
-                {chatBody}
-              </SkyroomChatMessageFilterProvider>
-            ) : chatBody}
+        <OverlayBody $compact={compact}>
+          <OverlayChatPanel $isRTL={isRTL} $compact={compact}>
+            <OverlayChatMessages compact={compact} />
+            {!compact && <OverlayChatForm isRTL={isRTL} />}
           </OverlayChatPanel>
         </OverlayBody>
       )}

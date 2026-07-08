@@ -5,6 +5,7 @@ const OVERLAY_BASE_CSS = `
     width: 100%;
     height: 100%;
     overflow: hidden;
+    background: transparent !important;
     font-family: 'Vazirmatn', 'Source Sans Pro', Arial, Helvetica, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
@@ -13,6 +14,7 @@ const OVERLAY_BASE_CSS = `
     width: 100%;
     height: 100%;
     box-sizing: border-box;
+    background: transparent;
   }
 
   *, *::before, *::after {
@@ -23,7 +25,7 @@ const OVERLAY_BASE_CSS = `
 const copyStylesToWindow = (targetWindow: Window): void => {
   const { document: targetDoc } = targetWindow;
 
-  [...Array.from(document.styleSheets)].forEach((styleSheet) => {
+  Array.from(document.styleSheets).forEach((styleSheet) => {
     try {
       if (styleSheet.href) {
         const link = targetDoc.createElement('link');
