@@ -189,14 +189,12 @@ needs_heavy_toolchain() {
 
 preflight() {
   log "Preflight in $BBB_ROOT"
-  if [[ -f "$BBB_ROOT/scripts/deploy-server-cleanup.sh" ]]; then
-    bash "$BBB_ROOT/scripts/deploy-server-cleanup.sh"
-  fi
-  command -v java >/dev/null || { echo "java not found"; exit 1; }
-  command -v npm >/dev/null || { echo "npm not found"; exit 1; }
   [[ -d "$BBB_ROOT" ]] || { echo "BBB_ROOT missing: $BBB_ROOT"; exit 1; }
 
   local light_only=0
+  if [[ "$SKIP_BUILD" == "1" ]]; then
+    light_only=1
+  fi
   if [[ -n "$ONLY" ]]; then
     case "$ONLY" in
       html5|playback|recording) light_only=1 ;;
@@ -208,8 +206,15 @@ preflight() {
   fi
 
   if [[ "$light_only" == "1" ]]; then
+    log "Light preflight (html5 / prebuilt / no heavy toolchain)"
     return 0
   fi
+
+  if [[ -f "$BBB_ROOT/scripts/deploy-server-cleanup.sh" ]]; then
+    bash "$BBB_ROOT/scripts/deploy-server-cleanup.sh"
+  fi
+  command -v java >/dev/null || { echo "java not found"; exit 1; }
+  command -v npm >/dev/null || { echo "npm not found"; exit 1; }
 
   ensure_toolchain
   command -v sbt >/dev/null || { echo "sbt still not available after prerequisites"; exit 1; }

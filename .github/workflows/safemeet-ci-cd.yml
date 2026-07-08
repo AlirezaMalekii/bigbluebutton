@@ -183,6 +183,17 @@ jobs:
             echo "Deploy plan: **smart** → ${COMPACT}"
           fi
 
+      - name: Setup Node.js (html5 build)
+        if: >-
+          steps.deploy_plan.outputs.mode == 'full' ||
+          (steps.deploy_plan.outputs.components != '' &&
+           contains(format(' {0} ', steps.deploy_plan.outputs.components), ' html5 '))
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: bigbluebutton-html5/package-lock.json
+
       - name: Build HTML5 in CI
         id: html5_ci_build
         if: >-
@@ -213,12 +224,15 @@ jobs:
           fi
           MODE="${{ steps.deploy_plan.outputs.mode }}"
           COMPONENTS="${{ steps.deploy_plan.outputs.components }}"
+          PREBUILT="${CI_HTML5_PREBUILT:-0}"
           case "$MODE" in
             rsync-only)
               ./deploy.sh "${ARGS[@]}"
               ;;
             smart)
-              if [[ "$COMPONENTS" != *" "* ]]; then
+              if [[ "$COMPONENTS" == "html5" && "$PREBUILT" == "1" ]]; then
+                ./deploy.sh "${ARGS[@]}" --skip-sync --only html5
+              elif [[ "$COMPONENTS" != *" "* ]]; then
                 ./deploy.sh "${ARGS[@]}" --only "$COMPONENTS"
               else
                 ./deploy.sh "${ARGS[@]}"

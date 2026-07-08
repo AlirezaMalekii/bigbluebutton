@@ -1050,6 +1050,7 @@
   "app.guest.guestInvalid": "کاربر مهمان نامعتبر است.",
   "app.guest.meetingForciblyEnded": "این کلاس به پایان رسیده و امکان ورود نیست.",
   "app.guest.calculating": "در حال بررسی لیست انتظار...",
+  "app.guest.messageFromHost": "پیام از میزبان",
   "app.guest.waitingForApproval": "در انتظار تایید مدیر",
   "app.userList.guest.waitingUsers": "کاربران منتظر در لابی",
   "app.userList.guest.waitingUsersTitle": "مدیریت کاربران لابی",

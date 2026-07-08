@@ -78,7 +78,9 @@ path_to_component() {
     bbb-export-annotations/*) echo export ;;
     bbb-shared-notes-server/*) echo notes ;;
     build/packages-template/bbb-playback/*) echo playback ;;
-    scripts/deploy*.sh|deploy.sh) echo _meta ;;
+    # Laptop/CI orchestration — must not force a full server rebuild.
+    deploy.sh|deploy.rsync-excludes|.github/workflows/safemeet-ci-cd.yml|scripts/deploy-detect-components.sh|scripts/deploy-server-cleanup.sh) echo _skip ;;
+    scripts/deploy-remote.sh|scripts/deploy-server-prerequisites.sh) echo _meta ;;
     *) echo "" ;;
   esac
 }
@@ -94,6 +96,7 @@ while IFS= read -r path; do
     echo "full"
     exit 0
   fi
+  [[ "$comp" == "_skip" ]] && continue
   [[ -n "$comp" ]] && components_add "$comp"
 done <<< "$CHANGED_FILES"
 

@@ -238,6 +238,43 @@ upload_prebuilt_html5_dist() {
     "${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_DIR}/bigbluebutton-html5/dist/"
 }
 
+# Push prebuilt dist straight to the live html5-client path (CI html5-only fast path).
+deploy_html5_prebuilt_to_production() {
+  local dist="${SCRIPT_DIR}/bigbluebutton-html5/dist"
+  local settings="${SCRIPT_DIR}/bigbluebutton-html5/private/config/settings.yml"
+  local html5_dest="/usr/share/bigbluebutton/html5-client"
+  local settings_dest="${html5_dest}/private/config/settings.yml"
+
+  if [[ ! -d "$dist" ]] || [[ -z "$(ls -A "$dist" 2>/dev/null || true)" ]]; then
+    log "ERROR: prebuilt html5 dist/ is missing or empty"
+    exit 1
+  fi
+
+  log "Fast html5 deploy — rsync dist/ → ${html5_dest} (skip full repo sync + remote webpack) ..."
+  rsync -az --delete \
+    --exclude 'private/' \
+    -e "$(ssh_rsh)" \
+    "${dist}/" \
+    "${DEPLOY_USER}@${DEPLOY_HOST}:${html5_dest}/"
+
+  if [[ -f "$settings" ]]; then
+    log "Syncing settings.yml for bbb-apps-akka ..."
+    ssh_cmd "mkdir -p '$(dirname "$settings_dest")'"
+    rsync -az \
+      -e "$(ssh_rsh)" \
+      "$settings" \
+      "${DEPLOY_USER}@${DEPLOY_HOST}:${settings_dest}"
+    ssh_cmd "chmod go+r '${settings_dest}' && chown bigbluebutton:bigbluebutton '${settings_dest}' 2>/dev/null || true"
+  fi
+
+  ssh_cmd "
+    ln -sf /usr/share/bigbluebutton/nginx/bbb-html5.nginx.static /usr/share/bigbluebutton/nginx/bbb-html5.nginx
+    systemctl restart nginx
+    systemctl restart bbb-apps-akka
+  "
+  log "html5-client updated (nginx + bbb-apps-akka restarted)"
+}
+
 log "Target: ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PORT} → ${REMOTE_DIR}"
 log "Testing SSH ..."
 if ! ssh_cmd "echo OK" >/dev/null 2>&1; then
@@ -271,6 +308,14 @@ fi
 
 if [[ "$DO_SYNC" == "1" ]]; then
   rsync_to_server
+fi
+
+# CI html5-only: skip staging upload + remote deploy-remote when dist is prebuilt locally.
+if [[ "${CI_HTML5_PREBUILT:-0}" == "1" && "$ONLY_COMPONENTS" == "html5" ]]; then
+  deploy_html5_prebuilt_to_production
+  write_deploy_state "$CURRENT_COMMIT"
+  log "Done (CI fast html5)."
+  exit 0
 fi
 
 upload_prebuilt_html5_dist
@@ -337,6 +382,12 @@ else
     DEPLOY_MODE="smart"
     DEPLOY_COMPONENTS="$(echo "$DETECTED" | tr '\n' ' ' | sed 's/  */ /g;s/^ //;s/ $//')"
     log "Smart deploy — changed components: ${DEPLOY_COMPONENTS}"
+    if [[ "${CI_HTML5_PREBUILT:-0}" == "1" && "$DEPLOY_COMPONENTS" == "html5" ]]; then
+      deploy_html5_prebuilt_to_production
+      write_deploy_state "$CURRENT_COMMIT"
+      log "Done (CI fast html5)."
+      exit 0
+    fi
     if [[ " ${DEPLOY_COMPONENTS} " == *" playback "* ]]; then
       NEEDS_NPM_INSTALL_FLAG="$(needs_npm_install "$LAST_DEPLOY_COMMIT")"
     fi

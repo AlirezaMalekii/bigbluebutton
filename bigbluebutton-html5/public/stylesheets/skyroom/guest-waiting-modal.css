@@ -313,7 +313,6 @@
 
 #layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer .buttonWrapper > button > span,
 #layout[data-skyroom-column="true"] [data-skyroom-guest-waiting-panel="true"] .skyroom-gw-composer button > span {
-  display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   width: 30px !important;
