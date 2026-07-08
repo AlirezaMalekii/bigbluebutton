@@ -75,8 +75,8 @@ const getCaptureStreamForPlacement = (): MediaStream | null => {
 const applyWindowChrome = (targetWindow: Window): void => {
   try {
     const { document: doc } = targetWindow;
-    doc.documentElement.style.background = '#eef2f7';
-    doc.body.style.background = '#eef2f7';
+    doc.documentElement.style.background = '#0b1220';
+    doc.body.style.background = '#0b1220';
     doc.body.style.margin = '0';
     doc.body.style.overflow = 'hidden';
   } catch {

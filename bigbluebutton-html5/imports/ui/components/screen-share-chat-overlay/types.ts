@@ -24,10 +24,10 @@ export interface WindowDragState {
 }
 
 export const OVERLAY_DEFAULT_WIDTH = 360;
-export const OVERLAY_DEFAULT_HEIGHT = 480;
+export const OVERLAY_DEFAULT_HEIGHT = 500;
 export const OVERLAY_COMPACT_WIDTH = 300;
-export const OVERLAY_COMPACT_HEIGHT = 210;
+export const OVERLAY_COMPACT_HEIGHT = 190;
 export const OVERLAY_COLLAPSED_HEIGHT = 44;
 export const OVERLAY_POPUP_NAME = 'bbb-screen-share-chat-overlay';
-export const OVERLAY_FULL_MESSAGE_LIMIT = 40;
+export const OVERLAY_FULL_MESSAGE_LIMIT = 20;
 export const OVERLAY_COMPACT_MESSAGE_LIMIT = 2;

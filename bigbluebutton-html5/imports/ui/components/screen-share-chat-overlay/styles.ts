@@ -14,11 +14,11 @@ export const OverlayShell = styled.div<RTLProps & CompactProps>`
   flex-direction: column;
   width: 100%;
   height: 100%;
-  background: #eef2f7;
+  background: #0b1220;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22);
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(148, 163, 184, 0.16);
   direction: ${({ $isRTL }) => ($isRTL ? 'rtl' : 'ltr')};
 
   ${({ $compact }) => $compact && css`
@@ -34,7 +34,8 @@ export const OverlayHeader = styled.div<RTLProps & { $collapsed?: boolean }>`
   gap: 8px;
   min-height: 54px;
   padding: 8px 12px;
-  background: linear-gradient(135deg, #1f3658 0%, #45617f 100%);
+  background: #111c2e;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
   color: ${colorWhite};
   cursor: grab;
   user-select: none;
@@ -98,17 +99,17 @@ export const HeaderButton = styled.button`
   justify-content: center;
   width: 34px;
   height: 34px;
-  border: none;
+  border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 11px;
-  background: rgba(255, 255, 255, 0.14);
-  color: ${colorWhite};
+  background: #1b2a40;
+  color: #e5edf7;
   cursor: pointer;
   font-size: 1.35rem;
   line-height: 1;
   transition: background 0.15s ease, transform 0.15s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.24);
+    background: #253852;
     transform: translateY(-1px);
   }
 
@@ -133,6 +134,7 @@ export const OverlayChatPanel = styled.div<RTLProps & CompactProps>`
   min-height: 0;
   overflow: hidden;
   padding: ${({ $compact }) => ($compact ? '10px' : '14px')};
+  background: #0b1220;
 `;
 
 export const CollapsedHint = styled.span`
@@ -151,9 +153,9 @@ export const ReopenBanner = styled.div<RTLProps>`
   margin: 0 0 8px;
   padding: 8px 10px;
   border-radius: 10px;
-  background: #f8fafc;
-  border: 1px solid rgba(45, 90, 135, 0.15);
-  color: #334155;
+  background: #111c2e;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  color: #dbe6f3;
   font-size: 0.78rem;
   direction: ${({ $isRTL }) => ($isRTL ? 'rtl' : 'ltr')};
 `;
@@ -165,7 +167,7 @@ export const ReopenButton = styled.button`
   border: none;
   border-radius: 8px;
   padding: 6px 10px;
-  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+  background: #27415f;
   color: ${colorWhite};
   font-size: 0.75rem;
   font-weight: 600;
@@ -189,16 +191,15 @@ export const OverlayMessageList = styled.div<CompactProps>`
   gap: ${({ $compact }) => ($compact ? '8px' : '12px')};
 
   scrollbar-width: thin;
-  scrollbar-color: rgba(100, 116, 139, 0.45) transparent;
+  scrollbar-color: rgba(100, 116, 139, 0.5) transparent;
 `;
 
 export const OverlayMessageItem = styled.div<CompactProps>`
   padding: ${({ $compact }) => ($compact ? '10px 12px' : '14px 16px')};
-  border-radius: 16px;
-  background: #ffffff;
-  border: 1px solid rgba(203, 213, 225, 0.9);
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
-  color: #0f172a;
+  border-radius: 14px;
+  background: #111c2e;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  color: #e5edf7;
 
   a {
     color: ${colorPrimary};
@@ -217,9 +218,9 @@ export const OverlayMessageItem = styled.div<CompactProps>`
   `}
 
   [data-test="overlayMessageContent"] {
-    color: #1e293b;
+    color: #e5edf7;
     font-size: ${({ $compact }) => ($compact ? '0.82rem' : '0.9rem')};
-    line-height: 1.65;
+    line-height: 1.7;
     word-break: break-word;
   }
 `;
@@ -235,7 +236,7 @@ export const OverlayMessageMeta = styled.div`
 export const OverlayMessageAuthor = styled.span`
   font-size: 0.8rem;
   font-weight: 700;
-  color: #1e3a5f;
+  color: #ffffff;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -243,7 +244,7 @@ export const OverlayMessageAuthor = styled.span`
 
 export const OverlayMessageTime = styled.span`
   font-size: 0.7rem;
-  color: #64748b;
+  color: #94a3b8;
   flex-shrink: 0;
 `;
 
@@ -255,7 +256,7 @@ export const OverlayEmptyState = styled.div`
   padding: 16px;
   text-align: center;
   font-size: 0.8rem;
-  color: #64748b;
+  color: #94a3b8;
 `;
 
 interface RTLFormProps {
@@ -267,7 +268,7 @@ export const OverlayForm = styled.form<RTLFormProps>`
   align-items: flex-end;
   gap: 8px;
   padding-top: 12px;
-  border-top: 1px solid rgba(203, 213, 225, 0.9);
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
   direction: ${({ $isRTL }) => ($isRTL ? 'rtl' : 'ltr')};
 `;
 
@@ -276,17 +277,22 @@ export const OverlayInput = styled.textarea`
   min-height: 42px;
   max-height: 88px;
   resize: none;
-  border: 1px solid rgba(203, 213, 225, 0.95);
-  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 13px;
   padding: 10px 12px;
   font-size: 0.88rem;
-  line-height: 1.35;
-  background: #ffffff;
-  color: #1f2937;
+  line-height: 1.55;
+  background: #111c2e;
+  color: #f8fafc;
 
   &:focus {
-    outline: 2px solid rgba(69, 97, 127, 0.22);
-    border-color: rgba(69, 97, 127, 0.5);
+    outline: none;
+    border-color: rgba(77, 141, 207, 0.75);
+  }
+
+  &::placeholder {
+    color: #94a3b8;
+    opacity: 1;
   }
 
   &:disabled {
@@ -297,10 +303,10 @@ export const OverlayInput = styled.textarea`
 
 export const OverlaySendButton = styled.button`
   border: none;
-  border-radius: 14px;
+  border-radius: 13px;
   min-height: 42px;
   padding: 0 16px;
-  background: linear-gradient(135deg, #1f3658 0%, #45617f 100%);
+  background: #27415f;
   color: ${colorWhite};
   font-size: 0.82rem;
   font-weight: 700;
@@ -308,11 +314,18 @@ export const OverlaySendButton = styled.button`
   white-space: nowrap;
 
   &:hover {
-    filter: brightness(1.05);
+    background: #315277;
   }
 
   &:disabled {
     opacity: 0.55;
     cursor: not-allowed;
   }
+`;
+
+export const OverlayErrorText = styled.span`
+  position: absolute;
+  bottom: 100%;
+  color: #fca5a5;
+  font-size: 0.72rem;
 `;

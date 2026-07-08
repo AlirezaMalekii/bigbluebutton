@@ -5,7 +5,7 @@ const OVERLAY_BASE_CSS = `
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #eef2f7 !important;
+    background: #0b1220 !important;
     font-family: 'Vazirmatn', 'Source Sans Pro', Arial, Helvetica, sans-serif;
     -webkit-font-smoothing: antialiased;
   }

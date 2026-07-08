@@ -1,11 +1,11 @@
 import React, { useCallback, useState } from 'react';
-import { useMutation, useReactiveVar } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { defineMessages, useIntl } from 'react-intl';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
-import connectionStatus from '/imports/ui/core/graphql/singletons/connectionStatus';
 import { CHAT_SEND_MESSAGE } from '/imports/ui/components/chat/chat-graphql/chat-message-form/mutations';
 import {
+  OverlayErrorText,
   OverlayForm,
   OverlayInput,
   OverlaySendButton,
@@ -19,10 +19,6 @@ const intlMessages = defineMessages({
   submit: {
     id: 'app.screenShareChatOverlay.submit',
     description: 'Overlay chat send button',
-  },
-  disconnected: {
-    id: 'app.chat.disconnected',
-    description: 'Disconnected chat message',
   },
   locked: {
     id: 'app.chat.locked',
@@ -38,9 +34,8 @@ const OverlayChatForm: React.FC<OverlayChatFormProps> = ({ isRTL }) => {
   const intl = useIntl();
   const [message, setMessage] = useState('');
   const [sendError, setSendError] = useState('');
-  const isConnected = useReactiveVar(connectionStatus.getConnectedStatusVar());
   const CHAT_CONFIG = window.meetingClientSettings.public.chat;
-  const publicChatId = CHAT_CONFIG.public_id;
+  const publicGroupChatId = CHAT_CONFIG.public_group_id;
 
   const { data: currentUser } = useCurrentUser((user) => ({
     isModerator: user?.isModerator,
@@ -59,10 +54,9 @@ const OverlayChatForm: React.FC<OverlayChatFormProps> = ({ isRTL }) => {
   const disablePublicChat = !!meeting?.lockSettings?.disablePublicChat
     || !!currentUser?.userLockSettings?.disablePublicChat;
   const chatLocked = !isModerator && isLocked && disablePublicChat;
-  const disabled = !isConnected || chatLocked || loading;
+  const disabled = chatLocked || loading;
 
-  const handleSubmit = useCallback(async (event: React.FormEvent) => {
-    event.preventDefault();
+  const submitMessage = useCallback(async () => {
     const trimmed = message.trim();
     if (!trimmed || disabled) return;
 
@@ -70,9 +64,8 @@ const OverlayChatForm: React.FC<OverlayChatFormProps> = ({ isRTL }) => {
     try {
       await sendMessage({
         variables: {
-          chatId: publicChatId,
+          chatId: publicGroupChatId,
           chatMessageInMarkdownFormat: trimmed,
-          replyToMessageId: null,
         },
       });
       setMessage('');
@@ -82,13 +75,23 @@ const OverlayChatForm: React.FC<OverlayChatFormProps> = ({ isRTL }) => {
         description: 'Error sending message',
       }));
     }
-  }, [disabled, intl, message, publicChatId, sendMessage]);
+  }, [disabled, intl, message, publicGroupChatId, sendMessage]);
+
+  const handleSubmit = useCallback((event: React.FormEvent) => {
+    event.preventDefault();
+    submitMessage();
+  }, [submitMessage]);
+
+  const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      submitMessage();
+    }
+  }, [submitMessage]);
 
   let placeholder = intl.formatMessage(intlMessages.placeholder);
   if (chatLocked) {
     placeholder = intl.formatMessage(intlMessages.locked);
-  } else if (!isConnected) {
-    placeholder = intl.formatMessage(intlMessages.disconnected);
   }
 
   return (
@@ -96,6 +99,7 @@ const OverlayChatForm: React.FC<OverlayChatFormProps> = ({ isRTL }) => {
       <OverlayInput
         value={message}
         onChange={(event) => setMessage(event.target.value)}
+        onKeyDown={handleKeyDown}
         placeholder={placeholder}
         disabled={disabled}
         dir={isRTL ? 'rtl' : 'ltr'}
@@ -105,7 +109,7 @@ const OverlayChatForm: React.FC<OverlayChatFormProps> = ({ isRTL }) => {
       <OverlaySendButton type="submit" disabled={disabled || !message.trim()}>
         {intl.formatMessage(intlMessages.submit)}
       </OverlaySendButton>
-      {sendError ? <span>{sendError}</span> : null}
+      {sendError ? <OverlayErrorText>{sendError}</OverlayErrorText> : null}
     </OverlayForm>
   );
 };
