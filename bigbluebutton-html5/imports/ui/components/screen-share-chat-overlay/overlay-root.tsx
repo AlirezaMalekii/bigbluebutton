@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { ApolloProvider } from '@apollo/client';
 import { IntlProvider } from 'react-intl';
+import { StyleSheetManager } from 'styled-components';
 import apolloContextHolder from '/imports/ui/core/graphql/apolloContextHolder/apolloContextHolder';
 import OverlayLayoutProvider from './overlay-layout-provider';
 import ScreenShareChatOverlayPanel from './component';
@@ -49,15 +50,17 @@ const OverlayRoot: React.FC<OverlayRootProps> = ({
 
   return (
     <ApolloProvider client={apolloClient}>
-      <IntlProvider
-        locale={normalizedLocale}
-        messages={messages}
-        fallbackOnEmptyString={false}
-      >
-        <OverlayLayoutProvider isRTL={isRTL}>
-          <ScreenShareChatOverlayPanel isRTL={isRTL} />
-        </OverlayLayoutProvider>
-      </IntlProvider>
+      <StyleSheetManager target={hostWindow.document.head}>
+        <IntlProvider
+          locale={normalizedLocale}
+          messages={messages}
+          fallbackOnEmptyString={false}
+        >
+          <OverlayLayoutProvider isRTL={isRTL}>
+            <ScreenShareChatOverlayPanel isRTL={isRTL} />
+          </OverlayLayoutProvider>
+        </IntlProvider>
+      </StyleSheetManager>
     </ApolloProvider>
   );
 };

@@ -30,6 +30,8 @@ let reactRoot: Root | null = null;
 let renderOverlayRoot: ((targetWindow: Window, rootEl: HTMLElement, options: OverlayOpenOptions) => Root) | null = null;
 let lastOpenOptions: OverlayOpenOptions | null = null;
 
+const OVERLAY_POSITION_STORAGE_KEY = 'bbb-screen-share-chat-overlay-position';
+
 const setVisibility = (visibility: OverlayVisibility) => {
   overlayVisibilityVar(visibility);
 };
@@ -70,11 +72,11 @@ const getCaptureStreamForPlacement = (): MediaStream | null => {
   return src instanceof MediaStream ? src : null;
 };
 
-const applyTransparentChrome = (targetWindow: Window): void => {
+const applyWindowChrome = (targetWindow: Window): void => {
   try {
     const { document: doc } = targetWindow;
-    doc.documentElement.style.background = 'transparent';
-    doc.body.style.background = 'transparent';
+    doc.documentElement.style.background = '#eef2f7';
+    doc.body.style.background = '#eef2f7';
     doc.body.style.margin = '0';
     doc.body.style.overflow = 'hidden';
   } catch {
@@ -88,13 +90,21 @@ const mountOverlayContent = (targetWindow: Window, options: OverlayOpenOptions):
   }
 
   copyStylesToWindow(targetWindow);
-  applyTransparentChrome(targetWindow);
+  applyWindowChrome(targetWindow);
 
   const rootEl = targetWindow.document.createElement('div');
   rootEl.id = 'screen-share-chat-overlay-root';
   targetWindow.document.body.appendChild(rootEl);
 
   reactRoot = renderOverlayRoot(targetWindow, rootEl, options);
+};
+
+const markOverlayClosedFromExternalWindow = (): void => {
+  reactRoot = null;
+  externalWindow = null;
+  setMode(null);
+  setVisibility('closed');
+  window.dispatchEvent(new CustomEvent('bbb-screen-share-chat-overlay-closed'));
 };
 
 const resizeOverlayWindow = (width: number, height: number): void => {
@@ -128,7 +138,42 @@ const moveOverlayWindow = (left: number, top: number): void => {
   }
 };
 
+const getStoredOverlayPosition = (): { left: number; top: number } | null => {
+  try {
+    const raw = window.localStorage.getItem(OVERLAY_POSITION_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { left?: unknown; top?: unknown };
+    if (typeof parsed.left === 'number' && typeof parsed.top === 'number') {
+      return { left: parsed.left, top: parsed.top };
+    }
+  } catch {
+    // ignore corrupt storage
+  }
+  return null;
+};
+
+export const rememberOverlayPosition = (): void => {
+  if (!externalWindow || externalWindow.closed) return;
+  try {
+    window.localStorage.setItem(
+      OVERLAY_POSITION_STORAGE_KEY,
+      JSON.stringify({
+        left: externalWindow.screenX,
+        top: externalWindow.screenY,
+      }),
+    );
+  } catch {
+    // localStorage can be unavailable in restrictive browser modes
+  }
+};
+
 const placeOnSharedScreen = async (isRTL: boolean): Promise<void> => {
+  const storedPosition = getStoredOverlayPosition();
+  if (storedPosition) {
+    moveOverlayWindow(storedPosition.left, storedPosition.top);
+    return;
+  }
+
   const stream = getCaptureStreamForPlacement();
   const placement = await resolveSharedScreenPlacement(stream);
   if (!placement) return;
@@ -178,7 +223,7 @@ const cleanupOverlay = ({ notifyParent = false }: { notifyParent?: boolean } = {
 const bindWindowLifecycle = (targetWindow: Window): void => {
   targetWindow.addEventListener('pagehide', () => {
     if (externalWindow === targetWindow) {
-      cleanupOverlay({ notifyParent: true });
+      markOverlayClosedFromExternalWindow();
     }
   });
 };
@@ -210,8 +255,9 @@ const openDocumentPiP = async (): Promise<Window> => {
 const openPopupWindow = async (options: OverlayOpenOptions): Promise<Window | null> => {
   const stream = getCaptureStreamForPlacement();
   const placement = await resolveSharedScreenPlacement(stream);
+  const storedPosition = getStoredOverlayPosition();
 
-  const pos = placement
+  const pos = storedPosition || (placement
     ? getOverlayCornerPosition(
       placement,
       OVERLAY_DEFAULT_WIDTH,
@@ -221,7 +267,7 @@ const openPopupWindow = async (options: OverlayOpenOptions): Promise<Window | nu
     : {
       left: Math.max(0, window.screenX + window.outerWidth - OVERLAY_DEFAULT_WIDTH - 24),
       top: Math.max(0, window.screenY + 80),
-    };
+    });
 
   const features = [
     `width=${OVERLAY_DEFAULT_WIDTH}`,

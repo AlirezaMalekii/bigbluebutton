@@ -40,7 +40,7 @@ const OverlayChatForm: React.FC<OverlayChatFormProps> = ({ isRTL }) => {
   const [sendError, setSendError] = useState('');
   const isConnected = useReactiveVar(connectionStatus.getConnectedStatusVar());
   const CHAT_CONFIG = window.meetingClientSettings.public.chat;
-  const publicGroupChatId = CHAT_CONFIG.public_group_id;
+  const publicChatId = CHAT_CONFIG.public_id;
 
   const { data: currentUser } = useCurrentUser((user) => ({
     isModerator: user?.isModerator,
@@ -70,7 +70,7 @@ const OverlayChatForm: React.FC<OverlayChatFormProps> = ({ isRTL }) => {
     try {
       await sendMessage({
         variables: {
-          chatId: publicGroupChatId,
+          chatId: publicChatId,
           chatMessageInMarkdownFormat: trimmed,
           replyToMessageId: null,
         },
@@ -82,7 +82,7 @@ const OverlayChatForm: React.FC<OverlayChatFormProps> = ({ isRTL }) => {
         description: 'Error sending message',
       }));
     }
-  }, [disabled, intl, message, publicGroupChatId, sendMessage]);
+  }, [disabled, intl, message, publicChatId, sendMessage]);
 
   let placeholder = intl.formatMessage(intlMessages.placeholder);
   if (chatLocked) {

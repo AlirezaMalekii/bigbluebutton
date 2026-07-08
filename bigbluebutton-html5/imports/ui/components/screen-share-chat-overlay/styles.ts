@@ -1,10 +1,5 @@
 import styled, { css } from 'styled-components';
-import {
-  colorWhite,
-  colorGrayDark,
-  colorGrayLightest,
-  colorPrimary,
-} from '/imports/ui/stylesheets/styled-components/palette';
+import { colorWhite, colorPrimary } from '/imports/ui/stylesheets/styled-components/palette';
 
 interface RTLProps {
   $isRTL?: boolean;
@@ -19,43 +14,39 @@ export const OverlayShell = styled.div<RTLProps & CompactProps>`
   flex-direction: column;
   width: 100%;
   height: 100%;
-  background: rgba(15, 23, 42, 0.22);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  border-radius: 14px;
+  background: #eef2f7;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22);
+  border: 1px solid rgba(148, 163, 184, 0.35);
   direction: ${({ $isRTL }) => ($isRTL ? 'rtl' : 'ltr')};
 
   ${({ $compact }) => $compact && css`
-    background: rgba(15, 23, 42, 0.16);
-    border-radius: 12px;
+    border-radius: 14px;
   `}
 `;
 
 export const OverlayHeader = styled.div<RTLProps & { $collapsed?: boolean }>`
   display: flex;
+  flex-direction: ${({ $isRTL }) => ($isRTL ? 'row-reverse' : 'row')};
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-height: 42px;
-  padding: 0 10px;
-  background: rgba(30, 58, 95, 0.72);
+  min-height: 54px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #1f3658 0%, #45617f 100%);
   color: ${colorWhite};
   cursor: grab;
   user-select: none;
   touch-action: none;
   flex-shrink: 0;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 
   &:active {
     cursor: grabbing;
   }
 
   ${({ $collapsed }) => $collapsed && css`
-    border-radius: 12px;
+    border-radius: 14px;
     min-height: 44px;
   `}
 `;
@@ -87,8 +78,8 @@ export const DragGrip = styled.span`
 `;
 
 export const HeaderTitle = styled.span`
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.92rem;
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -105,17 +96,20 @@ export const HeaderButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border: none;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.12);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.14);
   color: ${colorWhite};
   cursor: pointer;
-  transition: background 0.15s ease;
+  font-size: 1.35rem;
+  line-height: 1;
+  transition: background 0.15s ease, transform 0.15s ease;
 
   &:hover {
     background: rgba(255, 255, 255, 0.24);
+    transform: translateY(-1px);
   }
 
   &:focus-visible {
@@ -138,7 +132,7 @@ export const OverlayChatPanel = styled.div<RTLProps & CompactProps>`
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  padding: ${({ $compact }) => ($compact ? '4px 6px 6px' : '0 8px 8px')};
+  padding: ${({ $compact }) => ($compact ? '10px' : '14px')};
 `;
 
 export const CollapsedHint = styled.span`
@@ -157,9 +151,9 @@ export const ReopenBanner = styled.div<RTLProps>`
   margin: 0 0 8px;
   padding: 8px 10px;
   border-radius: 10px;
-  background: ${colorGrayLightest};
+  background: #f8fafc;
   border: 1px solid rgba(45, 90, 135, 0.15);
-  color: ${colorGrayDark};
+  color: #334155;
   font-size: 0.78rem;
   direction: ${({ $isRTL }) => ($isRTL ? 'rtl' : 'ltr')};
 `;
@@ -189,20 +183,22 @@ export const OverlayMessageList = styled.div<CompactProps>`
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: ${({ $compact }) => ($compact ? '4px 2px' : '8px 4px')};
+  padding: ${({ $compact }) => ($compact ? '0' : '0 2px 10px')};
   display: flex;
   flex-direction: column;
-  gap: ${({ $compact }) => ($compact ? '6px' : '10px')};
+  gap: ${({ $compact }) => ($compact ? '8px' : '12px')};
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.45) transparent;
 `;
 
 export const OverlayMessageItem = styled.div<CompactProps>`
-  padding: ${({ $compact }) => ($compact ? '6px 8px' : '8px 10px')};
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  padding: ${({ $compact }) => ($compact ? '10px 12px' : '14px 16px')};
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(203, 213, 225, 0.9);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  color: #0f172a;
 
   a {
     color: ${colorPrimary};
@@ -210,7 +206,7 @@ export const OverlayMessageItem = styled.div<CompactProps>`
   }
 
   ${({ $compact }) => $compact && css`
-    font-size: 0.78rem;
+    font-size: 0.82rem;
 
     [data-test="overlayMessageContent"] {
       display: -webkit-box;
@@ -219,6 +215,13 @@ export const OverlayMessageItem = styled.div<CompactProps>`
       overflow: hidden;
     }
   `}
+
+  [data-test="overlayMessageContent"] {
+    color: #1e293b;
+    font-size: ${({ $compact }) => ($compact ? '0.82rem' : '0.9rem')};
+    line-height: 1.65;
+    word-break: break-word;
+  }
 `;
 
 export const OverlayMessageMeta = styled.div`
@@ -230,7 +233,7 @@ export const OverlayMessageMeta = styled.div`
 `;
 
 export const OverlayMessageAuthor = styled.span`
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #1e3a5f;
   overflow: hidden;
@@ -239,8 +242,8 @@ export const OverlayMessageAuthor = styled.span`
 `;
 
 export const OverlayMessageTime = styled.span`
-  font-size: 0.68rem;
-  color: ${colorGrayDark};
+  font-size: 0.7rem;
+  color: #64748b;
   flex-shrink: 0;
 `;
 
@@ -252,8 +255,7 @@ export const OverlayEmptyState = styled.div`
   padding: 16px;
   text-align: center;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  color: #64748b;
 `;
 
 interface RTLFormProps {
@@ -264,29 +266,27 @@ export const OverlayForm = styled.form<RTLFormProps>`
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  padding-top: 12px;
+  border-top: 1px solid rgba(203, 213, 225, 0.9);
   direction: ${({ $isRTL }) => ($isRTL ? 'rtl' : 'ltr')};
 `;
 
 export const OverlayInput = styled.textarea`
   flex: 1;
-  min-height: 36px;
+  min-height: 42px;
   max-height: 88px;
   resize: none;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 10px;
-  padding: 8px 10px;
-  font-size: 0.8rem;
+  border: 1px solid rgba(203, 213, 225, 0.95);
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-size: 0.88rem;
   line-height: 1.35;
-  background: rgba(255, 255, 255, 0.82);
+  background: #ffffff;
   color: #1f2937;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
 
   &:focus {
-    outline: 2px solid rgba(255, 255, 255, 0.45);
-    border-color: rgba(255, 255, 255, 0.55);
+    outline: 2px solid rgba(69, 97, 127, 0.22);
+    border-color: rgba(69, 97, 127, 0.5);
   }
 
   &:disabled {
@@ -297,17 +297,18 @@ export const OverlayInput = styled.textarea`
 
 export const OverlaySendButton = styled.button`
   border: none;
-  border-radius: 10px;
-  padding: 8px 12px;
-  background: rgba(30, 58, 95, 0.88);
+  border-radius: 14px;
+  min-height: 42px;
+  padding: 0 16px;
+  background: linear-gradient(135deg, #1f3658 0%, #45617f 100%);
   color: ${colorWhite};
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
 
   &:hover {
-    background: rgba(30, 58, 95, 0.98);
+    filter: brightness(1.05);
   }
 
   &:disabled {

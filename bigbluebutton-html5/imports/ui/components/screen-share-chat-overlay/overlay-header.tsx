@@ -1,7 +1,6 @@
 import React, { useCallback } from 'react';
 import { useReactiveVar } from '@apollo/client';
 import { defineMessages, useIntl } from 'react-intl';
-import Icon from '/imports/ui/components/common/icon/component';
 import {
   getExternalOverlayWindow,
   hideOverlay,
@@ -9,6 +8,7 @@ import {
   showOverlay,
   toggleCompactOverlay,
   overlayVisibilityVar,
+  rememberOverlayPosition,
 } from './service';
 import {
   OverlayHeader,
@@ -77,6 +77,7 @@ const attachWindowDrag = (
   };
 
   const onPointerUp = () => {
+    rememberOverlayPosition();
     dragDoc.removeEventListener('pointermove', onPointerMove);
     dragDoc.removeEventListener('pointerup', onPointerUp);
     dragDoc.removeEventListener('pointercancel', onPointerUp);
@@ -130,7 +131,7 @@ const OverlayHeaderBar: React.FC<OverlayHeaderBarProps> = ({ isRTL }) => {
             title={intl.formatMessage(intlMessages.restore)}
             onClick={() => showOverlay()}
           >
-            <Icon iconName="undo" />
+            <span aria-hidden>↗</span>
           </HeaderButton>
         ) : (
           <>
@@ -145,7 +146,7 @@ const OverlayHeaderBar: React.FC<OverlayHeaderBarProps> = ({ isRTL }) => {
               data-test="screenShareChatOverlayCompact"
               onClick={() => toggleCompactOverlay()}
             >
-              <Icon iconName={compact ? 'fullscreen' : 'exit_fullscreen'} />
+              <span aria-hidden>{compact ? '↗' : '↙'}</span>
             </HeaderButton>
             <HeaderButton
               type="button"
@@ -153,7 +154,7 @@ const OverlayHeaderBar: React.FC<OverlayHeaderBarProps> = ({ isRTL }) => {
               title={intl.formatMessage(intlMessages.hide)}
               onClick={() => hideOverlay()}
             >
-              <Icon iconName="minus" />
+              <span aria-hidden>−</span>
             </HeaderButton>
           </>
         )}
@@ -163,7 +164,7 @@ const OverlayHeaderBar: React.FC<OverlayHeaderBarProps> = ({ isRTL }) => {
           title={intl.formatMessage(intlMessages.close)}
           onClick={() => closeOverlay()}
         >
-          <Icon iconName="close" />
+          <span aria-hidden>×</span>
         </HeaderButton>
       </HeaderActions>
     </OverlayHeader>
