@@ -166,6 +166,7 @@ bbb_installed() {
 upgrade_existing_bbb() {
   local host="$1"
   local stamp="$2"
+  local packages=()
 
   backup_file "$APT_LIST" "$stamp"
   backup_file "$SAFE_APT_LIST" "$stamp"
@@ -175,16 +176,20 @@ upgrade_existing_bbb() {
   if [[ "$DRY_RUN" == "1" ]]; then
     log "DRY RUN: would run apt-get update"
     log "DRY RUN: would simulate BBB package upgrade from ${SAFE_REPO_URL}"
-    apt-get -s -o Debug::NoLocking=1 install bigbluebutton bbb-html5 || true
+    mapfile -t packages < <(dpkg-query -W -f='${binary:Package}\n' 'bbb-*' 'bigbluebutton' 2>/dev/null | sort -u || true)
+    ((${#packages[@]})) || packages=(bigbluebutton bbb-html5)
+    apt-get -s -o Debug::NoLocking=1 install "${packages[@]}" || true
     return 0
   fi
 
   log "Upgrading installed BBB packages from SafeMeet repo when newer packages exist"
   apt-get update
+  mapfile -t packages < <(dpkg-query -W -f='${binary:Package}\n' 'bbb-*' 'bigbluebutton' 2>/dev/null | sort -u || true)
+  ((${#packages[@]})) || packages=(bigbluebutton bbb-html5)
   apt-get install -y \
     -o Dpkg::Options::="--force-confdef" \
     -o Dpkg::Options::="--force-confnew" \
-    bigbluebutton bbb-html5
+    "${packages[@]}"
 
   if command -v bbb-conf >/dev/null 2>&1; then
     bbb-conf --setip "$host" || true

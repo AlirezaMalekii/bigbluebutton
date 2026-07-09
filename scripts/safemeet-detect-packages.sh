@@ -197,10 +197,6 @@ else
   fi
 fi
 
-if [[ -n "${PACKAGES// }" ]] && ! has_package bigbluebutton; then
-  add_package bigbluebutton
-fi
-
 ORDER="bbb-apps-akka bbb-config bbb-etherpad bbb-export-annotations bbb-freeswitch-core bbb-freeswitch-sounds bbb-fsesl-akka bbb-graphql-actions bbb-graphql-middleware bbb-graphql-server bbb-html5 bbb-learning-dashboard bbb-libreoffice-docker bbb-mkclean bbb-pads bbb-playback bbb-playback-notes bbb-playback-podcast bbb-playback-presentation bbb-playback-screenshare bbb-playback-video bbb-record-core bbb-shared-notes-server bbb-transcription-controller bbb-web bbb-webhooks bbb-webrtc-recorder bbb-webrtc-sfu bigbluebutton"
 for package in $ORDER; do
   has_package "$package" && printf '%s\n' "$package"
