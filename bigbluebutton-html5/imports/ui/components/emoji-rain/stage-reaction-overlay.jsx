@@ -12,6 +12,7 @@ import Styled from './stage-reaction-overlay-styles';
 
 const MAX_VISIBLE_REACTIONS = 10;
 const REACTION_TTL_MS = 7600;
+const DUPLICATE_WINDOW_MS = 1500;
 
 const hasVisibleBounds = (bounds) => (
   bounds
@@ -32,6 +33,7 @@ const StageReactionOverlay = ({ reactions }) => {
   const { animations } = Settings.application;
   const [floatingReactions, setFloatingReactions] = useState([]);
   const seenReactionsRef = useRef(new Set());
+  const recentReactionRef = useRef(new Map());
 
   const screenShare = layoutSelectOutput((i) => i.screenShare);
   const externalVideo = layoutSelectOutput((i) => i.externalVideo);
@@ -72,10 +74,16 @@ const StageReactionOverlay = ({ reactions }) => {
 
     const nextReactions = reactionsToShow.reduce((acc, reaction) => {
       const createdAt = reaction.creationDate.getTime();
-      const key = `${reaction.userId || 'unknown'}-${reaction.reaction}-${createdAt}`;
+      const key = reaction.eventId
+        || `${reaction.userId || 'unknown'}-${reaction.reaction}-${createdAt}`;
+      const duplicateKey = `${reaction.userId || 'unknown'}-${reaction.reaction}`;
+      const lastSeenAt = recentReactionRef.current.get(duplicateKey) || 0;
 
       if (seenReactionsRef.current.has(key)) return acc;
+      if (createdAt - lastSeenAt >= 0 && createdAt - lastSeenAt < DUPLICATE_WINDOW_MS) return acc;
+
       seenReactionsRef.current.add(key);
+      recentReactionRef.current.set(duplicateKey, createdAt);
 
       const lane = 12 + Math.random() * 76;
       const drift = Math.round((Math.random() * 72) - 36);
@@ -148,6 +156,7 @@ const StageReactionOverlay = ({ reactions }) => {
 
 StageReactionOverlay.propTypes = {
   reactions: PropTypes.arrayOf(PropTypes.shape({
+    eventId: PropTypes.string,
     reaction: PropTypes.string.isRequired,
     creationDate: PropTypes.instanceOf(Date).isRequired,
     userId: PropTypes.string,

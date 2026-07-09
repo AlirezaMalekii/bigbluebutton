@@ -4,6 +4,7 @@ import { useIntl } from 'react-intl';
 import { layoutSelect } from '/imports/ui/components/layout/context';
 import { Layout } from '/imports/ui/components/layout/layoutTypes';
 import { useIsSharing } from '/imports/ui/components/screenshare/service';
+import { notify } from '/imports/ui/services/notification';
 import useCurrentLocale from '/imports/ui/core/local-states/useCurrentLocale';
 import { setupOverlayRenderer } from './overlay-root';
 import {
@@ -24,8 +25,18 @@ const ensureRendererRegistered = (): void => {
 };
 
 const ScreenShareChatOverlayContainer: React.FC = () => {
+  const intl = useIntl();
+  const [currentLocale] = useCurrentLocale();
   const isSharing = useIsSharing();
+  const isRTL = layoutSelect((i: Layout) => i.isRTL);
   const wasSharingRef = useRef(false);
+  const autoOpenAttemptedRef = useRef(false);
+
+  const buildOpenOptions = useCallback(() => ({
+    isRTL,
+    locale: currentLocale,
+    messages: intl.messages as Record<string, string>,
+  }), [currentLocale, intl.messages, isRTL]);
 
   useEffect(() => {
     ensureRendererRegistered();
@@ -43,12 +54,41 @@ const ScreenShareChatOverlayContainer: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (isSharing && !wasSharingRef.current) {
+      autoOpenAttemptedRef.current = false;
+    }
+
     if (!isSharing && wasSharingRef.current) {
       closeOverlayOnScreenshareEnd();
+      autoOpenAttemptedRef.current = false;
     }
 
     wasSharingRef.current = isSharing;
   }, [isSharing]);
+
+  useEffect(() => {
+    if (!isSharing || autoOpenAttemptedRef.current || isOverlayOpen()) {
+      return undefined;
+    }
+
+    autoOpenAttemptedRef.current = true;
+
+    // Delay slightly so getDisplayMedia / bridge settle before opening PiP/popup.
+    const timer = window.setTimeout(() => {
+      openOverlay(buildOpenOptions()).then((opened) => {
+        if (!opened) {
+          notify(intl.formatMessage({
+            id: 'app.screenShareChatOverlay.promptOpen',
+            description: 'Prompt to manually open floating chat during screen share',
+          }), 'info', 'chat', 8000);
+        }
+      });
+    }, 700);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [buildOpenOptions, intl, isSharing]);
 
   return null;
 };

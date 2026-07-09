@@ -3,7 +3,6 @@ import { useReactiveVar } from '@apollo/client';
 import { defineMessages, useIntl } from 'react-intl';
 import {
   getExternalOverlayWindow,
-  hideOverlay,
   closeOverlay,
   showOverlay,
   toggleCompactOverlay,
@@ -24,10 +23,6 @@ const intlMessages = defineMessages({
   title: {
     id: 'app.screenShareChatOverlay.title',
     description: 'Screen share floating chat title',
-  },
-  hide: {
-    id: 'app.screenShareChatOverlay.hide',
-    description: 'Hide floating chat overlay to title bar',
   },
   close: {
     id: 'app.screenShareChatOverlay.close',
@@ -134,29 +129,19 @@ const OverlayHeaderBar: React.FC<OverlayHeaderBarProps> = ({ isRTL }) => {
             <span aria-hidden>↗</span>
           </HeaderButton>
         ) : (
-          <>
-            <HeaderButton
-              type="button"
-              aria-label={intl.formatMessage(
-                compact ? intlMessages.expand : intlMessages.compact,
-              )}
-              title={intl.formatMessage(
-                compact ? intlMessages.expand : intlMessages.compact,
-              )}
-              data-test="screenShareChatOverlayCompact"
-              onClick={() => toggleCompactOverlay()}
-            >
-              <span aria-hidden>{compact ? '↗' : '↙'}</span>
-            </HeaderButton>
-            <HeaderButton
-              type="button"
-              aria-label={intl.formatMessage(intlMessages.hide)}
-              title={intl.formatMessage(intlMessages.hide)}
-              onClick={() => hideOverlay()}
-            >
-              <span aria-hidden>−</span>
-            </HeaderButton>
-          </>
+          <HeaderButton
+            type="button"
+            aria-label={intl.formatMessage(
+              compact ? intlMessages.expand : intlMessages.compact,
+            )}
+            title={intl.formatMessage(
+              compact ? intlMessages.expand : intlMessages.compact,
+            )}
+            data-test="screenShareChatOverlayCompact"
+            onClick={() => toggleCompactOverlay()}
+          >
+            <span aria-hidden>{compact ? '↗' : '↙'}</span>
+          </HeaderButton>
         )}
         <HeaderButton
           type="button"

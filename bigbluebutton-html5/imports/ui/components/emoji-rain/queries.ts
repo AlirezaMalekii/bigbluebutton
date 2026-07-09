@@ -13,6 +13,23 @@ subscription getEmojisToRain ($initialCursor: timestamptz) {
 }
 `;
 
+export const getUserReactionsForStage = gql`
+subscription getUserReactionsForStage {
+  user(
+    where: {
+      bot: {_eq: false},
+      loggedOut: {_eq: false},
+      disconnected: {_eq: false}
+    }
+  ) {
+    userId
+    name
+    reactionEmoji
+  }
+}
+`;
+
 export default {
   getEmojisToRain,
+  getUserReactionsForStage,
 };

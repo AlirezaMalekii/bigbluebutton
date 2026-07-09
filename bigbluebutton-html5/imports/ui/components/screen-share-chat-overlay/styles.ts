@@ -27,6 +27,7 @@ export const OverlayShell = styled.div<RTLProps & CompactProps>`
   overflow: hidden;
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.38);
   border: 1px solid rgba(148, 163, 184, 0.16);
+  font-family: 'IRANYekan', 'Source Sans Pro', Tahoma, Arial, sans-serif;
   direction: ${({ $isRTL }) => ($isRTL ? 'rtl' : 'ltr')};
 
   ${({ $compact }) => $compact && css`

@@ -1,6 +1,7 @@
 import { makeVar } from '@apollo/client';
 
 export interface ReactionStreamItem {
+  eventId?: string;
   reaction: string;
   creationDate: Date;
   userId?: string;
@@ -40,6 +41,12 @@ export const isFreshReaction = (
 export const normalizeReactionStream = (
   reactions: RawReactionStreamItem[] = [],
 ): ReactionStreamItem[] => reactions.map((reaction) => ({
+  eventId: [
+    'stream',
+    reaction.userId || 'unknown',
+    reaction.reactionEmoji || 'none',
+    reaction.createdAt || 'unknown',
+  ].join('-'),
   reaction: reaction.reactionEmoji || 'none',
   creationDate: new Date(reaction.createdAt || 0),
   userId: reaction.userId,
