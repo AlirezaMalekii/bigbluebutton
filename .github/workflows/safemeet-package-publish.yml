@@ -1,0 +1,83 @@
+name: SafeMeet BBB Package Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: "Comma-separated package names to build"
+        required: true
+        default: "bbb-html5,bigbluebutton"
+      publish:
+        description: "Publish artifacts to new-bbb-install.roomeet.ir"
+        required: true
+        type: boolean
+        default: true
+
+concurrency:
+  group: safemeet-package-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup SSH
+        if: inputs.publish
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SAFEMEET_BBB_REPO_SSH_PRIVATE_KEY || secrets.DEPLOY_SSH_PRIVATE_KEY }}
+
+      - name: Add repo server to known_hosts
+        if: inputs.publish
+        env:
+          REPO_HOST: ${{ secrets.SAFEMEET_BBB_REPO_HOST || '78.157.39.4' }}
+          REPO_PORT: ${{ secrets.SAFEMEET_BBB_REPO_PORT || '3698' }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "$REPO_PORT" -H "$REPO_HOST" >> ~/.ssh/known_hosts
+
+      - name: Build selected packages
+        env:
+          PACKAGE_INPUT: ${{ inputs.packages }}
+          FORCE_GIT_REV: safemeet.${{ github.sha }}
+          FORCE_COMMIT_DATE: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          rm -rf artifacts
+          mkdir -p artifacts
+
+          IFS=',' read -ra PACKAGES <<< "$PACKAGE_INPUT"
+          for pkg in "${PACKAGES[@]}"; do
+            pkg="$(echo "$pkg" | xargs)"
+            [[ -n "$pkg" ]] || continue
+            echo "::group::Build ${pkg}"
+            build/setup.sh "$pkg"
+            echo "::endgroup::"
+          done
+
+          test -n "$(ls -A artifacts 2>/dev/null)"
+
+      - name: Publish packages
+        if: inputs.publish
+        env:
+          REPO_HOST: ${{ secrets.SAFEMEET_BBB_REPO_HOST || '78.157.39.4' }}
+          REPO_PORT: ${{ secrets.SAFEMEET_BBB_REPO_PORT || '3698' }}
+          REPO_USER: ${{ secrets.SAFEMEET_BBB_REPO_USER || 'root' }}
+          REPO_DOMAIN: new-bbb-install.roomeet.ir
+        run: scripts/safemeet-publish-packages.sh --debs "artifacts/*.deb"
+
+      - name: Upload package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: safemeet-bbb-debs
+          path: artifacts/*.deb

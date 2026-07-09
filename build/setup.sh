@@ -13,7 +13,10 @@ cd ..
 
 mkdir -p artifacts
 
-DOCKER_IMAGE=$(python3 -c 'import yaml; print(yaml.load(open("./.gitlab-ci.yml"), Loader=yaml.SafeLoader)["default"]["image"])')
+DOCKER_IMAGE="$(
+    python3 -c 'import yaml; print(yaml.load(open("./.gitlab-ci.yml"), Loader=yaml.SafeLoader)["default"]["image"])' 2>/dev/null \
+    || ruby -e 'require "yaml"; puts YAML.load_file(".gitlab-ci.yml")["default"]["image"]'
+)"
 
 LOCAL_BUILD=1
 if [ "$LOCAL_BUILD" != 1 ] ; then
@@ -42,8 +45,8 @@ rm $DOCKER_CONTAINER_ID_FILE
 
 kill_docker() {
    if [[ -r $DOCKER_CONTAINER_ID_FILE ]]; then
-      sudo docker kill $(cat $DOCKER_CONTAINER_ID_FILE)
-      sudo rm $DOCKER_CONTAINER_ID_FILE
+      "${DOCKER_CMD[@]}" kill $(cat $DOCKER_CONTAINER_ID_FILE)
+      rm $DOCKER_CONTAINER_ID_FILE
    fi
    tput cnorm
    exit 1
@@ -57,7 +60,17 @@ max_retries=5
 retry_wait=300  # wait time in seconds (5 minutes)
 
 while [[ $retry_count -lt $max_retries ]]; do
-    if sudo docker pull "$DOCKER_IMAGE" || false; then
+    if docker version >/dev/null 2>&1; then
+        DOCKER_CMD=(docker)
+    elif sudo -n docker version >/dev/null 2>&1; then
+        DOCKER_CMD=(sudo docker)
+    else
+        echo "Docker daemon is not reachable with docker or passwordless sudo docker."
+        echo "Start Docker locally, or run this build on a CI runner with Docker enabled."
+        exit 1
+    fi
+
+    if "${DOCKER_CMD[@]}" pull "$DOCKER_IMAGE" || false; then
         echo "Docker image pulled successfully."
         break
     else
@@ -75,7 +88,7 @@ done
 
 
 # -v "$CACHE_DIR/dev":/root/dev
-sudo docker run --rm --detach --cidfile $DOCKER_CONTAINER_ID_FILE \
+"${DOCKER_CMD[@]}" run --rm --detach --cidfile $DOCKER_CONTAINER_ID_FILE \
         --env GIT_REV=$GIT_REV --env COMMIT_DATE=$COMMIT_DATE --env LOCAL_BUILD=$LOCAL_BUILD \
         --mount type=bind,src="$PWD",dst=/mnt \
         --mount type=bind,src="${PWD}/artifacts,dst=/artifacts" \
@@ -87,7 +100,7 @@ sudo docker run --rm --detach --cidfile $DOCKER_CONTAINER_ID_FILE \
 #        -v "$CACHE_DIR/$DISTRO/.m2:/root/.m2" \
 #        -v "$TMP/$TARGET:$TMP/$TARGET"  \
 
-sudo docker attach --no-stdin $(sudo cat $DOCKER_CONTAINER_ID_FILE)
-sudo rm $DOCKER_CONTAINER_ID_FILE
+"${DOCKER_CMD[@]}" attach --no-stdin $(cat $DOCKER_CONTAINER_ID_FILE)
+rm $DOCKER_CONTAINER_ID_FILE
 
 find artifacts

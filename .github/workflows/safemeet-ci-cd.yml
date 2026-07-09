@@ -118,7 +118,7 @@ jobs:
       - name: Run RSpec
         run: bundle exec rspec spec/recordandplayback/safemeet_asset_spec.rb
 
-  deploy:
+  publish-packages:
     needs: [changes, shellcheck, html5-checks, safemeet-recording-specs]
     if: |
       always() &&
@@ -129,8 +129,7 @@ jobs:
       (needs.html5-checks.result == 'success' || needs.html5-checks.result == 'skipped') &&
       (needs.safemeet-recording-specs.result == 'success' || needs.safemeet-recording-specs.result == 'skipped')
     runs-on: ubuntu-latest
-    environment: production
-    timeout-minutes: 120
+    timeout-minutes: 240
 
     steps:
       - name: Checkout
@@ -141,121 +140,85 @@ jobs:
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.SAFEMEET_BBB_REPO_SSH_PRIVATE_KEY || secrets.DEPLOY_SSH_PRIVATE_KEY }}
 
-      - name: Add server to known_hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -p "${{ secrets.DEPLOY_PORT }}" -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
-
-      - name: Plan deploy
-        id: deploy_plan
+      - name: Add repository server to known_hosts
         env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          REMOTE_DIR: ${{ secrets.DEPLOY_REMOTE_DIR }}
+          REPO_HOST: ${{ secrets.SAFEMEET_BBB_REPO_HOST || '78.157.39.4' }}
+          REPO_PORT: ${{ secrets.SAFEMEET_BBB_REPO_PORT || '3698' }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "$REPO_PORT" -H "$REPO_HOST" >> ~/.ssh/known_hosts
+
+      - name: Plan package publish
+        id: package_plan
+        env:
           GITHUB_EVENT_BEFORE: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          SSH_OPTS=(-p "$DEPLOY_PORT" -o BatchMode=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=120 -o TCPKeepAlive=yes)
-          LAST="$(ssh "${SSH_OPTS[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" "cat '${REMOTE_DIR}/.deploy-state' 2>/dev/null" | head -1 | tr -d '[:space:]' || true)"
-          BASELINE="$LAST"
-          if [[ -z "$BASELINE" && -n "${GITHUB_EVENT_BEFORE:-}" && "$GITHUB_EVENT_BEFORE" != 0000000000000000000000000000000000000000 ]]; then
+          BASELINE=""
+          if [[ -n "${GITHUB_EVENT_BEFORE:-}" && "$GITHUB_EVENT_BEFORE" != 0000000000000000000000000000000000000000 ]]; then
             BASELINE="$GITHUB_EVENT_BEFORE"
           fi
           if [[ -n "$BASELINE" ]]; then
             git fetch --no-tags --depth=1 origin "$BASELINE" 2>/dev/null || git fetch --no-tags origin "$BASELINE" 2>/dev/null || true
           fi
-          PLAN="$(bash scripts/deploy-detect-components.sh "$BASELINE" HEAD 2>/dev/null || true)"
-          echo "DEPLOY_BASELINE_COMMIT=${BASELINE}" >> "$GITHUB_ENV"
-          if [[ "$PLAN" == "full" ]]; then
-            echo "mode=full" >> "$GITHUB_OUTPUT"
-            echo "Deploy plan: **full** (first deploy or deploy scripts changed)"
-          elif [[ -z "${PLAN// }" ]]; then
-            echo "mode=rsync-only" >> "$GITHUB_OUTPUT"
-            echo "Deploy plan: **rsync only** (no component changes)"
+          PACKAGES="$(bash scripts/safemeet-detect-packages.sh "$BASELINE" HEAD 2>/dev/null || true)"
+          if [[ -z "${PACKAGES// }" ]]; then
+            echo "mode=installer-only" >> "$GITHUB_OUTPUT"
+            echo "packages=" >> "$GITHUB_OUTPUT"
+            echo "Package publish plan: installer/config assets only"
           else
-            COMPACT="$(echo "$PLAN" | tr '\n' ' ' | sed 's/  */ /g;s/^ //;s/ $//')"
-            echo "mode=smart" >> "$GITHUB_OUTPUT"
-            echo "components=${COMPACT}" >> "$GITHUB_OUTPUT"
-            echo "CI_DEPLOY_COMPONENTS=${COMPACT}" >> "$GITHUB_ENV"
-            echo "Deploy plan: **smart** → ${COMPACT}"
+            COMPACT="$(echo "$PACKAGES" | tr '\n' ' ' | sed 's/  */ /g;s/^ //;s/ $//')"
+            {
+              echo "mode=packages"
+              echo "packages=${COMPACT}"
+            } >> "$GITHUB_OUTPUT"
+            echo "Package publish plan: ${COMPACT}"
           fi
 
-      - name: Setup Node.js (html5 build)
-        if: >-
-          steps.deploy_plan.outputs.mode == 'full' ||
-          (steps.deploy_plan.outputs.components != '' &&
-           contains(format(' {0} ', steps.deploy_plan.outputs.components), ' html5 '))
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: npm
-          cache-dependency-path: bigbluebutton-html5/package-lock.json
-
-      - name: Build HTML5 in CI
-        id: html5_ci_build
-        if: >-
-          steps.deploy_plan.outputs.mode == 'full' ||
-          (steps.deploy_plan.outputs.components != '' &&
-           contains(format(' {0} ', steps.deploy_plan.outputs.components), ' html5 '))
-        working-directory: bigbluebutton-html5
-        run: |
-          set -euo pipefail
-          npm ci
-          npm run build
-          test -d dist && test -n "$(ls -A dist)"
-
-      - name: Deploy to BBB server
+      - name: Build selected Debian packages
+        if: steps.package_plan.outputs.packages != ''
         env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          REMOTE_DIR: ${{ secrets.DEPLOY_REMOTE_DIR }}
-          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
-          DEPLOY_SKIP_AKKA_FSESL: ${{ needs.changes.outputs.fsesl != 'true' && '1' || '0' }}
-          CI_HTML5_PREBUILT: ${{ steps.html5_ci_build.outcome == 'success' && '1' || '0' }}
+          PACKAGE_LIST: ${{ steps.package_plan.outputs.packages }}
+          FORCE_GIT_REV: safemeet.${{ github.sha }}
+          FORCE_COMMIT_DATE: ${{ github.run_id }}
         run: |
           set -euo pipefail
-          ARGS=()
-          if [[ "${DEPLOY_SKIP_AKKA_FSESL}" == "1" ]]; then
-            ARGS+=(--skip-akka-fsesl)
-          fi
-          MODE="${{ steps.deploy_plan.outputs.mode }}"
-          COMPONENTS="${{ steps.deploy_plan.outputs.components }}"
-          PREBUILT="${CI_HTML5_PREBUILT:-0}"
-          case "$MODE" in
-            rsync-only)
-              ./deploy.sh "${ARGS[@]}"
-              ;;
-            smart)
-              if [[ "$COMPONENTS" == "html5" && "$PREBUILT" == "1" ]]; then
-                ./deploy.sh "${ARGS[@]}" --skip-sync --only html5
-              elif [[ "$COMPONENTS" != *" "* ]]; then
-                ./deploy.sh "${ARGS[@]}" --only "$COMPONENTS"
-              else
-                ./deploy.sh "${ARGS[@]}"
-              fi
-              ;;
-            full|*)
-              ./deploy.sh "${ARGS[@]}"
-              ;;
-          esac
+          rm -rf artifacts
+          mkdir -p artifacts
 
-      - name: Deploy summary
+          for package in $PACKAGE_LIST; do
+            echo "::group::Build ${package}"
+            build/setup.sh "$package"
+            echo "::endgroup::"
+          done
+
+          test -n "$(ls -A artifacts 2>/dev/null)"
+
+      - name: Publish installer and packages to repo server
+        env:
+          REPO_HOST: ${{ secrets.SAFEMEET_BBB_REPO_HOST || '78.157.39.4' }}
+          REPO_PORT: ${{ secrets.SAFEMEET_BBB_REPO_PORT || '3698' }}
+          REPO_USER: ${{ secrets.SAFEMEET_BBB_REPO_USER || 'root' }}
+          REPO_DOMAIN: new-bbb-install.roomeet.ir
+        run: scripts/safemeet-publish-packages.sh --debs "artifacts/*.deb"
+
+      - name: Publish summary
         run: |
-          echo "### BigBlueButton deploy" >> "$GITHUB_STEP_SUMMARY"
+          echo "### BigBlueButton package publish" >> "$GITHUB_STEP_SUMMARY"
           echo "- Branch: \`${{ github.ref_name }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Commit: \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Mode: ${{ steps.deploy_plan.outputs.mode }}${{ steps.deploy_plan.outputs.components && format(' → {0}', steps.deploy_plan.outputs.components) || '' }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Server: BBB (${{ secrets.DEPLOY_HOST }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Mode: ${{ steps.package_plan.outputs.mode }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Packages: ${{ steps.package_plan.outputs.packages || 'none; installer only' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Repository: https://new-bbb-install.roomeet.ir/jammy-300" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "> After recording indexer changes, re-index affected recordings manually on the server." >> "$GITHUB_STEP_SUMMARY"
+          echo "> CI no longer pushes source code to the old BBB server or runs BBB deploy scripts there." >> "$GITHUB_STEP_SUMMARY"
 
   auto-repair:
     name: CI Auto-Repair
-    needs: [changes, shellcheck, html5-checks, safemeet-recording-specs, deploy]
+    needs: [changes, shellcheck, html5-checks, safemeet-recording-specs, publish-packages]
     if: >-
       always() &&
       github.event_name == 'push' &&
@@ -265,7 +228,7 @@ jobs:
         needs.shellcheck.result == 'failure' ||
         needs.html5-checks.result == 'failure' ||
         needs.safemeet-recording-specs.result == 'failure' ||
-        needs.deploy.result == 'failure'
+        needs.publish-packages.result == 'failure'
       )
     runs-on: ubuntu-latest
     permissions:
