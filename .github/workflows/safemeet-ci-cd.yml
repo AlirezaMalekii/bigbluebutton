@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [safemeet]
   workflow_dispatch:
+    inputs:
+      force_full_publish:
+        description: Build and publish the full SafeMeet BBB package set
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: safemeet-ci-cd-${{ github.ref }}
@@ -122,7 +128,10 @@ jobs:
     needs: [changes, shellcheck, html5-checks, safemeet-recording-specs]
     if: |
       always() &&
-      github.event_name == 'push' &&
+      (
+        github.event_name == 'push' ||
+        (github.event_name == 'workflow_dispatch' && inputs.force_full_publish)
+      ) &&
       github.ref == 'refs/heads/safemeet' &&
       needs.changes.result == 'success' &&
       (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped') &&
