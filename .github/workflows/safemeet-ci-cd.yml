@@ -155,10 +155,21 @@ jobs:
         id: package_plan
         env:
           GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+          REPO_DOMAIN: new-bbb-install.roomeet.ir
         run: |
           set -euo pipefail
           BASELINE=""
-          if [[ -n "${GITHUB_EVENT_BEFORE:-}" && "$GITHUB_EVENT_BEFORE" != 0000000000000000000000000000000000000000 ]]; then
+          EXISTING_REPO_PACKAGES="$(
+            curl -fsSL "https://${REPO_DOMAIN}/jammy-300/dists/bigbluebutton-jammy/main/binary-amd64/Packages.gz" \
+              | gzip -dc \
+              | grep -c '^Package:' || true
+          )"
+
+          if [[ "${EXISTING_REPO_PACKAGES:-0}" == "0" ]]; then
+            git fetch --no-tags origin v3.0.x-release
+            BASELINE="$(git merge-base HEAD origin/v3.0.x-release)"
+            echo "SafeMeet repo is empty; initial package baseline: ${BASELINE}"
+          elif [[ -n "${GITHUB_EVENT_BEFORE:-}" && "$GITHUB_EVENT_BEFORE" != 0000000000000000000000000000000000000000 ]]; then
             BASELINE="$GITHUB_EVENT_BEFORE"
           fi
           if [[ -n "$BASELINE" ]]; then
@@ -177,6 +188,10 @@ jobs:
             } >> "$GITHUB_OUTPUT"
             echo "Package publish plan: ${COMPACT}"
           fi
+
+      - name: Get external build dependencies
+        if: steps.package_plan.outputs.packages != ''
+        run: build/get_external_dependencies.sh
 
       - name: Build selected Debian packages
         if: steps.package_plan.outputs.packages != ''
