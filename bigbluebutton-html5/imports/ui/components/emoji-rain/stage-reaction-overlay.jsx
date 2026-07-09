@@ -6,6 +6,7 @@ import React, {
 } from 'react';
 import PropTypes from 'prop-types';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
+import { isFreshReaction } from './reaction-stream';
 import { layoutSelectOutput } from '../layout/context';
 import Styled from './stage-reaction-overlay-styles';
 
@@ -57,14 +58,14 @@ const StageReactionOverlay = ({ reactions }) => {
   ]);
 
   useEffect(() => {
-    if (!animations || document.hidden || !hasVisibleBounds(activeBounds)) return undefined;
+    // Do not gate on document.hidden: presenter may be on another display while
+    // viewers still need bubbles; stream delivery already handles freshness.
+    if (!animations || !hasVisibleBounds(activeBounds)) return undefined;
 
     const now = Date.now();
     const reactionsToShow = reactions.filter(({ reaction, creationDate }) => {
       if (!reaction || reaction === 'none') return false;
-
-      const createdAt = creationDate.getTime();
-      return now - createdAt <= 1200;
+      return isFreshReaction(creationDate, now);
     });
 
     if (reactionsToShow.length === 0) return undefined;
@@ -102,7 +103,8 @@ const StageReactionOverlay = ({ reactions }) => {
 
     const timers = nextReactions.map(({ id }) => setTimeout(() => {
       setFloatingReactions((current) => current.filter((reaction) => reaction.id !== id));
-      seenReactionsRef.current.delete(id);
+      // Keep key in seen set so late re-deliveries of the same stream row
+      // do not replay the bubble after it finished animating.
     }, REACTION_TTL_MS));
 
     return () => timers.forEach(clearTimeout);

@@ -555,6 +555,12 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
     userReaction: {
       enabled: true,
       expire: 60,
+      bubbleFreshnessSeconds: 15,
+      rateLimit: {
+        enabled: true,
+        maxPerWindow: 5,
+        windowSeconds: 60,
+      },
       reactions: [
         {
           id: 'smiley',

@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useReactiveVar } from '@apollo/client';
-import { reactionStreamVar } from '/imports/ui/components/emoji-rain/reaction-stream';
+import {
+  isFreshReaction,
+  reactionStreamVar,
+} from '/imports/ui/components/emoji-rain/reaction-stream';
 import { overlayVisibilityVar } from './service';
 import {
   OverlayReactionBubble,
@@ -35,7 +38,7 @@ const ScreenShareChatReactionOverlay: React.FC = () => {
     const now = Date.now();
     const reactionsToShow = reactions.filter(({ reaction, creationDate }) => {
       if (!reaction || reaction === 'none') return false;
-      return now - creationDate.getTime() <= 1200;
+      return isFreshReaction(creationDate, now);
     });
 
     if (reactionsToShow.length === 0) return undefined;
@@ -69,7 +72,6 @@ const ScreenShareChatReactionOverlay: React.FC = () => {
 
     const timers = nextReactions.map(({ id }) => setTimeout(() => {
       setFloatingReactions((current) => current.filter((reaction) => reaction.id !== id));
-      seenReactionsRef.current.delete(id);
     }, REACTION_TTL_MS));
 
     return () => timers.forEach(clearTimeout);

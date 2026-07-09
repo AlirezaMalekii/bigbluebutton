@@ -5,6 +5,8 @@ import BBBMenu from '/imports/ui/components/common/menu/component';
 import { convertRemToPixels } from '/imports/utils/dom-utils';
 import { SET_REACTION_EMOJI } from '/imports/ui/core/graphql/mutations/userMutations';
 import { useMutation } from '@apollo/client';
+import { notify } from '/imports/ui/services/notification';
+import { consumeReactionRateLimit } from './rate-limit';
 import Styled from './styles';
 
 const ReactionsButton = (props) => {
@@ -33,6 +35,11 @@ const ReactionsButton = (props) => {
       id: 'app.actionsBar.reactions.removeReactionLabel',
       description: 'remove reaction Label',
     },
+    rateLimitLabel: {
+      id: 'app.actionsBar.reactions.rateLimitLabel',
+      description: 'toast when reaction rate limit is reached',
+      defaultMessage: 'Reaction limit reached ({max} per {window}s). Wait {seconds}s and try again.',
+    },
   });
 
   const handleClose = () => {
@@ -43,6 +50,23 @@ const ReactionsButton = (props) => {
   };
 
   const handleReactionSelect = (reaction) => {
+    // Clearing status should not consume the send budget.
+    if (reaction !== 'none') {
+      const rate = consumeReactionRateLimit();
+      if (!rate.allowed) {
+        notify(
+          intl.formatMessage(intlMessages.rateLimitLabel, {
+            max: rate.maxPerWindow,
+            window: rate.windowSeconds,
+            seconds: rate.retryAfterSeconds,
+          }),
+          'warning',
+          'warning',
+        );
+        return;
+      }
+    }
+
     setReactionEmoji({ variables: { reactionEmoji: reaction } });
   };
 

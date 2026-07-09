@@ -547,9 +547,18 @@ export interface EmojiPicker {
   enable: boolean
 }
 
+export interface UserReactionRateLimit {
+  enabled: boolean
+  maxPerWindow: number
+  windowSeconds: number
+}
+
 export interface UserReaction {
   enabled: boolean
   expire: number
+  /** Seconds a stream reaction stays eligible for floating bubbles on all clients. */
+  bubbleFreshnessSeconds?: number
+  rateLimit?: UserReactionRateLimit
   reactions: Reaction[]
 }
 

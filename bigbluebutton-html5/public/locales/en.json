@@ -772,6 +772,7 @@
     "app.actionsBar.actionsDropdown.takePresenterDesc": "Assign yourself as the new presenter",
     "app.actionsBar.reactions.reactionsButtonLabel": "Share a reaction",
     "app.actionsBar.reactions.removeReactionLabel": "Remove reaction",
+    "app.actionsBar.reactions.rateLimitLabel": "Reaction limit reached ({max} per {window}s). Wait {seconds}s and try again.",
     "app.actionsBar.reactions.raiseHand": "Raise your hand",
     "app.actionsBar.reactions.lowHand": "Lower your hand",
     "app.actionsBar.reactions.lowUserHand": "Lower user's hand",

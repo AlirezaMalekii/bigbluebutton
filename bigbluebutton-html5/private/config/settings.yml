@@ -781,6 +781,14 @@ public:
   userReaction:
     enabled: true
     expire: 30
+    # How long (seconds) a reaction stream event remains eligible for stage/chat bubbles
+    # on remote clients (network delay). Increase if viewers miss bubbles.
+    bubbleFreshnessSeconds: 15
+    # Client-side send budget (admin-tunable). Default: 5 reactions per 60 seconds.
+    rateLimit:
+      enabled: true
+      maxPerWindow: 5
+      windowSeconds: 60
     reactions:
       - id: 'smiley'
         native: '😃'

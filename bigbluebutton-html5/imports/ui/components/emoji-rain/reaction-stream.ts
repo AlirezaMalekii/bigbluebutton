@@ -16,7 +16,26 @@ interface RawReactionStreamItem {
   } | null;
 }
 
+/** Default: accept stream events for ~15s so remote clients still animate bubbles. */
+const DEFAULT_FRESHNESS_MS = 15000;
+
 export const reactionStreamVar = makeVar<ReactionStreamItem[]>([]);
+
+export const getReactionBubbleFreshnessMs = (): number => {
+  const configured = window.meetingClientSettings?.public?.userReaction?.bubbleFreshnessSeconds;
+  if (typeof configured === 'number' && configured > 0) {
+    return Math.round(configured * 1000);
+  }
+  return DEFAULT_FRESHNESS_MS;
+};
+
+export const isFreshReaction = (
+  creationDate: Date,
+  now: number = Date.now(),
+): boolean => {
+  const ageMs = now - creationDate.getTime();
+  return ageMs >= 0 && ageMs <= getReactionBubbleFreshnessMs();
+};
 
 export const normalizeReactionStream = (
   reactions: RawReactionStreamItem[] = [],
@@ -30,4 +49,6 @@ export const normalizeReactionStream = (
 export default {
   reactionStreamVar,
   normalizeReactionStream,
+  isFreshReaction,
+  getReactionBubbleFreshnessMs,
 };

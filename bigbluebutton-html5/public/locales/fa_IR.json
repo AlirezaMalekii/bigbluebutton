@@ -784,6 +784,7 @@
   "app.actionsBar.actionsDropdown.takePresenterDesc": "نقش ارائه‌دهنده را به خود اختصاص دهید",
   "app.actionsBar.reactions.reactionsButtonLabel": "ارسال ایموجی/واکنش",
 "app.actionsBar.reactions.removeReactionLabel": "حذف ری‌اکشن",
+  "app.actionsBar.reactions.rateLimitLabel": "به سقف ارسال ری‌اکشن رسیدید ({max} بار در {window} ثانیه). {seconds} ثانیه صبر کنید و دوباره تلاش کنید.",
   "app.actionsBar.reactions.raiseHand": "اجازه گرفتن (بالابردن دست)",
   "app.actionsBar.reactions.lowHand": "پایین آوردن دست",
   "app.actionsBar.reactions.autoCloseReactionsBarLabel": "بستن خودکار نوار ری‌اکشن‌ها",
