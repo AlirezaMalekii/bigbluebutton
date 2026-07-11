@@ -8,6 +8,7 @@ import {
   defineMessages, injectIntl, FormattedMessage,
 } from 'react-intl';
 import { useMutation } from '@apollo/client';
+import Icon from '/imports/ui/components/common/icon/component';
 import Styled from './styles';
 import AudioSettings from '../audio-settings/component';
 import EchoTest from '../echo-test/component';
@@ -448,46 +449,51 @@ const AudioModal = ({
 
     return (
       <div>
-        <Styled.AudioChoiceIntro data-test="audioModalChoiceDesc">
-          {intl.formatMessage(intlMessages.audioChoiceDesc)}
-        </Styled.AudioChoiceIntro>
         <Styled.AudioOptions data-test="audioModalOptions">
           {!hideMicrophone && !isMobileNative && (
-            <Styled.AudioOption>
-              <Styled.AudioModalButton
-                label={intl.formatMessage(intlMessages.microphoneLabel)}
-                data-test="microphoneBtn"
-                aria-describedby="mic-description"
-                icon="unmute"
-                circle
-                size="jumbo"
-                disabled={audioLocked}
-                onClick={
-                  joinFullAudioImmediately
-                    ? handleJoinMicrophone
-                    : handleGoToEchoTest
-                }
-              />
-              <Styled.AudioOptionDesc id="mic-description">
-                {intl.formatMessage(intlMessages.microphoneDesc)}
-              </Styled.AudioOptionDesc>
-            </Styled.AudioOption>
+            <Styled.AudioChoiceCard
+              type="button"
+              data-test="microphoneBtn"
+              aria-describedby="mic-description"
+              disabled={audioLocked}
+              onClick={
+                joinFullAudioImmediately
+                  ? handleJoinMicrophone
+                  : handleGoToEchoTest
+              }
+            >
+              <Styled.AudioChoiceIcon aria-hidden="true">
+                <Icon iconName="unmute" />
+              </Styled.AudioChoiceIcon>
+              <Styled.AudioChoiceText>
+                <Styled.AudioChoiceTitle>
+                  {intl.formatMessage(intlMessages.microphoneLabel)}
+                </Styled.AudioChoiceTitle>
+                <Styled.AudioChoiceHint id="mic-description">
+                  {intl.formatMessage(intlMessages.microphoneDesc)}
+                </Styled.AudioChoiceHint>
+              </Styled.AudioChoiceText>
+            </Styled.AudioChoiceCard>
           )}
           {listenOnlyMode && (
-            <Styled.AudioOption>
-              <Styled.AudioModalButton
-                label={intl.formatMessage(intlMessages.listenOnlyLabel)}
-                data-test="listenOnlyBtn"
-                aria-describedby="listenOnly-description"
-                icon="listen"
-                circle
-                size="jumbo"
-                onClick={handleJoinListenOnly}
-              />
-              <Styled.AudioOptionDesc id="listenOnly-description">
-                {intl.formatMessage(intlMessages.listenOnlyDesc)}
-              </Styled.AudioOptionDesc>
-            </Styled.AudioOption>
+            <Styled.AudioChoiceCard
+              type="button"
+              data-test="listenOnlyBtn"
+              aria-describedby="listenOnly-description"
+              onClick={handleJoinListenOnly}
+            >
+              <Styled.AudioChoiceIcon aria-hidden="true">
+                <Icon iconName="listen" />
+              </Styled.AudioChoiceIcon>
+              <Styled.AudioChoiceText>
+                <Styled.AudioChoiceTitle>
+                  {intl.formatMessage(intlMessages.listenOnlyLabel)}
+                </Styled.AudioChoiceTitle>
+                <Styled.AudioChoiceHint id="listenOnly-description">
+                  {intl.formatMessage(intlMessages.listenOnlyDesc)}
+                </Styled.AudioChoiceHint>
+              </Styled.AudioChoiceText>
+            </Styled.AudioChoiceCard>
           )}
         </Styled.AudioOptions>
         {formattedDialNum ? (
@@ -727,6 +733,8 @@ const AudioModal = ({
     <Styled.Background isBlurred={Session.getItem('audioModalIsOpen')}>
       <Styled.AudioModal
         modalName="AUDIO"
+        className="skyroom-audio-choice-modal"
+        hideBorder
         onRequestClose={closeModal}
         data-test="audioModal"
         contentLabel={intl.formatMessage(intlMessages.ariaModalTitle)}

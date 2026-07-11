@@ -33,6 +33,8 @@ const FullscreenModal = styled(Styled.BaseModal)`
 
 const Header = styled.header`
   display: flex;
+  align-items: center;
+  gap: 1rem;
   padding: ${lineHeightComputed} 0;
   border-bottom: ${borderSize} solid ${colorGrayLightest};
 `;
@@ -50,10 +52,12 @@ const Title = styled.h1`
 `;
 
 const Actions = styled.div`
-  flex: 0 1 35%;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-inline-start: auto;
 `;
 
 const Content = styled.div`
@@ -63,11 +67,11 @@ const Content = styled.div`
 `;
 
 const DismissButton = styled(Button)`
-  flex: 0 1 48%;
+  flex: 0 0 auto;
 `;
 
 const ConfirmButton = styled(Button)`
-  flex: 0 1 48%;
+  flex: 0 0 auto;
 
   ${({ popout }) => popout === 'popout' && `
     & > i {

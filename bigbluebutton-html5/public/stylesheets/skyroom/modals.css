@@ -146,13 +146,39 @@
 }
 
 #fsmodal header [class*="Actions"] {
-  gap: 12px !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  max-width: none !important;
+  gap: 0.75rem !important;
   justify-content: flex-end !important;
+  margin-inline-start: auto !important;
 }
 
 #fsmodal button[data-test="modalDismissButton"],
 #fsmodal button[data-test="modalConfirmButton"] {
-  flex: 0 1 auto !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 6.5rem;
+}
+
+/* Group dismiss + confirm in simple/confirmation modals */
+[role="dialog"] [class*="Footer"]:has([class*="ConfirmationButton"]),
+[role="dialog"] [class*="Footer"]:has([class*="CancelButton"]),
+.ReactModal__Content [class*="Footer"]:has([class*="ConfirmationButton"]),
+.ReactModal__Content [class*="Footer"]:has([class*="CancelButton"]) {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.75rem !important;
+}
+
+[role="dialog"] [class*="Footer"] .buttonWrapper,
+.ReactModal__Content [class*="Footer"] .buttonWrapper {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  margin: 0 !important;
 }
 
 #fsmodal [class*="SettingsTabs"] {
@@ -434,40 +460,32 @@
 /* Connection status modal — see connection-status-modal.css */
 
 /* ---------------------------------------------------------------------
-   7) Audio modal — icon/label spacing + visible option descriptions
+   7) Audio modal — choice cards (mic / listen-only)
    --------------------------------------------------------------------- */
-[role="dialog"] [data-test="audioModalChoiceDesc"] {
-  color: var(--skyroom-modal-text-muted, #aab6c7) !important;
-  font-size: 0.9rem !important;
-  line-height: 1.55 !important;
-  margin-bottom: 1.25rem !important;
-}
-
 [role="dialog"] [data-test="audioModalOptions"] {
-  gap: 1.5rem 2.5rem !important;
+  gap: 0.625rem !important;
+  width: 100% !important;
 }
 
-[role="dialog"] [data-test="audioModalOptions"] [id="mic-description"],
-[role="dialog"] [data-test="audioModalOptions"] [id="listenOnly-description"] {
+[role="dialog"] [data-test="audioModalOptions"] [class*="AudioChoiceCard"] {
+  color: inherit !important;
+}
+
+[role="dialog"] [data-test="audioModalOptions"] [class*="AudioChoiceTitle"] {
+  color: var(--skyroom-modal-text, #eef4fb) !important;
+}
+
+[role="dialog"] [data-test="audioModalOptions"] [class*="AudioChoiceHint"] {
   color: var(--skyroom-modal-text-muted, #aab6c7) !important;
-  font-size: 0.78rem !important;
-  line-height: 1.45 !important;
-  margin-top: 0.65rem !important;
-  max-width: 11.5rem;
 }
 
-[role="dialog"] [data-test="audioModalOptions"] button > span:last-child,
 [role="dialog"] [data-test="echoYesBtn"] > span:last-child,
-[role="dialog"] [data-test="echoNoBtn"] > span:last-child,
-[role="dialog"] [data-test="microphoneBtn"] > span:last-child,
-[role="dialog"] [data-test="listenOnlyBtn"] > span:last-child {
+[role="dialog"] [data-test="echoNoBtn"] > span:last-child {
   color: var(--skyroom-modal-text, #eef4fb) !important;
   margin-top: 1rem !important;
   display: block !important;
 }
 
-[role="dialog"] [data-test="microphoneBtn"] > span:first-child,
-[role="dialog"] [data-test="listenOnlyBtn"] > span:first-child,
 [role="dialog"] [data-test="echoYesBtn"] > span:first-child,
 [role="dialog"] [data-test="echoNoBtn"] > span:first-child {
   margin-bottom: 0 !important;
@@ -520,17 +538,20 @@
   color: #ff8a85 !important;
 }
 
-[role="dialog"] input[data-test^="roomName-"],
-[role="dialog"] input[readonly][data-test="roomUserItem"],
-[role="dialog"] #breakoutBox-0 ~ [class*="SpanWarn"],
-[role="dialog"] [data-test="warningNoUserAssigned"] {
-  color: var(--skyroom-modal-text-muted, #aab6c7) !important;
-}
-
 [role="dialog"] input[type="text"][readonly] {
   background: rgba(20, 169, 158, 0.1) !important;
   border-color: rgba(20, 169, 158, 0.24) !important;
   color: var(--skyroom-modal-text, #eef4fb) !important;
+}
+
+[role="dialog"] [data-test="warningNoUserAssigned"] {
+  display: block;
+  width: 100%;
+  margin-top: 0.875rem !important;
+  color: var(--skyroom-modal-text-muted, #aab6c7) !important;
+  text-align: start !important;
+  position: static !important;
+  white-space: normal !important;
 }
 
 [role="dialog"] input[type="text"]:not([readonly]),

@@ -1393,28 +1393,30 @@
     font-size: 0.85rem !important;
   }
 
-  /* Audio choice modal (mic vs listen-only) — centered compact card on phone */
-  html[data-skyroom="true"] [data-test="audioModal"].ReactModal__Content {
+  /* Audio choice modal (mic vs listen-only) — minimal centered card on phone */
+  html[data-skyroom="true"] [data-test="audioModal"].ReactModal__Content,
+  html[data-skyroom="true"] [data-test="audioModal"].skyroom-audio-choice-modal {
     position: fixed !important;
     top: 50% !important;
     left: 50% !important;
     right: auto !important;
     bottom: auto !important;
     transform: translate(-50%, -50%) !important;
-    width: min(88vw, 300px) !important;
+    width: min(92vw, 320px) !important;
     min-width: 0 !important;
-    max-width: min(88vw, 300px) !important;
+    max-width: min(92vw, 320px) !important;
     height: auto !important;
-    max-height: min(88dvh, 520px) !important;
+    max-height: min(88dvh, 420px) !important;
     margin: 0 !important;
-    border-radius: 16px !important;
-    padding: 12px 12px 14px !important;
+    border-radius: 20px !important;
+    padding: 14px 14px 16px !important;
     overflow: visible !important;
     display: flex !important;
     flex-direction: column !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
     box-shadow:
-      0 20px 52px rgba(0, 0, 0, 0.48),
-      0 0 0 1px rgba(32, 199, 187, 0.14) !important;
+      0 24px 64px rgba(0, 0, 0, 0.52),
+      0 0 0 1px rgba(20, 169, 158, 0.08) !important;
   }
 
   html[data-skyroom="true"] [data-test="audioModal"].ReactModal__Content::before {
@@ -1427,12 +1429,13 @@
   }
 
   html[data-skyroom="true"] [data-test="audioModal"] [class*="Header"] {
-    margin-bottom: 0.35rem !important;
+    margin-bottom: 0.5rem !important;
     padding-bottom: 0 !important;
-    font-size: 0.9rem !important;
+    font-size: 0.9375rem !important;
     font-weight: 600 !important;
     line-height: 1.35 !important;
     text-align: center !important;
+    border-bottom: none !important;
   }
 
   html[data-skyroom="true"] [data-test="audioModal"] [class*="Content"] {
@@ -1442,82 +1445,23 @@
     -webkit-overflow-scrolling: touch;
     justify-content: center !important;
     align-items: center !important;
-    padding: 0.15rem 0 !important;
-  }
-
-  html[data-skyroom="true"] [data-test="audioModal"] [class*="AudioChoiceIntro"] {
-    margin-bottom: 0.5rem !important;
-    font-size: 0.72rem !important;
-    line-height: 1.35 !important;
-    padding: 0 0.15rem !important;
-    text-align: center !important;
-    color: var(--skyroom-modal-text-muted, #aab6c7) !important;
+    padding: 0 !important;
   }
 
   html[data-skyroom="true"] [data-test="audioModal"] [class*="AudioOptions"] {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 0.35rem !important;
-    width: 100% !important;
-    margin: 0 !important;
-  }
-
-  html[data-skyroom="true"] [data-test="audioModal"] [class*="AudioOption"] {
-    max-width: 100% !important;
-    width: 100% !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
     gap: 0.5rem !important;
-    text-align: start !important;
-    padding: 0.38rem 0.5rem !important;
-    border-radius: 11px !important;
-    border: 1px solid rgba(32, 199, 187, 0.12) !important;
-    background: rgba(13, 22, 38, 0.42) !important;
-  }
-
-  html[data-skyroom="true"] [data-test="audioModal"] [class*="AudioModalButton"] i,
-  html[data-skyroom="true"] [data-test="audioModal"] [class*="audioModalButton"] i {
-    font-size: 0.9rem !important;
-  }
-
-  html[data-skyroom="true"] [data-test="audioModal"] [class*="AudioModalButton"] span:first-child,
-  html[data-skyroom="true"] [data-test="audioModal"] [class*="audioModalButton"] span:first-child {
-    font-size: 0.9rem !important;
-    border-width: 2px !important;
+    width: 100% !important;
+    max-width: 100% !important;
     margin: 0 !important;
-    flex-shrink: 0 !important;
-    width: 1.75rem !important;
-    height: 1.75rem !important;
-    min-width: 1.75rem !important;
-    min-height: 1.75rem !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border-radius: 50% !important;
+  }
+
+  html[data-skyroom="true"] [data-test="audioModal"] [class*="AudioChoiceCard"] {
+    min-height: 3.25rem !important;
   }
 
   html[data-skyroom="true"] [data-test="audioModal"] [data-test="listenOnlyBtn"] {
-    display: inline-flex !important;
+    display: flex !important;
     visibility: visible !important;
-  }
-
-  html[data-skyroom="true"] [data-test="audioModal"] [class*="AudioModalButton"] span:last-child,
-  html[data-skyroom="true"] [data-test="audioModal"] [class*="audioModalButton"] span:last-child {
-    margin-top: 0 !important;
-    font-size: 0.76rem !important;
-    font-weight: 600 !important;
-    line-height: 1.3 !important;
-    text-align: start !important;
-  }
-
-  html[data-skyroom="true"] [data-test="audioModal"] [class*="AudioOptionDesc"] {
-    font-size: 0.64rem !important;
-    line-height: 1.3 !important;
-    margin: 0.12rem 0 0 !important;
-    text-align: start !important;
-    max-width: none !important;
-    color: var(--skyroom-modal-text-muted, #aab6c7) !important;
   }
 
   /* Connecting / finding devices — compact centered status */
@@ -1559,11 +1503,6 @@
 
   html[data-skyroom="true"] [class*="AudioOptions"]:not([data-test="audioModalOptions"]) {
     gap: 1rem 1.25rem !important;
-  }
-
-  html[data-skyroom="true"] [class*="AudioOptionDesc"]:not([data-test="audioModalOptions"] *) {
-    font-size: 0.72rem !important;
-    line-height: 1.35 !important;
   }
 
   /* ===================================================================

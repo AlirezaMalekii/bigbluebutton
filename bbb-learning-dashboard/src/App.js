@@ -7,9 +7,11 @@ import TabPanelUnstyled from '@mui/base/TabPanelUnstyled';
 import TabsUnstyled from '@mui/base/TabsUnstyled';
 import { Stack } from '@mui/material';
 import './App.css';
+import { FormattedMessage, injectIntl } from 'react-intl';
 import {
-  FormattedMessage, FormattedDate, injectIntl, FormattedTime,
-} from 'react-intl';
+  formatLearningDashboardDate,
+  formatLearningDashboardDateTime,
+} from './utils/datetime';
 import CardBody from './components/Card';
 import UsersTable from './components/UsersTable';
 import UserDetails from './components/UserDetails/component';
@@ -489,12 +491,7 @@ class App extends React.Component {
                 <FormattedMessage id="app.learningDashboard.date" defaultMessage="Date" />
               </span>
               <strong data-test="meetingDateDashboard">
-                <FormattedDate
-                  value={activitiesJson.createdOn}
-                  year="numeric"
-                  month="short"
-                  day="numeric"
-                />
+                {formatLearningDashboardDate(intl, activitiesJson.createdOn)}
               </strong>
             </div>
           </div>
@@ -795,17 +792,8 @@ class App extends React.Component {
                       id="app.learningDashboard.lastUpdatedLabel"
                       defaultMessage="Last updated at"
                     />
-                    &nbsp;
-                    <FormattedTime
-                      value={lastUpdated}
-                    />
-                    &nbsp;
-                    <FormattedDate
-                      value={lastUpdated}
-                      year="numeric"
-                      month="long"
-                      day="numeric"
-                    />
+                    {' '}
+                    {formatLearningDashboardDateTime(intl, lastUpdated)}
                   </>
                 )
               }

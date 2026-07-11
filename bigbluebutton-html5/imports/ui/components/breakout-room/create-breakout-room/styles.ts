@@ -157,18 +157,28 @@ const BreakoutBox = styled.div<BreakoutBoxProps>`
 `;
 
 const SpanWarn = styled.span<withValidProp>`
-  ${({ valid }) => valid && `
-    display: none;
-  `}
+  display: ${({ valid }) => (valid ? 'none' : 'block')};
+  margin: 0.35rem 0 0;
+  font-size: ${fontSizeSmall};
+  color: ${colorDanger};
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: normal;
+`;
 
-  ${({ valid }) => !valid && `
-    margin: .25rem;
-    position: absolute;
-    font-size: ${fontSizeSmall};
-    color: ${colorDanger};
-    font-weight: 200;
-    white-space: nowrap;
-  `}
+const AssignmentHint = styled.p<{ $visible: boolean }>`
+  display: ${({ $visible }) => ($visible ? 'block' : 'none')};
+  width: 100%;
+  margin: 0.875rem 0 0;
+  padding: 0.625rem 0.875rem;
+  border-radius: 10px;
+  font-size: ${fontSizeSmall};
+  line-height: 1.45;
+  color: ${breakoutTextMuted};
+  background: rgba(223, 39, 33, 0.08);
+  border: 1px solid rgba(223, 39, 33, 0.2);
+  box-sizing: border-box;
+  text-align: start;
 `;
 
 const RoomName = styled(BreakoutNameInput)<RoomNameProps>`
@@ -459,6 +469,7 @@ export default {
   BreakoutNameInput,
   BreakoutBox,
   SpanWarn,
+  AssignmentHint,
   RoomName,
   BreakoutSettings,
   FormLabel,

@@ -9,60 +9,129 @@ import {
 import { lineHeightComputed } from '/imports/ui/stylesheets/styled-components/typography';
 
 const AudioChoiceIntro = styled.p`
-  margin: 0 0 1.25rem;
-  padding: 0 0.5rem;
+  margin: 0 0 0.875rem;
+  padding: 0;
   text-align: center;
-  font-size: 0.9rem;
-  line-height: 1.55;
-  color: var(--skyroom-text-secondary, #aab6c7);
-  max-width: 36rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--skyroom-text-muted, #8b95a5);
+  max-width: 20rem;
 `;
 
 const AudioOptions = styled.div`
-  margin-top: auto;
-  margin-bottom: auto;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 1.5rem 2.5rem;
-  width: 100%;
-
-  @media ${smallOnly} {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-`;
-
-const AudioOption = styled.div`
   display: flex;
   flex-direction: column;
+  gap: 0.625rem;
+  width: 100%;
+  max-width: 22rem;
+`;
+
+const AudioChoiceCard = styled.button`
+  display: flex;
   align-items: center;
-  max-width: 11.5rem;
-  text-align: center;
+  gap: 0.875rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.875rem 1rem;
+  border: 1px solid rgba(20, 169, 158, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  text-align: inherit;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.12s ease,
+    box-shadow 0.15s ease;
+
+  &:hover:not(:disabled),
+  &:focus-visible:not(:disabled) {
+    border-color: rgba(20, 169, 158, 0.34);
+    background: rgba(20, 169, 158, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.985);
+  }
+
+  &:disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+  }
 
   @media ${smallOnly} {
-    max-width: 100%;
+    padding: 0.8125rem 0.9375rem;
+    gap: 0.75rem;
+    border-radius: 13px;
   }
 `;
 
-const AudioOptionDesc = styled.p`
-  margin: 0.65rem 0 0;
-  padding: 0 0.25rem;
-  font-size: 0.78rem;
-  line-height: 1.45;
-  font-weight: 400;
-  color: var(--skyroom-text-secondary, #aab6c7);
+const AudioChoiceIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 12px;
+  background: var(
+    --skyroom-gradient-primary-soft,
+    linear-gradient(135deg, rgba(13, 136, 126, 0.14) 0%, rgba(20, 169, 158, 0.22) 100%)
+  );
+  color: var(--skyroom-brand-400, #14a99e);
+
+  i {
+    font-size: 1.3rem;
+    line-height: 1;
+  }
 
   @media ${smallOnly} {
-    margin: 0.25rem 0 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 11px;
+
+    i {
+      font-size: 1.15rem;
+    }
   }
 `;
 
-/* Classic BBB mic / listen-only layout — label color adapted for dark modal shell */
+const AudioChoiceText = styled.span`
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+  flex: 1;
+  text-align: start;
+`;
+
+const AudioChoiceTitle = styled.span`
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--skyroom-text-primary, #eef4fb);
+
+  @media ${smallOnly} {
+    font-size: 0.875rem;
+  }
+`;
+
+const AudioChoiceHint = styled.span`
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--skyroom-text-muted, #8b95a5);
+
+  @media ${smallOnly} {
+    font-size: 0.6875rem;
+  }
+`;
+
+/* Legacy echo-test / help buttons */
 const AudioModalButton = styled(Button)`
   i {
     color: #3c5764;
@@ -106,12 +175,12 @@ const AudioDial = styled(Button)`
 const Connecting = styled.div`
   margin-top: auto;
   margin-bottom: auto;
-  font-size: 2rem;
+  font-size: 1rem;
   text-align: center;
   color: var(--skyroom-text-primary, #eef4fb);
 
   @media ${smallOnly} {
-    font-size: 0.95rem;
+    font-size: 0.875rem;
     font-weight: 500;
     line-height: 1.45;
     margin: 0.35rem 0;
@@ -121,9 +190,9 @@ const Connecting = styled.div`
 const ConnectingSubtext = styled.p`
   margin-top: 0.5rem;
   margin-bottom: 0;
-  font-size: 1.5rem;
+  font-size: 0.875rem;
   text-align: center;
-  color: var(--skyroom-text-secondary, #aab6c7);
+  color: var(--skyroom-text-muted, #8b95a5);
 
   @media ${smallOnly} {
     font-size: 0.75rem;
@@ -158,11 +227,11 @@ const ConnectingAnimation = styled.span`
 `;
 
 const AudioModal = styled(ModalSimple)`
-  padding: 1rem;
-  min-height: 20rem;
+  padding: 1rem 1.125rem 1.25rem;
+  min-height: 0;
 
   @media ${smallOnly} {
-    min-height: 0;
+    padding: 0.875rem 1rem 1rem;
   }
 `;
 
@@ -184,7 +253,7 @@ const Content = styled.div`
   align-items: center;
   margin-top: auto;
   margin-bottom: auto;
-  padding: 0.5rem 0;
+  padding: 0.25rem 0 0;
   width: 100%;
 `;
 
@@ -204,8 +273,11 @@ const Background = styled.span`
 export default {
   AudioChoiceIntro,
   AudioOptions,
-  AudioOption,
-  AudioOptionDesc,
+  AudioChoiceCard,
+  AudioChoiceIcon,
+  AudioChoiceText,
+  AudioChoiceTitle,
+  AudioChoiceHint,
   AudioModalButton,
   AudioDial,
   Background,

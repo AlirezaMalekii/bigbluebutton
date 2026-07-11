@@ -380,9 +380,6 @@ const BreakoutRoomUserAssignment: React.FC<ChildComponentProps> = ({
           >
             {roomUserList(0)}
           </Styled.BreakoutBox>
-          <Styled.SpanWarn data-test="warningNoUserAssigned" valid={rooms[0]?.users?.length < users.length}>
-            {intl.formatMessage(intlMessages.leastOneWarnBreakout)}
-          </Styled.SpanWarn>
         </Styled.Alert>
         <Styled.BoxContainer key="rooms-grid-" data-test="roomGrid">
           {
@@ -457,6 +454,13 @@ const BreakoutRoomUserAssignment: React.FC<ChildComponentProps> = ({
           }
         </Styled.BoxContainer>
       </Styled.ContentContainer>
+      <Styled.AssignmentHint
+        data-test="warningNoUserAssigned"
+        role="status"
+        $visible={rooms[0]?.users?.length >= users.length}
+      >
+        {intl.formatMessage(intlMessages.leastOneWarnBreakout)}
+      </Styled.AssignmentHint>
     </>
   );
 };

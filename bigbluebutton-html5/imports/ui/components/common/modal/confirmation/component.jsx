@@ -105,6 +105,13 @@ class ConfirmationModal extends Component {
           </Styled.Description>
 
           <Styled.Footer>
+            <div ref={this.cancelButtonRef}>
+              <Styled.CancelButton
+                color="secondary"
+                label={cancelButtonLabel || intl.formatMessage(messages.noLabel)}
+                onClick={() => setIsOpen(false)}
+              />
+            </div>
             {!hideConfirmButton && (
               <Styled.ConfirmationButton
                 color={confirmButtonColor}
@@ -117,13 +124,6 @@ class ConfirmationModal extends Component {
                 }}
               />
             )}
-            <div ref={this.cancelButtonRef}>
-              <Styled.CancelButton
-                color="secondary"
-                label={cancelButtonLabel || intl.formatMessage(messages.noLabel)}
-                onClick={() => setIsOpen(false)}
-              />
-            </div>
           </Styled.Footer>
         </Styled.Container>
       </Styled.ConfirmationModal>
