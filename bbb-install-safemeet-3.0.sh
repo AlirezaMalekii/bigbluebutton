@@ -176,16 +176,18 @@ upgrade_existing_bbb() {
   if [[ "$DRY_RUN" == "1" ]]; then
     log "DRY RUN: would run apt-get update"
     log "DRY RUN: would simulate BBB package upgrade from ${SAFE_REPO_URL}"
-    mapfile -t packages < <(dpkg-query -W -f='${binary:Package}\n' 'bbb-*' 'bigbluebutton' 2>/dev/null | sort -u || true)
-    ((${#packages[@]})) || packages=(bigbluebutton bbb-html5)
+    mapfile -t packages < <(dpkg-query -W -f='${binary:Package}\n' 'bbb-*' 2>/dev/null | sort -u || true)
+    ((${#packages[@]})) || packages=(bbb-html5)
     apt-get -s -o Debug::NoLocking=1 install "${packages[@]}" || true
     return 0
   fi
 
   log "Upgrading installed BBB packages from SafeMeet repo when newer packages exist"
   apt-get update
-  mapfile -t packages < <(dpkg-query -W -f='${binary:Package}\n' 'bbb-*' 'bigbluebutton' 2>/dev/null | sort -u || true)
-  ((${#packages[@]})) || packages=(bigbluebutton bbb-html5)
+  # Upgrade individual bbb-* packages only. The bigbluebutton meta-package uses
+  # exact-version Depends and breaks incremental SafeMeet publishes.
+  mapfile -t packages < <(dpkg-query -W -f='${binary:Package}\n' 'bbb-*' 2>/dev/null | sort -u || true)
+  ((${#packages[@]})) || packages=(bbb-html5)
   apt-get install -y \
     -o Dpkg::Options::="--force-confdef" \
     -o Dpkg::Options::="--force-confnew" \
