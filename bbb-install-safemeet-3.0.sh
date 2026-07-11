@@ -32,6 +32,7 @@ DARK_LOGO_URL=""
 CONFIG_ONLY=0
 DRY_RUN=0
 SKIP_HEALTH_CHECK=0
+PACKAGES_UPGRADED=0
 INSTALL_ARGS=()
 
 log() {
@@ -120,6 +121,11 @@ EOF
 }
 
 install_repo_key_and_pin() {
+  if repo_key_and_pin_current; then
+    log "SafeMeet apt source already configured"
+    return 0
+  fi
+
   log "Installing SafeMeet apt key and pinning"
   mkdir -p /etc/apt/keyrings
   curl -fsSL "$SAFE_REPO_KEY_URL" -o /etc/apt/keyrings/safemeet-bigbluebutton.asc
@@ -142,6 +148,76 @@ EOF
   chmod 0644 "$APT_PIN"
 }
 
+repo_key_and_pin_current() {
+  [[ -f "$SAFE_APT_LIST" && -f "$APT_PIN" && -f /etc/apt/keyrings/safemeet-bigbluebutton.asc ]]
+}
+
+packages_with_safemeet_upgrades() {
+  local pkg
+  local upgrades=()
+  local installed_packages=()
+
+  mapfile -t installed_packages < <(dpkg-query -W -f='${binary:Package}\n' 'bbb-*' 2>/dev/null | sort -u || true)
+  ((${#installed_packages[@]})) || return 0
+
+  for pkg in "${installed_packages[@]}"; do
+    if apt-get -s --only-upgrade install "$pkg" 2>/dev/null | grep -q "^Inst ${pkg} "; then
+      upgrades+=("$pkg")
+    fi
+  done
+
+  ((${#upgrades[@]})) || return 0
+  printf '%s\n' "${upgrades[@]}"
+}
+
+restart_services_for_packages() {
+  local pkg
+  local restart_all=0
+
+  for pkg in "$@"; do
+    case "$pkg" in
+      bbb-web)
+        systemctl restart bbb-web 2>/dev/null || true
+        systemctl reload nginx 2>/dev/null || true
+        ;;
+      bbb-html5|bbb-learning-dashboard|bbb-playback|bbb-playback-*)
+        systemctl reload nginx 2>/dev/null || true
+        ;;
+      bbb-graphql-server)
+        systemctl restart bbb-graphql-server 2>/dev/null || true
+        ;;
+      bbb-graphql-middleware)
+        systemctl restart bbb-graphql-middleware 2>/dev/null || true
+        ;;
+      bbb-graphql-actions)
+        systemctl restart bbb-graphql-actions 2>/dev/null || true
+        ;;
+      bbb-apps-akka)
+        systemctl restart bbb-apps-akka 2>/dev/null || true
+        ;;
+      bbb-fsesl-akka)
+        systemctl restart bbb-fsesl-akka 2>/dev/null || true
+        ;;
+      bbb-webrtc-sfu)
+        systemctl restart bbb-webrtc-sfu 2>/dev/null || true
+        ;;
+      bbb-webrtc-recorder)
+        systemctl restart bbb-webrtc-recorder 2>/dev/null || true
+        ;;
+      bbb-record-core)
+        systemctl restart bbb-rap-starter bbb-rap-resque-worker bbb-rap-caption-inbox 2>/dev/null || true
+        ;;
+      *)
+        restart_all=1
+        ;;
+    esac
+  done
+
+  if [[ "$restart_all" == "1" ]] && command -v bbb-conf >/dev/null 2>&1; then
+    bbb-conf --restart || true
+  fi
+}
+
 patch_and_run_base_installer() {
   local tmp
   tmp="$(mktemp /tmp/bbb-install-safemeet.XXXXXX)"
@@ -160,13 +236,20 @@ patch_and_run_base_installer() {
 }
 
 bbb_installed() {
-  dpkg-query -W -f='${Status}' bigbluebutton 2>/dev/null | grep -q "install ok installed"
+  if dpkg-query -W -f='${Status}' bigbluebutton 2>/dev/null | grep -q "install ok installed"; then
+    return 0
+  fi
+  # SafeMeet incremental updates may remove the meta-package while BBB remains
+  # fully installed. Treat core packages as an existing install.
+  dpkg-query -W -f='${Status}' bbb-web 2>/dev/null | grep -q "install ok installed" \
+    || dpkg-query -W -f='${Status}' bbb-html5 2>/dev/null | grep -q "install ok installed"
 }
 
 upgrade_existing_bbb() {
   local host="$1"
   local stamp="$2"
   local packages=()
+  local upgraded=()
 
   backup_file "$APT_LIST" "$stamp"
   backup_file "$SAFE_APT_LIST" "$stamp"
@@ -175,28 +258,41 @@ upgrade_existing_bbb() {
 
   if [[ "$DRY_RUN" == "1" ]]; then
     log "DRY RUN: would run apt-get update"
-    log "DRY RUN: would simulate BBB package upgrade from ${SAFE_REPO_URL}"
-    mapfile -t packages < <(dpkg-query -W -f='${binary:Package}\n' 'bbb-*' 2>/dev/null | sort -u || true)
-    ((${#packages[@]})) || packages=(bbb-html5)
-    apt-get -s -o Debug::NoLocking=1 install "${packages[@]}" || true
+    log "DRY RUN: would check for SafeMeet package upgrades"
+    apt-get update
+    mapfile -t packages < <(packages_with_safemeet_upgrades || true)
+    if ((${#packages[@]})); then
+      log "DRY RUN: would upgrade: ${packages[*]}"
+      apt-get -s --only-upgrade install "${packages[@]}" || true
+    else
+      log "DRY RUN: no SafeMeet package upgrades available"
+    fi
     return 0
   fi
 
-  log "Upgrading installed BBB packages from SafeMeet repo when newer packages exist"
+  log "Checking SafeMeet repo for package upgrades"
   apt-get update
-  # Upgrade individual bbb-* packages only. The bigbluebutton meta-package uses
-  # exact-version Depends and breaks incremental SafeMeet publishes.
-  mapfile -t packages < <(dpkg-query -W -f='${binary:Package}\n' 'bbb-*' 2>/dev/null | sort -u || true)
-  ((${#packages[@]})) || packages=(bbb-html5)
+  mapfile -t packages < <(packages_with_safemeet_upgrades || true)
+
+  if ((${#packages[@]} == 0)); then
+    log "No SafeMeet package upgrades available; skipping apt install"
+    PACKAGES_UPGRADED=0
+    return 0
+  fi
+
+  log "Upgrading SafeMeet packages: ${packages[*]}"
   apt-get install -y \
+    --only-upgrade \
     -o Dpkg::Options::="--force-confdef" \
     -o Dpkg::Options::="--force-confnew" \
     "${packages[@]}"
+  upgraded=("${packages[@]}")
+  PACKAGES_UPGRADED=${#upgraded[@]}
 
   if command -v bbb-conf >/dev/null 2>&1; then
     bbb-conf --setip "$host" || true
-    bbb-conf --restart || true
   fi
+  restart_services_for_packages "${upgraded[@]}"
 }
 
 upsert_property() {
@@ -302,6 +398,11 @@ health_check() {
   local host="$1"
   [[ "$SKIP_HEALTH_CHECK" == "1" ]] && return 0
   [[ "$DRY_RUN" == "1" ]] && return 0
+
+  if [[ "$PACKAGES_UPGRADED" -eq 0 && -z "$DEFAULT_PDF_URL" && -z "$LOGO_URL" && -z "$DARK_LOGO_URL" ]]; then
+    log "No package or config changes applied; skipping health checks"
+    return 0
+  fi
 
   log "Running health checks"
   if command -v bbb-conf >/dev/null 2>&1; then
