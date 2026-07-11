@@ -44,7 +44,16 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
-          ssh-keyscan -p "$REPO_PORT" -H "$REPO_HOST" >> ~/.ssh/known_hosts
+          for attempt in 1 2 3 4 5; do
+            if ssh-keyscan -T 15 -p "$REPO_PORT" -H "$REPO_HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
+              echo "ssh-keyscan succeeded on attempt ${attempt}"
+              exit 0
+            fi
+            echo "ssh-keyscan attempt ${attempt} failed, retrying..."
+            sleep $((attempt * 3))
+          done
+          echo "ssh-keyscan failed after retries for ${REPO_HOST}:${REPO_PORT}" >&2
+          exit 1
 
       - name: Build selected packages
         env:
