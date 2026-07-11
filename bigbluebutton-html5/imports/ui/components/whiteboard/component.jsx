@@ -36,7 +36,7 @@ import {
   usePrevious,
   getDifferences,
 } from './utils';
-import { useMouseEvents, useCursor } from './hooks';
+import { useMouseEvents, useCursor, useSkyroomMobileStylePanelAnchor } from './hooks';
 import {
   notifyShapeNumberExceeded, getCustomEditorAssetUrls, getCustomAssetUrls,
   debouncedUpdateShapes, sanitizeShape,
@@ -2160,6 +2160,10 @@ const Whiteboard = React.memo((props) => {
       setWheelZoomTimeout,
       isInfiniteWhiteboard,
     },
+  );
+
+  useSkyroomMobileStylePanelAnchor(
+    isSkyroomColumnLayout() && isSkyroomMobileViewport(),
   );
 
   React.useEffect(() => {

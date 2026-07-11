@@ -776,6 +776,81 @@
     touch-action: manipulation !important;
   }
 
+  /* Skyroom mobile — dark glass toolbar (matches desktop Skyroom theme). */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools {
+    background: rgba(12, 20, 34, 0.94) !important;
+    border: 1px solid rgba(20, 169, 158, 0.22) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool .tlui-icon {
+    color: #e8edf4 !important;
+    opacity: 1 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__bottom {
+    top: auto !important;
+    bottom: var(--skyroom-wb-toolbar-gap, 2px) !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: max-content !important;
+  }
+
+  /* Pen color/size panel — compact, above the styles trigger. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content[data-state="open"]:has(.tlui-style-panel),
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element [role="dialog"][data-state="open"]:has(.tlui-style-panel),
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content[data-skyroom-mobile-style-panel-anchored="true"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element [role="dialog"][data-skyroom-mobile-style-panel-anchored="true"] {
+    z-index: 1500 !important;
+    max-width: min(10.5rem, 68vw) !important;
+    max-height: min(28vh, 220px) !important;
+    overflow: auto !important;
+    padding: 4px !important;
+    background: rgba(10, 18, 30, 0.98) !important;
+    border: 1px solid rgba(32, 199, 187, 0.22) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.42) !important;
+    color: #e8edf4 !important;
+    pointer-events: auto !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content[data-skyroom-mobile-style-panel-anchored="true"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element [role="dialog"][data-skyroom-mobile-style-panel-anchored="true"] {
+    position: fixed !important;
+    transform: none !important;
+    margin: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-style-panel {
+    gap: 2px !important;
+    padding: 2px !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-style-panel .tlui-button,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-style-panel .tlui-button-grid__button {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    padding: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-style-panel .tlui-icon {
+    width: 10px !important;
+    height: 10px !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-style-panel input[type="range"] {
+    width: 100% !important;
+    max-width: 6.5rem !important;
+    height: 0.28rem !important;
+  }
+
   html[data-skyroom="true"]:has(.ReactModal__Overlay--after-open) #layout[data-skyroom-mobile="true"] #whiteboard-element [role="dialog"][data-state="open"]:has(.tlui-style-panel),
   html[data-skyroom="true"]:has(.ReactModal__Overlay--after-open) #layout[data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content[data-state="open"]:has(.tlui-style-panel),
   html[data-skyroom="true"]:has(.ReactModal__Overlay--after-open) #layout[data-skyroom-mobile="true"] #whiteboard-element .tlui-menu[data-state="open"]:has(.tlui-buttons__grid),

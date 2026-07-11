@@ -64,7 +64,7 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     left: -50px !important;
   }
 
-  ${({ isSkyroom, isSkyroomMobile }) => (isSkyroom && !isSkyroomMobile) && `
+  ${({ isSkyroom }) => isSkyroom && `
     .tlui-popover__content {
       left: auto !important;
     }
@@ -73,6 +73,12 @@ const TldrawV2GlobalStyle = createGlobalStyle`
       position: static !important;
       right: auto !important;
       top: auto !important;
+    }
+  `}
+
+  ${({ isSkyroomMobile }) => isSkyroomMobile && `
+    button[data-testid="tools.more"] {
+      display: none !important;
     }
   `}
 
@@ -168,7 +174,7 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     width: 20px !important;
   }
 
-  ${({ isSkyroom, isSkyroomMobile }) => (isSkyroom && !isSkyroomMobile ? `
+  ${({ isSkyroom, isSkyroomMobile }) => (isSkyroom ? `
     .tlui-toolbar__inner {
       flex-direction: row-reverse !important;
     }
@@ -212,10 +218,15 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     }
 
     .tlui-button__tool {
-      width: 36px !important;
-      height: 36px !important;
+      width: ${isSkyroomMobile ? '30px' : '36px'} !important;
+      height: ${isSkyroomMobile ? '30px' : '36px'} !important;
       border-radius: 10px !important;
       color: #e8edf4 !important;
+    }
+
+    .tlui-button__tool .tlui-icon {
+      color: #e8edf4 !important;
+      opacity: 1 !important;
     }
 
     .tlui-button__tool:hover {
@@ -225,6 +236,13 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     .tl-container {
       --color-selected: rgba(32, 199, 187, 0.38) !important;
       --color-selected-contrast: #ffffff !important;
+      --color-background: rgba(12, 20, 34, 0.94) !important;
+      --color-low: rgba(220, 230, 242, 0.82) !important;
+      --color-lowest: rgba(190, 204, 220, 0.55) !important;
+      --color-text: #e8edf4 !important;
+      --color-text-0: #f0f5fb !important;
+      --color-text-1: #dce6f2 !important;
+      --color-text-3: #aab6c7 !important;
     }
 
     .tlui-button__tool[data-state="selected"],
@@ -238,7 +256,12 @@ const TldrawV2GlobalStyle = createGlobalStyle`
       opacity: 1 !important;
     }
 
-    /* TLDraw/Radix positions toolbar popovers (side=top) — do not override transform. */
+    .tlui-button__tool[data-state="selected"] .tlui-icon,
+    .tlui-button__tool[aria-pressed="true"] .tlui-icon {
+      color: #fff !important;
+      opacity: 1 !important;
+    }
+
     #whiteboard-element .tlui-popover__content[data-state="open"],
     #whiteboard-element .tlui-menu[data-state="open"],
     #whiteboard-element [role="dialog"][data-state="open"] {
@@ -286,8 +309,8 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     display: flex;
   }
 
-  ${({ presentationHeight, isSkyroom, isSkyroomMobile }) => {
-    if (isSkyroom && !isSkyroomMobile) return '';
+  ${({ presentationHeight, isSkyroom }) => {
+    if (isSkyroom) return '';
 
     const minRange = { height: 345, top: 14 };
     const maxRange = { height: 1200, top: 384 };

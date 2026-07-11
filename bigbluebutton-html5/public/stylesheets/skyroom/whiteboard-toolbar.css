@@ -147,8 +147,8 @@
   height: calc(13px * var(--skyroom-wb-scale, 1)) !important;
 }
 
-/* TLDraw tools — desktop Skyroom only; mobile uses upstream BBB toolbar layout. */
-#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #whiteboard-element .tlui-layout__bottom {
+/* TLDraw tools — Skyroom mobile + desktop: hug slide-nav bar. */
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-layout__bottom {
   top: auto !important;
   bottom: var(--skyroom-wb-toolbar-gap, 4px) !important;
   padding-bottom: 0 !important;
@@ -159,7 +159,8 @@
 #layout[data-skyroom-column="true"][data-skyroom-toolbar-hidden="true"] #whiteboard-element .tlui-layout__bottom {
   display: none !important;
 }
-#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #whiteboard-element .tlui-layout__bottom .tlui-toolbar {
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-layout__bottom .tlui-toolbar {
   padding-bottom: 1px !important;
 }
 

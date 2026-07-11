@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { throttle } from 'radash';
+import { isSkyroomMobileViewport } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const WHITEBOARD_CHROME_SELECTOR = [
   '.tlui-layout__bottom',
@@ -437,7 +438,124 @@ const useMouseEvents = ({
   ]);
 };
 
+const isSkyroomMobileStylePanelMode = () => {
+  if (!isSkyroomMobileViewport()) return false;
+  return Boolean(document.getElementById('layout')?.hasAttribute('data-skyroom-mobile'));
+};
+
+/* eslint-disable no-param-reassign */
+const anchorSkyroomMobileStylePanel = () => {
+  if (!isSkyroomMobileStylePanelMode()) return;
+
+  const root = document.getElementById('whiteboard-element');
+  if (!root) return;
+
+  const trigger = root.querySelector('button[data-testid="mobile.styles"][data-state="open"]')
+    || root.querySelector('button[data-testid="mobile.styles"][aria-expanded="true"]');
+
+  const popover = root.querySelector('.tlui-popover__content[data-state="open"]:has(.tlui-style-panel)')
+    || root.querySelector('[role="dialog"][data-state="open"]:has(.tlui-style-panel)');
+
+  if (!trigger || !popover) return;
+
+  const gap = 8;
+  const triggerRect = trigger.getBoundingClientRect();
+  const popoverHeight = popover.offsetHeight > 0 ? popover.offsetHeight : popover.scrollHeight;
+  const popoverWidth = popover.offsetWidth > 0 ? popover.offsetWidth : popover.scrollWidth;
+
+  if (popoverHeight < 4 || popoverWidth < 4) return;
+
+  const stageRect = (
+    document.getElementById('presentationInnerWrapper') || root
+  ).getBoundingClientRect();
+
+  let top = triggerRect.top - popoverHeight - gap;
+  top = Math.max(stageRect.top + gap, top);
+
+  let left = triggerRect.left + (triggerRect.width / 2) - (popoverWidth / 2);
+  left = Math.max(stageRect.left + gap, left);
+  left = Math.min(left, stageRect.right - popoverWidth - gap);
+
+  const desiredTop = `${Math.round(top)}px`;
+  const desiredLeft = `${Math.round(left)}px`;
+
+  if (
+    popover.dataset.skyroomMobileStylePanelAnchored === 'true'
+    && popover.style.top === desiredTop
+    && popover.style.left === desiredLeft
+  ) {
+    return;
+  }
+
+  popover.style.setProperty('position', 'fixed', 'important');
+  popover.style.setProperty('top', desiredTop, 'important');
+  popover.style.setProperty('left', desiredLeft, 'important');
+  popover.style.setProperty('right', 'auto', 'important');
+  popover.style.setProperty('bottom', 'auto', 'important');
+  popover.style.setProperty('transform', 'none', 'important');
+  popover.style.setProperty('margin', '0', 'important');
+  popover.style.setProperty('z-index', '1500', 'important');
+  popover.dataset.skyroomMobileStylePanelAnchored = 'true';
+};
+
+const clearSkyroomMobileStylePanelAnchors = () => {
+  document.querySelectorAll('[data-skyroom-mobile-style-panel-anchored="true"]').forEach((popover) => {
+    if (popover.getAttribute('data-state') !== 'open') {
+      delete popover.dataset.skyroomMobileStylePanelAnchored;
+      [
+        'position', 'top', 'left', 'right', 'bottom', 'transform', 'margin', 'z-index',
+      ].forEach((prop) => popover.style.removeProperty(prop));
+    }
+  });
+};
+/* eslint-enable no-param-reassign */
+
+/** Anchor the pen color/size panel above mobile.styles on phone — style panel only. */
+const useSkyroomMobileStylePanelAnchor = (enabled) => {
+  React.useEffect(() => {
+    if (!enabled) return undefined;
+
+    let rafId = null;
+
+    const schedule = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        clearSkyroomMobileStylePanelAnchors();
+        anchorSkyroomMobileStylePanel();
+        rafId = requestAnimationFrame(() => {
+          rafId = null;
+          anchorSkyroomMobileStylePanel();
+        });
+      });
+    };
+
+    const root = document.getElementById('whiteboard-element');
+    const observer = root
+      ? new MutationObserver(schedule)
+      : null;
+
+    observer?.observe(root, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-state', 'style'],
+      childList: true,
+    });
+
+    window.addEventListener('resize', schedule);
+    window.addEventListener('scroll', schedule, true);
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      observer?.disconnect();
+      window.removeEventListener('resize', schedule);
+      window.removeEventListener('scroll', schedule, true);
+      clearSkyroomMobileStylePanelAnchors();
+    };
+  }, [enabled]);
+};
+
 export {
   useMouseEvents,
   useCursor,
+  useSkyroomMobileStylePanelAnchor,
 };
