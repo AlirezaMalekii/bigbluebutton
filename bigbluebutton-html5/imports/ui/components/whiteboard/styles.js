@@ -61,10 +61,10 @@ const TldrawV2GlobalStyle = createGlobalStyle`
   }
 
   .tlui-popover__content {
-    left: auto !important;
+    left: -50px !important;
   }
 
-  ${({ isSkyroom }) => isSkyroom && `
+  ${({ isSkyroom, isSkyroomMobile }) => (isSkyroom && !isSkyroomMobile) && `
     .tlui-popover__content {
       left: auto !important;
     }
@@ -168,7 +168,7 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     width: 20px !important;
   }
 
-  ${({ isSkyroom }) => (isSkyroom ? `
+  ${({ isSkyroom, isSkyroomMobile }) => (isSkyroom && !isSkyroomMobile ? `
     .tlui-toolbar__inner {
       flex-direction: row-reverse !important;
     }
@@ -268,12 +268,15 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     font-family: 'Arial', sans-serif !important;
   }
 
-  ${({ isSkyroom }) => !isSkyroom && `
-  [data-side="bottom"][data-align="end"][data-state="open"][role="dialog"]:not(:has(.tlui-style-panel)) {
+  ${({ isSkyroom, isSkyroomMobile }) => {
+    if (isSkyroom && !isSkyroomMobile) return '';
+    return `
+  [data-side="bottom"][data-align="end"][data-state="open"][role="dialog"] {
     right: 3.5rem !important;
     bottom: 9.5rem !important;
   }
-  `}
+  `;
+  }}
 
   [id*="shape:poll-result"] {
     background-color: white !important;
@@ -283,8 +286,8 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     display: flex;
   }
 
-  ${({ presentationHeight, isSkyroom }) => {
-    if (isSkyroom) return '';
+  ${({ presentationHeight, isSkyroom, isSkyroomMobile }) => {
+    if (isSkyroom && !isSkyroomMobile) return '';
 
     const minRange = { height: 345, top: 14 };
     const maxRange = { height: 1200, top: 384 };

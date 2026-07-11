@@ -36,7 +36,7 @@ import {
   usePrevious,
   getDifferences,
 } from './utils';
-import { useMouseEvents, useCursor, useSkyroomMoreMenuAnchor } from './hooks';
+import { useMouseEvents, useCursor } from './hooks';
 import {
   notifyShapeNumberExceeded, getCustomEditorAssetUrls, getCustomAssetUrls,
   debouncedUpdateShapes, sanitizeShape,
@@ -2162,8 +2162,6 @@ const Whiteboard = React.memo((props) => {
     },
   );
 
-  useSkyroomMoreMenuAnchor(isSkyroomColumnLayout());
-
   React.useEffect(() => {
     const handleArrowPress = (event) => {
       const currPageNum = parseInt(curPageIdRef.current, 10);
@@ -2651,6 +2649,7 @@ const Whiteboard = React.memo((props) => {
           hiddenGeoShapes,
           viewerCanPan,
           isSkyroom: isSkyroomColumnLayout(),
+          isSkyroomMobile: isSkyroomColumnLayout() && isSkyroomMobileViewport(),
         }}
       />
     </div>

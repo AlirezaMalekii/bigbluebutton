@@ -749,19 +749,18 @@
     padding-inline-start: 2px !important;
   }
 
-  /* TLDraw toolbar sits above the slide-nav bar on phone. */
+  /* TLDraw toolbar — upstream BBB mobile layout; Radix owns popover placement. */
 
-  /* Let fixed-position toolbar popovers escape the presentation clip on phone. */
+  /* Let toolbar popovers escape presentation clip on phone. */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationInnerWrapper,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tl-container {
     overflow: visible !important;
   }
 
   /*
    * TLDraw canvas must not steal taps from the bottom toolbar on phone.
-   * The passive-listener warnings come from canvas touch handlers when hits
-   * land on the canvas layer instead of toolbar buttons.
    */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tl-canvas,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tl-overlays {
@@ -769,88 +768,12 @@
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__bottom,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-style-panel__wrapper {
-    z-index: 1004 !important;
-    pointer-events: auto !important;
-    touch-action: manipulation !important;
-  }
-
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__bottom .tlui-toolbar,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__bottom button,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element button[data-testid="mobile.styles"] {
+    z-index: 1004 !important;
     pointer-events: auto !important;
     touch-action: manipulation !important;
-  }
-
-  /* TLDraw/Radix popovers — native side=top placement above bottom toolbar. */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tl-container {
-    overflow: visible !important;
-  }
-
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content[data-state="open"]:has(.tlui-style-panel),
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu[data-state="open"]:has(.tlui-buttons__grid),
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element [role="dialog"][data-state="open"]:has(.tlui-style-panel),
-  #skyroom-wb-popover-portal [data-skyroom-toolbar-popover-anchored="true"] {
-    z-index: 1500 !important;
-    max-width: min(13.5rem, 78vw) !important;
-    max-height: min(34vh, calc(100vh - var(--skyroom-footer-h, 56px) - 120px)) !important;
-    overflow: auto !important;
-    padding: 3px !important;
-    background: rgba(10, 18, 30, 0.98) !important;
-    border: 1px solid rgba(32, 199, 187, 0.22) !important;
-    border-radius: 10px !important;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.42) !important;
-    color: #e8edf4 !important;
-    pointer-events: auto !important;
-  }
-
-  #skyroom-wb-popover-portal [data-skyroom-toolbar-popover-anchored="true"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content[data-skyroom-toolbar-popover-anchored="true"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu[data-skyroom-toolbar-popover-anchored="true"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu[data-skyroom-more-menu-anchored="true"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element [role="dialog"][data-skyroom-toolbar-popover-anchored="true"] {
-    position: fixed !important;
-    transform: none !important;
-    margin: 0 !important;
-  }
-
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-style-panel {
-    gap: 3px !important;
-    padding: 2px !important;
-  }
-
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-style-panel label,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-style-panel span:not([class*="color"]) {
-    font-size: 0.58rem !important;
-    line-height: 1.1 !important;
-  }
-
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content .tlui-button,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-button,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content .tlui-button-grid__button,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-button-grid__button {
-    width: 22px !important;
-    height: 22px !important;
-    min-width: 22px !important;
-    min-height: 22px !important;
-    padding: 0 !important;
-  }
-
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content .tlui-icon,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu:has(.tlui-buttons__grid) .tlui-icon {
-    width: 11px !important;
-    height: 11px !important;
-  }
-
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-buttons__grid,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button-grid {
-    gap: 2px !important;
-  }
-
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-style-panel input[type="range"] {
-    width: 100% !important;
-    max-width: 7.5rem !important;
-    height: 0.3rem !important;
   }
 
   html[data-skyroom="true"]:has(.ReactModal__Overlay--after-open) #layout[data-skyroom-mobile="true"] #whiteboard-element [role="dialog"][data-state="open"]:has(.tlui-style-panel),

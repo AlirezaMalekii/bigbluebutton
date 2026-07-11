@@ -147,10 +147,8 @@
   height: calc(13px * var(--skyroom-wb-scale, 1)) !important;
 }
 
-/* TLDraw tools — drop the floating toolbar down so it hugs the slide-nav bar with a
-   small gap (the whiteboard height excludes the slide-nav, so bottom is measured from
-   the slide-nav top). Kill tldraw's default bottom padding that otherwise floats it up. */
-#layout[data-skyroom-column="true"] #whiteboard-element .tlui-layout__bottom {
+/* TLDraw tools — desktop Skyroom only; mobile uses upstream BBB toolbar layout. */
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #whiteboard-element .tlui-layout__bottom {
   top: auto !important;
   bottom: var(--skyroom-wb-toolbar-gap, 4px) !important;
   padding-bottom: 0 !important;
@@ -161,15 +159,12 @@
 #layout[data-skyroom-column="true"][data-skyroom-toolbar-hidden="true"] #whiteboard-element .tlui-layout__bottom {
   display: none !important;
 }
-#layout[data-skyroom-column="true"] #whiteboard-element .tlui-layout__bottom .tlui-toolbar {
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #whiteboard-element .tlui-layout__bottom .tlui-toolbar {
   padding-bottom: 1px !important;
 }
 
-/* Compact the tldraw bottom toolbar, scaled proportionally with the whiteboard via
-   --skyroom-wb-scale (set on #layout from the live stage width). The 0.8 base keeps it
-   noticeably smaller; on a narrow stage the scale floor (0.6) keeps it usable. Scaling the
-   toolbar only — the style panel is a separate wrapper, so its anchoring is unaffected. */
-#layout[data-skyroom-column="true"] #whiteboard-element .tlui-toolbar__inner {
+/* Compact the tldraw bottom toolbar — desktop Skyroom only. */
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #whiteboard-element .tlui-toolbar__inner {
   transform: scale(calc(0.8 * var(--skyroom-wb-scale, 1)));
   transform-origin: bottom center;
   margin-bottom: 0 !important;
@@ -261,8 +256,7 @@
   position: static !important;
 }
 
-/* DESKTOP only — fixed anchor above the centered toolbar. JS portal handles
-   open popovers on mobile; this is a resting-state hint for the wrapper shell. */
+/* DESKTOP only — resting-state hint for the style panel wrapper shell. */
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #whiteboard-element .tlui-style-panel__wrapper:not(:has([data-state="open"])) {
   position: absolute !important;
   top: auto !important;
@@ -281,20 +275,6 @@
 [dir="rtl"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #whiteboard-element .tlui-style-panel__wrapper {
   left: auto !important;
   right: calc(50% + 92px) !important;
-}
-
-/* TLDraw toolbar popovers — Radix positions them (side=top) inside .tl-container. */
-#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-popover__content[data-state="open"],
-#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-menu[data-state="open"],
-#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element [role="dialog"][data-state="open"] {
-  pointer-events: auto !important;
-  z-index: 1500 !important;
-}
-
-#layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content:not([data-skyroom-toolbar-popover-anchored="true"]),
-#layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-style-panel):not([data-skyroom-toolbar-popover-anchored="true"]),
-#layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-buttons__grid):not([data-skyroom-toolbar-popover-anchored="true"]) {
-  left: auto !important;
 }
 
 #layout[data-skyroom-column="true"] #whiteboard-element .tlui-style-panel [data-state="selected"],
