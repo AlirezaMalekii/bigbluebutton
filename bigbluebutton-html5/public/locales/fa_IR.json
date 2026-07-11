@@ -847,7 +847,7 @@
   "app.audioModal.iOSBrowser": "صدا و تصویر پشتیبانی نمی‌شود",
   "app.audioModal.iOSErrorDescription": "مرورگر کروم در آیفون (iOS) از صدا و تصویر کلاس پشتیبانی نمی‌کند.",
   "app.audioModal.iOSErrorRecommendation": "لطفاً از مرورگر سافاری (Safari) استفاده کنید.",
-  "app.audioModal.audioChoiceDesc": "میکروفون برای صحبت، فقط شنونده برای شنیدن.",
+  "app.audioModal.audioChoiceDesc": "یک روش را برای ورود به صدای کلاس انتخاب کنید",
   "app.audioModal.unsupportedBrowserLabel": "مرورگر شما کاملاً پشتیبانی نمی‌شود. لطفاً از {supportedBrowser1} یا {supportedBrowser2} استفاده کنید.",
   "app.audioModal.closeLabel": "بستن",
   "app.audioModal.yes": "بله",

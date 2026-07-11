@@ -23,6 +23,7 @@ const Control = ({
 
         return (
           <div
+            key={application}
             className={cx('application-icon', { inactive: !active })}
             onClick={() => active ? null : toggleApplication(application)}
           >

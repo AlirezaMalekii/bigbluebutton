@@ -20,12 +20,16 @@
   width: 100%;
 
   .application-control {
+    align-items: center;
     background-color: var(--application-control-background-color);
     box-sizing: border-box;
     display: flex;
     flex-direction: row-reverse;
+    flex-shrink: 0;
     gap: $margin-small;
-    padding: $padding-small;
+    justify-content: flex-start;
+    min-height: 2.75rem;
+    padding: $padding-small $padding;
 
     .application-icon {
       align-items: center;
@@ -33,14 +37,16 @@
       border-radius: 999px;
       box-sizing: border-box;
       color: var(--application-control-color);
+      cursor: pointer;
       display: flex;
+      flex-shrink: 0;
       font-size: large;
       font-weight: var(--font-weight-semi-bold);
       height: 2.1rem;
       justify-content: center;
       opacity: 1;
       outline: none;
-      overflow: hidden;
+      overflow: visible;
       transition: background .18s ease, color .18s ease, opacity .18s ease, transform .18s ease;
       width: 2.1rem;
 

@@ -18,7 +18,8 @@ const setDirection = (language) => {
 };
 
 const getLocale = () => {
-  const locale = getSearchParam('locale') || navigator.language;
+  // SafeMeet default is fa_IR; only override via ?locale= or explicit URL param.
+  const locale = getSearchParam('locale') || config.default;
 
   let file = localeToFile(locale);
   let [ language, ] = file.split('_');

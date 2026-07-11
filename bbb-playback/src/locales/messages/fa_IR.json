@@ -37,7 +37,7 @@
   "player.presentation.wrapper.aria": "محدوده فایل ارائه",
   "player.screenshare.wrapper.aria": "محدوده اشتراک‌گذاری صفحه نمایش",
   "player.search.modal.title": "جستجو",
-  "player.search.modal.subtitle": "یافتن محتوای صفحات ارائه شده",
+  "player.search.modal.subtitle": "جستجو در محتوای اسلایدهای ارائه",
   "player.search.modal.placeholder": "عبارت مورد نظر را وارد کنید…",
   "player.search.modal.minLength": "حداقل ۳ کاراکتر وارد کنید",
   "player.search.modal.noResults": "نتیجه‌ای یافت نشد",

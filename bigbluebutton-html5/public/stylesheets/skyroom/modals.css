@@ -324,11 +324,11 @@
   color: #ffffff !important;
 }
 
-/* Inner spans must not duplicate chrome */
-[role="dialog"] button[data-test] > span,
-[role="dialog"] button[color] > span,
-.ReactModal__Content button[data-test] > span,
-#fsmodal button[data-test] > span {
+/* Inner spans must not duplicate chrome — scoped to BBB Button wrapper only */
+[role="dialog"] .buttonWrapper > button[data-test] > span,
+[role="dialog"] .buttonWrapper > button[color] > span,
+.ReactModal__Content .buttonWrapper > button[data-test] > span,
+#fsmodal .buttonWrapper > button[data-test] > span {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
@@ -462,21 +462,101 @@
 /* ---------------------------------------------------------------------
    7) Audio modal — choice cards (mic / listen-only)
    --------------------------------------------------------------------- */
+html[data-skyroom="true"] [data-test="audioModal"].ReactModal__Content:not(:has([data-test="audioSettingsModal"])) {
+  width: min(92vw, 28rem) !important;
+  max-width: 28rem !important;
+  min-width: 0 !important;
+  padding: 1.375rem 1.5rem 1.5rem !important;
+  box-sizing: border-box !important;
+}
+
+html[data-skyroom="true"] [data-test="audioModal"]:not(:has([data-test="audioSettingsModal"])) [class*="Header"] {
+  margin-bottom: 0.25rem !important;
+  padding-bottom: 0 !important;
+}
+
+html[data-skyroom="true"] [data-test="audioModal"]:not(:has([data-test="audioSettingsModal"])) [class*="Title"] {
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin-bottom: 0 !important;
+}
+
+html[data-skyroom="true"] [data-test="audioModal"]:not(:has([data-test="audioSettingsModal"])) [data-test="modalSimpleBody"] {
+  padding-top: 0.15rem !important;
+}
+
 [role="dialog"] [data-test="audioModalOptions"] {
-  gap: 0.625rem !important;
+  gap: 0.875rem !important;
   width: 100% !important;
+}
+
+[role="dialog"] [data-test="audioModalChoiceDesc"] {
+  color: var(--skyroom-modal-text-muted, #aab6c7) !important;
+  text-align: center !important;
+  margin-bottom: 1rem !important;
+}
+
+[role="dialog"] [data-test="audioModalOptions"] [data-test="microphoneBtn"],
+[role="dialog"] [data-test="audioModalOptions"] [data-test="listenOnlyBtn"] {
+  background: rgba(255, 255, 255, 0.035) !important;
+  border: 1px solid rgba(20, 169, 158, 0.16) !important;
+  border-radius: 16px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+[role="dialog"] [data-test="audioModalOptions"] [data-test="microphoneBtn"]:hover,
+[role="dialog"] [data-test="audioModalOptions"] [data-test="listenOnlyBtn"]:hover {
+  background: rgba(20, 169, 158, 0.1) !important;
+  border-color: rgba(20, 169, 158, 0.42) !important;
 }
 
 [role="dialog"] [data-test="audioModalOptions"] [class*="AudioChoiceCard"] {
   color: inherit !important;
 }
 
+[role="dialog"] [data-test="audioModalOptions"] [class*="AudioChoiceText"] {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.25rem !important;
+  min-width: 0 !important;
+}
+
 [role="dialog"] [data-test="audioModalOptions"] [class*="AudioChoiceTitle"] {
+  display: block !important;
   color: var(--skyroom-modal-text, #eef4fb) !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
 }
 
 [role="dialog"] [data-test="audioModalOptions"] [class*="AudioChoiceHint"] {
+  display: block !important;
   color: var(--skyroom-modal-text-muted, #aab6c7) !important;
+  line-height: 1.45 !important;
+}
+
+@media (min-width: 40.063em) {
+  html[data-skyroom="true"] [data-test="audioModal"].ReactModal__Content:not(:has([data-test="audioSettingsModal"])) {
+    width: min(90vw, 28rem) !important;
+  }
+
+  [role="dialog"] [data-test="audioModalOptions"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  [role="dialog"] [data-test="audioModalOptions"] [data-test="microphoneBtn"],
+  [role="dialog"] [data-test="audioModalOptions"] [data-test="listenOnlyBtn"] {
+    min-height: 9.25rem !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  [role="dialog"] [data-test="audioModalOptions"] [class*="AudioChoiceText"] {
+    align-items: center !important;
+    text-align: center !important;
+  }
 }
 
 [role="dialog"] [data-test="echoYesBtn"] > span:last-child,

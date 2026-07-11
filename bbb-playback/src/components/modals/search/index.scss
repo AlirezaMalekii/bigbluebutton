@@ -70,6 +70,7 @@ $result-height: $bottom-content-height;
 }
 
 .search-header {
+  direction: rtl;
   flex-direction: column;
   font-weight: var(--font-weight-regular);
   padding: 0 0 $padding 0;
@@ -80,6 +81,7 @@ $result-height: $bottom-content-height;
     box-sizing: border-box;
     display: flex;
     justify-content: center;
+    width: 100%;
   }
 
   .title {
@@ -94,6 +96,7 @@ $result-height: $bottom-content-height;
   .subtitle {
     color: var(--skyroom-text-muted);
     font-size: .82rem;
+    line-height: 1.5;
     padding: 0 $padding-small;
   }
 }
@@ -102,6 +105,10 @@ $result-height: $bottom-content-height;
   align-items: center;
   justify-content: flex-end;
   padding: $padding 0;
+
+  [dir='rtl'] & {
+    justify-content: flex-start;
+  }
 
   .search-submit {
     background: var(--skyroom-brand-gradient);

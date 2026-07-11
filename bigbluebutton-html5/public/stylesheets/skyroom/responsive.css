@@ -1449,6 +1449,8 @@
   }
 
   html[data-skyroom="true"] [data-test="audioModal"] [class*="AudioOptions"] {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
     gap: 0.5rem !important;
     width: 100% !important;
     max-width: 100% !important;

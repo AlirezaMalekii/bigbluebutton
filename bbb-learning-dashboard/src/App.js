@@ -9,8 +9,8 @@ import { Stack } from '@mui/material';
 import './App.css';
 import { FormattedMessage, injectIntl } from 'react-intl';
 import {
-  formatLearningDashboardDate,
-  formatLearningDashboardDateTime,
+  LearningDashboardDate,
+  LearningDashboardDateTime,
 } from './utils/datetime';
 import CardBody from './components/Card';
 import UsersTable from './components/UsersTable';
@@ -491,7 +491,7 @@ class App extends React.Component {
                 <FormattedMessage id="app.learningDashboard.date" defaultMessage="Date" />
               </span>
               <strong data-test="meetingDateDashboard">
-                {formatLearningDashboardDate(intl, activitiesJson.createdOn)}
+                <LearningDashboardDate intl={intl} value={activitiesJson.createdOn} />
               </strong>
             </div>
           </div>
@@ -793,7 +793,7 @@ class App extends React.Component {
                       defaultMessage="Last updated at"
                     />
                     {' '}
-                    {formatLearningDashboardDateTime(intl, lastUpdated)}
+                    <LearningDashboardDateTime intl={intl} value={lastUpdated} />
                   </>
                 )
               }

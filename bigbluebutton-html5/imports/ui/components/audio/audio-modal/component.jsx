@@ -449,6 +449,9 @@ const AudioModal = ({
 
     return (
       <div>
+        <Styled.AudioChoiceIntro data-test="audioModalChoiceDesc">
+          {intl.formatMessage(intlMessages.audioChoiceDesc)}
+        </Styled.AudioChoiceIntro>
         <Styled.AudioOptions data-test="audioModalOptions">
           {!hideMicrophone && !isMobileNative && (
             <Styled.AudioChoiceCard

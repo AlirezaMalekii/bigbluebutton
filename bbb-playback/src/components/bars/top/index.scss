@@ -13,6 +13,7 @@
     var(--top-bar-background-color);
   color: var(--top-bar-color);
   box-sizing: border-box;
+  direction: ltr;
   display: flex;
   grid-area: top-bar;
   overflow: hidden;
@@ -34,26 +35,38 @@
   }
 
   .left {
+    flex-shrink: 0;
     justify-content: flex-start;
   }
 
   .center {
     display: grid;
+    flex: 1;
     justify-content: center;
-    width: 100%;
+    min-width: 0;
+    width: auto;
   }
 
   .right {
+    flex-shrink: 0;
+    gap: $margin-extra-small;
     justify-content: flex-end;
+
+    .button-wrapper {
+      flex-shrink: 0;
+      margin: 0;
+    }
   }
 
   .title {
     color: var(--skyroom-text-primary);
+    direction: rtl;
     font-size: .95rem;
     font-weight: var(--font-weight-semi-bold);
     letter-spacing: -.01em;
     overflow: hidden;
     padding: $padding-small;
+    text-align: center;
     text-overflow: ellipsis;
     text-shadow: 0 1px 18px rgba(20, 169, 158, .16);
     white-space: nowrap;
@@ -70,6 +83,61 @@
       background-color: var(--top-bar-active-background-color);
       color: var(--skyroom-brand-200);
       transform: translateY(-1px);
+    }
+  }
+}
+
+@media (min-width: $media-min-width) {
+  .top-bar {
+    align-items: center;
+    display: grid;
+    gap: $margin;
+    grid-template-columns: minmax(0, 1fr) $section-width;
+    padding-inline: $padding-small;
+
+    .left,
+    .center,
+    .right {
+      grid-column: 1;
+      grid-row: 1;
+      padding: $padding-small;
+      width: auto;
+    }
+
+    .left {
+      justify-self: start;
+      z-index: 1;
+    }
+
+    .center {
+      justify-self: center;
+      pointer-events: none;
+      z-index: 0;
+
+      .title,
+      .interactive {
+        pointer-events: auto;
+      }
+    }
+
+    .right {
+      justify-self: end;
+      z-index: 1;
+    }
+  }
+
+  .player-wrapper.hidden-section .top-bar {
+    gap: 0;
+    grid-template-columns: minmax(0, 1fr) 0;
+  }
+
+  @media (max-height: $media-max-height) {
+    .top-bar {
+      grid-template-columns: minmax(0, 1fr) $section-width-small;
+    }
+
+    .player-wrapper.hidden-section .top-bar {
+      grid-template-columns: minmax(0, 1fr) 0;
     }
   }
 }
