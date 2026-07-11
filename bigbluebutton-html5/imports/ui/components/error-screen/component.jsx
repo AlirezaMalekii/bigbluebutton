@@ -1,104 +1,16 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { defineMessages, injectIntl } from 'react-intl';
-import Session from '/imports/ui/services/storage/in-memory';
-import Styled from './styles';
-import intlHolder from '../../core/singletons/intlHolder';
-
-const intlMessages = defineMessages({
-  503: {
-    id: 'app.error.503',
-  },
-  500: {
-    id: 'app.error.500',
-    defaultMessage: 'Oops, something went wrong',
-  },
-  410: {
-    id: 'app.error.410',
-  },
-  409: {
-    id: 'app.error.409',
-  },
-  408: {
-    id: 'app.error.408',
-  },
-  404: {
-    id: 'app.error.404',
-    defaultMessage: 'Not found',
-  },
-  403: {
-    id: 'app.error.403',
-  },
-  401: {
-    id: 'app.error.401',
-  },
-  400: {
-    id: 'app.error.400',
-  },
-  meeting_ended: {
-    id: 'app.meeting.endedMessage',
-  },
-  user_logged_out_reason: {
-    id: 'app.error.userLoggedOut',
-  },
-  validate_token_failed_eject_reason: {
-    id: 'app.error.ejectedUser',
-  },
-  banned_user_rejoining_reason: {
-    id: 'app.error.userBanned',
-  },
-  joined_another_window_reason: {
-    id: 'app.error.joinedAnotherWindow',
-  },
-  user_inactivity_eject_reason: {
-    id: 'app.meeting.logout.userInactivityEjectReason',
-  },
-  user_requested_eject_reason: {
-    id: 'app.meeting.logout.ejectedFromMeeting',
-  },
-  max_participants_reason: {
-    id: 'app.meeting.logout.maxParticipantsReached',
-  },
-  guest_deny: {
-    id: 'app.guest.guestDeny',
-  },
-  duplicate_user_in_meeting_eject_reason: {
-    id: 'app.meeting.logout.duplicateUserEjectReason',
-  },
-  not_enough_permission_eject_reason: {
-    id: 'app.meeting.logout.permissionEjectReason',
-  },
-  able_to_rejoin_user_disconnected_reason: {
-    id: 'app.error.disconnected.rejoin',
-  },
-  user_not_found: {
-    id: 'app.error.userNotFound',
-  },
-  request_timeout: {
-    id: 'app.error.requestTimeout',
-  },
-  meeting_not_found: {
-    id: 'app.error.meetingNotFound',
-  },
-  session_token_replaced: {
-    id: 'app.error.sessionTokenReplaced',
-  },
-  internal_error: {
-    id: 'app.error.serverInternalError',
-  },
-  param_missing: {
-    id: 'app.error.paramMissing',
-  },
-  too_many_connections: {
-    id: 'app.error.tooManyConnections',
-  },
-  server_closed: {
-    id: 'app.error.serverClosed',
-  },
-});
+import Icon from '/imports/ui/components/common/icon/icon-ts/component';
+import resolveErrorScreen from './errorReason';
 
 const propTypes = {
-  error: PropTypes.object,
+  error: PropTypes.shape({
+    message: PropTypes.string,
+    cause: PropTypes.string,
+  }),
+  endedReason: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  callback: PropTypes.func,
+  children: PropTypes.node,
 };
 
 const defaultProps = {
@@ -110,7 +22,6 @@ const defaultProps = {
 class ErrorScreen extends PureComponent {
   componentDidMount() {
     const { callback, endedReason } = this.props;
-    // stop audio
     callback(endedReason, () => {});
   }
 
@@ -118,48 +29,79 @@ class ErrorScreen extends PureComponent {
     const {
       children,
       error,
+      endedReason,
     } = this.props;
-    const formatedMessage = 'Oops, something went wrong';
-    let errorMessageDescription = Session.getItem('errorMessageDescription');
-    const intl = intlHolder.getIntl();
 
-    if (error) {
-      errorMessageDescription = error.message;
-    }
-
-    if (intl) {
-      errorMessageDescription = Session.getItem('errorMessageDescription');
-
-      if (errorMessageDescription in intlMessages) {
-        errorMessageDescription = intl.formatMessage(intlMessages[errorMessageDescription]);
-      }
-    }
+    const {
+      title,
+      reason,
+      hint,
+      reloadLabel,
+      technicalDetailLabel,
+      technicalDetail,
+      isRtl,
+    } = resolveErrorScreen({ error, endedReason });
 
     return (
-      <Styled.Background>
-        <Styled.Message data-test="errorScreenMessage">
-          {formatedMessage}
-        </Styled.Message>
-        {
-          !errorMessageDescription
-          || formatedMessage === errorMessageDescription
-          || (
-            <Styled.SessionMessage>
-              {errorMessageDescription}
-            </Styled.SessionMessage>
-          )
-        }
-        <div>
-          {children}
+      <div data-skyroom-error-screen="true" data-test="errorScreen">
+        <div data-skyroom-error-card="true">
+          <div
+            data-skyroom-error-content="true"
+            dir={isRtl ? 'rtl' : 'ltr'}
+          >
+            <div data-skyroom-error-icon="true" aria-hidden="true">
+              <Icon iconName="alert" />
+            </div>
+
+            <h1 data-skyroom-error-title="true" data-test="errorScreenMessage">
+              {title}
+            </h1>
+
+            <p data-skyroom-error-reason="true">
+              {reason}
+            </p>
+
+            {technicalDetail ? (
+              <div data-skyroom-error-detail="true">
+                <span data-skyroom-error-detail-label="true">
+                  {technicalDetailLabel}
+                </span>
+                <p data-skyroom-error-detail-text="true">
+                  {technicalDetail}
+                </p>
+              </div>
+            ) : null}
+
+            <p data-skyroom-error-hint="true">
+              {hint}
+            </p>
+
+            <div data-skyroom-error-actions="true">
+              <button
+                type="button"
+                data-skyroom-error-btn="true"
+                data-test="errorScreenReload"
+                onClick={() => window.location.reload()}
+              >
+                {reloadLabel}
+              </button>
+            </div>
+
+            {children ? (
+              <div>
+                {children}
+              </div>
+            ) : null}
+          </div>
         </div>
-      </Styled.Background>
+      </div>
     );
   }
 }
 
-export default injectIntl(ErrorScreen);
-
-export { ErrorScreen };
-
 ErrorScreen.propTypes = propTypes;
 ErrorScreen.defaultProps = defaultProps;
+
+export default ErrorScreen;
+
+export { ErrorScreen };

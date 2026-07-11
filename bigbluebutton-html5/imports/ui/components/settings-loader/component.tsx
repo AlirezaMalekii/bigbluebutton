@@ -6,7 +6,6 @@ import { ErrorScreen } from '/imports/ui/components/error-screen/component';
 import LoadingScreen from '/imports/ui/components/common/loading-screen/component';
 import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import useSkyroomLoadingSource from '/imports/ui/components/skyroom-layout/loading/useSkyroomLoadingSource';
-import Session from '/imports/ui/services/storage/in-memory';
 import BBBWeb from '/imports/api/bbb-web-api';
 import { applySkyroomWhiteLabelSettings } from '/imports/ui/components/skyroom-layout/white-label';
 import MeetingStaticDataStore from '/imports/ui/core/singletons/meetingStaticData';
@@ -94,7 +93,6 @@ const SettingsLoader: React.FC<SettingsLoaderProps> = (props) => {
           }).catch(() => {
             setLoading(false);
             setError('Error fetching client settings');
-            Session.setItem('errorMessageDescription', 'meeting_ended');
           });
       }).catch((error) => {
         setLoading(false);

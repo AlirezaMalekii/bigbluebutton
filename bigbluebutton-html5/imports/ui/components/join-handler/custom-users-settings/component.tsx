@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { setUserSettings } from '/imports/ui/core/local-states/useUserSettings';
 import { setUseCurrentLocale } from '/imports/ui/core/local-states/useCurrentLocale';
 import BBBWeb from '/imports/api/bbb-web-api';
-import Session from '/imports/ui/services/storage/in-memory';
 import { ErrorScreen } from '/imports/ui/components/error-screen/component';
 import LoadingScreen from '/imports/ui/components/common/loading-screen/component';
 import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
@@ -85,7 +84,6 @@ const CustomUsersSettings: React.FC<CustomUsersSettingsProps> = ({
             }
           }).catch(() => {
             setError('Error fetching user custom settings');
-            Session.setItem('errorMessageDescription', 'meeting_ended');
           })
           .finally(() => {
             setLoading(false);

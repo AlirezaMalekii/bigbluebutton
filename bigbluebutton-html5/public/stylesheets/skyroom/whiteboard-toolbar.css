@@ -291,9 +291,9 @@
   z-index: 1500 !important;
 }
 
-#layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content,
-#layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-style-panel),
-#layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-buttons__grid) {
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-popover__content:not([data-skyroom-toolbar-popover-anchored="true"]),
+#layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-style-panel):not([data-skyroom-toolbar-popover-anchored="true"]),
+#layout[data-skyroom-column="true"] #whiteboard-element [role="dialog"]:has(.tlui-buttons__grid):not([data-skyroom-toolbar-popover-anchored="true"]) {
   left: auto !important;
 }
 
