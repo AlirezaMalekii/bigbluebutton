@@ -358,7 +358,7 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
   }
 
   return ReactDOM.createPortal(
-    <Styled.Overlay data-dismissed="false">
+    <Styled.Overlay data-test="pollingOverlay">
       <Styled.PollingContainer
         autoWidth={poll.stackOptions}
         data-test="pollingContainer"

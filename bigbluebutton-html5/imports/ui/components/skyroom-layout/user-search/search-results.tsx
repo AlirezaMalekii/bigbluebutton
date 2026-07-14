@@ -16,6 +16,11 @@ import ListItem from '/imports/ui/components/user-list/user-list-content/user-pa
 import useHiddenTabUserIds from '/imports/ui/components/user-list/user-list-content/user-participants/user-list-participants/useHiddenTabUserIds';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
 import { CURRENT_PRESENTATION_PAGE_SUBSCRIPTION, CurrentPresentationPagesSubscriptionResponse } from '/imports/ui/components/whiteboard/queries';
+import useUnreadPrivateChatsBySender from '/imports/ui/core/hooks/useUnreadPrivateChatsBySender';
+import {
+  getPinnedPrivateChatSenderIds,
+  reorderSearchUsersForPrivateMessages,
+} from '/imports/ui/components/user-list/user-list-content/user-participants/user-list-participants/private-chat-user-order';
 import { SKYROOM_USER_SEARCH_SUBSCRIPTION } from './queries';
 import Styled from './styles';
 
@@ -90,19 +95,32 @@ const SkyroomUserSearchResults: React.FC<SkyroomUserSearchResultsProps> = ({ sea
   );
   const pageId = presentationData?.pres_page_curr[0]?.pageId ?? '';
   const hiddenTabUserIds = useHiddenTabUserIds();
+  const unreadBySender = useUnreadPrivateChatsBySender();
+  const pinnedSenderIds = useMemo(
+    () => getPinnedPrivateChatSenderIds(unreadBySender),
+    [unreadBySender],
+  );
 
   const users = useMemo(() => {
     const list = [...(usersData ?? [])];
     if (!currentUser?.userId) return list;
-    const idx = list.findIndex((u) => u.userId === currentUser.userId);
+
+    const reordered = reorderSearchUsersForPrivateMessages(
+      list,
+      currentUser as User,
+      pinnedSenderIds,
+    );
+
+    const idx = reordered.findIndex((u) => u.userId === currentUser.userId);
     if (idx > 0) {
-      const [self] = list.splice(idx, 1);
-      list.unshift(self);
+      const [self] = reordered.splice(idx, 1);
+      reordered.unshift(self);
     } else if (idx < 0 && currentUser.name?.toLowerCase().includes(searchTerm.trim().toLowerCase())) {
-      list.unshift(currentUser as User);
+      reordered.unshift(currentUser as User);
     }
-    return list;
-  }, [usersData, currentUser, searchTerm]);
+
+    return reordered;
+  }, [usersData, currentUser, searchTerm, pinnedSenderIds]);
 
   let userListDropdownItems = [] as PluginSdk.UserListDropdownInterface[];
   if (pluginsExtensibleAreasAggregatedState.userListDropdownItems) {

@@ -54,9 +54,9 @@ public final class SupportedFileTypes {
 		}
 	});
 
-	private static final List<String> MEDIA_FILE_LIST = Collections.unmodifiableList(new ArrayList<String>(6) {
+	private static final List<String> MEDIA_FILE_LIST = Collections.unmodifiableList(new ArrayList<String>(8) {
 		{
-			add(MP4); add(WEBM); add(MP3); add(OGG); add(WAV); add(M4A);
+			add(MP4); add(MOV); add(WEBM); add(MP3); add(OGG); add(WAV); add(M4A); add(AAC);
 		}
 	});
 	
@@ -107,8 +107,89 @@ public final class SupportedFileTypes {
 		return mimeTypeUtils.getExtensionBasedOnMimeType(mimeType);
 	}
 
+	private static String sanitizeMimeType(String mimeType) {
+		if (mimeType == null || mimeType.isEmpty()) {
+			return "";
+		}
+
+		int semicolonIndex = mimeType.indexOf(';');
+		String sanitized = semicolonIndex >= 0
+				? mimeType.substring(0, semicolonIndex)
+				: mimeType;
+
+		return sanitized.trim().toLowerCase();
+	}
+
+	private static String normalizeMimeTypeForExtension(String mimeType, String fileExtension) {
+		if (fileExtension == null || mimeType == null || mimeType.isEmpty()) {
+			return mimeType;
+		}
+
+		String extension = fileExtension.toLowerCase();
+		String normalizedMimeType = sanitizeMimeType(mimeType);
+
+		if (MP4.equalsIgnoreCase(extension)) {
+			if ("video/quicktime".equals(normalizedMimeType)
+					|| "video/x-m4v".equals(normalizedMimeType)) {
+				return "video/mp4";
+			}
+			if (normalizedMimeType.startsWith("audio/")) {
+				return "audio/mp4";
+			}
+			return normalizedMimeType;
+		}
+
+		if (M4A.equalsIgnoreCase(extension) || AAC.equalsIgnoreCase(extension)) {
+			if ("video/mp4".equals(normalizedMimeType)
+					|| "video/quicktime".equals(normalizedMimeType)
+					|| "audio/x-m4a".equals(normalizedMimeType)
+					|| "audio/m4a".equals(normalizedMimeType)
+					|| "audio/aac".equals(normalizedMimeType)
+					|| "audio/x-aac".equals(normalizedMimeType)) {
+				return "audio/mp4";
+			}
+			return normalizedMimeType;
+		}
+
+		if (MP3.equalsIgnoreCase(extension)) {
+			if ("audio/mp3".equals(normalizedMimeType)
+					|| "audio/x-mpeg-3".equals(normalizedMimeType)
+					|| "audio/x-mpeg".equals(normalizedMimeType)) {
+				return "audio/mpeg";
+			}
+			return normalizedMimeType;
+		}
+
+		if (WAV.equalsIgnoreCase(extension)) {
+			if ("audio/x-wav".equals(normalizedMimeType)
+					|| "audio/wave".equals(normalizedMimeType)
+					|| "audio/vnd.wave".equals(normalizedMimeType)) {
+				return "audio/wav";
+			}
+			return normalizedMimeType;
+		}
+
+		if (OGG.equalsIgnoreCase(extension) && "application/ogg".equals(normalizedMimeType)) {
+			return "audio/ogg";
+		}
+
+		if (WEBM.equalsIgnoreCase(extension) && "audio/webm".equals(normalizedMimeType)) {
+			return "audio/webm";
+		}
+
+		if (MOV.equalsIgnoreCase(extension)) {
+			if ("video/mp4".equals(normalizedMimeType)
+					|| "video/x-m4v".equals(normalizedMimeType)) {
+				return "video/quicktime";
+			}
+			return normalizedMimeType;
+		}
+
+		return normalizedMimeType;
+	}
+
 	public static Boolean isPresentationMimeTypeValid(File pres, String fileExtension) {
-		String mimeType = detectMimeType(pres);
+		String mimeType = normalizeMimeTypeForExtension(detectMimeType(pres), fileExtension);
 
 		if (mimeType.equals("")) {
 			log.error("Not able to detect mimeType.");

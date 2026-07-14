@@ -41,7 +41,12 @@ trait ChangeUserReactionEmojiReqMsgHdlr extends RightsManagementTrait {
       val userReactionExpire = getConfigPropertyValueByPathAsIntOrElse(liveMeeting.clientSettings, "public.userReaction.expire", 30)
       for {
         user <- Users2x.findWithIntId(liveMeeting.users2x, msg.body.userId)
-        newUserState <- Users2x.setReactionEmoji(liveMeeting.users2x, user.intId, msg.body.reactionEmoji, userReactionExpire)
+        _ <- if (user.reactionEmoji == msg.body.reactionEmoji && msg.body.reactionEmoji != "none") {
+          None
+        } else {
+          Users2x.setReactionEmoji(liveMeeting.users2x, user.intId, msg.body.reactionEmoji, userReactionExpire)
+        }
+        newUserState <- Users2x.findWithIntId(liveMeeting.users2x, msg.body.userId)
       } yield {
         if (user.reactionEmoji != msg.body.reactionEmoji) {
           broadcast(newUserState, msg.body.reactionEmoji)

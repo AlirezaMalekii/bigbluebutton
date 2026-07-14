@@ -1,4 +1,6 @@
-import React, { useContext, useEffect, useRef } from 'react';
+import React, {
+  useContext, useEffect, useMemo, useRef,
+} from 'react';
 import * as PluginSdk from 'bigbluebutton-html-plugin-sdk';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
 import { setLocalUserList, useLoadedUserList } from '/imports/ui/core/hooks/useLoadedUserList';
@@ -17,6 +19,12 @@ import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import { LockSettings, Meeting, UsersPolicies } from '/imports/ui/Types/meeting';
 import { filterByMeetingId } from '/imports/ui/core/utils/subscriptionFilters';
 import { USER_LIST_SUBSCRIPTION } from '/imports/ui/core/graphql/queries/users';
+import useUnreadPrivateChatsBySender from '/imports/ui/core/hooks/useUnreadPrivateChatsBySender';
+import { useUsersByIds } from '/imports/ui/core/graphql/queries/usersByIds';
+import {
+  getPinnedPrivateChatSenderIds,
+  reorderUsersForPrivateMessages,
+} from '../private-chat-user-order';
 
 interface UserListParticipantsContainerProps {
   index: number;
@@ -102,6 +110,11 @@ const UserListParticipantsPageContainer: React.FC<UserListParticipantsContainerP
 }) => {
   const offset = index * 50;
   const limit = useRef(50);
+  const unreadBySender = useUnreadPrivateChatsBySender();
+  const pinnedSenderIds = useMemo(
+    () => getPinnedPrivateChatSenderIds(unreadBySender),
+    [unreadBySender],
+  );
 
   const {
     data: meeting,
@@ -131,6 +144,14 @@ const UserListParticipantsPageContainer: React.FC<UserListParticipantsContainerP
       (u) => ({ mismatchedUserId: u.userId, mismatchedName: u.name }),
     )
     : [];
+
+  const missingPinnedIds = useMemo(() => {
+    if (offset !== 0) return [];
+    const pageUserIds = new Set(users.map((user) => user.userId));
+    return pinnedSenderIds.filter((userId) => !pageUserIds.has(userId));
+  }, [offset, pinnedSenderIds, users]);
+
+  const { data: extraPinnedUsers, loading: extraPinnedUsersLoading } = useUsersByIds(missingPinnedIds);
 
   const { data: currentUser, loading: currentUserLoading } = useCurrentUser((c: Partial<User>) => ({
     userId: c.userId,
@@ -162,13 +183,36 @@ const UserListParticipantsPageContainer: React.FC<UserListParticipantsContainerP
   const presentationPage = presentationData?.pres_page_curr[0];
   const pageId = presentationPage?.pageId;
 
+  const displayUsers = useMemo(() => {
+    const pageUsers = [...users];
+    const meetingPinnedUsers = meeting?.meetingId
+      ? extraPinnedUsers.filter((user) => user.meetingId === meeting.meetingId)
+      : extraPinnedUsers;
+
+    return reorderUsersForPrivateMessages(
+      pageUsers,
+      currentUser as User,
+      meetingPinnedUsers,
+      offset,
+      pinnedSenderIds,
+    );
+  }, [
+    users,
+    currentUser,
+    unreadBySender,
+    extraPinnedUsers,
+    offset,
+    pinnedSenderIds,
+    meeting?.meetingId,
+  ]);
+
   useEffect(() => {
     setVisibleUsers((prev) => {
       const newList = { ...prev };
-      newList[index] = users;
+      newList[index] = displayUsers;
       return newList;
     });
-  }, [usersData]);
+  }, [displayUsers, index, setVisibleUsers]);
 
   useEffect(() => {
     return () => {
@@ -178,9 +222,16 @@ const UserListParticipantsPageContainer: React.FC<UserListParticipantsContainerP
         return prev;
       });
     };
-  }, []);
+  }, [index, setVisibleUsers]);
 
-  if (usersLoading || meetingLoading || !meeting || currentUserLoading || presentationLoading) {
+  if (
+    usersLoading
+    || meetingLoading
+    || !meeting
+    || currentUserLoading
+    || presentationLoading
+    || (offset === 0 && extraPinnedUsersLoading && missingPinnedIds.length > 0)
+  ) {
     return Array.from({ length: isLastItem ? restOfUsers : 50 }).map((_, i) => (
       <Styled.UserListItem key={`not-visible-item-${i + 1}`}>
         {/* eslint-disable-next-line */}
@@ -189,23 +240,13 @@ const UserListParticipantsPageContainer: React.FC<UserListParticipantsContainerP
     ));
   }
 
-  const currentUserIndex = users.findIndex((u: User) => u.userId === currentUser?.userId);
-
-  if (currentUserIndex !== -1) {
-    users.splice(currentUserIndex, 1);
-  }
-
-  if (offset === 0) {
-    users.unshift(currentUser as User);
-  }
-
   if (!meeting || !currentUser) {
     return null;
   }
 
   return (
     <UsersListParticipantsPage
-      users={users ?? []}
+      users={displayUsers ?? []}
       meeting={{
         meetingId: meeting.meetingId!,
         isBreakout: !!meeting.isBreakout,

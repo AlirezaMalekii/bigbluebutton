@@ -1101,18 +1101,48 @@ public:
         mime: video/mp4
       - extension: .mp4
         mime: video/quicktime
+      - extension: .mp4
+        mime: video/x-m4v
+      - extension: .mp4
+        mime: audio/mp4
+      - extension: .mov
+        mime: video/quicktime
+      - extension: .mov
+        mime: video/mp4
       - extension: .webm
         mime: video/webm
+      - extension: .webm
+        mime: audio/webm
       - extension: .mp3
         mime: audio/mpeg
+      - extension: .mp3
+        mime: audio/mp3
+      - extension: .mp3
+        mime: audio/x-mpeg-3
       - extension: .ogg
         mime: audio/ogg
       - extension: .ogg
         mime: video/ogg
+      - extension: .ogg
+        mime: application/ogg
       - extension: .wav
         mime: audio/wav
+      - extension: .wav
+        mime: audio/x-wav
+      - extension: .wav
+        mime: audio/wave
       - extension: .m4a
         mime: audio/mp4
+      - extension: .m4a
+        mime: audio/x-m4a
+      - extension: .m4a
+        mime: video/mp4
+      - extension: .aac
+        mime: audio/mp4
+      - extension: .aac
+        mime: audio/aac
+      - extension: .aac
+        mime: audio/x-aac
   user:
     role_moderator: MODERATOR
     role_viewer: VIEWER

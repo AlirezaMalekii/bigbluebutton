@@ -41,6 +41,9 @@
   margin: 0 !important;
   border: none !important;
   background: transparent !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
 }
 
 [dir="rtl"] [data-test="connectionStatusModal"] > div > div > header:first-of-type {
@@ -51,6 +54,11 @@
 [data-test="connectionStatusModal"] > div > div > header:first-of-type h2,
 [data-test="connectionStatusModal"] > div > div > header:first-of-type [class*="Title"] {
   display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
 }
 
 [data-test="connectionStatusModal"] > div > div > header:first-of-type button,
@@ -142,6 +150,47 @@
 [data-test="connectionStatusModal"] [class*="LogAvatar"] img {
   width: 36px !important;
   height: 36px !important;
+}
+
+@media (min-width: 561px) {
+  [data-test="connectionStatusModal"] > div > div > header:first-of-type {
+    top: 8px !important;
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  [dir="rtl"] [data-test="connectionStatusModal"] > div > div > header:first-of-type {
+    right: auto !important;
+    left: 12px !important;
+  }
+
+  [dir="ltr"] [data-test="connectionStatusModal"] > div > div > header:first-of-type {
+    right: 12px !important;
+    left: auto !important;
+  }
+
+  [data-test="connectionStatusModal"] > div > div > header:first-of-type button,
+  [data-test="connectionStatusModal"] > div > div > header:first-of-type [data-test="closeModal"] {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    border-radius: 8px !important;
+  }
+
+  .skyroom-conn-modal__topbar {
+    align-items: center !important;
+  }
+
+  [dir="rtl"] .skyroom-conn-modal__topbar {
+    padding-inline-start: 2.75rem !important;
+    padding-inline-end: 0 !important;
+  }
+
+  [dir="ltr"] .skyroom-conn-modal__topbar {
+    padding-inline-end: 2.75rem !important;
+    padding-inline-start: 0 !important;
+  }
 }
 
 @media (max-width: 560px) {

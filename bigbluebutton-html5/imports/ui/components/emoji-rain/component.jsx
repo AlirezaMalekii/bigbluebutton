@@ -6,6 +6,7 @@ import logger from '/imports/startup/client/logger';
 const EmojiRain = ({ reactions }) => {
   const Settings = getSettingsSingletonInstance();
   const containerRef = useRef(null);
+  const seenReactionsRef = useRef(new Set());
   const [isAnimating, setIsAnimating] = useState(false);
   const EMOJI_SIZE = window.meetingClientSettings.public.app.emojiRain.emojiSize;
   const NUMBER_OF_EMOJIS = window.meetingClientSettings.public.app.emojiRain.numberOfEmojis;
@@ -24,7 +25,7 @@ const EmojiRain = ({ reactions }) => {
       return;
     }
 
-    for (let i = 0; i < NUMBER_OF_EMOJIS; i++) {
+    for (let i = 0; i < NUMBER_OF_EMOJIS; i += 1) {
       const initialPosition = {
         x: coord.x + coord.width / 8,
         y: coord.y + coord.height / 5,
@@ -56,15 +57,15 @@ const EmojiRain = ({ reactions }) => {
       flyingEmojis.push({ shapeElement, endPosition });
     }
 
-    requestAnimationFrame(() => setTimeout(() => flyingEmojis.forEach((emoji) => {
-      const { shapeElement, endPosition } = emoji;
+    requestAnimationFrame(() => setTimeout(() => flyingEmojis.forEach((flyingEmoji) => {
+      const { shapeElement, endPosition } = flyingEmoji;
       shapeElement.style.left = `${endPosition.x}px`;
       shapeElement.style.top = `${endPosition.y}px`;
       shapeElement.style.transform = 'scaleX(0) scaleY(0)';
     }), 0));
 
     setTimeout(() => {
-      flyingEmojis.forEach((emoji) => emoji.shapeElement.remove());
+      flyingEmojis.forEach((flyingEmoji) => flyingEmoji.shapeElement.remove());
       flyingEmojis.length = 0;
     }, 2000);
   }
@@ -98,9 +99,14 @@ const EmojiRain = ({ reactions }) => {
       reactions.forEach((reaction) => {
         const currentTime = new Date().getTime();
         const secondsSinceCreated = (currentTime - reaction.creationDate.getTime()) / 1000;
-        if (secondsSinceCreated <= 1 && (reaction.reaction !== 'none')) {
-          createEmojiRain(reaction.reaction);
-        }
+        if (secondsSinceCreated > 1 || reaction.reaction === 'none') return;
+
+        const key = reaction.eventId
+          || `${reaction.userId || 'unknown'}-${reaction.reaction}-${reaction.creationDate.getTime()}`;
+        if (seenReactionsRef.current.has(key)) return;
+
+        seenReactionsRef.current.add(key);
+        createEmojiRain(reaction.reaction);
       });
     }
   }, [isAnimating, reactions]);

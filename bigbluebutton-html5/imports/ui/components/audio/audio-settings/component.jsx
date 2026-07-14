@@ -524,10 +524,12 @@ class AudioSettings extends React.Component {
             />
           </Styled.LabelSmall>
         </Styled.FormElement>
-        <Styled.LabelSmallFullWidth htmlFor="audioStreamVolume">
-          {intl.formatMessage(intlMessages.streamVolumeLabel)}
-          <AudioStreamVolume stream={stream} />
-        </Styled.LabelSmallFullWidth>
+        <Styled.FormElement>
+          <Styled.LabelSmall htmlFor="audioStreamVolume">
+            {intl.formatMessage(intlMessages.streamVolumeLabel)}
+            <AudioStreamVolume stream={stream} />
+          </Styled.LabelSmall>
+        </Styled.FormElement>
         <Styled.FormElement>
           <Styled.LabelSmall htmlFor="outputDeviceSelector">
             {intl.formatMessage(intlMessages.speakerSourceLabel)}
@@ -543,18 +545,20 @@ class AudioSettings extends React.Component {
             />
           </Styled.LabelSmall>
         </Styled.FormElement>
-        <Styled.LabelSmall htmlFor="audioTest">
-          {intl.formatMessage(intlMessages.testSpeakerLabel)}
-          {!withEcho ? (
-            <AudioTestContainer id="audioTest" />
-          ) : (
-            <LocalEchoContainer
-              intl={intl}
-              outputDeviceId={outputDeviceId}
-              stream={stream}
-            />
-          )}
-        </Styled.LabelSmall>
+        <Styled.FormElement>
+          <Styled.LabelSmall htmlFor="audioTest">
+            {intl.formatMessage(intlMessages.testSpeakerLabel)}
+            {!withEcho ? (
+              <AudioTestContainer id="audioTest" />
+            ) : (
+              <LocalEchoContainer
+                intl={intl}
+                outputDeviceId={outputDeviceId}
+                stream={stream}
+              />
+            )}
+          </Styled.LabelSmall>
+        </Styled.FormElement>
         {this.renderAudioCaptionsSelector()}
       </>
     );

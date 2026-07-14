@@ -609,6 +609,76 @@ html[data-skyroom="true"] [dir="rtl"] [data-test="audioModal"] [class*="HelpItem
   display: block !important;
 }
 
+/* ---------------------------------------------------------------------
+   7b) Audio settings modal — stacked single-column layout
+   --------------------------------------------------------------------- */
+html[data-skyroom="true"] [data-test="audioModal"]:has([data-test="audioSettingsModal"]).ReactModal__Content {
+  width: min(92vw, 26rem) !important;
+  max-width: 26rem !important;
+  min-width: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 1rem 1.25rem 1.125rem !important;
+  box-sizing: border-box !important;
+}
+
+html[data-skyroom="true"] [data-test="audioModal"]:has([data-test="audioSettingsModal"]) [class*="Content"] {
+  overflow-y: visible !important;
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+  padding: 0 !important;
+}
+
+html[data-skyroom="true"] [data-test="audioModal"]:has([data-test="audioSettingsModal"]) [class*="Header"] {
+  margin-bottom: 0.35rem !important;
+}
+
+html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="Form"] {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="FormElement"],
+html[data-skyroom="true"] [data-test="audioSettingsModal"] label {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+html[data-skyroom="true"] [data-test="audioSettingsModal"] select,
+html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="Select"] {
+  width: 100% !important;
+  min-height: 2.5rem !important;
+}
+
+html[data-skyroom="true"] [data-test="audioSettingsModal"] meter {
+  width: 100% !important;
+}
+
+html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="LocalEchoTestButton"],
+html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="TestAudioButton"],
+html[data-skyroom="true"] [data-test="audioSettingsModal"] button[data-test="testSpeakerButton"],
+html[data-skyroom="true"] [data-test="audioSettingsModal"] button[data-test="stopHearingButton"] {
+  width: 100% !important;
+}
+
+html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="AudioNote"] {
+  margin-bottom: 0.5rem !important;
+  line-height: 1.4 !important;
+}
+
+html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="BottomSeparator"] {
+  margin-top: 0.75rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"] {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
 [role="dialog"] [data-test="echoYesBtn"] > span:first-child,
 [role="dialog"] [data-test="echoNoBtn"] > span:first-child {
   margin-bottom: 0 !important;
@@ -1224,6 +1294,16 @@ html[data-skyroom="true"] [dir="rtl"] [data-test="audioModal"] [class*="HelpItem
 .poll-creation-modal [data-test="pollLiveResultChart"] {
   width: 100%;
   min-height: 8rem;
+  overflow: visible;
+}
+
+.poll-creation-modal [data-test="pollLiveResultChart"] .recharts-wrapper,
+.poll-creation-modal [data-test="pollLiveResultChart"] .recharts-surface {
+  overflow: visible;
+}
+
+.poll-creation-modal [data-test="pollLiveResultChart"] .recharts-yAxis .recharts-cartesian-axis-tick-value {
+  fill: var(--skyroom-modal-text-muted, #aab6c7) !important;
 }
 
 .poll-creation-modal [class*="ButtonsActions"] {
@@ -1245,6 +1325,21 @@ html[data-skyroom="true"] [dir="rtl"] [data-test="audioModal"] [class*="HelpItem
 }
 
 /* Poll creation modal — dark theme tokens for form controls */
+.poll-creation-modal [class*="InfoBoxContainer"][data-quiz="false"] {
+  background: linear-gradient(
+    135deg,
+    rgba(32, 199, 187, 0.14) 0%,
+    rgba(32, 199, 187, 0.06) 100%
+  ) !important;
+  border: 1px solid rgba(32, 199, 187, 0.28) !important;
+  color: var(--skyroom-modal-text, #eef4fb) !important;
+}
+
+.poll-creation-modal [class*="InfoBoxContainer"][data-quiz="false"] p {
+  color: var(--skyroom-modal-text, #eef4fb) !important;
+  font-weight: 500;
+}
+
 .poll-creation-modal [class*="InfoBoxContainer"] {
   background: rgba(32, 199, 187, 0.1) !important;
   border: 1px solid rgba(32, 199, 187, 0.22) !important;
@@ -1282,6 +1377,29 @@ html[data-skyroom="true"] [dir="rtl"] [data-test="audioModal"] [class*="HelpItem
 .poll-creation-modal [class*="CustomInputHeading"],
 .poll-creation-modal [class*="Question"] {
   color: var(--skyroom-modal-text, #eef4fb) !important;
+}
+
+.poll-creation-modal [class*="CustomInputRow"] {
+  gap: 0.35rem !important;
+  justify-content: flex-start !important;
+  width: fit-content !important;
+  max-width: 100% !important;
+}
+
+.poll-creation-modal [class*="CustomInputRow"] label {
+  margin-inline-start: 0 !important;
+  margin-inline-end: 0 !important;
+}
+
+.poll-creation-modal [class*="QuizCorrectAnswerControl"] {
+  gap: 0.35rem !important;
+}
+
+.poll-creation-modal [data-test="correctAnswerLabel"] {
+  color: #1dbf73 !important;
+  background: rgba(29, 191, 115, 0.16) !important;
+  border: 1px solid rgba(29, 191, 115, 0.35);
+  font-weight: 700;
 }
 
 .poll-creation-modal [class*="ToggleLabel"] {

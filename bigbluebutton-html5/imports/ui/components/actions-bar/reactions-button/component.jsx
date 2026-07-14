@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { defineMessages } from 'react-intl';
 import PropTypes from 'prop-types';
 import BBBMenu from '/imports/ui/components/common/menu/component';
@@ -6,7 +6,10 @@ import { convertRemToPixels } from '/imports/utils/dom-utils';
 import { SET_REACTION_EMOJI } from '/imports/ui/core/graphql/mutations/userMutations';
 import { useMutation } from '@apollo/client';
 import { notify } from '/imports/ui/services/notification';
-import { consumeReactionRateLimit } from './rate-limit';
+import {
+  checkReactionRateLimit,
+  consumeReactionRateLimit,
+} from './rate-limit';
 import Styled from './styles';
 
 const ReactionsButton = (props) => {
@@ -16,12 +19,14 @@ const ReactionsButton = (props) => {
     isMobile,
     currentUserReaction,
     autoCloseReactionsBar,
+    isModerator,
   } = props;
 
   const REACTIONS = window.meetingClientSettings.public.userReaction.reactions;
   const DISABLE_EMOJIS = window.meetingClientSettings.public.chat.disableEmojis;
 
   const [setReactionEmoji] = useMutation(SET_REACTION_EMOJI);
+  const pendingRef = useRef(false);
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
@@ -40,6 +45,11 @@ const ReactionsButton = (props) => {
       description: 'toast when reaction rate limit is reached',
       defaultMessage: 'Reaction limit reached ({max} per {window}s). Wait {seconds}s and try again.',
     },
+    sendErrorLabel: {
+      id: 'app.actionsBar.reactions.sendErrorLabel',
+      description: 'toast when reaction send fails',
+      defaultMessage: 'Could not send reaction. Please try again.',
+    },
   });
 
   const handleClose = () => {
@@ -50,9 +60,11 @@ const ReactionsButton = (props) => {
   };
 
   const handleReactionSelect = (reaction) => {
+    if (pendingRef.current) return;
+
     // Clearing status should not consume the send budget.
-    if (reaction !== 'none') {
-      const rate = consumeReactionRateLimit();
+    if (reaction !== 'none' && !isModerator) {
+      const rate = checkReactionRateLimit();
       if (!rate.allowed) {
         notify(
           intl.formatMessage(intlMessages.rateLimitLabel, {
@@ -67,7 +79,25 @@ const ReactionsButton = (props) => {
       }
     }
 
-    setReactionEmoji({ variables: { reactionEmoji: reaction } });
+    pendingRef.current = true;
+
+    setReactionEmoji({
+      variables: { reactionEmoji: reaction },
+      onCompleted: () => {
+        pendingRef.current = false;
+        if (reaction !== 'none' && !isModerator) {
+          consumeReactionRateLimit();
+        }
+      },
+      onError: () => {
+        pendingRef.current = false;
+        notify(
+          intl.formatMessage(intlMessages.sendErrorLabel),
+          'error',
+          'warning',
+        );
+      },
+    });
   };
 
   const customStyles = {
@@ -196,6 +226,11 @@ const propTypes = {
   userId: PropTypes.string.isRequired,
   sidebarContentPanel: PropTypes.string.isRequired,
   layoutContextDispatch: PropTypes.func.isRequired,
+  isModerator: PropTypes.bool,
+};
+
+ReactionsButton.defaultProps = {
+  isModerator: false,
 };
 
 ReactionsButton.propTypes = propTypes;

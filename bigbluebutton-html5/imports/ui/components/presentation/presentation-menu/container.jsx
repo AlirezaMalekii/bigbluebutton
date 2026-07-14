@@ -1,11 +1,12 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useReducer } from 'react';
 import PropTypes from 'prop-types';
 import PresentationMenu from './component';
-import FullscreenService from '/imports/ui/components/common/fullscreen-button/service';
 import { layoutSelect, layoutDispatch } from '/imports/ui/components/layout/context';
 import { useIsSnapshotOfCurrentSlideEnabled } from '/imports/ui/services/features';
 import { PluginsContext } from '/imports/ui/components/components-data/plugin-context/context';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
+import { SKYROOM_MOBILE_ZONE_FS_EVENT } from '/imports/ui/components/skyroom-layout/mobile-zone-fullscreen-state';
+import { isPresentationFullscreenActive } from '../presentation-fullscreen';
 
 import {
   persistShape,
@@ -17,7 +18,12 @@ const PresentationMenuContainer = (props) => {
   const { element: currentElement, group: currentGroup } = fullscreen;
   const layoutContextDispatch = layoutDispatch();
   const { elementId, currentUser } = props;
-  const isFullscreen = currentElement === elementId;
+  const [, forceRender] = useReducer((x) => x + 1, 0);
+  const isFullscreen = isPresentationFullscreenActive({
+    fullscreenContext: currentElement === elementId,
+    currentElement,
+    elementId,
+  });
   const Settings = getSettingsSingletonInstance();
   const { isRTL } = Settings.application;
   const { pluginsExtensibleAreasAggregatedState } = useContext(PluginsContext);
@@ -34,7 +40,12 @@ const PresentationMenuContainer = (props) => {
     name: meeting?.name,
   }));
 
-  const handleToggleFullscreen = (ref) => FullscreenService.toggleFullScreen(ref);
+  useEffect(() => {
+    const onMobileZoneFs = () => forceRender();
+    window.addEventListener(SKYROOM_MOBILE_ZONE_FS_EVENT, onMobileZoneFs);
+    return () => window.removeEventListener(SKYROOM_MOBILE_ZONE_FS_EVENT, onMobileZoneFs);
+  }, []);
+
   const isIphone = !!(navigator.userAgent.match(/iPhone/i));
   const allowSnapshotOfCurrentSlide = useIsSnapshotOfCurrentSlideEnabled();
 
@@ -50,7 +61,6 @@ const PresentationMenuContainer = (props) => {
         presentationDropdownItems,
         hasWBAccess,
         meetingName: meetingInfo?.name,
-        handleToggleFullscreen,
         isIphone,
         allowSnapshotOfCurrentSlide,
         persistShape,

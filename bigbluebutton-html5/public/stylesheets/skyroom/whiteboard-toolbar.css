@@ -375,6 +375,24 @@
   color: #aab6c7 !important;
 }
 
+/* Crisp Persian labels — disable tldraw text-shadow on context menus. */
+#layout[data-skyroom-column="true"] #whiteboard-element .tl-container {
+  --color-text-shadow: transparent;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-context-menu__content .tlui-button,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu[data-state="open"]:not(:has(.tlui-buttons__grid)) .tlui-button__menu,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu.scrollable .tlui-button__menu {
+  text-shadow: none !important;
+  text-rendering: auto;
+  font-size: 13px;
+}
+
+[dir="rtl"] #layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__menu .tlui-button__label,
+[dir="rtl"] #layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__checkbox .tlui-button__label {
+  text-align: right;
+}
+
 /* Unified presentation fullscreen — top-left overlay for all slide types */
 .skyroom-presentation-fullscreen-btn {
   pointer-events: auto;

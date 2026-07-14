@@ -276,11 +276,17 @@ const Warning = styled.div`
 
 const CustomInputRow = styled.div`
   display: flex;
-  flex-flow: nowrap;
-  flex-grow: 1;
-  justify-content: space-between;
+  flex-flow: row nowrap;
+  flex-grow: 0;
+  justify-content: flex-start;
   align-items: center;
-  gap: .5rem;
+  gap: 0.35rem;
+  width: fit-content;
+  max-width: 100%;
+
+  label {
+    margin-left: 0;
+  }
 `;
 
 const Col = styled.div`
@@ -424,15 +430,29 @@ const CustomInputHeading = styled(SectionHeading)`
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  padding-bottom: ${mdPaddingX};
+  margin: 0;
+  padding: 0;
 `;
 
 const CustomInputHeadingCol = styled(Col)`
   overflow: hidden;
+  flex-grow: 0;
+  flex-shrink: 1;
 `;
 
 const CustomInputToggleCol = styled(Col)`
   flex-shrink: 0;
+  flex-grow: 0;
+
+  &:last-child {
+    padding-right: 0;
+    padding-left: 0;
+
+    [dir="rtl"] & {
+      padding-right: 0;
+      padding-left: 0;
+    }
+  }
 `;
 
 const AnonymousHeading = styled(CustomInputHeading)``;
@@ -736,6 +756,14 @@ const LiveResultTable = styled.table`
   width: 100%;
 `;
 
+const QuizCorrectAnswerControl = styled.div`
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+`;
+
 const QuizCorrectAnswerCheckbox = styled.input`  
   --accent: ${darkCyanLime};
   --inputMask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="3" stroke="%23000" fill="none" stroke-linecap="round" stroke-linejoin="round"> <path d="M5 12l5 5l10 -10"/></svg>');
@@ -748,10 +776,10 @@ const QuizCorrectAnswerCheckbox = styled.input`
   box-sizing: border-box;
   font-size: 1em;
   height: ${lgPaddingX};
-  margin: .1875em .1875em .1875em .25em;
+  flex-shrink: 0;
+  margin: 0;
   position: relative;
   width: ${lgPaddingX};
-  margin-right: ${mdPaddingX};
 
   &::after {
     background: var(--backgroundColorAfter, transparent);
@@ -786,22 +814,22 @@ const InfoBoxContainer = styled.div<InfoBoxContainerProps>`
   border-radius: .5rem;
   margin-bottom: 1rem;
 
-  color: ${slate900} !important;
+  color: ${colorText};
   background-color: ${colorBlueLightest};
   border: 1px solid ${colorBlueLighter};
 
   ${({ isQuiz }) => isQuiz && `
     background-color: ${colorInfoBoxQuizBg};
     border: 1px solid ${colorInfoBoxQuizBorder};
-    color: ${slate900} !important;
+    color: ${colorText};
   `}
 
   & > p {
     margin: 0;
     line-height: 1.45;
     font-size: ${fontSizeSmall};
-    color: ${slate900} !important;
-    font-weight: 600;
+    color: ${colorText};
+    font-weight: 500;
   }
 `;
 
@@ -833,17 +861,18 @@ const SelectedCorrectAnswerIndicator = styled.span<SelectedCorrectAnswerIndicato
   `}
 `;
 
-const CorrectLabel = styled.div`
-  position: absolute;
-  top: 50%;
-  right: 2rem;
-  transform:  translate(0, -50%);
-  border-radius: 9999px; 
+const CorrectLabel = styled.span`
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  border-radius: 9999px;
   color: ${colorGreen600};
   background-color: ${colorGreen100};
-  padding: 0.25rem 0.50rem;
+  padding: 0.2rem 0.5rem;
   font-size: ${fontSizeSmaller};
-  line-height: ${lineHeightComputed};
+  line-height: 1.2;
+  font-weight: 700;
+  white-space: nowrap;
 `;
 
 const PollInputContainer = styled.div`
@@ -917,6 +946,7 @@ export default {
   SegmentedButtonWrapper,
   SegmentedButton,
   QuizCorrectAnswerCheckbox,
+  QuizCorrectAnswerControl,
   InfoBoxContainer,
   ResponseHeader,
   SelectedCorrectAnswerIndicator,

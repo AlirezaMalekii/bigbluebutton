@@ -34,6 +34,7 @@ const propTypes = {
   color: PropTypes.string,
   fullScreenStyle: PropTypes.bool,
   dataTest: PropTypes.string,
+  customToggle: PropTypes.func,
 };
 
 const FullscreenButtonComponent = ({
@@ -53,6 +54,7 @@ const FullscreenButtonComponent = ({
   fullscreenRef = null,
   handleToggleFullScreen,
   dataTest = 'webcamFullscreenButton',
+  customToggle,
 }) => {
   if (isIphone) return null;
 
@@ -68,6 +70,11 @@ const FullscreenButtonComponent = ({
   );
 
   const handleClick = () => {
+    if (customToggle) {
+      customToggle();
+      return;
+    }
+
     handleToggleFullScreen(fullscreenRef);
     const newElement = (elementId === currentElement) ? '' : elementId;
     const newGroup = (elementGroup === currentGroup) ? '' : elementGroup;

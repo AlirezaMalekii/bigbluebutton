@@ -483,7 +483,7 @@ const SkyroomConnectionStatusModal: React.FC<SkyroomConnectionStatusModalProps> 
 
   return (
     <Styled.Shell className="skyroom-conn-modal">
-      <Styled.TopBar>
+      <Styled.TopBar className="skyroom-conn-modal__topbar">
         <Styled.TopBarIcon aria-hidden>
           <NetworkIcon />
         </Styled.TopBarIcon>

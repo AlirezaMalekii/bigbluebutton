@@ -2,9 +2,8 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { defineMessages } from 'react-intl';
-import ExternalVideoModal from '/imports/ui/components/external-video-player/external-video-player-graphql/modal/component';
-import LayoutModalContainer from '/imports/ui/components/layout/modal/container';
 import BBBMenu from '/imports/ui/components/common/menu/component';
+import LayoutModalContainer from '/imports/ui/components/layout/modal/container';
 import ModalSimple from '/imports/ui/components/common/modal/simple/component';
 import { ActionButtonDropdownItemType } from 'bigbluebutton-html-plugin-sdk/dist/cjs/extensible-areas/action-button-dropdown-item/enums';
 import Styled from './styles';
@@ -30,8 +29,6 @@ const propTypes = {
   handleTakePresenter: PropTypes.func.isRequired,
   isTimerActive: PropTypes.bool.isRequired,
   isTimerEnabled: PropTypes.bool.isRequired,
-  allowExternalVideo: PropTypes.bool.isRequired,
-  stopExternalVideoShare: PropTypes.func.isRequired,
   isMobile: PropTypes.bool.isRequired,
   isTimerFeatureEnabled: PropTypes.bool.isRequired,
   isCameraAsContentEnabled: PropTypes.bool.isRequired,
@@ -123,14 +120,6 @@ const intlMessages = defineMessages({
     id: 'app.actionsBar.actionsDropdown.takePresenterDesc',
     description: 'Description of take presenter role option',
   },
-  startExternalVideoLabel: {
-    id: 'app.actionsBar.actionsDropdown.shareExternalVideo',
-    description: 'Start sharing external video button',
-  },
-  stopExternalVideoLabel: {
-    id: 'app.actionsBar.actionsDropdown.stopShareExternalVideo',
-    description: 'Stop sharing external video button',
-  },
   layoutModal: {
     id: 'app.actionsBar.actionsDropdown.layoutModal',
     description: 'Label for layouts selection button',
@@ -157,9 +146,8 @@ class ActionsDropdown extends PureComponent {
     this.timerId = uniqueId('action-item-');
     this.selectUserRandId = uniqueId('action-item-');
 
-    this.handleExternalVideoClick = this.handleExternalVideoClick.bind(this);
-    this.makePresentationItems = this.makePresentationItems.bind(this);
     this.handleTimerClick = this.handleTimerClick.bind(this);
+    this.makePresentationItems = this.makePresentationItems.bind(this);
     this.handlePollActionClick = this.handlePollActionClick.bind(this);
     this.handlePollModalOutsideClick = this.handlePollModalOutsideClick.bind(this);
     this.handleSkyroomOpenPollResults = this.handleSkyroomOpenPollResults.bind(this);
@@ -167,14 +155,6 @@ class ActionsDropdown extends PureComponent {
 
   componentDidMount() {
     window.addEventListener(SKYROOM_OPEN_POLL_RESULTS_EVENT, this.handleSkyroomOpenPollResults);
-  }
-
-  componentDidUpdate(prevProps) {
-    const { amIPresenter: wasPresenter } = prevProps;
-    const { amIPresenter: isPresenter } = this.props;
-    if (wasPresenter && !isPresenter) {
-      this.setExternalVideoModalIsOpen(false);
-    }
   }
 
   componentWillUnmount() {
@@ -185,10 +165,6 @@ class ActionsDropdown extends PureComponent {
     Session.setItem('forcePollOpen', true);
     Session.setItem('pollInitiated', true);
     this.setPollModalIsOpen(true);
-  }
-
-  handleExternalVideoClick() {
-    this.setExternalVideoModalIsOpen(true);
   }
 
   handleTimerClick() {
@@ -218,11 +194,8 @@ class ActionsDropdown extends PureComponent {
     const {
       intl,
       amIPresenter,
-      allowExternalVideo,
       handleTakePresenter,
-      isSharingVideo,
       isPollingEnabled,
-      stopExternalVideoShare,
       isTimerActive,
       isTimerEnabled,
       amIModerator,
@@ -291,18 +264,6 @@ class ActionsDropdown extends PureComponent {
         label: formatMessage(takePresenter),
         key: this.takePresenterId,
         onClick: () => handleTakePresenter(),
-      });
-    }
-
-    if (amIPresenter && allowExternalVideo) {
-      actions.push({
-        icon: !isSharingVideo ? 'external-video' : 'external-video_off',
-        label: !isSharingVideo
-          ? intl.formatMessage(intlMessages.startExternalVideoLabel)
-          : intl.formatMessage(intlMessages.stopExternalVideoLabel),
-        key: 'external-video',
-        onClick: isSharingVideo ? stopExternalVideoShare : this.handleExternalVideoClick,
-        dataTest: 'shareExternalVideo',
       });
     }
 
@@ -454,30 +415,6 @@ class ActionsDropdown extends PureComponent {
             transformOrigin: { vertical: 'bottom', horizontal: isRTL ? 'right' : 'left' },
           }}
         />
-        {/* External Video Modal */}
-        <ModalRegistration id="externalVideoModal" priority="low">
-          {({
-            isOpen,
-            id,
-            open,
-            close,
-          }) => {
-            this.setExternalVideoModalIsOpen = (value) => {
-              if (value) open();
-              else close();
-            };
-            return isOpen && (
-              <ExternalVideoModal
-                onRequestClose={close}
-                priority="low"
-                isOpen={isOpen}
-                id={id}
-                setIsOpen={isOpen ? close : open}
-              />
-            );
-          }}
-        </ModalRegistration>
-
         {/* Layout Modal */}
         <ModalRegistration id="layoutModal" priority="low">
           {({

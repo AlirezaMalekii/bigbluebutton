@@ -68,21 +68,31 @@ const PollInputs: React.FC<PollInputsProps> = ({
       <span key={pollOptionKey}>
         <Styled.OptionWrapper>
           {isQuiz && (
-            <Tooltip title={intl.formatMessage(intlMessages.correctAnswerSelectionTooltip)}>
-              <Styled.QuizCorrectAnswerCheckbox
-                type="checkbox"
-                id={`correct-answer-${i}`}
-                checked={correctAnswer.index === i}
-                onChange={(ev: React.ChangeEvent<HTMLInputElement>) => {
-                  if (ev.target.checked) {
-                    setCorrectAnswer({
-                      text: o.key,
-                      index: i,
-                    });
-                  }
-                }}
-              />
-            </Tooltip>
+            <Styled.QuizCorrectAnswerControl>
+              <Tooltip title={intl.formatMessage(intlMessages.correctAnswerSelectionTooltip)}>
+                <Styled.QuizCorrectAnswerCheckbox
+                  type="checkbox"
+                  id={`correct-answer-${i}`}
+                  checked={correctAnswer.index === i}
+                  onChange={(ev: React.ChangeEvent<HTMLInputElement>) => {
+                    if (ev.target.checked) {
+                      setCorrectAnswer({
+                        text: o.key,
+                        index: i,
+                      });
+                    }
+                  }}
+                />
+              </Tooltip>
+              {correctAnswer.index === i && (
+                <Styled.CorrectLabel
+                  data-test="correctAnswerLabel"
+                  aria-label={intl.formatMessage(intlMessages.correctAnswerLabel)}
+                >
+                  {intl.formatMessage(intlMessages.correctAnswerLabel)}
+                </Styled.CorrectLabel>
+              )}
+            </Styled.QuizCorrectAnswerControl>
           )}
           <Styled.PollInputContainer>
             <Styled.PollOptionInput
@@ -97,14 +107,6 @@ const PollInputs: React.FC<PollInputsProps> = ({
               onCut={(e) => { e.stopPropagation(); }}
               onCopy={(e) => { e.stopPropagation(); }}
             />
-            {isQuiz && correctAnswer.index === i && (
-              <Styled.CorrectLabel
-                data-test="correctAnswerLabel"
-                aria-label={intl.formatMessage(intlMessages.correctAnswerLabel)}
-              >
-                {intl.formatMessage(intlMessages.correctAnswerLabel)}
-              </Styled.CorrectLabel>
-            )}
           </Styled.PollInputContainer>
           {optList.length > MIN_OPTIONS_LENGTH && (
             <Styled.DeletePollOptionButton

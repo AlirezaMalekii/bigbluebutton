@@ -1,7 +1,6 @@
 import styled from 'styled-components';
 import {
   overlayIndex,
-  overlayOpacity,
   pollIndex,
   borderSize,
 } from '/imports/ui/stylesheets/styled-components/general';
@@ -23,77 +22,60 @@ const Overlay = styled.div`
   inset: 0;
   z-index: ${overlayIndex};
   pointer-events: auto;
-  background-color: rgba(0, 0, 0, ${overlayOpacity});
-  backdrop-filter: blur(4px);
-
-  /*
-   * On phones the poll is a non-blocking bottom sheet: drop the dimming backdrop and let taps
-   * pass through the overlay to the class behind it. The sheet itself re-enables pointer events.
-   */
-  @media ${hasPhoneDimentions} {
-    background-color: transparent;
-    backdrop-filter: none;
-    pointer-events: none;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) 16px
+    max(16px, env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  background-color: rgba(7, 11, 20, 0.62);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 `;
 
 // ─── Main card ──────────────────────────────────────────────────────────────
 
 const PollingContainer = styled.aside<{ autoWidth: boolean }>`
   pointer-events: auto;
-  position: fixed;
+  position: relative;
   z-index: ${pollIndex};
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
-  width: min(34rem, 92vw);
-  max-height: min(90vh, 48rem);
+  flex-shrink: 0;
+  width: min(22rem, 100%);
+  max-height: min(85vh, 34rem);
   overflow-y: auto;
+  overflow-x: hidden;
 
-  background: var(--skyroom-surface-2, #1a2436);
-  border: 1px solid var(--skyroom-panel-border-token, rgba(20, 169, 158, 0.14));
+  background:
+    radial-gradient(420px 220px at 12% -20%, rgba(20, 169, 158, 0.12), transparent 62%),
+    linear-gradient(165deg, #1a2234 0%, #121a28 55%, #0e1522 100%);
+  border: 1px solid rgba(32, 199, 187, 0.22);
   border-radius: var(--radius-lg, 16px);
-  box-shadow: var(--shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.40));
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
 
-  padding: var(--space-6, 24px);
+  padding: calc(var(--space-6, 24px) + 4px) var(--space-5, 20px) var(--space-5, 20px);
   display: flex;
   flex-direction: column;
   gap: var(--space-4, 16px);
-  position: relative;
 
   color: var(--skyroom-text-primary, #e6edf7);
   text-align: center;
+  -webkit-overflow-scrolling: touch;
 
   &:focus {
     outline: none;
     border-color: var(--skyroom-accent, #20c7bb);
   }
 
-  /*
-   * Phone: a non-blocking bottom sheet instead of a full-screen modal. It sits at the bottom,
-   * never taller than ~62vh so the class above stays visible, and can be dismissed with the
-   * close button (header pill reopens it). This keeps the meeting usable while a poll is live.
-   */
   @media ${hasPhoneDimentions} {
-    top: auto;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    transform: none;
-    width: 100vw;
-    max-width: 100vw;
-    height: auto;
-    max-height: 62vh;
-    border-radius: var(--radius-lg, 16px) var(--radius-lg, 16px) 0 0;
-    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.45);
-    padding: var(--space-5, 20px) var(--space-4, 16px)
-      calc(var(--space-4, 16px) + env(safe-area-inset-bottom, 0px));
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    width: min(21rem, 100%);
+    max-height: min(82vh, 32rem);
+    padding: calc(var(--space-5, 20px) + 4px) var(--space-4, 16px) var(--space-4, 16px);
+    border-radius: 14px;
   }
 
-  ${({ autoWidth }) => autoWidth && 'width: auto;'}
+  ${({ autoWidth }) => autoWidth && 'width: auto; max-width: min(28rem, 100%);'}
 `;
 
 // ─── Dismiss (close) button — poll/quiz answer modal ─────────────────────────
@@ -224,26 +206,30 @@ const PollButtonWrapper = styled.div`
 // @ts-ignore Until everything in Typescript
 const PollingButton = styled(Button)`
   width: 100%;
-  min-height: 44px;
+  min-height: 48px;
   border-radius: var(--radius-md, 12px) !important;
   font-size: 0.9375rem;
   font-weight: 600;
-  white-space: nowrap;
+  white-space: normal;
   overflow: hidden;
   text-overflow: ellipsis;
-  background: var(--skyroom-accent-soft, rgba(32, 199, 187, 0.12)) !important;
-  color: var(--skyroom-accent, #20c7bb) !important;
-  border: 1px solid var(--skyroom-accent-border, rgba(32, 199, 187, 0.36)) !important;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: var(--skyroom-text-primary, #e6edf7) !important;
+  border: 1px solid rgba(32, 199, 187, 0.24) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease,
+    transform 0.1s ease, box-shadow 0.15s ease !important;
 
   &:hover,
   &:focus-visible {
-    background: var(--skyroom-accent-hover-bg, rgba(32, 199, 187, 0.18)) !important;
-    border-color: var(--skyroom-accent, #20c7bb) !important;
+    background: rgba(32, 199, 187, 0.16) !important;
+    border-color: rgba(32, 199, 187, 0.45) !important;
     color: ${colorWhite} !important;
+    box-shadow: 0 4px 14px rgba(13, 136, 126, 0.22) !important;
   }
 
   &:active {
+    transform: scale(0.98);
     background: rgba(13, 136, 126, 0.55) !important;
     border-color: var(--skyroom-brand-500, #0d887e) !important;
   }
@@ -306,7 +292,7 @@ const PollingSecret = styled.div`
 const MultipleResponseAnswersTable = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--space-1, 4px);
+  gap: var(--space-2, 8px);
   width: 100%;
 `;
 
@@ -314,14 +300,24 @@ const CheckboxContainer = styled.div`
   display: flex;
   align-items: center;
   gap: var(--space-3, 12px);
-  padding: var(--space-2, 8px) var(--space-3, 12px);
-  border-radius: var(--radius-sm, 8px);
+  min-height: 48px;
+  padding: var(--space-3, 12px) var(--space-3, 12px);
+  border-radius: var(--radius-md, 12px);
   cursor: pointer;
-  transition: background 0.12s ease;
+  transition: background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
   text-align: start;
+  border: 1px solid rgba(32, 199, 187, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+
+  &[data-selected="true"] {
+    background: rgba(32, 199, 187, 0.14);
+    border-color: rgba(32, 199, 187, 0.38);
+    box-shadow: 0 0 0 1px rgba(32, 199, 187, 0.12) inset;
+  }
 
   &:hover {
-    background: var(--skyroom-accent-soft, rgba(32, 199, 187, 0.10));
+    background: rgba(32, 199, 187, 0.1);
+    border-color: rgba(32, 199, 187, 0.28);
   }
 `;
 
@@ -333,8 +329,15 @@ const MultipleResponseAnswersTableAnswerText = styled.div`
   text-align: start;
   color: var(--skyroom-text-primary, #e6edf7);
   font-size: 0.9375rem;
+  font-weight: 500;
   line-height: 1.5;
   flex: 1;
+
+  label {
+    cursor: pointer;
+    display: block;
+    width: 100%;
+  }
 `;
 
 // ─── Hidden a11y helpers (unchanged) ────────────────────────────────────────

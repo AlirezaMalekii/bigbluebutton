@@ -27,6 +27,11 @@ import {
   isSkyroomMobileViewport,
   getSkyroomMobileWbToolbarReserve,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import { SKYROOM_MOBILE_ZONE_FS_EVENT } from '/imports/ui/components/skyroom-layout/mobile-zone-fullscreen-state';
+import {
+  isPresentationFullscreenActive,
+  togglePresentationFullscreen,
+} from './presentation-fullscreen';
 
 const intlMessages = defineMessages({
   presentationLabel: {
@@ -163,6 +168,10 @@ class Presentation extends PureComponent {
       );
     }
     window.addEventListener('resize', this.onResize, false);
+    this.onMobileZoneFullscreenChange = () => {
+      this.forceUpdate();
+    };
+    window.addEventListener(SKYROOM_MOBILE_ZONE_FS_EVENT, this.onMobileZoneFullscreenChange);
 
     const {
       currentSlide,
@@ -339,6 +348,9 @@ class Presentation extends PureComponent {
     const { fullscreenContext, layoutContextDispatch } = this.props;
 
     window.removeEventListener('resize', this.onResize, false);
+    if (this.onMobileZoneFullscreenChange) {
+      window.removeEventListener(SKYROOM_MOBILE_ZONE_FS_EVENT, this.onMobileZoneFullscreenChange);
+    }
     if (this.refPresentationContainer) {
       this.refPresentationContainer.removeEventListener(
         FULLSCREEN_CHANGE_EVENT,
@@ -705,12 +717,26 @@ class Presentation extends PureComponent {
   }
 
   renderPresentationFullscreen() {
-    const { intl, fullscreenElementId, fullscreenContext } = this.props;
+    const {
+      intl,
+      fullscreenElementId,
+      fullscreenContext,
+      layoutContextDispatch,
+      userIsPresenter,
+    } = this.props;
     const { isFullscreen } = this.state;
     const allowFullscreen = window.meetingClientSettings?.public?.app?.allowFullscreen;
     const isIphone = !!(navigator.userAgent.match(/iPhone/i));
 
     if (!allowFullscreen || isIphone) return null;
+    // Presenters use the top-right dock button (desktop + mobile).
+    if (userIsPresenter) return null;
+
+    const presentationIsFullscreen = isPresentationFullscreenActive({
+      fullscreenContext,
+      currentElement: fullscreenContext ? fullscreenElementId : '',
+      elementId: fullscreenElementId,
+    }) || isFullscreen;
 
     return (
       <Styled.PresentationFullscreenButton
@@ -718,9 +744,17 @@ class Presentation extends PureComponent {
         elementName={intl.formatMessage(intlMessages.presentationLabel)}
         fullscreenRef={this.refPresentationContainer}
         elementId={fullscreenElementId}
-        isFullscreen={fullscreenContext || isFullscreen}
+        isFullscreen={presentationIsFullscreen}
         dark
         dataTest="presentationFullscreen"
+        customToggle={() => {
+          togglePresentationFullscreen({
+            fullscreenRef: this.refPresentationContainer,
+            elementId: fullscreenElementId,
+            currentElement: fullscreenContext ? fullscreenElementId : '',
+            layoutContextDispatch,
+          });
+        }}
       />
     );
   }
@@ -859,6 +893,10 @@ class Presentation extends PureComponent {
                 : null,
           }}
         >
+          {!tldrawIsMounting
+            && stageReady
+            && currentSlide
+            && this.renderPresentationFullscreen()}
           <h2 className="sr-only">{intl.formatMessage(intlMessages.presentationHeader)}</h2>
           <Styled.Presentation
             ref={(ref) => {
@@ -910,10 +948,6 @@ class Presentation extends PureComponent {
                     </TooltipContainer>
                   </Styled.ExtraTools>
                 )}
-                {!tldrawIsMounting
-                  && stageReady
-                  && currentSlide
-                  && this.renderPresentationFullscreen()}
                 {!tldrawIsMounting
                   && stageReady
                   && currentSlide

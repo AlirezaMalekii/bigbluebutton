@@ -6,6 +6,7 @@ import { addAlert } from './service';
 import useChat from '/imports/ui/core/hooks/useChat';
 import { GraphqlDataHookSubscriptionResponse } from '/imports/ui/Types/hook';
 import { Chat } from '/imports/ui/Types/chat';
+import { useShouldSuppressPrivateChatAlerts } from '/imports/ui/components/chat/private-chat-privacy';
 
 const intlMessages = defineMessages({
   newMsgAria: {
@@ -23,9 +24,11 @@ const ScreenReaderAlertAdapter = () => {
     chatId: chat.chatId,
     totalUnread: chat.totalUnread,
     participant: chat.participant,
+    public: chat.public,
   })) as GraphqlDataHookSubscriptionResponse<Chat[]>;
   const previousData = usePreviousValue(data);
   const intl = useIntl();
+  const suppressPrivateChatAlerts = useShouldSuppressPrivateChatAlerts();
 
   useEffect(() => {
     if (!loading && data && !isEqual(data, previousData)) {
@@ -36,12 +39,14 @@ const ScreenReaderAlertAdapter = () => {
         const previousChat = previousUnreadChats && previousUnreadChats.find((c) => c.chatId === chat.chatId);
 
         if (!previousChat || chat.totalUnread > previousChat.totalUnread) {
+          if (suppressPrivateChatAlerts && !chat.public) return;
+
           const name = chat.participant?.name ?? intl.formatMessage(intlMessages.publicChatName);
           addAlert(`${intl.formatMessage(intlMessages.newMsgAria, { chatName: name })}`);
         }
       });
     }
-  }, [data, previousData, loading]);
+  }, [data, previousData, loading, suppressPrivateChatAlerts, intl]);
 
   return null;
 };

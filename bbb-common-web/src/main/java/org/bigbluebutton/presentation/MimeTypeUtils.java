@@ -33,6 +33,8 @@ public class MimeTypeUtils {
     private  static final String OGG = "audio/ogg";
     private  static final String WAV = "audio/wav";
     private  static final String M4A = "audio/mp4";
+    private  static final String AUDIO_WEBM = "audio/webm";
+    private  static final String AUDIO_AAC = "audio/aac";
 
     // If the following mime-types are changed, please, make sure to also change:
     // bigbluebutton-html5/private/config/settings.yml: L827
@@ -57,12 +59,24 @@ public class MimeTypeUtils {
             put(FileTypeConstants.PNG, Arrays.asList(PNG));
             put(FileTypeConstants.SVG, Arrays.asList(SVG));
             put(FileTypeConstants.WEBP, Arrays.asList(WEBP));
-            put(FileTypeConstants.MP4, Arrays.asList(MP4, QUICKTIME));
-            put(FileTypeConstants.WEBM, Arrays.asList(WEBM));
-            put(FileTypeConstants.MP3, Arrays.asList(MPEG));
-            put(FileTypeConstants.OGG, Arrays.asList(OGG, "video/ogg"));
-            put(FileTypeConstants.WAV, Arrays.asList(WAV));
-            put(FileTypeConstants.M4A, Arrays.asList(M4A));
+            put(FileTypeConstants.MP4, Arrays.asList(
+                    MP4, QUICKTIME, "video/x-m4v", M4A, "audio/x-m4a", "audio/m4a"
+            ));
+            put(FileTypeConstants.MOV, Arrays.asList(QUICKTIME, MP4, "video/x-m4v"));
+            put(FileTypeConstants.WEBM, Arrays.asList(WEBM, AUDIO_WEBM));
+            put(FileTypeConstants.MP3, Arrays.asList(
+                    MPEG, "audio/mp3", "audio/x-mpeg-3", "audio/x-mpeg"
+            ));
+            put(FileTypeConstants.OGG, Arrays.asList(OGG, "video/ogg", "application/ogg"));
+            put(FileTypeConstants.WAV, Arrays.asList(
+                    WAV, "audio/x-wav", "audio/wave", "audio/vnd.wave"
+            ));
+            put(FileTypeConstants.M4A, Arrays.asList(
+                    M4A, "audio/x-m4a", "audio/m4a", MP4, QUICKTIME, "video/mp4"
+            ));
+            put(FileTypeConstants.AAC, Arrays.asList(
+                    M4A, AUDIO_AAC, "audio/x-aac", MP4, QUICKTIME, "video/mp4"
+            ));
         }
     };
 
@@ -93,7 +107,11 @@ public class MimeTypeUtils {
         List<String> validMimeTypes = Arrays.asList(XLS, XLSX,
                 DOC, DOCX, PPT, PPTX, ODT, RTF, TXT, ODS, ODP, ODG,
                 PDF, JPEG, PNG, TIKA_MSOFFICE, TIKA_MSOFFICE_X,
-                WEBP, SVG, MP4, QUICKTIME, WEBM, MPEG, OGG, WAV, M4A, "video/ogg"
+                WEBP, SVG, MP4, QUICKTIME, "video/x-m4v", WEBM, AUDIO_WEBM,
+                MPEG, "audio/mp3", "audio/x-mpeg-3", "audio/x-mpeg",
+                OGG, "video/ogg", "application/ogg",
+                WAV, "audio/x-wav", "audio/wave", "audio/vnd.wave",
+                M4A, "audio/x-m4a", "audio/m4a", AUDIO_AAC, "audio/x-aac"
         );
         return validMimeTypes;
     }

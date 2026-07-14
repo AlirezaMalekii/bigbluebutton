@@ -12,6 +12,7 @@ import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import {
   isFileAccepted,
   isMediaExtension,
+  normalizeUploadFile,
 } from './fileTypes';
 
 const TOKEN_TIMEOUT = 15000;
@@ -333,11 +334,12 @@ function handleFiledrop(files, files2, that, intl, intlMessages) {
     );
 
     const presentationsToUpload = accepted.map((file) => {
+      const normalizedFile = normalizeUploadFile(file);
       const id = uniqueId(uuid());
-      const isMedia = isMediaExtension(file.name);
+      const isMedia = isMediaExtension(normalizedFile.name);
 
       return {
-        file,
+        file: normalizedFile,
         downloadable: isMedia,
         isRemovable: true,
         presentationId: id,

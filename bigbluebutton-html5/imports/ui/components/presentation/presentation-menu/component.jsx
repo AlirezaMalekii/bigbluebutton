@@ -17,6 +17,7 @@ import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import deviceInfo from '/imports/utils/deviceInfo';
 import browserInfo from '/imports/utils/browserInfo';
 import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
+import { togglePresentationFullscreen } from '../presentation-fullscreen';
 
 const intlMessages = defineMessages({
   downloading: {
@@ -33,6 +34,16 @@ const intlMessages = defineMessages({
     id: 'app.presentation.options.downloadFailed',
     description: 'Downloaded failed label',
     defaultMessage: 'Could not download current presentation',
+  },
+  fullscreenLabel: {
+    id: 'app.presentation.options.fullscreen',
+    description: 'Fullscreen label',
+    defaultMessage: 'Fullscreen',
+  },
+  exitFullscreenLabel: {
+    id: 'app.presentation.options.exitFullscreen',
+    description: 'Exit fullscreen label',
+    defaultMessage: 'Exit fullscreen',
   },
   minimizePresentationLabel: {
     id: 'app.presentation.options.minimize',
@@ -90,6 +101,12 @@ const propTypes = {
   }).isRequired,
   allowSnapshotOfCurrentSlide: PropTypes.bool,
   elementName: PropTypes.string,
+  elementId: PropTypes.string,
+  fullscreenRef: PropTypes.instanceOf(Element),
+  isFullscreen: PropTypes.bool,
+  isIphone: PropTypes.bool,
+  currentElement: PropTypes.string,
+  layoutContextDispatch: PropTypes.func.isRequired,
   meetingName: PropTypes.string,
   tldrawAPI: PropTypes.shape({
     getSvg: PropTypes.func.isRequired,
@@ -105,6 +122,12 @@ const PresentationMenu = (props) => {
   const {
     intl,
     elementName = '',
+    elementId = '',
+    fullscreenRef = null,
+    isFullscreen = false,
+    isIphone = false,
+    currentElement = '',
+    layoutContextDispatch,
     tldrawAPI = null,
     meetingName = '',
     isToolbarVisible,
@@ -217,6 +240,11 @@ const PresentationMenu = (props) => {
       closeIsClearModal();
     }
   };
+
+  const formattedLabel = (fullscreen) => (fullscreen
+    ? intl.formatMessage(intlMessages.exitFullscreenLabel)
+    : intl.formatMessage(intlMessages.fullscreenLabel)
+  );
 
   const formattedVisibilityLabel = (visible) => (visible
     ? intl.formatMessage(intlMessages.hideToolsDesc)
@@ -337,6 +365,23 @@ const PresentationMenu = (props) => {
           setIsToolbarVisible(!isToolbarVisible);
         },
       };
+    }
+
+    if (!isIphone) {
+      actionItems.push({
+        key: 'list-item-fullscreen',
+        dataTest: 'presentationFullscreen',
+        label: formattedLabel(isFullscreen),
+        icon: isFullscreen ? 'exit_fullscreen' : 'fullscreen',
+        onClick: () => {
+          togglePresentationFullscreen({
+            fullscreenRef,
+            elementId,
+            currentElement,
+            layoutContextDispatch,
+          });
+        },
+      });
     }
 
     const { isIos } = deviceInfo;

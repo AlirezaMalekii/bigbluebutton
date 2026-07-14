@@ -10,6 +10,7 @@ import {
   useIsDownloadPresentationOriginalFileEnabled,
   useIsDownloadPresentationConvertedToPdfEnabled,
   useIsDownloadPresentationWithAnnotationsEnabled,
+  useIsExternalVideoEnabled,
 } from '/imports/ui/services/features';
 import {
   PRESENTATIONS_SUBSCRIPTION,
@@ -23,6 +24,7 @@ import {
 } from '../mutations';
 import { useStorageKey } from '/imports/ui/services/storage/hooks';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
+import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import {
   EXTERNAL_VIDEO_START,
   EXTERNAL_VIDEO_STOP,
@@ -82,6 +84,11 @@ const PresentationUploaderContainer = (props) => {
   };
 
   const presentationEnabled = useIsPresentationEnabled();
+  const allowExternalVideo = useIsExternalVideoEnabled();
+  const { data: meetingData } = useMeeting((m) => ({
+    externalVideoUrl: m?.externalVideo?.externalVideoUrl,
+  }));
+  const isSharingVideo = !!meetingData?.externalVideoUrl;
   const allowDownloadOriginal = useIsDownloadPresentationOriginalFileEnabled();
   const allowDownloadConverted = useIsDownloadPresentationConvertedToPdfEnabled();
   const allowDownloadWithAnnotations = useIsDownloadPresentationWithAnnotationsEnabled();
@@ -102,6 +109,8 @@ const PresentationUploaderContainer = (props) => {
         removePresentation={removePresentation}
         startExternalVideo={startExternalVideo}
         stopExternalVideo={stopExternalVideo}
+        allowExternalVideo={allowExternalVideo}
+        isSharingVideo={isSharingVideo}
         isOpen={isOpen}
         selectedToBeNextCurrent={selectedToBeNextCurrent}
         fileUploadConstraintsHint={PRESENTATION_CONFIG.fileUploadConstraintsHint}

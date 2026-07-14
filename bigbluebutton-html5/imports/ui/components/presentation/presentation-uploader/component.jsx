@@ -22,6 +22,7 @@ import {
   resolvePresentationId,
   startPresentationMediaExternalVideo,
 } from './presentationMediaSync';
+import OnlineVideoSection from './online-video-section/component';
 import Service from './service';
 /* eslint-disable react/sort-comp */
 
@@ -56,6 +57,8 @@ const propTypes = {
   exportPresentation: PropTypes.func.isRequired,
   startExternalVideo: PropTypes.func,
   stopExternalVideo: PropTypes.func,
+  allowExternalVideo: PropTypes.bool,
+  isSharingVideo: PropTypes.bool,
   externalUploadData: PropTypes.shape({
     presentationUploadExternalDescription: PropTypes.string,
     presentationUploadExternalUrl: PropTypes.string,
@@ -66,6 +69,8 @@ const defaultProps = {
   selectedToBeNextCurrent: '',
   startExternalVideo: null,
   stopExternalVideo: null,
+  allowExternalVideo: false,
+  isSharingVideo: false,
 };
 
 const intlMessages = defineMessages({
@@ -314,6 +319,76 @@ const applySelectionToPresentations = (list, selectedId) => {
   }));
 };
 
+const preserveLocalPresentationFields = (clonedPresentations, originalPresentations) => {
+  const originalById = new Map(
+    normalizePresentations(originalPresentations).map((presentation) => [
+      presentation.presentationId,
+      presentation,
+    ]),
+  );
+
+  return normalizePresentations(clonedPresentations).map((presentation) => {
+    const original = originalById.get(presentation.presentationId);
+    if (!original) return presentation;
+
+    return {
+      ...presentation,
+      ...(original.file ? { file: original.file } : {}),
+      ...(original.uploadStarted ? { uploadStarted: original.uploadStarted } : {}),
+      ...(original.upload ? { upload: { ...presentation.upload, ...original.upload } } : {}),
+      ...(original.conversion ? {
+        conversion: { ...presentation.conversion, ...original.conversion },
+      } : {}),
+      ...(typeof original.onProgress === 'function' ? { onProgress: original.onProgress } : {}),
+      ...(typeof original.onConversion === 'function' ? { onConversion: original.onConversion } : {}),
+      ...(typeof original.onUpload === 'function' ? { onUpload: original.onUpload } : {}),
+      ...(typeof original.onServerPresentationId === 'function'
+        ? { onServerPresentationId: original.onServerPresentationId }
+        : {}),
+      ...(typeof original.onDone === 'function' ? { onDone: original.onDone } : {}),
+    };
+  });
+};
+
+const mergeLocalUploadFields = (serverEntry, localPresentations) => {
+  const localMatch = normalizePresentations(localPresentations).find(
+    (presentation) => presentation.presentationId === serverEntry.uploadTemporaryId
+      || presentation.uploadTemporaryId === serverEntry.uploadTemporaryId
+      || (
+        presentation.name === serverEntry.name
+        && (presentation.file || presentation.uploadStarted)
+      ),
+  );
+
+  if (!localMatch) return serverEntry;
+
+  return {
+    ...serverEntry,
+    ...(localMatch.file ? { file: localMatch.file } : {}),
+    ...(localMatch.uploadStarted ? { uploadStarted: localMatch.uploadStarted } : {}),
+    ...(localMatch.upload ? { upload: { ...serverEntry.upload, ...localMatch.upload } } : {}),
+    ...(typeof localMatch.onProgress === 'function' ? { onProgress: localMatch.onProgress } : {}),
+    ...(typeof localMatch.onConversion === 'function' ? { onConversion: localMatch.onConversion } : {}),
+    ...(typeof localMatch.onUpload === 'function' ? { onUpload: localMatch.onUpload } : {}),
+    ...(typeof localMatch.onServerPresentationId === 'function'
+      ? { onServerPresentationId: localMatch.onServerPresentationId }
+      : {}),
+    ...(typeof localMatch.onDone === 'function' ? { onDone: localMatch.onDone } : {}),
+  };
+};
+
+const isPresentationUploadPending = (presentation) => {
+  if (!presentation) return false;
+  if (presentation.uploadErrorMsgKey || presentation.uploadErrorDetailsJson) return false;
+  if (presentation.uploadInProgress) return true;
+  if (presentation.uploadStarted && !presentation.uploadCompleted) return true;
+  if (presentation.file && !presentation.uploadCompleted) return true;
+  if (!presentation.uploadCompleted && presentation.upload && !presentation.upload.done) {
+    return true;
+  }
+  return false;
+};
+
 class PresentationUploader extends Component {
   constructor(props) {
     super(props);
@@ -377,13 +452,13 @@ class PresentationUploader extends Component {
 
     if (selectedItem) {
       if (selectedItem.uploadErrorMsgKey || selectedItem.uploadErrorDetailsJson) return true;
-      if (selectedItem.uploadInProgress) return true;
-      if (selectedItem.file && !selectedItem.uploadCompleted) return true;
+      if (isPresentationUploadPending(selectedItem)) return true;
+      if (!selectedItem.uploadCompleted) return true;
       return false;
     }
 
     return presentations.some(
-      (p) => p?.file && !p?.uploadCompleted && !p?.uploadErrorMsgKey,
+      (p) => isPresentationUploadPending(p) || (!p?.uploadCompleted && !p?.uploadErrorMsgKey),
     );
   }
 
@@ -506,7 +581,10 @@ class PresentationUploader extends Component {
 
     let shouldUpdateState = false;
 
-    let presState = JSON.parse(JSON.stringify(presentations));
+    let presState = preserveLocalPresentationFields(
+      JSON.parse(JSON.stringify(presentations)),
+      presentations,
+    );
 
     // New entries comming from graphql
     const propsDiffs = propPresentations.filter(
@@ -535,10 +613,12 @@ class PresentationUploader extends Component {
           || pres.presentationId === p.presentationId),
       );
 
-      let newEntries = JSON.parse(JSON.stringify(propsDiffs)).map((entry) => ({
-        ...entry,
-        isMedia: isMediaExtension(entry.name),
-      }));
+      let newEntries = JSON.parse(JSON.stringify(propsDiffs)).map((entry) => (
+        mergeLocalUploadFields({
+          ...entry,
+          isMedia: isMediaExtension(entry.name),
+        }, presentations)
+      ));
       const pendingSelectionId = this.getPendingSelectionId();
       if (replacedCurrent) {
         newEntries = newEntries.map((entry) => {
@@ -561,7 +641,10 @@ class PresentationUploader extends Component {
 
       // Then add the new entries to state
       presState = [
-        ...JSON.parse(JSON.stringify(presState)),
+        ...preserveLocalPresentationFields(
+          JSON.parse(JSON.stringify(presState)),
+          presentations,
+        ),
         ...newEntries,
       ];
 
@@ -582,9 +665,11 @@ class PresentationUploader extends Component {
       const hasConversionError = !!presentation?.uploadErrorMsgKey;
       const finishedConversion = !presentation?.uploadInProgress
         || !currentPropPres?.uploadInProgress;
-      const hasTemporaryId = presentation.presentationId.startsWith(presentation.name);
+      const hasLocalUpload = isPresentationUploadPending(presentation)
+        || !!presentation.file
+        || !!presentation.uploadStarted;
 
-      if (hasConversionError || (!finishedConversion && hasTemporaryId)) return true;
+      if (hasConversionError || (!finishedConversion && hasLocalUpload)) return true;
 
       const modPresentation = presentation;
       if (!isOpen && currentPropPres?.current !== prevPropPres?.current) {
@@ -872,28 +957,28 @@ class PresentationUploader extends Component {
     if (!presentationEnabled || !presentationIds?.length) return;
 
     const PRESENTATION_CONFIG = window.meetingClientSettings.public.presentation;
-    const { presentations } = this.state;
-
-    handleUploadPending(
-      presentations,
-      PRESENTATION_CONFIG.uploadEndpoint,
-      presentationIds,
-    ).catch((error) => {
-      logger.error({
-        logCode: 'presentationuploader_component_auto_upload_error',
-        extraInfo: { error },
-      }, 'Presentation uploader catch error on auto upload');
-    });
 
     this.setState(({ presentations: rawPresentations }) => {
-      const nextPresentations = normalizePresentations(rawPresentations);
-      return {
-        presentations: nextPresentations.map((p) => (
-          presentationIds.includes(p.presentationId)
-            ? update(p, { uploadStarted: { $set: true } })
-            : p
-        )),
-      };
+      const nextPresentations = normalizePresentations(rawPresentations).map((p) => (
+        presentationIds.includes(p.presentationId)
+          ? update(p, { uploadStarted: { $set: true } })
+          : p
+      ));
+
+      return { presentations: nextPresentations };
+    }, () => {
+      const { presentations } = this.state;
+
+      handleUploadPending(
+        presentations,
+        PRESENTATION_CONFIG.uploadEndpoint,
+        presentationIds,
+      ).catch((error) => {
+        logger.error({
+          logCode: 'presentationuploader_component_auto_upload_error',
+          extraInfo: { error },
+        }, 'Presentation uploader catch error on auto upload');
+      });
     });
   }
 
@@ -920,6 +1005,11 @@ class PresentationUploader extends Component {
       return null;
     }
 
+    const selectedItem = this.getSelectedPresentation();
+    if (!selectedItem?.uploadCompleted || selectedItem?.uploadInProgress) {
+      return null;
+    }
+
     presentations.forEach((item) => {
       if (item.uploadCompleted) {
         const didDownloadableStateChange = propPresentations.some(
@@ -936,7 +1026,6 @@ class PresentationUploader extends Component {
     });
 
     Session.setItem('showUploadPresentationView', false);
-    const selectedItem = this.getSelectedPresentation();
     const mergedPresentations = [...propPresentations];
     presentations.forEach((presentation) => {
       const existingIndex = mergedPresentations.findIndex(
@@ -1387,6 +1476,10 @@ class PresentationUploader extends Component {
       isPresenter,
       intl,
       fileUploadConstraintsHint,
+      allowExternalVideo,
+      isSharingVideo,
+      startExternalVideo,
+      stopExternalVideo,
     } = this.props;
     if (!isPresenter) return null;
 
@@ -1422,6 +1515,14 @@ class PresentationUploader extends Component {
           </Styled.HintBanner>
           {this.renderPresentationList()}
           {this.renderDownloadableWithAnnotationsHint()}
+          {startExternalVideo ? (
+            <OnlineVideoSection
+              allowExternalVideo={allowExternalVideo}
+              isSharingVideo={isSharingVideo}
+              startExternalVideo={startExternalVideo}
+              stopExternalVideo={stopExternalVideo}
+            />
+          ) : null}
           <Styled.DropzoneSection>
             {this.renderDropzone()}
           </Styled.DropzoneSection>

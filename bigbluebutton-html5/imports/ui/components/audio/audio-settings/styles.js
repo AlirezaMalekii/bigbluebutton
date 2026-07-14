@@ -5,7 +5,6 @@ import {
   borderSizeSmall,
   mdPaddingX,
   mdPaddingY,
-  jumboPaddingX,
   jumboPaddingY,
 } from '/imports/ui/stylesheets/styled-components/general';
 import {
@@ -21,15 +20,10 @@ const FormWrapper = styled.div`
 `;
 
 const Form = styled.div`
-  display: grid;
-  grid-template-columns: 2fr 1fr;
+  display: flex;
+  flex-direction: column;
+  gap: ${mdPaddingY};
   margin: ${mdPaddingY} ${mdPaddingX} 0 ${mdPaddingX};
-  column-gap: ${jumboPaddingX};
-  row-gap: ${mdPaddingY};
-  @media ${smallOnly} {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-  }
 `;
 
 const AudioNote = styled.div`
@@ -45,21 +39,22 @@ const FormElement = styled.div`
   position: relative;
   display: flex;
   flex-flow: column;
-  flex-grow: 1;
+  width: 100%;
+  min-width: 0;
 `;
 
 const LabelSmall = styled.label`
   color: black;
   font-size: ${fontSizeSmall};
   font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
 
   & > :first-child {
     margin: 0.5rem 0 0 0 !important;
   }
-`;
-
-const LabelSmallFullWidth = styled(LabelSmall)`
-  width: 100%;
 `;
 
 const EnterAudio = styled.div`
@@ -126,7 +121,6 @@ export default {
   AudioNote,
   FormElement,
   LabelSmall,
-  LabelSmallFullWidth,
   BackButton,
   FetchingAnimation,
 };

@@ -26,6 +26,7 @@ import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/pan
 import SkyroomModeratorBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomModeratorBadge';
 import SkyroomViewerBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomViewerBadge';
 import SkyroomPresenterBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomPresenterBadge';
+import useUnreadPrivateChatsBySender from '/imports/ui/core/hooks/useUnreadPrivateChatsBySender';
 
 const messages = defineMessages({
   moderator: {
@@ -63,6 +64,10 @@ const messages = defineMessages({
   raisedHand: {
     id: 'app.userList.raisedHand',
     description: 'Text for identifying users with raised hand',
+  },
+  privateMessageUnread: {
+    id: 'app.userList.privateMessageUnread',
+    description: 'Text for identifying users with unread private messages',
   },
 });
 
@@ -148,6 +153,8 @@ const UserListItem: React.FC<UserListItemProps> = ({
   }
 
   const intl = useIntl();
+  const unreadPrivateChatsBySender = useUnreadPrivateChatsBySender();
+  const privateChatUnread = unreadPrivateChatsBySender.get(user.userId)?.unread ?? 0;
   const { data: talkingUsers } = useWhoIsTalking();
   const { data: unmutedUsers } = useWhoIsUnmuted();
   const voiceUser = {
@@ -209,6 +216,20 @@ const UserListItem: React.FC<UserListItemProps> = ({
       >
         <Icon iconName="hand" />
         <span className="skyroom-user-sub-text">{intl.formatMessage(messages.raisedHand)}</span>
+      </span>,
+    );
+  }
+  if (privateChatUnread > 0) {
+    subs.push(
+      <span
+        key="private-message-unread"
+        className="skyroom-user-sub-item skyroom-user-private-message"
+        data-test="privateMessageUnreadIndicator"
+      >
+        <Icon iconName="chat" />
+        <span className="skyroom-user-sub-text">
+          {intl.formatMessage(messages.privateMessageUnread, { count: privateChatUnread })}
+        </span>
       </span>,
     );
   }

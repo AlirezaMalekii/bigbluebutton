@@ -776,6 +776,18 @@
   color: var(--skyroom-accent, #20c7bb) !important;
 }
 
+#layout[data-skyroom-column="true"] [data-test="userListContent"] .skyroom-user-private-message,
+#layout[data-skyroom-column="true"] [data-test="userListContent"] .skyroom-user-private-message .skyroom-user-sub-text {
+  color: var(--skyroom-brand-500, #6366f1) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] .skyroom-user-private-message > [class*="icon-bbb-"],
+#layout[data-skyroom-column="true"] [data-test="userListContent"] .skyroom-user-private-message > i,
+#layout[data-skyroom-column="true"] [data-test="userListContent"] .skyroom-user-private-message > svg {
+  font-size: 0.68rem !important;
+  color: var(--skyroom-brand-500, #6366f1) !important;
+}
+
 #layout[data-skyroom-column="true"] [data-test="userListContent"] .skyroom-user-sub-sep {
   display: none !important;
 }

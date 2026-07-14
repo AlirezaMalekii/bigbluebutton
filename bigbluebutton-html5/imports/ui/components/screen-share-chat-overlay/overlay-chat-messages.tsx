@@ -56,9 +56,10 @@ const OverlayChatMessages: React.FC<OverlayChatMessagesProps> = ({
   // create a second GraphQL subscription (dedupe key stays stable).
   const { data: chatMeta } = useChat((chat) => ({
     totalMessages: chat.totalMessages,
-  }), publicGroupChatId) as GraphqlDataHookSubscriptionResponse<Partial<ChatType>[]>;
+  }), publicGroupChatId) as GraphqlDataHookSubscriptionResponse<Partial<ChatType> | Partial<ChatType>[]>;
 
-  const totalMessages = chatMeta?.[0]?.totalMessages ?? 0;
+  const currentChat = Array.isArray(chatMeta) ? chatMeta[0] : chatMeta;
+  const totalMessages = currentChat?.totalMessages ?? 0;
   const offset = Math.max(0, totalMessages - OVERLAY_FULL_MESSAGE_LIMIT);
 
   const variables = useMemo(() => ({

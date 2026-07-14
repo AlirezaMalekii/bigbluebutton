@@ -18,6 +18,7 @@ const ReactionsButtonContainer = ({ ...props }) => {
 
   const { data: currentUserData } = useCurrentUser((user) => ({
     reactionEmoji: user.reactionEmoji,
+    isModerator: user.isModerator,
   }));
 
   const { autoCloseReactionsBar } = useSettings(SETTINGS.APPLICATION);
@@ -25,6 +26,7 @@ const ReactionsButtonContainer = ({ ...props }) => {
   return (
     <ReactionsButton {...{
       currentUserReaction: currentUserData?.reactionEmoji ?? 'none',
+      isModerator: currentUserData?.isModerator ?? false,
       layoutContextDispatch,
       sidebarContentPanel,
       isMobile,

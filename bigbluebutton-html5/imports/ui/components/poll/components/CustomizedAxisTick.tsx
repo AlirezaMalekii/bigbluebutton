@@ -15,6 +15,7 @@ function getAverageCharacterWidth(text: string, font: string, fontSize: number) 
 
 const TICK_SIZE = 6;
 const ELLIPSIS = '...';
+const TICK_OFFSET = 10;
 
 function resolveChartFontFamily(): string {
   if (typeof document === 'undefined') return 'Source Sans Pro, sans-serif';
@@ -22,23 +23,41 @@ function resolveChartFontFamily(): string {
   return bodyFont || 'IRANYekanX, Source Sans Pro, sans-serif';
 }
 
+function isRtlChart(): boolean {
+  if (typeof document === 'undefined') return false;
+  return document.documentElement.dir === 'rtl';
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomizedAxisTick = (props: any) => {
-  const { payload, ...restProps } = props;
-  const { width, fontSize } = restProps;
+  const {
+    payload, x, y, width, fontSize, fill,
+  } = props;
   const label = payload?.value ?? '';
   const chartFont = resolveChartFontFamily();
   const averageCharWidth = getAverageCharacterWidth(label, chartFont, fontSize)
     ?? (fontSize * 0.55);
   const numberOfChars = Math.floor((width - TICK_SIZE) / averageCharWidth);
   const restValue = label.substring(numberOfChars, label.length);
+  const displayLabel = `${label.substring(
+    0,
+    restValue.length > 0 ? numberOfChars - ELLIPSIS.length : numberOfChars,
+  )}${restValue.length > 0 ? ELLIPSIS : ''}`;
+
+  const rtl = isRtlChart();
 
   return (
-    <g>
-      {/* eslint-disable-next-line react/jsx-props-no-spreading */}
-      <text {...restProps}>
-        {label.substring(0, restValue.length > 0 ? numberOfChars - ELLIPSIS.length : numberOfChars)}
-        {restValue.length > 0 && ELLIPSIS}
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={4}
+        dx={rtl ? TICK_OFFSET : -TICK_OFFSET}
+        textAnchor={rtl ? 'start' : 'end'}
+        fontSize={fontSize}
+        fill={fill || 'var(--skyroom-modal-text-muted, #aab6c7)'}
+      >
+        {displayLabel}
       </text>
     </g>
   );

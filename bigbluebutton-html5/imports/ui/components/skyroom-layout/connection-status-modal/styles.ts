@@ -12,16 +12,32 @@ const Shell = styled.div`
   min-height: 0;
   padding: 14px 16px;
   box-sizing: border-box;
+
+  @media (min-width: 561px) {
+    padding: 8px 16px 12px;
+  }
 `;
 
 const TopBar = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
   padding-inline-end: 40px;
   margin-bottom: 10px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border-subtle, rgba(218, 230, 245, 0.08));
+
+  @media (min-width: 561px) {
+    gap: 8px;
+    min-height: 32px;
+    max-height: 32px;
+    margin-bottom: 8px;
+    padding-top: 0;
+    padding-bottom: 8px;
+    padding-inline-end: 0;
+    padding-inline-start: 0;
+  }
 `;
 
 const TopBarIcon = styled.div`
@@ -40,6 +56,17 @@ const TopBarIcon = styled.div`
     width: 17px;
     height: 17px;
   }
+
+  @media (min-width: 561px) {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+
+    svg {
+      width: 15px;
+      height: 15px;
+    }
+  }
 `;
 
 const TopBarText = styled.div`
@@ -54,6 +81,11 @@ const ModalTitle = styled.h2`
   letter-spacing: 0.01em;
   color: var(--skyroom-text-primary, #eef4fb);
   line-height: 1.35;
+
+  @media (min-width: 561px) {
+    font-size: 0.9375rem;
+    line-height: 1.15;
+  }
 `;
 
 const ModalDescription = styled.p`

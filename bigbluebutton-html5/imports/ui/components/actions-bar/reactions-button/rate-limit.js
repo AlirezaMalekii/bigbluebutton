@@ -21,7 +21,7 @@ const sendTimestamps = [];
  * @returns {{ allowed: true }
  *   | { allowed: false, retryAfterSeconds: number, maxPerWindow: number, windowSeconds: number }}
  */
-export const consumeReactionRateLimit = () => {
+export const checkReactionRateLimit = () => {
   const { enabled, maxPerWindow, windowSeconds } = getRateLimitConfig();
 
   if (!enabled) {
@@ -46,10 +46,29 @@ export const consumeReactionRateLimit = () => {
     };
   }
 
-  sendTimestamps.push(now);
   return { allowed: true };
 };
 
+/**
+ * Record a successful reaction send. Call only after mutation succeeds.
+ */
+export const consumeReactionRateLimit = () => {
+  const check = checkReactionRateLimit();
+  if (!check.allowed) return check;
+
+  sendTimestamps.push(Date.now());
+  return { allowed: true };
+};
+
+/** Remove the most recent slot (e.g. when mutation fails after consume). */
+export const releaseReactionRateLimitSlot = () => {
+  if (sendTimestamps.length > 0) {
+    sendTimestamps.pop();
+  }
+};
+
 export default {
+  checkReactionRateLimit,
   consumeReactionRateLimit,
+  releaseReactionRateLimitSlot,
 };

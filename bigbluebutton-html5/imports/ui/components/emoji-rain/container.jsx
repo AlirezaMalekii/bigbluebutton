@@ -5,6 +5,29 @@ import { getEmojisToRain, getUserReactionsForStage } from './queries';
 import { normalizeReactionStream, reactionStreamVar } from './reaction-stream';
 import useDeduplicatedSubscription from '../../core/hooks/useDeduplicatedSubscription';
 
+const DUPLICATE_WINDOW_MS = 1500;
+
+const getReactionDedupKey = (reaction) => {
+  if (reaction.eventId) return reaction.eventId;
+  const createdAt = reaction.creationDate?.getTime?.() || 0;
+  const bucket = Math.floor(createdAt / DUPLICATE_WINDOW_MS);
+  return `${reaction.userId || 'unknown'}-${reaction.reaction}-${bucket}`;
+};
+
+const dedupeReactions = (reactions) => {
+  const seen = new Set();
+  const result = [];
+
+  reactions.forEach((reaction) => {
+    const key = getReactionDedupKey(reaction);
+    if (seen.has(key)) return;
+    seen.add(key);
+    result.push(reaction);
+  });
+
+  return result;
+};
+
 const EmojiRainContainer = () => {
   const nowDate = useRef(new Date().toISOString());
   const previousUserReactionsRef = useRef(new Map());
@@ -57,17 +80,17 @@ const EmojiRainContainer = () => {
     previousUserReactionsRef.current = next;
 
     if (nextFallbackReactions.length > 0) {
-      setFallbackReactions((current) => [
+      setFallbackReactions((current) => dedupeReactions([
         ...current,
         ...nextFallbackReactions,
-      ].slice(-20));
+      ]).slice(-20));
     }
   }, [usersReactionData]);
 
-  const reactions = [
+  const reactions = dedupeReactions([
     ...normalizeReactionStream(emojisArray),
     ...fallbackReactions,
-  ];
+  ]);
 
   useEffect(() => {
     reactionStreamVar(reactions);

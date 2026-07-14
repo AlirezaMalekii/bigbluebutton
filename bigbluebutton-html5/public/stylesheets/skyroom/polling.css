@@ -2,6 +2,12 @@
    Skyroom — Participant poll / quiz overlay
    ===================================================================== */
 
+#polling-container [data-test="pollingOverlay"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 #polling-container [data-test="pollingContainer"] {
   scrollbar-width: thin;
   scrollbar-color: rgba(32, 199, 187, 0.35) transparent;
@@ -14,6 +20,17 @@
 #polling-container [data-test="pollingContainer"]::-webkit-scrollbar-thumb {
   background: rgba(32, 199, 187, 0.35);
   border-radius: 99px;
+}
+
+#polling-container [data-test="dismissPoll"] {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(218, 230, 245, 0.16);
+}
+
+#polling-container [data-test="dismissPoll"]:hover,
+#polling-container [data-test="dismissPoll"]:focus-visible {
+  background: rgba(32, 199, 187, 0.18) !important;
+  border-color: rgba(32, 199, 187, 0.35);
 }
 
 /* Quiz / poll type badge row */
@@ -33,7 +50,7 @@
   border: 1px solid rgba(32, 199, 187, 0.22);
 }
 
-/* Answer buttons — pressed feedback */
+/* Answer buttons — card-style options */
 #polling-container [data-test="pollAnswerOption"] {
   transition: transform 0.1s ease, box-shadow 0.15s ease !important;
 }
@@ -42,16 +59,37 @@
   transform: scale(0.98);
 }
 
-/* Checkbox rows — selected state */
-#polling-container [data-skyroom-poll-option="true"][data-selected="true"] {
-  background: rgba(32, 199, 187, 0.14) !important;
-  border: 1px solid rgba(32, 199, 187, 0.28);
-  border-radius: var(--radius-sm, 8px);
+/* Checkbox rows — option cards */
+#polling-container [data-skyroom-poll-option="true"] {
+  border: 1px solid rgba(32, 199, 187, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  min-height: 48px;
 }
 
-#polling-container [data-skyroom-poll-option="true"] {
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm, 8px);
+#polling-container [data-skyroom-poll-option="true"][data-selected="true"] {
+  background: rgba(32, 199, 187, 0.14) !important;
+  border: 1px solid rgba(32, 199, 187, 0.38) !important;
+  box-shadow: 0 0 0 1px rgba(32, 199, 187, 0.12) inset;
+}
+
+#polling-container [data-skyroom-poll-option="true"]:hover {
+  background: rgba(32, 199, 187, 0.1);
+  border-color: rgba(32, 199, 187, 0.28);
+}
+
+#polling-container .MuiCheckbox-root {
+  color: rgba(255, 255, 255, 0.42) !important;
+  padding: 4px !important;
+}
+
+#polling-container .MuiCheckbox-root.Mui-checked {
+  color: var(--skyroom-brand-400, #14a99e) !important;
+}
+
+#polling-container [data-test="pollQuestion"] {
+  color: var(--skyroom-text-primary, #e6edf7);
+  font-weight: 600;
 }
 
 /* Submit button emphasis */
@@ -61,11 +99,21 @@
   border: none !important;
   color: #fff !important;
   font-weight: 600 !important;
+  min-height: 48px !important;
+  border-radius: 12px !important;
   box-shadow: 0 4px 14px rgba(13, 136, 126, 0.3) !important;
+  margin-top: 4px;
 }
 
 #polling-container [data-test="submitAnswer"]:disabled,
 #polling-container [data-test="submitAnswersMultiple"]:disabled {
   opacity: 0.45 !important;
   box-shadow: none !important;
+}
+
+@media (max-width: 768px) {
+  #polling-container [data-test="pollingContainer"] {
+    width: min(21rem, 92vw) !important;
+    max-height: min(82vh, 32rem) !important;
+  }
 }

@@ -38,6 +38,8 @@ function measureLabelWidth(text: string, fontSize: number): number {
   return ctx.measureText(text).width;
 }
 
+const CHART_Y_AXIS_TICK_PADDING = 24;
+
 function computeChartDimensions(
   labels: string[],
   fontSize: number,
@@ -47,10 +49,18 @@ function computeChartDimensions(
   const measuredWidth = measureLabelWidth(longestLabel, fontSize);
   const yAxisWidth = Math.min(
     CHART_Y_AXIS_MAX,
-    Math.max(CHART_Y_AXIS_MIN, Math.ceil(measuredWidth) + 16),
+    Math.max(
+      CHART_Y_AXIS_MIN,
+      Math.ceil(measuredWidth) + 16 + CHART_Y_AXIS_TICK_PADDING,
+    ),
   );
   const chartHeight = Math.max(CHART_MIN_HEIGHT, optionCount * CHART_BAR_HEIGHT + 32);
   return { chartHeight, yAxisWidth };
+}
+
+function isRtlLayout(): boolean {
+  if (typeof document === 'undefined') return false;
+  return document.documentElement.dir === 'rtl';
 }
 
 const intlMessages = defineMessages({
@@ -187,6 +197,8 @@ const LiveResult: React.FC<LiveResultProps> = ({
     [translatedResponses, fontSize],
   );
 
+  const chartRtl = isRtlLayout();
+
   return (
     <div>
       <Styled.Instructions>
@@ -215,8 +227,8 @@ const LiveResult: React.FC<LiveResultProps> = ({
               layout="vertical"
               margin={{
                 top: 8,
-                right: 24,
-                left: 4,
+                right: chartRtl ? 8 : 16,
+                left: chartRtl ? 16 : 8,
                 bottom: 8,
               }}
               barCategoryGap="20%"
@@ -227,6 +239,10 @@ const LiveResult: React.FC<LiveResultProps> = ({
                 fontSize={fontSize}
                 type="category"
                 dataKey="optionDesc"
+                orientation={chartRtl ? 'right' : 'left'}
+                tickMargin={12}
+                axisLine={{ stroke: 'rgba(255, 255, 255, 0.15)' }}
+                tickLine={false}
                 tick={<CustomizedAxisTick />}
               />
               <Bar
