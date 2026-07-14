@@ -1,0 +1,33 @@
+---
+description: Proportional verification for BBB meeting UI, interactions, responsive behavior, and regressions
+globs: "{bigbluebutton-html5/**,bigbluebutton-tests/playwright/**}"
+alwaysApply: false
+---
+
+# Meeting UI Verification
+
+Choose checks based on risk:
+
+- Style/copy: targeted ESLint plus manual desktop/mobile and RTL inspection.
+- Component logic: targeted ESLint, TypeScript, and relevant interaction states.
+- Layout/media/realtime: add or run relevant Playwright coverage and test moderator/viewer synchronization.
+
+Required UI matrix when applicable:
+
+- 390px phone, 768px tablet, and 1440px desktop
+- Persian RTL and mixed LTR content
+- moderator/presenter and viewer
+- no/one/many webcams
+- presentation and screenshare
+- panel open/closed, loading, empty, disabled, error, reconnect
+- keyboard focus, labels, contrast, and no accidental horizontal scroll
+
+Use stable `data-test`, role, or accessible-name selectors. Prefer behavior assertions; use screenshots for visual regressions, not as the only assertion for synchronization.
+
+Existing commands:
+
+- `cd bigbluebutton-html5 && npm run lint:file -- <files>`
+- `cd bigbluebutton-html5 && npm run tscheck:staged`
+- `cd bigbluebutton-tests/playwright && npm run lint && npm run typecheck`
+
+Run remote meeting tests only when the required BBB URL/secret environment is available. Never expose those values in output or committed files.

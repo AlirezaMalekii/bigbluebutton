@@ -344,14 +344,6 @@ class OptionsDropdown extends PureComponent {
       });
     }
 
-    this.menuItems.push({
-      key: 'list-item-shortcuts',
-      icon: 'shortcuts',
-      label: intl.formatMessage(intlMessages.hotkeysLabel),
-      description: intl.formatMessage(intlMessages.hotkeysDesc),
-      onClick: () => this.setShortcutHelpModalIsOpen(),
-    });
-
     const Settings = getSettingsSingletonInstance();
     const { selectedLayout } = Settings.application;
     const showLayoutButton = window.meetingClientSettings

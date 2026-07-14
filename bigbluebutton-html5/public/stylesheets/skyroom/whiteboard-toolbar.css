@@ -314,3 +314,103 @@
   background-color: rgba(32, 199, 187, 0.18) !important;
   opacity: 1 !important;
 }
+
+/* Hide vertical three-dots actions menu — desktop + mobile Skyroom. */
+#layout[data-skyroom-column="true"] #whiteboard-element [data-testid="main.action-menu"] {
+  display: none !important;
+}
+
+/* Right-click context menu on shapes/text — Skyroom dark glass theme. */
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu.scrollable,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu[data-state="open"]:not(:has(.tlui-buttons__grid)),
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-context-menu__content {
+  background: rgba(10, 18, 30, 0.98) !important;
+  border: 1px solid rgba(32, 199, 187, 0.22) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42) !important;
+  color: #e8edf4 !important;
+  padding: 4px !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__menu,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button.tlui-button__menu,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__checkbox {
+  color: #dce6f2 !important;
+  background: transparent !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__menu .tlui-icon,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__menu .tlui-button__label,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__checkbox .tlui-icon,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__checkbox .tlui-button__label {
+  color: #dce6f2 !important;
+  opacity: 1 !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__menu:hover,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__menu[data-highlighted],
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__checkbox:hover,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__checkbox[data-highlighted] {
+  background: rgba(32, 199, 187, 0.14) !important;
+  color: #ffffff !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__menu:hover .tlui-icon,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__menu[data-highlighted] .tlui-icon,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__menu:hover .tlui-button__label,
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-button__menu[data-highlighted] .tlui-button__label {
+  color: #ffffff !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu__group {
+  border-color: rgba(32, 199, 187, 0.12) !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu__group__small {
+  background: rgba(14, 22, 36, 0.6) !important;
+  border-radius: 8px !important;
+}
+
+#layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu .tlui-kbd {
+  color: #aab6c7 !important;
+}
+
+/* Unified presentation fullscreen — top-left overlay for all slide types */
+.skyroom-presentation-fullscreen-btn {
+  pointer-events: auto;
+}
+
+.skyroom-presentation-fullscreen-btn button,
+.skyroom-presentation-fullscreen-btn [class*="FullscreenButton"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  border-radius: 12px !important;
+  background: linear-gradient(165deg, rgba(28, 40, 62, 0.95) 0%, rgba(16, 24, 40, 0.92) 100%) !important;
+  border: 1px solid var(--skyroom-accent-border, rgba(32, 199, 187, 0.36)) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+.skyroom-presentation-fullscreen-btn button i,
+.skyroom-presentation-fullscreen-btn [class*="FullscreenButton"] i {
+  color: #e8edf4 !important;
+  font-size: 1rem !important;
+}
+
+/* Webcam tile fullscreen overlay */
+.skyroom-webcam-fullscreen-btn button,
+.skyroom-webcam-fullscreen-btn [class*="FullscreenButton"] {
+  min-width: 36px !important;
+  min-height: 36px !important;
+  border-radius: 10px !important;
+  background: rgba(0, 0, 0, 0.45) !important;
+}
+
+.skyroom-webcam-fullscreen-btn button i,
+.skyroom-webcam-fullscreen-btn [class*="FullscreenButton"] i {
+  color: #fff !important;
+}

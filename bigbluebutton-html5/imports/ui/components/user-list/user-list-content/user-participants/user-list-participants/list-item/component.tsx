@@ -15,7 +15,10 @@ import { LockSettings } from '/imports/ui/Types/meeting';
 import { uniqueId } from '/imports/utils/string-utils';
 import { convertRemToPixels } from '/imports/utils/dom-utils';
 import { PluginsContext } from '/imports/ui/components/components-data/plugin-context/context';
-import { useIsReactionsEnabled } from '/imports/ui/services/features';
+import {
+  useIsRaiseHandEnabled,
+  useIsReactionsEnabled,
+} from '/imports/ui/services/features';
 import useWhoIsTalking from '/imports/ui/core/hooks/useWhoIsTalking';
 import useWhoIsUnmuted from '/imports/ui/core/hooks/useWhoIsUnmuted';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
@@ -56,6 +59,10 @@ const messages = defineMessages({
   meetingTabHidden: {
     id: 'app.userList.meetingTabHidden',
     description: 'Tooltip when participant meeting tab is not active',
+  },
+  raisedHand: {
+    id: 'app.userList.raisedHand',
+    description: 'Text for identifying users with raised hand',
   },
 });
 
@@ -189,6 +196,19 @@ const UserListItem: React.FC<UserListItemProps> = ({
           ? <Icon iconName="pin-video_on" />
           : <Icon iconName="video" />}
         <span className="skyroom-user-sub-text">{intl.formatMessage(messages.sharingWebcam)}</span>
+      </span>,
+    );
+  }
+  const raiseHandEnabled = useIsRaiseHandEnabled();
+  if (raiseHandEnabled && user.raiseHand && isSkyroomColumnLayout()) {
+    subs.push(
+      <span
+        key="raise-hand"
+        className="skyroom-user-sub-item skyroom-user-raise-hand"
+        data-test="raiseHandUserIndicator"
+      >
+        <Icon iconName="hand" />
+        <span className="skyroom-user-sub-text">{intl.formatMessage(messages.raisedHand)}</span>
       </span>,
     );
   }

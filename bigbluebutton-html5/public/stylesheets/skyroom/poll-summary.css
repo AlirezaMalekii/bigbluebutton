@@ -181,4 +181,117 @@
   #layout[data-skyroom-column="true"] [data-test="skyroom-poll-summary-question"] {
     display: none;
   }
+
+  #layout[data-skyroom-column="true"] [data-test="skyroom-poll-participation"] {
+    min-width: 10rem;
+    min-height: 1.88rem;
+    padding: 0.12rem 0.35rem;
+    border-radius: 0.7rem;
+  }
+
+  #layout[data-skyroom-column="true"] [data-test="skyroom-poll-participation-question"] {
+    display: none;
+  }
+}
+
+/* Pending participation pill — viewers who dismissed the answer modal */
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-participation"] {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 13.2rem;
+  min-height: 2.22rem;
+  padding: 0.24rem 0.52rem;
+  margin: 0;
+  border: 1px solid rgba(255, 193, 7, 0.55);
+  border-radius: 1rem;
+  cursor: pointer;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 152, 0, 0.88) 0%,
+    rgba(255, 193, 7, 0.78) 45%,
+    rgba(13, 136, 126, 0.72) 100%
+  );
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+  transition: filter 0.15s ease, transform 0.12s ease;
+  animation: skyroom-poll-summary-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-participation"]:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-participation"]:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 2px;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-participation-icon"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 0.75rem;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-participation-meta"] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.08rem;
+  min-width: 0;
+  flex: 1;
+  text-align: start;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-participation-primary"] {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-participation-pill"] {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.18);
+  padding: 0.1rem 0.44rem;
+  font-size: 0.69rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-participation-dot"] {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #ffc107;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+  animation: skyroom-poll-participation-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes skyroom-poll-participation-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(0.92); }
+}
+
+#layout[data-skyroom-column="true"] [data-test="skyroom-poll-participation-question"] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 10rem;
+  font-size: 0.74rem;
+  line-height: 1;
+  opacity: 0.92;
 }

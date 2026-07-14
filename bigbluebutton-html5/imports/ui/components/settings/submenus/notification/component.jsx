@@ -53,7 +53,7 @@ class NotificationMenu extends BaseMenu {
     super(props);
 
     this.state = {
-      settingsName: 'notification',
+      settingsName: 'application',
       settings: props.settings,
     };
   }

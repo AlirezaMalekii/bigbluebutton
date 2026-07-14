@@ -1,0 +1,18 @@
+---
+description: SafeMeet BBB internationalization, Persian copy, RTL, and white-label conventions
+globs: "{bigbluebutton-html5/public/locales/**,bigbluebutton-html5/imports/startup/client/intl*,bigbluebutton-html5/imports/ui/**/*.{js,jsx,ts,tsx},bigbluebutton-html5/private/config/settings.yml}"
+alwaysApply: false
+---
+
+# Persian and RTL
+
+- Use `react-intl` messages; do not embed new user-facing copy directly in components.
+- Add canonical English and Persian entries together, following nearby namespaces. SafeMeet-specific keys should use `app.skyroom.*` where appropriate.
+- Do not edit generated locale indexes or copy artifacts unless their generation workflow explicitly requires it.
+- Persian UI is RTL and uses IRANYekan; use logical layout properties and natural Persian wording.
+- Phone numbers, URLs, email, tokens, file paths, and code remain LTR and should not inherit Persian digit/font treatment blindly.
+- Keep accessible labels meaningful; icon-only controls need localized names or tooltips.
+- Put product names, URLs, and logo paths in `skyroom-layout/white-label.js`, not scattered replacements.
+- Avoid new DOM-wide text rewriting. Prefer source messages or server settings.
+- Check interpolation, plurals, long labels, narrow mobile widths, and mixed Persian/Latin content.
+- This meeting client uses styled-components and scoped CSS; do not apply Ant Design/Tailwind rules from Meeting-Panel.

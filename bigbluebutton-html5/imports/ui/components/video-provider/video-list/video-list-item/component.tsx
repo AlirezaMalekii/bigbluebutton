@@ -4,6 +4,7 @@ import { UserCameraHelperButton } from 'bigbluebutton-html-plugin-sdk';
 import { UpdatedDataForUserCameraDomElement } from 'bigbluebutton-html-plugin-sdk/dist/cjs/dom-element-manipulation/user-camera/types';
 import Session from '/imports/ui/services/storage/in-memory';
 import UserActions from '/imports/ui/components/video-provider/video-list/video-list-item/user-actions/component';
+import ViewActions from '/imports/ui/components/video-provider/video-list/video-list-item/view-actions/component';
 import UserStatus from '/imports/ui/components/video-provider/video-list/video-list-item/user-status/component';
 import PinArea from '/imports/ui/components/video-provider/video-list/video-list-item/pin-area/component';
 import UserAvatarVideo from '/imports/ui/components/video-provider/video-list/video-list-item/user-avatar/component';
@@ -433,6 +434,14 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
           positionYAxis="top"
           positionXAxis="left"
         >
+          <ViewActions
+            name={name}
+            cameraId={cameraId}
+            videoContainer={videoContainer}
+            isFullscreenContext={isFullscreenContext}
+            layoutContextDispatch={layoutContextDispatch}
+            isStream={isStream}
+          />
           {renderPluginItems(
             cameraId, userId, topLeftPluginItemsRender, false, false, isVideoPluginHelperSqueezed, isRTL,
           )}

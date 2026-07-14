@@ -1,7 +1,41 @@
-# Agent Instructions
+# Agent Guide
 
-This file intentionally does not duplicate the full agent policy.
+This repository is the SafeMeet fork of BigBlueButton 3.x. Keep BBB as the realtime/media/state backbone and implement the custom meeting experience through localized SafeMeet extension seams.
 
-**Canonical instructions:** see `CLAUDE.md`.
+## Mandatory
 
-In particular, follow the security-reporting guidance in `CLAUDE.md` and do not open public PRs for suspected vulnerabilities.
+- Security disclosure policy: `CLAUDE.md`
+- Core architecture guardrails: `.cursor/rules/BigBlueButton-3-x-Development.mdc`
+- Official BBB development documentation: https://docs.bigbluebutton.org/development/
+
+## Meeting UI
+
+- SafeMeet components: `bigbluebutton-html5/imports/ui/components/skyroom-layout/`
+- SafeMeet styles/tokens: `bigbluebutton-html5/public/stylesheets/skyroom/`
+- Design system: `docs/safemeet/meeting-ui-design-system.md`
+- Architecture map: `docs/safemeet/meeting-ui-architecture.md`
+- Quality checklist: `docs/safemeet/meeting-ui-quality-checklist.md`
+
+Use project skills under `.cursor/skills/` for deep feature planning, UI implementation, realtime tracing, verification, and upstream-impact review. Short Persian product requests should still be investigated and converted into complete interaction, responsive, permission, accessibility, and verification requirements.
+
+## Scoped rules
+
+Rules in `.cursor/rules/` are loaded by relevant paths:
+
+- `safemeet-meeting-ui.mdc`
+- `bbb-layout-performance.mdc`
+- `bbb-realtime-graphql.mdc`
+- `bbb-i18n-rtl-fa.mdc`
+- `bbb-meeting-ui-testing.mdc`
+- `bbb-deploy-pipeline.mdc`
+- `eslint-pre-commit.mdc`
+
+Do not apply Meeting-Panel Ant Design/Tailwind conventions to the BBB HTML5 client.
+
+## Delivery paths
+
+- Local/staging UI iteration: see `DEPLOY-FA.md`; normally `./deploy.sh --only html5`.
+- Branch CI/release: see `SAFEMEET-BBB-INSTALL-REPO.md`; CI builds and publishes Debian packages and does not deploy source to the old BBB server.
+- Never commit `.deploy.env`, keys, tokens, or server secrets.
+
+Do not create commits, pushes, deployments, or public PRs unless the user explicitly requests them.

@@ -824,6 +824,10 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
           mime: 'video/mp4',
         },
         {
+          extension: '.mp4',
+          mime: 'video/quicktime',
+        },
+        {
           extension: '.webm',
           mime: 'video/webm',
         },

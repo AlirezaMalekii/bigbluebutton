@@ -611,7 +611,6 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
 
   const toggleMultipleResponse = () => {
     setMultipleResponse((prev) => !prev);
-    return !multipleResponse;
   };
 
   useEffect(() => {

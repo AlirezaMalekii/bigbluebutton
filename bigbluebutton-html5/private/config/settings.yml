@@ -1099,6 +1099,8 @@ public:
         mime: image/svg+xml
       - extension: .mp4
         mime: video/mp4
+      - extension: .mp4
+        mime: video/quicktime
       - extension: .webm
         mime: video/webm
       - extension: .mp3

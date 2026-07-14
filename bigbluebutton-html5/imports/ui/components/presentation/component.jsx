@@ -704,6 +704,27 @@ class Presentation extends PureComponent {
     );
   }
 
+  renderPresentationFullscreen() {
+    const { intl, fullscreenElementId, fullscreenContext } = this.props;
+    const { isFullscreen } = this.state;
+    const allowFullscreen = window.meetingClientSettings?.public?.app?.allowFullscreen;
+    const isIphone = !!(navigator.userAgent.match(/iPhone/i));
+
+    if (!allowFullscreen || isIphone) return null;
+
+    return (
+      <Styled.PresentationFullscreenButton
+        className="skyroom-presentation-fullscreen-btn"
+        elementName={intl.formatMessage(intlMessages.presentationLabel)}
+        fullscreenRef={this.refPresentationContainer}
+        elementId={fullscreenElementId}
+        isFullscreen={fullscreenContext || isFullscreen}
+        dark
+        dataTest="presentationFullscreen"
+      />
+    );
+  }
+
   render() {
     const {
       userIsPresenter,
@@ -889,6 +910,10 @@ class Presentation extends PureComponent {
                     </TooltipContainer>
                   </Styled.ExtraTools>
                 )}
+                {!tldrawIsMounting
+                  && stageReady
+                  && currentSlide
+                  && this.renderPresentationFullscreen()}
                 {!tldrawIsMounting
                   && stageReady
                   && currentSlide

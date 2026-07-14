@@ -25,9 +25,15 @@ const propTypes = {
   isIphone: PropTypes.bool,
   isFullscreen: PropTypes.bool,
   elementName: PropTypes.string,
+  elementId: PropTypes.string,
+  elementGroup: PropTypes.string,
+  layoutContextDispatch: PropTypes.func,
+  currentElement: PropTypes.string,
+  currentGroup: PropTypes.string,
   handleToggleFullScreen: PropTypes.func.isRequired,
   color: PropTypes.string,
   fullScreenStyle: PropTypes.bool,
+  dataTest: PropTypes.string,
 };
 
 const FullscreenButtonComponent = ({
@@ -46,6 +52,7 @@ const FullscreenButtonComponent = ({
   fullScreenStyle = true,
   fullscreenRef = null,
   handleToggleFullScreen,
+  dataTest = 'webcamFullscreenButton',
 }) => {
   if (isIphone) return null;
 
@@ -87,7 +94,7 @@ const FullscreenButtonComponent = ({
         label={formattedLabel(isFullscreen)}
         hideLabel
         isStyled={fullScreenStyle}
-        data-test="webcamFullscreenButton"
+        data-test={dataTest}
       />
     </Styled.FullscreenButtonWrapper>
   );

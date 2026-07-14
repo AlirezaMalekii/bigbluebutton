@@ -64,13 +64,13 @@ const PresentationUploaderContainer = (props) => {
     });
   };
 
-  const setPresentation = (presentationId) => {
-    presentationSetCurrent({ variables: { presentationId } });
-  };
+  const setPresentation = (presentationId) => (
+    presentationSetCurrent({ variables: { presentationId } })
+  );
 
-  const removePresentation = (presentationId) => {
-    presentationRemove({ variables: { presentationId } });
-  };
+  const removePresentation = (presentationId) => (
+    presentationRemove({ variables: { presentationId } })
+  );
 
   const startExternalVideo = (externalVideoUrl) => {
     if (!externalVideoUrl) return;

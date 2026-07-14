@@ -131,8 +131,8 @@ const SessionDetails: React.FC<SessionDetailsProps> = (props) => {
               <Styled.JoinTitle>
                 {intl.formatMessage(intlMessages.joinByUrlLabel)}
               </Styled.JoinTitle>
-              <p>
-                {loginUrl}
+              <Styled.LtrRow>
+                <Styled.LtrValue dir="ltr">{loginUrl}</Styled.LtrValue>
                 <Styled.CopyButton
                   key="copy-join-url"
                   onClick={() => copyData(loginUrl, 'join-url')}
@@ -146,7 +146,7 @@ const SessionDetails: React.FC<SessionDetailsProps> = (props) => {
                     ? intl.formatMessage(intlMessages.copied)
                     : intl.formatMessage(intlMessages.copyUrlTooltip)}
                 />
-              </p>
+              </Styled.LtrRow>
             </>
           )}
           {formattedDialNum && formattedTelVoice && (
@@ -167,12 +167,15 @@ const SessionDetails: React.FC<SessionDetailsProps> = (props) => {
                     : intl.formatMessage(intlMessages.copyPhoneTooltip)}
                 />
               </Styled.JoinTitle>
-              <p>{formattedDialNum}</p>
+              <Styled.LtrRow>
+                <Styled.LtrValue dir="ltr">{formattedDialNum}</Styled.LtrValue>
+              </Styled.LtrRow>
               <p>
                 <b>
                   {`${intl.formatMessage(intlMessages.phonePinLabel)}:`}
                 </b>
-                {` ${formattedPin} #`}
+                {' '}
+                <Styled.LtrValue dir="ltr">{`${formattedPin} #`}</Styled.LtrValue>
               </p>
             </>
           )}

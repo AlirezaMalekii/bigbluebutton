@@ -35,10 +35,6 @@ if [[ ! "$command" =~ ^git[[:space:]]+(-c[[:space:]]+[^[:space:]]+[[:space:]]+)*
   allow
 fi
 
-if [[ "$command" =~ --no-verify ]]; then
-  allow
-fi
-
 html5_dir=""
 if [[ "$cwd" == *"bigbluebutton-html5"* ]]; then
   html5_dir="${cwd%%/bigbluebutton-html5*}/bigbluebutton-html5"

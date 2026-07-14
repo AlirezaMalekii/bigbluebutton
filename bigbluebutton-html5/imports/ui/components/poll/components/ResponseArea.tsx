@@ -84,7 +84,7 @@ const ResponseArea: React.FC<ResponseAreaProps> = ({
   if (defaultPoll || type === pollTypes.Response) {
     return (
       <Styled.ResponseArea>
-        {(defaultPoll && !isQuiz) && (
+        {defaultPoll && (
           <div>
             <Styled.PollCheckbox data-test="allowMultiple">
               <Checkbox
@@ -132,7 +132,9 @@ const ResponseArea: React.FC<ResponseAreaProps> = ({
               </Styled.AnonymousHeadingCol>
               <Styled.AnonymousToggleCol>
                 {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-                <Styled.Toggle>
+                <Styled.Toggle
+                  onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
+                >
                   <Styled.ToggleLabel>
                     {secretPoll
                       ? intl.formatMessage(intlMessages.on)

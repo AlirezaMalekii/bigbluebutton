@@ -17,7 +17,8 @@ const ViewActions: React.FC<ViewActionsProps> = (props) => {
     name, cameraId, videoContainer, isFullscreenContext, layoutContextDispatch, isStream,
   } = props;
 
-  const ALLOW_FULLSCREEN = window.meetingClientSettings.public.app.allowFullscreen;
+  const isIphone = !!(navigator.userAgent.match(/iPhone/i));
+  const allowFullscreen = window.meetingClientSettings?.public?.app?.allowFullscreen;
 
   useEffect(() => () => {
     if (isFullscreenContext) {
@@ -31,13 +32,13 @@ const ViewActions: React.FC<ViewActionsProps> = (props) => {
     }
   }, []);
 
-  if (!ALLOW_FULLSCREEN || !isStream) return null;
+  if (!allowFullscreen || !isStream || isIphone) return null;
 
   return (
-    <Styled.FullscreenWrapper>
+    <Styled.FullscreenWrapper className="skyroom-webcam-fullscreen-btn">
       <FullscreenButtonContainer
-        data-test="webcamsFullscreenButton"
-        fullscreenRef={videoContainer.current}
+        dataTest="webcamsFullscreenButton"
+        fullscreenRef={videoContainer?.current}
         elementName={name}
         elementId={cameraId}
         elementGroup="webcams"

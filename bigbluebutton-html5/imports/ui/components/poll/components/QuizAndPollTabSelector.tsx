@@ -35,6 +35,7 @@ const QuizAndPollTabSelector: React.FC<QuizAndPollTabSelectorProps> = ({ isQuiz,
           role="tab"
           aria-selected={!isQuiz}
           active={!isQuiz}
+          data-active={!isQuiz ? 'true' : 'false'}
           onClick={() => onTabChange(false)}
         >
           {intl.formatMessage(intlMessages.tabPollLabel)}
@@ -44,6 +45,7 @@ const QuizAndPollTabSelector: React.FC<QuizAndPollTabSelectorProps> = ({ isQuiz,
           role="tab"
           aria-selected={isQuiz}
           active={isQuiz}
+          data-active={isQuiz ? 'true' : 'false'}
           onClick={() => onTabChange(true)}
         >
           {intl.formatMessage(intlMessages.tabQuizLabel)}

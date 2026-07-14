@@ -10,25 +10,25 @@ const Shell = styled.div`
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  padding: var(--space-5, 20px);
+  padding: 14px 16px;
   box-sizing: border-box;
 `;
 
 const TopBar = styled.div`
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-3, 12px);
+  align-items: center;
+  gap: 10px;
   padding-inline-end: 40px;
-  margin-bottom: var(--space-4, 16px);
-  padding-bottom: var(--space-4, 16px);
+  margin-bottom: 10px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--border-subtle, rgba(218, 230, 245, 0.08));
 `;
 
 const TopBarIcon = styled.div`
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -37,8 +37,8 @@ const TopBarIcon = styled.div`
   color: var(--skyroom-brand-400, #14a99e);
 
   svg {
-    width: 20px;
-    height: 20px;
+    width: 17px;
+    height: 17px;
   }
 `;
 
@@ -48,8 +48,8 @@ const TopBarText = styled.div`
 `;
 
 const ModalTitle = styled.h2`
-  margin: 0 0 4px;
-  font-size: 1.125rem;
+  margin: 0;
+  font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.01em;
   color: var(--skyroom-text-primary, #eef4fb);
@@ -58,16 +58,20 @@ const ModalTitle = styled.h2`
 
 const ModalDescription = styled.p`
   margin: 0;
-  font-size: 0.8125rem;
-  line-height: 1.5;
+  font-size: 0.75rem;
+  line-height: 1.35;
   color: var(--skyroom-text-secondary, #8d9aad);
+
+  @media (min-width: 561px) {
+    display: none;
+  }
 `;
 
 const Body = styled.div`
   display: flex;
   flex: 1;
   min-height: 0;
-  gap: var(--space-4, 16px);
+  gap: 12px;
 
   @media (max-width: 560px) {
     flex-direction: column;
@@ -99,7 +103,7 @@ const NavButton = styled.button<{ $active?: boolean }>`
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 11px 12px;
+  padding: 9px 10px;
   border-radius: 12px;
   border: 1px solid transparent;
   background: transparent;
@@ -187,9 +191,9 @@ const PanelScroll = styled.div`
 const Hero = styled.div`
   display: flex;
   align-items: center;
-  gap: var(--space-4, 16px);
-  padding: var(--space-4, 16px);
-  margin-bottom: var(--space-4, 16px);
+  gap: 12px;
+  padding: 10px;
+  margin-bottom: 10px;
   border-radius: 14px;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(218, 230, 245, 0.08);
@@ -217,8 +221,8 @@ const Hero = styled.div`
 
 const HeroRing = styled.div`
   flex-shrink: 0;
-  width: 72px;
-  height: 72px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -229,8 +233,8 @@ const HeroRing = styled.div`
 `;
 
 const HeroIconWrap = styled.div`
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -245,7 +249,7 @@ const HeroEyebrow = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -263,7 +267,7 @@ const LiveDot = styled.span`
 `;
 
 const HeroTitle = styled.div`
-  font-size: 1.0625rem;
+  font-size: 0.9875rem;
   font-weight: 700;
   color: var(--skyroom-text-primary, #eef4fb);
   line-height: 1.3;
@@ -276,7 +280,7 @@ const HeroSubtitle = styled.div`
 `;
 
 const HeroAction = styled.button`
-  margin-top: 10px;
+  margin-top: 6px;
   padding: 0;
   border: none;
   background: none;
@@ -298,14 +302,14 @@ const SectionLabel = styled.div`
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--skyroom-text-secondary, #7b8798);
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 `;
 
 const MetricGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: var(--space-4, 16px);
+  gap: 6px;
+  margin-bottom: 10px;
 
   @media (max-width: 420px) {
     grid-template-columns: 1fr;
@@ -315,8 +319,8 @@ const MetricGrid = styled.div`
 const MetricCard = styled.div`
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 12px;
+  gap: 8px;
+  padding: 8px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(218, 230, 245, 0.07);
@@ -330,9 +334,9 @@ const MetricCard = styled.div`
 
 const MetricIcon = styled.div<{ $variant?: 'upload' | 'download' | 'neutral' }>`
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -360,8 +364,8 @@ const MetricIcon = styled.div<{ $variant?: 'upload' | 'download' | 'neutral' }>`
   }}
 
   svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
   }
 `;
 
@@ -375,11 +379,11 @@ const MetricLabel = styled.div`
   font-weight: 500;
   color: var(--skyroom-text-secondary, #8d9aad);
   line-height: 1.35;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 `;
 
 const MetricValue = styled.div`
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--skyroom-text-primary, #eef4fb);
   font-variant-numeric: tabular-nums;
@@ -393,10 +397,10 @@ const CopyButton = styled.button<{ $copied?: boolean }>`
   justify-content: center;
   gap: 8px;
   width: 100%;
-  min-height: 42px;
+  min-height: 36px;
   margin-top: auto;
-  padding: 0 16px;
-  border-radius: 12px;
+  padding: 0 14px;
+  border-radius: 10px;
   border: 1px solid rgba(32, 199, 187, 0.35);
   background: rgba(32, 199, 187, 0.1);
   color: var(--skyroom-brand-300, #3fd9cf);

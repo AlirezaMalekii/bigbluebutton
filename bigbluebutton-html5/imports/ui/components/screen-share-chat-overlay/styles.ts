@@ -254,33 +254,46 @@ export const CollapsedHint = styled.span`
 
 export const ReopenBanner = styled.div<RTLProps>`
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
   margin: 0 0 8px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   border-radius: 10px;
   background: #111c2e;
   border: 1px solid rgba(148, 163, 184, 0.14);
   color: #dbe6f3;
   font-size: 0.78rem;
+  line-height: 1.45;
+  text-align: center;
   direction: ${({ $isRTL }) => ($isRTL ? 'rtl' : 'ltr')};
+`;
+
+export const ReopenBannerText = styled.span`
+  display: block;
+  max-width: 100%;
+  word-break: normal;
+  overflow-wrap: break-word;
 `;
 
 export const ReopenButton = styled.button`
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  align-self: center;
   border: none;
   border-radius: 8px;
-  padding: 6px 10px;
+  padding: 7px 12px;
   background: #27415f;
   color: ${colorWhite};
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.35;
 
   &:hover {
     filter: brightness(1.05);

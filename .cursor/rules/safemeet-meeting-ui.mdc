@@ -1,0 +1,26 @@
+---
+description: SafeMeet meeting UI design system, extension seams, RTL, and responsive conventions
+globs: bigbluebutton-html5/{imports/ui/components/{skyroom-layout,nav-bar,actions-bar,sidebar-content,sidebar-navigation,chat,user-list,presentation,whiteboard,video-provider}/**,public/stylesheets/skyroom/**,client/main.html}
+alwaysApply: false
+---
+
+# SafeMeet Meeting UI
+
+- Treat `skyroom-layout/` plus `public/stylesheets/skyroom/` as the customization shell over upstream BBB.
+- Use `isSkyroomTheme()`, `isSkyroomColumnLayout()`, `panel-toggles.js`, layout `ACTIONS`/`PANELS`, and existing mobile-zone state. Do not create parallel panel or layout state.
+- Prefer late CSS-variable overrides and small guarded integration points over copying upstream components.
+- Scope meeting overrides to `#layout[data-skyroom-column="true"]`; scope portaled/mobile surfaces to `html[data-skyroom="true"]`.
+- Use tokens from `tokens.css`, `theme.css`, and panel-scoped tokens. Do not add another hardcoded teal, spacing, radius, or shadow when a semantic token exists.
+- Production is dark-first: near-black surfaces, teal brand/accent, IRANYekan for Persian, subtle glass/elevation, compact 13–14px panel typography.
+- Reuse shared panel chrome from `skyroom-layout/panel-chrome/`.
+- RTL is the default. Use logical CSS properties and `text-align: start`; mark phone, URL, code, and technical identifiers LTR.
+- Phone behavior is `<600px` and belongs in `responsive.css` or existing mobile-zone components. Check tablet and desktop separately.
+- If a JS layout constant has a matching CSS token, update both and document the synchronization.
+- Use BBB icon classes before adding new assets; use `white-label.js` constants for SafeMeet branding.
+- Preserve loading, empty, error, disabled, focus-visible, keyboard, moderator/viewer, and reduced-space states.
+- Do not rename the established internal `skyroom-*` contract merely to match product naming.
+
+Canonical references:
+- `docs/safemeet/meeting-ui-design-system.md`
+- `docs/safemeet/meeting-ui-architecture.md`
+- `docs/safemeet/meeting-ui-quality-checklist.md`

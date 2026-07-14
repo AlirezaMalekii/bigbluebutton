@@ -4,7 +4,7 @@ import { layoutSelect } from '/imports/ui/components/layout/context';
 import { Layout } from '/imports/ui/components/layout/layoutTypes';
 import Icon from '/imports/ui/components/common/icon/component';
 import { useScreenShareChatOverlayControls } from './container';
-import { ReopenBanner, ReopenButton } from './styles';
+import { ReopenBanner, ReopenBannerText, ReopenButton } from './styles';
 
 const intlMessages = defineMessages({
   reopenLabel: {
@@ -48,7 +48,7 @@ const ScreenShareChatOverlayButton: React.FC = () => {
 
   return (
     <ReopenBanner $isRTL={isRTL} data-test="screenShareChatOverlayReopen">
-      <span>{intl.formatMessage(intlMessages.bannerText)}</span>
+      <ReopenBannerText>{intl.formatMessage(intlMessages.bannerText)}</ReopenBannerText>
       <ReopenButton type="button" onClick={handleClick}>
         <Icon iconName="chat" />
         {intl.formatMessage(

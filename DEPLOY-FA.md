@@ -5,6 +5,8 @@
 تغییرات شما عمدتاً در **`bigbluebutton-html5`** است (تم Skyroom، فارسی، layout و …).  
 برای دیدن آن‌ها روی سرور کافی است **یک بار** دیپلوی HTML5؛ برای همهٔ ماژول‌های repo از دیپلوی کامل استفاده کنید.
 
+این سند فقط workflow توسعهٔ محلی از لپ‌تاپ به سرور BBB را توضیح می‌دهد. CI شاخهٔ `safemeet` این مسیر را اجرا نمی‌کند؛ CI پکیج‌های Debian را می‌سازد و apt repository را منتشر می‌کند. برای CI و انتشار رسمی، `SAFEMEET-BBB-INSTALL-REPO.md` منبع حقیقت است.
+
 | محل | معنی |
 |-----|------|
 | `/root/dev/bigbluebutton` | سورس sync‌شده از لپ‌تاپ (بعد از `deploy.sh`) |
@@ -21,7 +23,7 @@
    ```
 2. در ریشهٔ پروژه:
    ```bash
-   cd /Users/alirezamaleki/Developer/bigbluebutton
+   cd /Users/alirezamaleki/Developer/laravel/SafeMeet/bigbluebutton
    cp deploy.env.example .deploy.env   # اختیاری؛ پیش‌فرض همان IP/پورت شماست
    chmod +x deploy.sh
    ```
@@ -33,7 +35,7 @@
 حدود **۱۰–۲۰ دقیقه** (بسته به سرعت سرور):
 
 ```bash
-cd /Users/alirezamaleki/Developer/bigbluebutton
+cd /Users/alirezamaleki/Developer/laravel/SafeMeet/bigbluebutton
 ./deploy.sh --only html5
 ```
 

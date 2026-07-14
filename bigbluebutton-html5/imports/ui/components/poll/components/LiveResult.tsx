@@ -1,5 +1,5 @@
 import { useMutation } from '@apollo/client';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import Session from '/imports/ui/services/storage/in-memory';
 import {
@@ -15,13 +15,43 @@ import {
 import logger from '/imports/startup/client/logger';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import { POLL_CANCEL, POLL_PUBLISH_RESULT } from '../mutations';
-import { layoutDispatch, layoutSelect, layoutSelectOutput } from '../../layout/context';
+import { layoutDispatch, layoutSelect } from '../../layout/context';
 import { ACTIONS, PANELS } from '../../layout/enums';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
 import CustomizedAxisTick from './CustomizedAxisTick';
 import connectionStatus from '/imports/ui/core/graphql/singletons/connectionStatus';
 import Tooltip from '../../common/tooltip/component';
-import { Layout, Output } from '../../layout/layoutTypes';
+import { Layout } from '../../layout/layoutTypes';
+
+const CHART_BAR_HEIGHT = 44;
+const CHART_MIN_HEIGHT = 160;
+const CHART_Y_AXIS_MIN = 72;
+const CHART_Y_AXIS_MAX = 220;
+
+function measureLabelWidth(text: string, fontSize: number): number {
+  if (typeof document === 'undefined') return text.length * fontSize * 0.55;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return text.length * fontSize * 0.55;
+  const fontFamily = window.getComputedStyle(document.body).fontFamily || 'IRANYekanX, sans-serif';
+  ctx.font = `normal ${fontSize}px ${fontFamily}`;
+  return ctx.measureText(text).width;
+}
+
+function computeChartDimensions(
+  labels: string[],
+  fontSize: number,
+): { chartHeight: number; yAxisWidth: number } {
+  const optionCount = Math.max(labels.length, 1);
+  const longestLabel = labels.reduce((max, label) => (label.length > max.length ? label : max), '');
+  const measuredWidth = measureLabelWidth(longestLabel, fontSize);
+  const yAxisWidth = Math.min(
+    CHART_Y_AXIS_MAX,
+    Math.max(CHART_Y_AXIS_MIN, Math.ceil(measuredWidth) + 16),
+  );
+  const chartHeight = Math.max(CHART_MIN_HEIGHT, optionCount * CHART_BAR_HEIGHT + 32);
+  return { chartHeight, yAxisWidth };
+}
 
 const intlMessages = defineMessages({
   usersTitle: {
@@ -108,7 +138,6 @@ interface LiveResultProps {
   users: Array<UserInfo>;
   isSecret: boolean;
   isQuiz: boolean;
-  type: string;
 }
 
 const LiveResult: React.FC<LiveResultProps> = ({
@@ -121,7 +150,6 @@ const LiveResult: React.FC<LiveResultProps> = ({
   users,
   isSecret,
   isQuiz,
-  type,
 }) => {
   const CHAT_CONFIG = window.meetingClientSettings.public.chat;
   const PUBLIC_CHAT_KEY = CHAT_CONFIG.public_group_id;
@@ -132,7 +160,6 @@ const LiveResult: React.FC<LiveResultProps> = ({
   const [shouldShowCorrectAnswer, setShouldShowCorrectAnswers] = React.useState(true);
 
   const layoutContextDispatch = layoutDispatch();
-  const sidebarContent: Output['sidebarContent'] = layoutSelectOutput((i: Output) => i.sidebarContent);
   const fontSize: Layout['fontSize'] = layoutSelect((i: Layout) => i.fontSize);
   const publishPoll = useCallback((pId: string, showAnswer: boolean) => {
     pollPublishResult({
@@ -151,6 +178,14 @@ const LiveResult: React.FC<LiveResultProps> = ({
       optionDesc,
     };
   });
+
+  const { chartHeight, yAxisWidth } = useMemo(
+    () => computeChartDimensions(
+      translatedResponses.map((r) => r.optionDesc),
+      fontSize,
+    ),
+    [translatedResponses, fontSize],
+  );
 
   return (
     <div>
@@ -173,16 +208,35 @@ const LiveResult: React.FC<LiveResultProps> = ({
           {usersCount !== numberOfAnswerCount
             ? <Styled.ConnectingAnimation animations={animations} /> : null}
         </Styled.Status>
-        <ResponsiveContainer width="90%" height={translatedResponses.length * 50}>
-          <BarChart
-            data={translatedResponses}
-            layout="vertical"
-          >
-            <XAxis type="number" allowDecimals={false} />
-            <YAxis width={type === 'R-' ? (sidebarContent.width / 3) : 70} fontSize={fontSize} type="category" dataKey="optionDesc" tick={<CustomizedAxisTick />} />
-            <Bar dataKey="optionResponsesCount" fill="var(--skyroom-brand-400, #14A99E)" radius={[0, 4, 4, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        <Styled.ChartSection data-test="pollLiveResultChart">
+          <ResponsiveContainer width="100%" height={chartHeight}>
+            <BarChart
+              data={translatedResponses}
+              layout="vertical"
+              margin={{
+                top: 8,
+                right: 24,
+                left: 4,
+                bottom: 8,
+              }}
+              barCategoryGap="20%"
+            >
+              <XAxis type="number" allowDecimals={false} />
+              <YAxis
+                width={yAxisWidth}
+                fontSize={fontSize}
+                type="category"
+                dataKey="optionDesc"
+                tick={<CustomizedAxisTick />}
+              />
+              <Bar
+                dataKey="optionResponsesCount"
+                fill="var(--skyroom-brand-400, #14A99E)"
+                radius={[0, 4, 4, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </Styled.ChartSection>
       </Styled.Stats>
       {
         isQuiz && (
@@ -347,7 +401,6 @@ const LiveResultContainer: React.FC = () => {
     responses,
     pollId,
     users,
-    type,
   } = currentPoll;
 
   const numberOfAnswerCount = currentPoll.responses_aggregate.aggregate.sum.optionResponsesCount;
@@ -364,7 +417,6 @@ const LiveResultContainer: React.FC = () => {
       pollId={pollId}
       users={users}
       isQuiz={currentPoll.quiz}
-      type={type}
     />
   );
 };

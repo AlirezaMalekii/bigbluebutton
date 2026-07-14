@@ -540,21 +540,16 @@ const Stats = styled.div`
   margin-bottom: ${smPaddingX};
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
   border: 1px solid ${pollStatsBorderColor};
   border-radius: ${borderSizeLarge};
   padding: ${mdPaddingX};
+`;
 
-  & > div {
-    display: flex;
-    flex-direction: row;
-
-    & > div:nth-child(even) {
-      position: relative;
-      height: 75%;
-      width: 50%;
-      text-align: center;
-    }
-  }
+const ChartSection = styled.div`
+  width: 100%;
+  min-height: 8rem;
+  flex-shrink: 0;
 `;
 
 const Title = styled.span`
@@ -601,15 +596,25 @@ const ConnectingAnimation = styled.span<ConnectingAnimationProps>`
 const ButtonsActions = styled.div`
   display: flex;
   width: 100%;
-  justify-content: space-between;
+  gap: 0.75rem;
+  justify-content: stretch;
   align-items: center;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
 `;
 
 // @ts-ignore - Button is a JS Component
 const PublishButton = styled(Button)`
-  width: 48%;
+  flex: 1 1 0;
+  min-height: 2.5rem;
+  max-height: 2.75rem;
   overflow-wrap: break-word;
-  white-space: pre-wrap;
+  white-space: normal;
 `;
 
 const CancelButton = styled(PublishButton)``;
@@ -894,6 +899,7 @@ export default {
   BarShade,
   BarVal,
   Stats,
+  ChartSection,
   Title,
   Status,
   ConnectingAnimation,

@@ -88,15 +88,32 @@ const UnknownError = styled.label`
 `;
 
 const HelpItems = styled.ul`
-  text-align: left;
-  justify-content: center;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: start;
+  line-height: 1.5;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+
+  [dir="rtl"] & {
+    text-align: right;
+  }
+
   li {
     margin-bottom: ${smPaddingY};
   }
+
+  li:last-child {
+    margin-bottom: 0;
+  }
+
   font-size: ${fontSizeBase};
 
   @media ${smallOnly} {
     font-size: ${fontSizeSmall};
+    padding: 0 ${smPaddingX};
   }
 `;
 

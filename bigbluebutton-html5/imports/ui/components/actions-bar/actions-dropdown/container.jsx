@@ -19,6 +19,8 @@ import {
   TIMER_ACTIVATE,
   TIMER_DEACTIVATE,
   TIMER_SET_SONG_TRACK,
+  TIMER_SET_TIME,
+  TIMER_START,
   TIMER_SWITCH_MODE,
 } from '../../timer/mutations';
 import Auth from '/imports/ui/services/auth';
@@ -71,6 +73,8 @@ const ActionsDropdownContainer = (props) => {
   const [timerActivate] = useMutation(TIMER_ACTIVATE);
   const [timerDeactivate] = useMutation(TIMER_DEACTIVATE);
   const [timerSetSongTrack] = useMutation(TIMER_SET_SONG_TRACK);
+  const [timerSetTime] = useMutation(TIMER_SET_TIME);
+  const [timerStart] = useMutation(TIMER_START);
   const [timerSwitchMode] = useMutation(TIMER_SWITCH_MODE);
   const [presentationSetCurrent] = useMutation(PRESENTATION_SET_CURRENT);
   const [startExternalVideoMutation] = useMutation(EXTERNAL_VIDEO_START);
@@ -117,15 +121,21 @@ const ActionsDropdownContainer = (props) => {
 
     // Ensure mode is updated even when re-activating after a previous mode was used.
     await timerSwitchMode({ variables: { stopwatch } });
+    if (!stopwatch && normalizedTime > 0) {
+      await timerSetTime({ variables: { time: normalizedTime } });
+    }
     await timerActivate({
       variables: {
         stopwatch,
-        running,
+        running: false,
         time: normalizedTime,
       },
     });
     if (TIMER_CONFIG.music?.enabled) {
       await timerSetSongTrack({ variables: { track: songTrack || 'noTrack' } });
+    }
+    if (running) {
+      await timerStart();
     }
   };
 

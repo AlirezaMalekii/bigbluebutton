@@ -38,6 +38,9 @@ const propTypes = {
   handleSave: PropTypes.func.isRequired,
   handleUploadPending: PropTypes.func.isRequired,
   dispatchChangePresentationDownloadable: PropTypes.func.isRequired,
+  setPresentation: PropTypes.func.isRequired,
+  removePresentation: PropTypes.func.isRequired,
+  presentationEnabled: PropTypes.bool.isRequired,
   fileValidMimeTypes: PropTypes.arrayOf(PropTypes.shape).isRequired,
   presentations: PropTypes.arrayOf(PropTypes.shape({
     presentationId: PropTypes.string.isRequired,
@@ -53,6 +56,10 @@ const propTypes = {
   exportPresentation: PropTypes.func.isRequired,
   startExternalVideo: PropTypes.func,
   stopExternalVideo: PropTypes.func,
+  externalUploadData: PropTypes.shape({
+    presentationUploadExternalDescription: PropTypes.string,
+    presentationUploadExternalUrl: PropTypes.string,
+  }).isRequired,
 };
 
 const defaultProps = {
@@ -783,31 +790,33 @@ class PresentationUploader extends Component {
     const { presentations: statePresentations } = this.state;
     const presentations = normalizePresentations(statePresentations);
     const toRemoveIndex = presentations.indexOf(item);
+    if (toRemoveIndex === -1) return;
+
+    const removedWasCurrent = item?.current === true;
     this.setState({
       presentations: update(presentations, {
         $splice: [[toRemoveIndex, 1]],
       }),
     }, () => {
-      const { presentations: updatedPresentations, oldCurrentId } = this.state;
-      const commands = {};
-
+      const { presentations: updatedPresentations } = this.state;
       const currentIndex = updatedPresentations.findIndex((p) => p?.current);
-      const actualCurrentIndex = updatedPresentations.findIndex(
-        (p) => p?.presentationId === oldCurrentId,
-      );
 
       if (currentIndex === -1 && updatedPresentations.length > 0) {
-        const newCurrentIndex = actualCurrentIndex === -1 ? 0 : actualCurrentIndex;
-        commands[newCurrentIndex] = {
-          $apply: (presentation) => {
-            const p = presentation;
-            p.current = true;
-          },
-        };
+        const defaultIndex = updatedPresentations.findIndex((p) => p?.isDefault);
+        const newCurrentIndex = defaultIndex === -1 ? 0 : defaultIndex;
+        const nextCurrentId = updatedPresentations[newCurrentIndex]?.presentationId || '';
+        const updatedCurrent = updatedPresentations.map((presentation, index) => ({
+          ...presentation,
+          current: index === newCurrentIndex,
+        }));
+        Session.setItem('selectedToBeNextCurrent', nextCurrentId);
+        this.setState({ presentations: updatedCurrent });
+        return;
       }
 
-      const updatedCurrent = update(updatedPresentations, commands);
-      this.setState({ presentations: updatedCurrent });
+      if (removedWasCurrent && currentIndex === -1) {
+        Session.setItem('selectedToBeNextCurrent', '');
+      }
     });
   }
 
@@ -928,42 +937,40 @@ class PresentationUploader extends Component {
 
     Session.setItem('showUploadPresentationView', false);
     const selectedItem = this.getSelectedPresentation();
+    const mergedPresentations = [...propPresentations];
+    presentations.forEach((presentation) => {
+      const existingIndex = mergedPresentations.findIndex(
+        (item) => item.presentationId === presentation.presentationId
+          || item.uploadTemporaryId === presentation.presentationId
+          || item.uploadTemporaryId === presentation.uploadTemporaryId
+          || (item.name === presentation.name && presentation.uploadCompleted),
+      );
+      if (existingIndex >= 0) {
+        mergedPresentations[existingIndex] = {
+          ...mergedPresentations[existingIndex],
+          ...presentation,
+        };
+      } else {
+        mergedPresentations.push(presentation);
+      }
+    });
+    const resolvedId = resolvePresentationId(selectedItem, mergedPresentations);
+    const resolvedSelected = mergedPresentations.find(
+      (p) => p.presentationId === resolvedId,
+    ) || (selectedItem && resolvedId ? { ...selectedItem, presentationId: resolvedId } : null);
 
-    return Service.applyPresentationSelection(
-      propPresentations,
-      presentations,
-      removePresentation,
-    )
+    return Promise.resolve(setPresentation(resolvedId || ''))
+      .then(() => Service.applyPresentationSelection(
+        propPresentations,
+        presentations,
+        removePresentation,
+      ))
       .then(() => {
         const hasError = presentations.some((p) => !!p.uploadErrorMsgKey);
         if (!hasError) {
           this.setState({
             disableActions: false,
           });
-          const mergedPresentations = [...propPresentations];
-          presentations.forEach((presentation) => {
-            const existingIndex = mergedPresentations.findIndex(
-              (item) => item.presentationId === presentation.presentationId
-                || item.uploadTemporaryId === presentation.presentationId
-                || item.uploadTemporaryId === presentation.uploadTemporaryId
-                || (item.name === presentation.name && presentation.uploadCompleted),
-            );
-            if (existingIndex >= 0) {
-              mergedPresentations[existingIndex] = {
-                ...mergedPresentations[existingIndex],
-                ...presentation,
-              };
-            } else {
-              mergedPresentations.push(presentation);
-            }
-          });
-          const resolvedId = resolvePresentationId(selectedItem, mergedPresentations);
-          const resolvedSelected = mergedPresentations.find(
-            (p) => p.presentationId === resolvedId,
-          ) || (selectedItem ? { ...selectedItem, presentationId: resolvedId } : null);
-          if (resolvedId) {
-            setPresentation(resolvedId);
-          }
           this.syncExternalVideoForSelection(
             resolvedSelected,
             mergedPresentations,

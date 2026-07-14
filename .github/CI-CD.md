@@ -1,80 +1,73 @@
-# CI/CD — BigBlueButton (SafeMeet fork)
+# CI/CD — BigBlueButton SafeMeet fork
 
-## Branches
+## Source of truth
 
-| Branch | CI | Deploy |
-|--------|----|--------|
-| `safemeet` | Yes | Auto → BBB server |
-| PRs to `safemeet` | Yes | No |
+Workflow: `.github/workflows/safemeet-ci-cd.yml`
 
-## Workflow
+Package/install details: `SAFEMEET-BBB-INSTALL-REPO.md`
 
-File: [`.github/workflows/safemeet-ci-cd.yml`](workflows/safemeet-ci-cd.yml)
+## Branch behavior
 
-1. **ShellCheck** — `scripts/`
-2. **HTML5** — eslint + typecheck in `bigbluebutton-html5/`
-3. **SafeMeet recording** — RSpec in `record-and-playback/core/`
-4. **Deploy** — smart component deploy via `./deploy.sh` on push to `safemeet`
+- Push to `safemeet`: run path-aware checks, build selected Debian packages, and publish the SafeMeet apt repository.
+- Pull request to `safemeet`: run checks; do not publish packages.
+- Manual workflow: optionally force publication of the full package set.
 
-## GitHub Secrets
+CI does not sync source to the old BBB server and does not run `./deploy.sh` there.
 
-| Secret | Example / notes |
-|--------|-----------------|
-| `DEPLOY_SSH_PRIVATE_KEY` | Private key with access to BBB server |
-| `DEPLOY_HOST` | `78.157.39.51` |
-| `DEPLOY_PORT` | `3698` |
-| `DEPLOY_USER` | `root` |
-| `DEPLOY_REMOTE_DIR` | `/root/dev/bigbluebutton` |
+## Jobs
 
-Local override: copy [`deploy.env.example`](../deploy.env.example) → `.deploy.env`
+1. Detect changed areas.
+2. Run ShellCheck for deployment/package scripts when affected.
+3. Run HTML5 lint and TypeScript checks when the client is affected.
+4. Run SafeMeet recording specs when recording code is affected.
+5. Plan, build, and publish selected Debian packages on eligible `safemeet` runs.
+6. Start bounded CI auto-repair for actionable code failures.
 
-## GitHub Environment
+The package planner compares the current commit with the published baseline and uses `scripts/safemeet-detect-packages.sh` to minimize package builds.
 
-Create environment **`production`** (recommended). BBB deploys can take 10–90 minutes depending on changed components.
+## Repository publication
 
-## Smart deploy (fast path)
+Packages and installer artifacts are published to:
 
-CI computes the plan in the **Plan deploy** step (baseline = server `.deploy-state` or `github.event.before`), then runs `./deploy.sh --only COMPONENT` for a single changed area or passes `CI_DEPLOY_COMPONENTS` for multi-component smart deploy.
-
-**Important:** If logs show `Plan: html5` but deploy runs **full** (~15 min), that was a bug (fixed) — baseline was lost between plan and deploy. After the fix, html5-only pushes should take ~3–5 min like manual `./deploy.sh --only html5`.
-
-1. Read last successful commit from server `.deploy-state`
-2. `git fetch` that baseline commit (shallow checkout stays fast)
-3. Detect changed components → build **only** those on the server
-4. Skip `akka-fsesl` unless fsesl paths changed (`--skip-akka-fsesl`)
-
-Typical times after the first deploy:
-
-| Change type | Components | Approx. time |
-|-------------|------------|--------------|
-| SafeMeet recording Ruby only | libs → web → playback | ~5–15 min |
-| HTML5 UI only | html5 | ~10–20 min |
-| CI/workflow only | rsync only, no remote build | ~1–2 min |
-| `deploy.sh` / deploy scripts | full (safety) | ~30–90 min |
-
-CI checks (html5 lint, RSpec) also run **only when related paths change**, so pushes that touch recording code skip the HTML5 npm job.
-
-```bash
-./deploy.sh                    # smart deploy (changed components only)
-./deploy.sh --only html5       # UI only
-./deploy.sh --only playback    # recording stack
-./deploy.sh --full             # all components
+```text
+https://new-bbb-install.roomeet.ir/jammy-300
 ```
 
-Or: Actions → SafeMeet CI/CD → Run workflow (must be on `safemeet` branch for auto-deploy on push).
+That host is an apt repository server, not a BBB meeting server.
 
-## After recording indexer changes
+Publication imports `.deb` files with replacement enabled, updates the signed aptly publication, and synchronizes its web root.
 
-Worker restart is automatic. **Existing recordings** need manual re-index:
+## Local development deployment
+
+`deploy.sh` remains a separate laptop-to-BBB-server development/staging workflow:
 
 ```bash
-sudo -u bigbluebutton bundle exec ruby scripts/post_publish/90_safemeet_recording_asset_index.rb -m RECORD_ID -f presentation
+./deploy.sh --only html5
 ```
 
-## Rotate compromised credentials
+It uses gitignored `.deploy.env`. See `DEPLOY-FA.md`. Do not describe this path as branch CI.
 
-Rotate BBB server SSH access and update `DEPLOY_SSH_PRIVATE_KEY` in GitHub Secrets.
+## Secrets
 
-## CI auto-repair (Cursor Cloud Agent)
+The active workflow may require repository-publication and Cursor auto-repair credentials. Inspect the workflow for current secret names before changing configuration.
 
-Job **CI Auto-Repair** inside [`.github/workflows/safemeet-ci-cd.yml`](workflows/safemeet-ci-cd.yml) — runs only when any check or deploy fails on push to **`safemeet`**. Secret: `CURSOR_API_KEY`. Max 3 attempts; infra/SSH failures skipped.
+Never place credentials, SSH keys, tokens, or `.deploy.env` values in repository files, logs, plans, or agent output.
+
+## Verification
+
+For a package publication:
+
+- inspect the workflow summary for planned package names
+- confirm expected `.deb` artifacts were built
+- verify apt repository metadata and package policy on a target BBB server
+- run `bbb-conf --status` and `bbb-conf --check` after installation/update
+
+For local HTML5 deployment:
+
+- hard-refresh or use a private window
+- create a new meeting
+- check browser console/network and relevant moderator/viewer scenarios
+
+## CI auto-repair
+
+The Cursor automation may apply a minimal fix and push to `safemeet`, with a bounded number of attempts. It must stop for infrastructure, authentication, repository-server, quota, or SSH failures instead of changing deployment architecture or credentials.

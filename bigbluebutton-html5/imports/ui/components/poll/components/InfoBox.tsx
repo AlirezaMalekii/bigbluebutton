@@ -34,7 +34,7 @@ const InfoBox: React.FC<InfoBoxContainerProps> = ({
   })();
 
   return (
-    <Styled.InfoBoxContainer isQuiz={isQuiz}>
+    <Styled.InfoBoxContainer isQuiz={isQuiz} data-quiz={isQuiz ? 'true' : 'false'}>
       <p>{message}</p>
     </Styled.InfoBoxContainer>
   );

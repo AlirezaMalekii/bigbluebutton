@@ -1,6 +1,7 @@
 import React from 'react';
 import TimerIndicatorContainer from '/imports/ui/components/timer/indicator/component';
 import SkyroomActivePollSummary from './SkyroomActivePollSummary';
+import SkyroomPendingPollParticipation from './SkyroomPendingPollParticipation';
 
 /**
  * Groups live poll/quiz summary and timer in the header control rail
@@ -8,6 +9,7 @@ import SkyroomActivePollSummary from './SkyroomActivePollSummary';
  */
 const SkyroomHeaderStatusCluster: React.FC = () => (
   <div data-test="skyroom-header-status-cluster">
+    <SkyroomPendingPollParticipation />
     <SkyroomActivePollSummary />
     <TimerIndicatorContainer />
   </div>

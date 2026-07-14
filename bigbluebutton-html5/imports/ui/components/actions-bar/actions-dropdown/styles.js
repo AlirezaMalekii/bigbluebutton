@@ -8,10 +8,7 @@ const PollModalBody = styled.div`
   width: 100%;
   max-width: min(78rem, 96vw);
   min-width: 0;
-  height: min(68vh, 46rem);
-  max-height: calc(100vh - 11rem);
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: visible;
   padding: 0.35rem 0.5rem 0.5rem;
 
   @media ${smallOnly} {

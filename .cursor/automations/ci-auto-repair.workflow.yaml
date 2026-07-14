@@ -12,13 +12,13 @@ workflow:
     - manageCheckRun: {}
   prompts:
     - |
-      Repair failed CI/CD for SafeMeet **bigbluebutton** fork.
+      Repair failed package CI/CD for the SafeMeet **bigbluebutton** fork.
 
       Trigger: checks failed on `safemeet` in `AlirezaMalekii/bigbluebutton`.
 
-      Steps: read failed logs → minimal fix → push to `safemeet` (no PR).
+      Steps: read failed logs → identify whether failure is checks, package planning/build, or publication → apply the smallest code/config fix → push to `safemeet` (no PR).
 
-      Limits: max 3 attempts; never touch `.deploy.env`, deploy secrets, or server SSH; respect smart deploy in `deploy.sh`. Stop on infra/SSH failures.
+      Limits: max 3 attempts; never touch `.deploy.env`, repository credentials, deploy secrets, or server SSH. CI publishes Debian packages to the SafeMeet apt repository and does not run `deploy.sh` on the old BBB host. Stop on infrastructure, authentication, quota, apt-repository, or SSH failures.
 
       Commit: `ci-auto-repair: chain=<sha> attempt=<n>`
   gitConfig:

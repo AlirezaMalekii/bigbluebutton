@@ -17,6 +17,12 @@ export const ChatMessage = styled.div<ChatMessageProps>`
   font-weight: 400;
   word-break: break-word;
 
+  &.chat-message-emoji-only {
+    font-size: 1.35rem;
+    line-height: 1.25;
+    text-align: start;
+  }
+
   & img {
     max-width: 100%;
     max-height: 100%;

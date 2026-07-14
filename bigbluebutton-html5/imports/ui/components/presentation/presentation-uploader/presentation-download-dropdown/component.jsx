@@ -191,11 +191,16 @@ class PresentationDownloadDropdown extends PureComponent {
       tooltipLabelForDropdown = intl.formatMessage(intlMessages.optionsUncomplete);
     }
 
+    const isRTL = typeof document !== 'undefined'
+      && document.documentElement.getAttribute('dir') === 'rtl';
+
     return (
       <PresentationDownloadDropdownWrapper>
         <BBBMenu
           disabled={disabled}
           customStyles={customStyles}
+          overrideMobileStyles
+          minContent
           trigger={(
             <Trigger
               disabled={disabled}
@@ -208,13 +213,23 @@ class PresentationDownloadDropdown extends PureComponent {
           )}
           opts={{
             id: 'presentation-download-dropdown',
+            className: 'skyroom-presentation-options-menu',
             keepMounted: true,
             transitionDuration: 0,
-            elevation: 2,
+            elevation: 8,
             getcontentanchorel: null,
-            fullwidth: 'true',
-            anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
-            transformOrigin: { vertical: 'top', horizontal: 'left' },
+            disableScrollLock: true,
+            BackdropProps: {
+              invisible: true,
+            },
+            anchorOrigin: {
+              vertical: 'bottom',
+              horizontal: isRTL ? 'right' : 'left',
+            },
+            transformOrigin: {
+              vertical: 'top',
+              horizontal: isRTL ? 'right' : 'left',
+            },
           }}
           actions={this.getAvailableActions()}
         />

@@ -104,8 +104,8 @@ const Badge = styled.span<BadgeProps>`
     position: relative;
     z-index: 1;
     display: block;
-    width: 60%;
-    height: 60%;
+    width: 68%;
+    height: 68%;
     flex-shrink: 0;
   }
 `;

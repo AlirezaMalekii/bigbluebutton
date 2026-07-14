@@ -1,12 +1,10 @@
 import React, {
-  useEffect, useMemo, useRef, useState,
+  useEffect, useMemo, useReducer, useRef, useState,
 } from 'react';
 import ReactDOM from 'react-dom';
 import { useMutation } from '@apollo/client';
 import { defineMessages, useIntl } from 'react-intl';
 import Checkbox from '/imports/ui/components/common/checkbox/component';
-import Icon from '/imports/ui/components/common/icon/icon-ts/component';
-import { hasPhoneDimentions } from '/imports/ui/stylesheets/styled-components/breakpoints';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import {
   POLL_SUBMIT_TYPED_VOTE,
@@ -23,6 +21,13 @@ import { useIsPollingEnabled } from '../../services/features';
 import logger from '/imports/startup/client/logger';
 import connectionStatus from '../../core/graphql/singletons/connectionStatus';
 import useMeeting from '../../core/hooks/useMeeting';
+import {
+  dismissPollParticipation,
+  isPollParticipationDismissed,
+  resetPollParticipationDismissIfPollChanged,
+  SKYROOM_OPEN_POLL_PARTICIPATION_EVENT,
+  subscribePollParticipationDismiss,
+} from '../skyroom-layout/active-poll-summary/pollParticipationDismiss';
 
 const intlMessages = defineMessages({
   pollingTitleLabel: {
@@ -108,12 +113,7 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
 
   const [typedAns, setTypedAns] = useState('');
   const [checkedAnswers, setCheckedAnswers] = useState<Array<number>>([]);
-  // Phone-only: allow dismissing the poll bottom sheet without answering, then reopening it via
-  // a floating pill. Desktop keeps the centered modal untouched.
-  const [dismissed, setDismissed] = useState(false);
-  const [isPhoneSheet, setIsPhoneSheet] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia(hasPhoneDimentions).matches,
-  );
+  const [, forceDismissSync] = useReducer((x: number) => x + 1, 0);
   const intl = useIntl();
   const responseInput = useRef<HTMLInputElement>(null);
   const pollingContainer = useRef<HTMLElement>(null);
@@ -125,18 +125,23 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
     }
   }, []);
 
+  useEffect(() => subscribePollParticipationDismiss(forceDismissSync), []);
+
   useEffect(() => {
-    const mql = window.matchMedia(hasPhoneDimentions);
-    const onChange = () => setIsPhoneSheet(mql.matches);
-    onChange();
-    mql.addEventListener('change', onChange);
-    return () => mql.removeEventListener('change', onChange);
+    resetPollParticipationDismissIfPollChanged(poll.pollId);
+  }, [poll.pollId]);
+
+  useEffect(() => {
+    const onReopen = () => forceDismissSync();
+    window.addEventListener(SKYROOM_OPEN_POLL_PARTICIPATION_EVENT, onReopen);
+    return () => window.removeEventListener(SKYROOM_OPEN_POLL_PARTICIPATION_EVENT, onReopen);
   }, []);
 
-  // A brand-new poll should always show, even if the previous one was dismissed.
-  useEffect(() => {
-    setDismissed(false);
-  }, [poll.pollId]);
+  const dismissed = isPollParticipationDismissed(poll.pollId);
+
+  const handleDismiss = () => {
+    dismissPollParticipation(poll.pollId);
+  };
 
   const handleUpdateResponseInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (responseInput.current) {
@@ -150,13 +155,12 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
   };
 
   const handleCheckboxChange = (answerId: number) => {
-    if (checkedAnswers.includes(answerId)) {
-      checkedAnswers.splice(checkedAnswers.indexOf(answerId), 1);
-    } else {
-      checkedAnswers.push(answerId);
-    }
-    checkedAnswers.sort();
-    setCheckedAnswers([...checkedAnswers]);
+    setCheckedAnswers((prev) => {
+      if (prev.includes(answerId)) {
+        return prev.filter((id) => id !== answerId).sort((a, b) => a - b);
+      }
+      return [...prev, answerId].sort((a, b) => a - b);
+    });
   };
 
   const handleMessageKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -349,22 +353,12 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
     );
   };
 
-  if (isPhoneSheet && dismissed) {
-    return ReactDOM.createPortal(
-      <Styled.ReopenPill
-        type="button"
-        data-test="reopenPoll"
-        onClick={() => setDismissed(false)}
-      >
-        <Icon iconName="polling" />
-        {intl.formatMessage(intlMessages.reopenLabel)}
-      </Styled.ReopenPill>,
-      document.getElementById('polling-container') || document.body,
-    );
+  if (dismissed) {
+    return null;
   }
 
   return ReactDOM.createPortal(
-    <Styled.Overlay>
+    <Styled.Overlay data-dismissed="false">
       <Styled.PollingContainer
         autoWidth={poll.stackOptions}
         data-test="pollingContainer"
@@ -372,16 +366,14 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
         ref={pollingContainer}
         tabIndex={-1}
       >
-        {isPhoneSheet && (
-          <Styled.CloseButton
-            type="button"
-            data-test="dismissPoll"
-            aria-label={intl.formatMessage(intlMessages.dismissLabel)}
-            onClick={() => setDismissed(true)}
-          >
-            ×
-          </Styled.CloseButton>
-        )}
+        <Styled.CloseButton
+          type="button"
+          data-test="dismissPoll"
+          aria-label={intl.formatMessage(intlMessages.dismissLabel)}
+          onClick={handleDismiss}
+        >
+          ×
+        </Styled.CloseButton>
         {poll.questionText.length > 0 && (
           <Styled.QHeader>
             <Styled.QTitle>

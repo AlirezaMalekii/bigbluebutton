@@ -60,6 +60,7 @@ const PollingContainer = styled.aside<{ autoWidth: boolean }>`
   display: flex;
   flex-direction: column;
   gap: var(--space-4, 16px);
+  position: relative;
 
   color: var(--skyroom-text-primary, #e6edf7);
   text-align: center;
@@ -72,7 +73,7 @@ const PollingContainer = styled.aside<{ autoWidth: boolean }>`
   /*
    * Phone: a non-blocking bottom sheet instead of a full-screen modal. It sits at the bottom,
    * never taller than ~62vh so the class above stays visible, and can be dismissed with the
-   * close button (a floating pill reopens it). This keeps the meeting usable while a poll is live.
+   * close button (header pill reopens it). This keeps the meeting usable while a poll is live.
    */
   @media ${hasPhoneDimentions} {
     top: auto;
@@ -95,12 +96,13 @@ const PollingContainer = styled.aside<{ autoWidth: boolean }>`
   ${({ autoWidth }) => autoWidth && 'width: auto;'}
 `;
 
-// ─── Dismiss (close) button — bottom sheet header ─────────────────────────────
+// ─── Dismiss (close) button — poll/quiz answer modal ─────────────────────────
 
 const CloseButton = styled.button`
   position: absolute;
   top: 8px;
   inset-inline-end: 8px;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -110,7 +112,7 @@ const CloseButton = styled.button`
   border-radius: 50%;
   background: var(--skyroom-accent-soft, rgba(32, 199, 187, 0.12));
   color: var(--skyroom-text-primary, #e6edf7);
-  font-size: 1rem;
+  font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
   transition: background 0.15s ease;

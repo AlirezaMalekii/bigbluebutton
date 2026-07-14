@@ -76,8 +76,8 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     }
   `}
 
-  ${({ isSkyroomMobile }) => isSkyroomMobile && `
-    button[data-testid="tools.more"] {
+  ${({ isSkyroom }) => isSkyroom && `
+    [data-testid="main.action-menu"] {
       display: none !important;
     }
   `}

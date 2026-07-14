@@ -41,17 +41,12 @@ const PresentationSvg = styled.svg`
 `;
 
 const PresentationFullscreenButton = styled(FullscreenButtonContainer)`
-  z-index: 1;
+  z-index: 1001;
   position: absolute;
-  top: 0;
-  right: 0;
-  left: auto;
+  top: 14px;
+  left: 14px;
+  right: auto;
   cursor: pointer;
-
-  [dir="rtl"] & {
-    right: auto;
-    left : 0;
-  }
 `;
 
 const InnerToastWrapper = styled.div`

@@ -1,0 +1,18 @@
+---
+description: BBB and SafeMeet layout-state, resize, webcam-zone, and rendering performance constraints
+globs: bigbluebutton-html5/imports/ui/components/{layout,skyroom-layout,presentation,whiteboard,webcam,video-provider,screenshare}/**
+alwaysApply: false
+---
+
+# Layout and Interaction Performance
+
+- Read layout inputs through selectors and mutate them only through existing `layoutDispatch()` actions.
+- Use `LayoutObserver`, device type, and current layout helpers; do not add competing viewport state or per-component resize systems.
+- Coalesce geometry recalculation with existing throttle/debounce, `requestAnimationFrame`, and `layout-resize.ts` mechanisms.
+- Keep interaction-only guards in refs or `Session` when they do not belong in rendered state.
+- Publish layout, webcam-zone, presentation camera, or whiteboard state only when the computed value changed.
+- Preserve `panZoomInterval`, wheel/pinch throttling, `zoomSlide` debounce, cursor interval, and existing subscription deduplication unless profiling proves a change is needed.
+- Do not mix animated and instant camera updates without a user-interaction guard.
+- Avoid broad DOM observers, repeated layout reads/writes, large state projections, and per-frame React state updates.
+- Validate with no webcams, one webcam, many webcams, presentation, screenshare, mobile split zones, RTL, and panel open/close transitions.
+- Assume large meetings and low-end mobile devices; prefer fewer renders, subscriptions, timers, and DOM nodes.

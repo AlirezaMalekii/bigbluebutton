@@ -1,0 +1,22 @@
+---
+description: BBB GraphQL, realtime synchronization, permissions, and backend-contract rules
+globs: "{bigbluebutton-html5/imports/api/**,bigbluebutton-html5/imports/ui/core/**,bigbluebutton-html5/imports/ui/components/**/*{queries,mutations,subscription}*.{ts,tsx,js,jsx},bbb-graphql-*/**}"
+alwaysApply: false
+---
+
+# BBB Realtime and GraphQL
+
+Before changing realtime behavior, trace:
+
+`UI event → container/hook → mutation/action → GraphQL actions/Redis/Akka → database view → subscription → UI projection`.
+
+- Search existing schema, hooks, queries, mutations, and plugin commands before adding a channel.
+- Prefer `useDeduplicatedSubscription`, `createUseSubscription`, existing domain hooks, and narrow projection functions.
+- Co-locate feature queries/mutations with the feature and preserve BBB naming/filter conventions.
+- Do not poll data available through subscriptions or create a second websocket/global store.
+- Keep meeting/user filters, role checks, disabled-feature checks, and subscription cleanup intact.
+- Keep mutations in established service/container paths and skip writes when the effective value is unchanged.
+- Do not speculate about payloads or backend behavior; inspect schema, metadata, actions, and Akka handlers.
+- Evaluate reconnect, permission refresh, late subscription data, multi-user ordering, meeting end, and breakout boundaries.
+- New schema/backend contracts require explicit compatibility and deployment notes.
+- Official BBB architecture documentation is the primary external source; library documentation is supplementary.

@@ -10,6 +10,11 @@ import { smPadding } from '/imports/ui/stylesheets/styled-components/general';
 const WelcomeMessage = styled.div`
   font-size: 1.0rem;
   margin-bottom: 1rem;
+  text-align: start;
+
+  [dir='rtl'] & {
+    text-align: right;
+  }
 `;
 
 const Container = styled.div<{ isFullWidth: boolean }>`
@@ -17,7 +22,11 @@ const Container = styled.div<{ isFullWidth: boolean }>`
   flex-wrap: wrap;
   width: 100%;
   box-sizing: border-box;
-  text-align: left;
+  text-align: start;
+
+  [dir='rtl'] & {
+    text-align: right;
+  }
 
   & > div {
     flex: ${({ isFullWidth }) => (isFullWidth ? '1 1 100%' : '1 1 50%')};
@@ -75,6 +84,34 @@ const JoinTitle = styled.h2`
   text-transform: uppercase;
   color: ${colorGrayDark};
   font-weight: 600;
+  text-align: start;
+
+  [dir='rtl'] & {
+    text-align: right;
+  }
+`;
+
+const LtrValue = styled.span`
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: left;
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+`;
+
+const LtrRow = styled.p`
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.25rem;
+
+  [dir='rtl'] & {
+    justify-content: flex-end;
+  }
 `;
 
 // @ts-ignore - as button comes from JS, we can't provide its props
@@ -106,6 +143,8 @@ export default {
   WelcomeMessage,
   Container,
   JoinTitle,
+  LtrValue,
+  LtrRow,
   CopyButton,
   Chevron,
 };

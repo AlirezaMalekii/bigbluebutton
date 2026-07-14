@@ -26,10 +26,11 @@
     "noFallthroughCasesInSwitch": false,
 
     /* Module Resolution Options */
-    "baseUrl": ".",
     "paths": {
+      /* Replaces deprecated baseUrl "." module lookup (TS 6+) */
+      "*": ["./*"],
       /* Support absolute /imports/* with a leading '/' */
-      "/*": ["*"],
+      "/*": ["./*"],
       "/imports/": ["./imports/*"],
       "/client/": ["./client/*"]
     },

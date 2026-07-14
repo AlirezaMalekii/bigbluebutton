@@ -14,7 +14,6 @@ import ConfirmationModal from '/imports/ui/components/common/modal/confirmation/
 import Styled from './styles';
 import Icon from '/imports/ui/components/common/icon/component';
 import TooltipContainer from '/imports/ui/components/common/tooltip/container';
-import { ACTIONS } from '/imports/ui/components/layout/enums';
 import deviceInfo from '/imports/utils/deviceInfo';
 import browserInfo from '/imports/utils/browserInfo';
 import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
@@ -34,16 +33,6 @@ const intlMessages = defineMessages({
     id: 'app.presentation.options.downloadFailed',
     description: 'Downloaded failed label',
     defaultMessage: 'Could not download current presentation',
-  },
-  fullscreenLabel: {
-    id: 'app.presentation.options.fullscreen',
-    description: 'Fullscreen label',
-    defaultMessage: 'Fullscreen',
-  },
-  exitFullscreenLabel: {
-    id: 'app.presentation.options.exitFullscreen',
-    description: 'Exit fullscreen label',
-    defaultMessage: 'Exit fullscreen',
   },
   minimizePresentationLabel: {
     id: 'app.presentation.options.minimize',
@@ -100,17 +89,8 @@ const propTypes = {
     formatMessage: PropTypes.func.isRequired,
   }).isRequired,
   allowSnapshotOfCurrentSlide: PropTypes.bool,
-  handleToggleFullscreen: PropTypes.func.isRequired,
-  isFullscreen: PropTypes.bool,
   elementName: PropTypes.string,
-  fullscreenRef: PropTypes.instanceOf(Element),
   meetingName: PropTypes.string,
-  isIphone: PropTypes.bool,
-  elementId: PropTypes.string,
-  elementGroup: PropTypes.string,
-  currentElement: PropTypes.string,
-  currentGroup: PropTypes.string,
-  layoutContextDispatch: PropTypes.func.isRequired,
   tldrawAPI: PropTypes.shape({
     getSvg: PropTypes.func.isRequired,
     getCurrentPageShapes: PropTypes.func.isRequired,
@@ -124,18 +104,9 @@ const propTypes = {
 const PresentationMenu = (props) => {
   const {
     intl,
-    isFullscreen = false,
-    elementId = '',
     elementName = '',
-    elementGroup = '',
-    currentElement = '',
-    currentGroup = '',
-    fullscreenRef = null,
     tldrawAPI = null,
-    handleToggleFullscreen,
-    layoutContextDispatch,
     meetingName = '',
-    isIphone = false,
     isToolbarVisible,
     setIsToolbarVisible,
     allowSnapshotOfCurrentSlide = false,
@@ -246,11 +217,6 @@ const PresentationMenu = (props) => {
       closeIsClearModal();
     }
   };
-
-  const formattedLabel = (fullscreen) => (fullscreen
-    ? intl.formatMessage(intlMessages.exitFullscreenLabel)
-    : intl.formatMessage(intlMessages.fullscreenLabel)
-  );
 
   const formattedVisibilityLabel = (visible) => (visible
     ? intl.formatMessage(intlMessages.hideToolsDesc)
@@ -371,30 +337,6 @@ const PresentationMenu = (props) => {
           setIsToolbarVisible(!isToolbarVisible);
         },
       };
-    }
-
-    if (!isIphone) {
-      actionItems.push(
-        {
-          key: 'list-item-fullscreen',
-          dataTest: 'presentationFullscreen',
-          label: formattedLabel(isFullscreen),
-          icon: isFullscreen ? 'exit_fullscreen' : 'fullscreen',
-          onClick: () => {
-            handleToggleFullscreen(fullscreenRef);
-            const newElement = (elementId === currentElement) ? '' : elementId;
-            const newGroup = (elementGroup === currentGroup) ? '' : elementGroup;
-
-            layoutContextDispatch({
-              type: ACTIONS.SET_FULLSCREEN_ELEMENT,
-              value: {
-                element: newElement,
-                group: newGroup,
-              },
-            });
-          },
-        },
-      );
     }
 
     const { isIos } = deviceInfo;

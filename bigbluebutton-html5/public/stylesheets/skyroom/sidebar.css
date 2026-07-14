@@ -314,16 +314,21 @@
   overflow: visible !important;
 }
 
+#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-skyroom-avatar="true"] svg {
+  width: 72% !important;
+  height: 72% !important;
+}
+
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::after,
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::after,
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::before,
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::before {
-  width: 11px !important;
-  height: 11px !important;
-  min-width: 11px !important;
-  max-width: 11px !important;
-  max-height: 11px !important;
-  font-size: 7px !important;
+  width: 13px !important;
+  height: 13px !important;
+  min-width: 13px !important;
+  max-width: 13px !important;
+  max-height: 13px !important;
+  font-size: 8px !important;
   letter-spacing: 0 !important;
   padding: 0 !important;
   line-height: 1 !important;
@@ -759,6 +764,18 @@
   padding: 0 !important;
 }
 
+#layout[data-skyroom-column="true"] [data-test="userListContent"] .skyroom-user-raise-hand,
+#layout[data-skyroom-column="true"] [data-test="userListContent"] .skyroom-user-raise-hand .skyroom-user-sub-text {
+  color: var(--skyroom-accent, #20c7bb) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] .skyroom-user-raise-hand > [class*="icon-bbb-"],
+#layout[data-skyroom-column="true"] [data-test="userListContent"] .skyroom-user-raise-hand > i,
+#layout[data-skyroom-column="true"] [data-test="userListContent"] .skyroom-user-raise-hand > svg {
+  font-size: 0.68rem !important;
+  color: var(--skyroom-accent, #20c7bb) !important;
+}
+
 #layout[data-skyroom-column="true"] [data-test="userListContent"] .skyroom-user-sub-sep {
   display: none !important;
 }
@@ -1089,6 +1106,17 @@
   line-height: 1.4 !important;
   font-weight: 400 !important;
   background-color: transparent !important;
+}
+
+#layout[data-skyroom-column="true"] .resizeSidebarContentWrapper [data-test="messageContent"].chat-message-emoji-only {
+  font-size: 1.35rem !important;
+  line-height: 1.25 !important;
+  text-align: start !important;
+}
+
+[dir="rtl"] #layout[data-skyroom-column="true"] .resizeSidebarContentWrapper [data-test="messageContent"].chat-message-emoji-only {
+  direction: rtl !important;
+  text-align: right !important;
 }
 
 #layout[data-skyroom-column="true"] .resizeSidebarContentWrapper [data-test="messageContent"] a,
