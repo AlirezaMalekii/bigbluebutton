@@ -93,6 +93,52 @@ export const getAuthenticatedPresentationMediaPlaybackUrl = (presentationId, pre
   return Auth.authenticateURL(playbackUrl);
 };
 
+export const getAuthenticatedPresentationMediaDownloadUrl = (presentationId, presentationName) => {
+  const downloadUrl = getPresentationMediaDownloadUrl(presentationId, presentationName);
+  if (!downloadUrl) return null;
+  return Auth.authenticateURL(downloadUrl);
+};
+
+export const parsePresentationMediaUrl = (url) => {
+  if (!url || typeof url !== 'string') return null;
+
+  try {
+    const parsed = new URL(url, window.location.origin);
+    const match = parsed.pathname.match(/\/presentation\/(media|download)\/([^/]+)\/([^/?]+)/);
+    if (!match) return null;
+
+    const [, endpoint, meetingId, presentationId] = match;
+    const presFilename = parsed.searchParams.get('presFilename') || '';
+    const filename = parsed.searchParams.get('filename') || presFilename || `${presentationId}.mp4`;
+
+    return {
+      endpoint,
+      meetingId,
+      presentationId,
+      presFilename,
+      filename,
+    };
+  } catch {
+    return null;
+  }
+};
+
+export const getPresentationMediaDisplayName = (url) => {
+  const parsed = parsePresentationMediaUrl(url);
+  if (!parsed?.filename) return '';
+  try {
+    return decodeURIComponent(parsed.filename);
+  } catch {
+    return parsed.filename;
+  }
+};
+
+export const getAuthenticatedPresentationMediaDownloadUrlFromPlaybackUrl = (playbackUrl) => {
+  const parsed = parsePresentationMediaUrl(playbackUrl);
+  if (!parsed?.presentationId) return null;
+  return getAuthenticatedPresentationMediaDownloadUrl(parsed.presentationId, parsed.filename);
+};
+
 export const buildAcceptList = (fileValidMimeTypes = []) => {
   const extensions = fileValidMimeTypes.map((entry) => entry.extension);
   const mimes = fileValidMimeTypes.map((entry) => entry.mime);
@@ -125,6 +171,47 @@ export const normalizeUploadFile = (file) => {
   if (!canonicalMime) return file;
 
   const browserMime = (file.type || '').toLowerCase().split(';')[0].trim();
+
+  if (extensionKey === 'mp4' && (
+    !browserMime
+    || browserMime === 'application/octet-stream'
+    || browserMime === 'video/quicktime'
+    || browserMime === 'video/x-m4v'
+    || browserMime.startsWith('audio/')
+  )) {
+    return new File([file], file.name, {
+      type: 'video/mp4',
+      lastModified: file.lastModified,
+    });
+  }
+
+  if (extensionKey === 'mov' && (
+    !browserMime
+    || browserMime === 'application/octet-stream'
+    || browserMime === 'video/mp4'
+    || browserMime === 'video/x-m4v'
+  )) {
+    return new File([file], file.name, {
+      type: 'video/quicktime',
+      lastModified: file.lastModified,
+    });
+  }
+
+  if ((extensionKey === 'm4a' || extensionKey === 'aac') && (
+    !browserMime
+    || browserMime === 'application/octet-stream'
+    || browserMime.startsWith('video/')
+    || browserMime === 'audio/x-m4a'
+    || browserMime === 'audio/m4a'
+    || browserMime === 'audio/aac'
+    || browserMime === 'audio/x-aac'
+  )) {
+    return new File([file], file.name, {
+      type: 'audio/mp4',
+      lastModified: file.lastModified,
+    });
+  }
+
   const shouldNormalize = !browserMime
     || browserMime === 'application/octet-stream'
     || browserMime === canonicalMime
@@ -132,20 +219,6 @@ export const normalizeUploadFile = (file) => {
 
   if (!shouldNormalize) return file;
   if (browserMime === canonicalMime) return file;
-
-  if (extensionKey === 'mp4' && browserMime === 'video/quicktime') {
-    return new File([file], file.name, {
-      type: 'video/mp4',
-      lastModified: file.lastModified,
-    });
-  }
-
-  if ((extensionKey === 'm4a' || extensionKey === 'aac') && browserMime.startsWith('video/')) {
-    return new File([file], file.name, {
-      type: 'audio/mp4',
-      lastModified: file.lastModified,
-    });
-  }
 
   return new File([file], file.name, {
     type: canonicalMime,
@@ -182,6 +255,10 @@ export default {
   getPresentationMediaPlaybackUrl,
   getPresentationMediaDownloadUrl,
   getAuthenticatedPresentationMediaPlaybackUrl,
+  getAuthenticatedPresentationMediaDownloadUrl,
+  getAuthenticatedPresentationMediaDownloadUrlFromPlaybackUrl,
+  getPresentationMediaDisplayName,
+  parsePresentationMediaUrl,
   isPresentationMediaUrl,
   getPresentationMediaKindFromUrl,
   buildAcceptList,

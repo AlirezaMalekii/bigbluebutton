@@ -9,6 +9,7 @@ import apolloContextHolder from '/imports/ui/core/graphql/apolloContextHolder/ap
 import { getPresentationUploadToken } from './queries';
 import { requestPresentationUploadTokenMutation } from './mutation';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
+import Session from '/imports/ui/services/storage/in-memory';
 import {
   isFileAccepted,
   isMediaExtension,
@@ -32,7 +33,12 @@ const futch = (url, opts = {}, onProgress) => new Promise((res, rej) => {
       return rej(new Error({ code: e.target.status, message: e.target.statusText }));
     }
 
-    return res(e.target.responseText);
+    const responseText = (e.target.responseText || '').trim();
+    if (responseText === 'upload-failed') {
+      return rej(new Error({ code: 'upload-failed', message: 'upload-failed' }));
+    }
+
+    return res(responseText);
   };
   xhr.onerror = rej;
   if (xhr.upload && onProgress) {
@@ -102,8 +108,10 @@ const uploadAndConvertPresentation = (
 ) => {
   if (!file) return Promise.resolve();
 
+  const uploadFile = normalizeUploadFile(file);
+
   const data = new FormData();
-  data.append('fileUpload', file);
+  data.append('fileUpload', uploadFile);
   data.append('conference', meetingId);
   data.append('room', meetingId);
   data.append('temporaryPresentationId', temporaryPresentationId);
@@ -156,9 +164,10 @@ const removePresentations = (
 
 const isPresentationEligibleForUpload = (p) => {
   if (!p?.file || p.uploadCompleted) return false;
-  if (!p.uploadStarted) return true;
-  // Retry when auto-upload was marked but never actually progressed
-  return !(p.upload?.done || p.uploadInProgress);
+  if (p.upload?.done) return false;
+  // Keep uploading while the local File handle exists, even if GraphQL already
+  // marked uploadInProgress from the upload-token handshake.
+  return true;
 };
 
 const getPresentationsPendingUpload = (presentations, presentationIds = null) => {
@@ -383,24 +392,40 @@ function handleFiledrop(files, files2, that, intl, intlMessages) {
       };
     });
 
+    const uploadIds = presentationsToUpload.map((p) => p.presentationId);
+    const firstUploadId = uploadIds[0];
+    const PRESENTATION_CONFIG = window.meetingClientSettings.public.presentation;
+
     that.setState(({ presentations: rawPresentations }) => {
       const presentations = Array.isArray(rawPresentations)
         ? rawPresentations.filter(Boolean)
         : [];
+      const mergedPresentations = presentations.concat(presentationsToUpload).map((p) => ({
+        ...p,
+        current: p.presentationId === firstUploadId,
+        uploadStarted: uploadIds.includes(p.presentationId) ? true : p.uploadStarted,
+      }));
+
       return {
-        presentations: presentations.concat(presentationsToUpload),
+        presentations: mergedPresentations,
         toUploadCount: (toUploadCount + presentationsToUpload.length),
         shouldDisableExportButtonForAllDocuments: true,
       };
     }, () => {
-      // after the state is set (files have been dropped),
-      // make the first of the new presentations current
-      if (presentationsToUpload && presentationsToUpload.length) {
-        that.handleCurrentChange(presentationsToUpload[0].presentationId);
-        if (typeof that.triggerAutoUpload === 'function') {
-          that.triggerAutoUpload(presentationsToUpload.map((p) => p.presentationId));
-        }
+      if (firstUploadId) {
+        Session.setItem('selectedToBeNextCurrent', firstUploadId);
       }
+
+      uploadPendingPresentations(
+        that.state.presentations,
+        PRESENTATION_CONFIG.uploadEndpoint,
+        uploadIds,
+      ).catch((error) => {
+        logger.error({
+          logCode: 'presentation_uploader_service_auto_upload_error',
+          extraInfo: { error, uploadIds },
+        }, 'Presentation uploader auto upload failed after file drop');
+      });
     });
 
     if (rejected.length > 0) {

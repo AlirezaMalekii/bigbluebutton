@@ -382,3 +382,18 @@
 #layout[data-skyroom-column="true"] .skyroom-user-actions-menu .MuiMenuItem-root:hover {
   background: var(--skyroom-accent-soft, rgba(32, 199, 187, 0.10)) !important;
 }
+
+#layout[data-skyroom-column="true"] #presentation-download-dropdown .MuiPaper-root,
+#layout[data-skyroom-column="true"] .skyroom-presentation-options-menu .MuiPaper-root {
+  min-width: min(280px, calc(100vw - 24px)) !important;
+  max-width: min(300px, calc(100vw - 24px)) !important;
+  border-radius: 14px !important;
+  padding: 6px 0 !important;
+}
+
+#layout[data-skyroom-column="true"] #presentation-download-dropdown .MuiMenuItem-root,
+#layout[data-skyroom-column="true"] .skyroom-presentation-options-menu .MuiMenuItem-root {
+  min-height: 44px !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.45 !important;
+}

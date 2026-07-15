@@ -3,6 +3,7 @@ import useSkyroomColumnLayout from './hook';
 import SkyroomSharedNotesColumn from './shared-notes-column/component';
 import SkyroomMobileZoneTabs from './mobile-zone-tabs/component';
 import SkyroomMobileZoneFullscreenButtons from './mobile-zone-fullscreen/component';
+import SkyroomWebcamFullscreenController from './webcam-fullscreen/component';
 import SkyroomMobileStatusRail from './mobile-status-rail/component';
 import SkyroomMobileTalkingRail from './mobile-talking-rail/component';
 import useGuestWaitingAutoFocus from './guest-waiting-auto-focus/hook';
@@ -25,6 +26,7 @@ const SkyroomColumnController: React.FC = () => {
       <SkyroomSharedNotesColumn />
       <SkyroomMobileZoneTabs />
       <SkyroomMobileZoneFullscreenButtons />
+      <SkyroomWebcamFullscreenController />
       <SkyroomMobileTalkingRail />
       <SkyroomMobileStatusRail />
     </>

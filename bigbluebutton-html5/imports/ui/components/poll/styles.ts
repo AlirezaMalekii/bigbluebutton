@@ -35,8 +35,6 @@ import {
   SegmentedButtonBoxShadowSm,
   slate900,
   darkCyanLime,
-  colorInfoBoxQuizBg,
-  colorInfoBoxQuizBorder,
   colorSelectedCorrectAnswerText,
   colorSelectedCorrectAnswerBg,
   colorSelectedCorrectAnswerTextActive,
@@ -572,6 +570,83 @@ const ChartSection = styled.div`
   flex-shrink: 0;
 `;
 
+const PollResultsChartRoot = styled.div`
+  width: 100%;
+`;
+
+const PollResultsChartArea = styled.div`
+  width: 100%;
+  min-height: 5rem;
+`;
+
+const PollResultsLegend = styled.ul`
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  &[data-variant="chat"] {
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+  }
+`;
+
+const PollResultsLegendItem = styled.li`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+`;
+
+type PollResultsLegendSwatchProps = {
+  color: string;
+};
+
+const PollResultsLegendSwatch = styled.span<PollResultsLegendSwatchProps>`
+  flex-shrink: 0;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-top: 0.2rem;
+  border-radius: 2px;
+  background-color: ${({ color }) => color};
+`;
+
+const PollResultsLegendContent = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+`;
+
+const PollResultsLegendLabel = styled.span`
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  line-height: 1.4;
+  color: var(--skyroom-modal-text, ${colorText});
+  font-size: ${fontSizeSmall};
+  font-weight: 500;
+
+  &[data-variant="chat"] {
+    font-size: 0.85rem;
+  }
+`;
+
+const PollResultsLegendCount = styled.span`
+  flex-shrink: 0;
+  color: var(--skyroom-modal-text-muted, ${colorGrayDark});
+  font-size: ${fontSizeSmall};
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+
+  &[data-variant="chat"] {
+    font-size: 0.8rem;
+  }
+`;
+
 const Title = styled.span`
   font-weight: bold;
   word-break: break-all;
@@ -814,21 +889,21 @@ const InfoBoxContainer = styled.div<InfoBoxContainerProps>`
   border-radius: .5rem;
   margin-bottom: 1rem;
 
-  color: ${colorText};
-  background-color: ${colorBlueLightest};
-  border: 1px solid ${colorBlueLighter};
+  color: var(--skyroom-modal-text, ${colorText});
+  background-color: rgba(32, 199, 187, 0.1);
+  border: 1px solid rgba(32, 199, 187, 0.22);
 
   ${({ isQuiz }) => isQuiz && `
-    background-color: ${colorInfoBoxQuizBg};
-    border: 1px solid ${colorInfoBoxQuizBorder};
-    color: ${colorText};
+    background-color: rgba(6, 100, 247, 0.12);
+    border: 1px solid rgba(6, 100, 247, 0.28);
+    color: var(--skyroom-modal-text, ${colorText});
   `}
 
   & > p {
     margin: 0;
     line-height: 1.45;
     font-size: ${fontSizeSmall};
-    color: ${colorText};
+    color: var(--skyroom-modal-text, ${colorText});
     font-weight: 500;
   }
 `;
@@ -929,6 +1004,14 @@ export default {
   BarVal,
   Stats,
   ChartSection,
+  PollResultsChartRoot,
+  PollResultsChartArea,
+  PollResultsLegend,
+  PollResultsLegendItem,
+  PollResultsLegendSwatch,
+  PollResultsLegendContent,
+  PollResultsLegendLabel,
+  PollResultsLegendCount,
   Title,
   Status,
   ConnectingAnimation,

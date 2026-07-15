@@ -433,6 +433,42 @@
 }
 
 /* -----------------------------------------------------------------------
+   Screen share — active while the local presenter is sharing their screen
+   ----------------------------------------------------------------------- */
+#layout[data-skyroom-column="true"] #ActionsBar [data-test="stopScreenShare"]:not([aria-disabled="true"]) > span:first-child {
+  background: var(--skyroom-accent-active-bg,
+    linear-gradient(145deg, rgba(13, 136, 126, 0.88), rgba(10, 111, 103, 0.92))) !important;
+  border-color: rgba(32, 199, 187, 0.48) !important;
+  box-shadow:
+    0 2px 10px rgba(13, 136, 126, 0.28),
+    0 0 0 1px rgba(32, 199, 187, 0.14) inset !important;
+}
+
+#layout[data-skyroom-column="true"] #ActionsBar [data-test="stopScreenShare"]:not([aria-disabled="true"]) > span:first-child i,
+#layout[data-skyroom-column="true"] #ActionsBar [data-test="stopScreenShare"]:not([aria-disabled="true"]) > span:first-child [class^="icon-bbb-"] {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+/* -----------------------------------------------------------------------
+   Presentation visibility — active while stage content is shown
+   ----------------------------------------------------------------------- */
+#layout[data-skyroom-column="true"] #ActionsBar [data-test="minimizePresentation"]:not([aria-disabled="true"]) > span:first-child {
+  background: var(--skyroom-accent-active-bg,
+    linear-gradient(145deg, rgba(13, 136, 126, 0.88), rgba(10, 111, 103, 0.92))) !important;
+  border-color: rgba(32, 199, 187, 0.48) !important;
+  box-shadow:
+    0 2px 10px rgba(13, 136, 126, 0.28),
+    0 0 0 1px rgba(32, 199, 187, 0.14) inset !important;
+}
+
+#layout[data-skyroom-column="true"] #ActionsBar [data-test="minimizePresentation"]:not([aria-disabled="true"]) > span:first-child i,
+#layout[data-skyroom-column="true"] #ActionsBar [data-test="minimizePresentation"]:not([aria-disabled="true"]) > span:first-child [class^="icon-bbb-"] {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+/* -----------------------------------------------------------------------
    Actions dropdown (+ button — left zone)
    ----------------------------------------------------------------------- */
 #layout[data-skyroom-column="true"] #ActionsBar [data-test="actionsButton"] > span:first-child {

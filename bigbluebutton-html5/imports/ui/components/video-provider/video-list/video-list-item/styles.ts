@@ -94,7 +94,9 @@ const Content = styled.div<{
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 99;
+    z-index: 1501;
+    background-color: ${colorBlack};
+    border-radius: 0;
   `}
 `;
 
@@ -173,24 +175,51 @@ const Video = styled.video<{
   `}
 `;
 
-const VideoDisabled = styled.div`
-  color: white;
-  width: 100%;
-  height: 20%;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
+const VideoDisabled = styled.div<{ $compact?: boolean }>`
+  position: absolute;
+  left: 50%;
+  bottom: ${({ $compact }) => ($compact ? '20px' : '28px')};
+  transform: translateX(-50%);
+  z-index: 2;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  position: absolute;
-  border-radius: 10px;
-  z-index: 2;
-  top: 40%;
-  transform: translate(-50%, -50%);
-  top: 50%;
-  left: 50%;
-  padding: 20px;
-  backdrop-filter: blur(10px); 
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  gap: 4px;
+  max-width: calc(100% - 20px);
+  padding: ${({ $compact }) => ($compact ? '3px 6px' : '4px 8px')};
+  color: rgba(255, 255, 255, 0.92);
+  font-size: ${({ $compact }) => ($compact ? '0.58rem' : '0.68rem')};
+  line-height: 1.35;
+  font-weight: 500;
+  text-align: center;
+  background: rgba(8, 12, 22, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.32);
+  pointer-events: none;
+
+  span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    ${({ $compact }) => ($compact ? `
+      white-space: nowrap;
+      max-width: 72px;
+    ` : `
+      white-space: normal;
+      max-width: 100%;
+    `)}
+  }
+
+  i,
+  [class^="icon-bbb-"] {
+    flex-shrink: 0;
+    font-size: ${({ $compact }) => ($compact ? '0.72rem' : '0.82rem')};
+    line-height: 1;
+    opacity: 0.88;
+  }
 `;
 
 const TopBar = styled.div`

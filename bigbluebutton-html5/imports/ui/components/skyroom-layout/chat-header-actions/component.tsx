@@ -14,6 +14,7 @@ import {
 import { generateExportedMessages } from '/imports/ui/components/chat/chat-graphql/chat-header/chat-actions/services';
 import { getDateString } from '/imports/utils/string-utils';
 import { CHAT_PUBLIC_CLEAR_HISTORY } from '/imports/ui/components/chat/chat-graphql/chat-header/chat-actions/mutations';
+import ConfirmationModal from '/imports/ui/components/common/modal/confirmation/component';
 import useMeetingSettings from '/imports/ui/core/local-states/useMeetingSettings';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
@@ -36,6 +37,18 @@ const intlMessages = defineMessages({
     id: 'app.chat.dropdown.copy',
     description: 'Copy button label',
   },
+  clearHistoryConfirmationTitle: {
+    id: 'app.chat.clearHistory.confirmationTitle',
+    description: 'Clear public chat history confirmation title',
+  },
+  clearHistoryConfirmationDescription: {
+    id: 'app.chat.clearHistory.confirmationDescription',
+    description: 'Clear public chat history confirmation description',
+  },
+  clearHistoryCancelLabel: {
+    id: 'app.chat.toolbar.delete.cancelLabel',
+    description: 'Cancel clear public chat history',
+  },
 });
 
 const SkyroomChatHeaderActions: React.FC = () => {
@@ -47,6 +60,7 @@ const SkyroomChatHeaderActions: React.FC = () => {
   const uniqueIdsRef = useRef<string[]>([uid(1), uid(2), uid(3)]);
   const downloadOrCopyRef = useRef<'download' | 'copy' | null>(null);
   const [userIsModerator, setUserIsModerator] = useState(false);
+  const [isClearHistoryModalOpen, setIsClearHistoryModalOpen] = useState(false);
   const [chatPublicClearHistory] = useMutation(CHAT_PUBLIC_CLEAR_HISTORY);
   const { data: currentUserData, loading: currentUserLoading } = useCurrentUser((u) => ({
     isModerator: u.isModerator,
@@ -115,7 +129,7 @@ const SkyroomChatHeaderActions: React.FC = () => {
       dataTest: 'chatClear',
       label: intl.formatMessage(intlMessages.clear),
       disabled: !userIsModerator || currentUserLoading || meetingLoading,
-      onClick: () => chatPublicClearHistory(),
+      onClick: () => setIsClearHistoryModalOpen(true),
     },
   ].filter(({ allow }) => allow), [
     enableSaveAndCopyPublicChat,
@@ -124,13 +138,27 @@ const SkyroomChatHeaderActions: React.FC = () => {
     meetingLoading,
     intl,
     loadHistory,
-    chatPublicClearHistory,
   ]);
 
   if (errorHistory) return null;
 
   return (
     <Styled.OptionsGroup data-test="skyroom-chat-header-options">
+      {isClearHistoryModalOpen ? (
+        <ConfirmationModal
+          intl={intl}
+          isOpen={isClearHistoryModalOpen}
+          setIsOpen={setIsClearHistoryModalOpen}
+          onRequestClose={() => setIsClearHistoryModalOpen(false)}
+          onConfirm={() => chatPublicClearHistory()}
+          priority="low"
+          title={intl.formatMessage(intlMessages.clearHistoryConfirmationTitle)}
+          description={intl.formatMessage(intlMessages.clearHistoryConfirmationDescription)}
+          confirmButtonLabel={intl.formatMessage(intlMessages.clear)}
+          cancelButtonLabel={intl.formatMessage(intlMessages.clearHistoryCancelLabel)}
+          confirmButtonDataTest="chatClearConfirmation"
+        />
+      ) : null}
       <BBBMenu
         dataTest="chat-options-dropdown-menu"
         overrideMobileStyles

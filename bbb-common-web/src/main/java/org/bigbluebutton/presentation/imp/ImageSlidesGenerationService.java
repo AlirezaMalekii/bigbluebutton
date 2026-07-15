@@ -103,7 +103,7 @@ public class ImageSlidesGenerationService {
 		}
 
 		notifier.sendCreatingSvgImagesUpdateMessage(pres);
-		svgImageCreator.createSvgImage(pres, page, false);
+		svgImageCreator.createSvgImage(pres, page, null, false);
 	}
 	
    private void createPngImages(UploadedPresentation pres, int page) {

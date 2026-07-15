@@ -1715,6 +1715,67 @@
     width: auto !important;
   }
 
+  /* Presentation file options (⋯) — anchored dropdown inside upload modal on phone */
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-presentation-options-menu),
+  html[data-skyroom="true"] .MuiModal-root:has(#presentation-download-dropdown) {
+    z-index: 1500 !important;
+  }
+
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-presentation-options-menu) .MuiPaper-root.override-mobile-styles,
+  html[data-skyroom="true"] .MuiModal-root:has(#presentation-download-dropdown) .MuiPaper-root.override-mobile-styles {
+    pointer-events: auto !important;
+    width: min(300px, calc(100vw - 20px)) !important;
+    min-width: min(280px, calc(100vw - 20px)) !important;
+    max-width: min(300px, calc(100vw - 20px)) !important;
+    max-height: none !important;
+    height: auto !important;
+    padding: 6px 0 !important;
+    overflow: visible !important;
+    border-radius: 14px !important;
+    z-index: 1501 !important;
+  }
+
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-presentation-options-menu) .MuiBackdrop-root,
+  html[data-skyroom="true"] .MuiModal-root:has(#presentation-download-dropdown) .MuiBackdrop-root {
+    background-color: rgba(4, 8, 16, 0.35) !important;
+    pointer-events: auto !important;
+  }
+
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-presentation-options-menu) .MuiList-root,
+  html[data-skyroom="true"] .MuiModal-root:has(#presentation-download-dropdown) .MuiList-root {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-presentation-options-menu) .MuiMenuItem-root,
+  html[data-skyroom="true"] .MuiModal-root:has(#presentation-download-dropdown) .MuiMenuItem-root,
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-presentation-options-menu) [data-key^="menuItem-"],
+  html[data-skyroom="true"] .MuiModal-root:has(#presentation-download-dropdown) [data-key^="menuItem-"] {
+    width: 100% !important;
+    min-height: 44px !important;
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+  }
+
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-presentation-options-menu) [class*="MenuItemWrapper"],
+  html[data-skyroom="true"] .MuiModal-root:has(#presentation-download-dropdown) [class*="MenuItemWrapper"] {
+    flex-direction: row !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-presentation-options-menu) [class*="Option"],
+  html[data-skyroom="true"] .MuiModal-root:has(#presentation-download-dropdown) [class*="Option"] {
+    white-space: normal !important;
+    text-align: start !important;
+    writing-mode: horizontal-tb !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
+    width: auto !important;
+    flex: 1 1 auto !important;
+    line-height: 1.45 !important;
+  }
+
   /* ===================================================================
      8) Modal sticky header + full-width footer buttons (C1)
      Improves the bottom-sheet in section 6: sticky grab-rail header so

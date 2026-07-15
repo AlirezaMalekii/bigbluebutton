@@ -22,8 +22,15 @@ import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import logger from '/imports/startup/client/logger';
 import {
   getPresentationMediaKindFromUrl,
+  getPresentationMediaDisplayName,
+  getAuthenticatedPresentationMediaDownloadUrlFromPlaybackUrl,
   isPresentationMediaUrl,
 } from '../../presentation/presentation-uploader/fileTypes';
+import Auth from '/imports/ui/services/auth';
+import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
+import { CURRENT_PRESENTATION_PAGE_SUBSCRIPTION } from '../../whiteboard/queries';
+import DownloadPresentationButton from '../../presentation/download-presentation-button/component';
+import PresentationMediaAudioPlayer from '../presentation-media-audio-player/component';
 import {
   layoutDispatch,
   layoutSelect,
@@ -44,6 +51,7 @@ import deviceInfo from '/imports/utils/deviceInfo';
 import { ACTIONS, PRESENTATION_AREA } from '../../layout/enums';
 import { EXTERNAL_VIDEO_UPDATE, EXTERNAL_VIDEO_STOP } from '../mutations';
 import { calculateCurrentTime } from '/imports/ui/components/external-video-player/service';
+import { isAparatVideoUrl } from '/imports/ui/components/external-video-player/external-video-utils';
 
 import PeerTube from '../custom-players/peertube';
 import { ArcPlayer } from '../custom-players/arc-player';
@@ -97,6 +105,9 @@ interface ExternalVideoPlayerProps {
   }) => void;
   getServerCurrentTime(): number;
   updatedAt: string;
+  isPresentationMedia?: boolean;
+  presentationMediaKind?: 'audio' | 'video' | null;
+  presentationMediaDownloadUri?: string;
 }
 
 // @ts-ignore - PeerTubePlayer is not typed
@@ -126,6 +137,9 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   sendMessage,
   getServerCurrentTime,
   updatedAt,
+  isPresentationMedia = false,
+  presentationMediaKind = null,
+  presentationMediaDownloadUri,
 }) => {
   const intl = useIntl();
   const storage = getStorageSingletonInstance();
@@ -208,6 +222,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   const [subtitlesOn, setSubtitlesOn] = React.useState(false);
   const [played, setPlayed] = React.useState(0);
   const [loaded, setLoaded] = React.useState(0);
+  const [duration, setDuration] = React.useState(0);
   const playerRef = useRef<ReactPlayer>();
   const playerParentRef = useRef<HTMLDivElement| null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
@@ -218,6 +233,9 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   const lastCursorRef = useRef<{ position: number, updateAt: number }>({ position: 0, updateAt: 0 });
   const [stopExternalVideoShare] = useMutation(EXTERNAL_VIDEO_STOP);
   const mediaLoadFailedRef = useRef(false);
+  const layoutTransitionRef = useRef(false);
+  const aparatStartedRef = useRef(false);
+  const isAparatSource = isAparatVideoUrl(videoUrl);
 
   let currentTime = getServerCurrentTime();
 
@@ -364,7 +382,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   }, []);
 
   useEffect(() => {
-    const unsynchedPlayer = reactPlayerPlaying !== playing;
+    const unsynchedPlayer = !isAparatSource && reactPlayerPlaying !== playing;
     if (unsynchedPlayer && !!videoUrl) {
       timeoutRef.current = setTimeout(() => {
         setShowUnsynchedMsg(true);
@@ -437,9 +455,27 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
     }
   }, [isPresenter]);
 
+  const isPresentationAudio = isPresentationMedia && presentationMediaKind === 'audio';
+  const presentationMediaTitle = isPresentationMedia
+    ? getPresentationMediaDisplayName(videoUrl)
+    : '';
+
   useEffect(() => {
     mediaLoadFailedRef.current = false;
+    aparatStartedRef.current = false;
+    setDuration(0);
+    setPlayed(0);
+    setLoaded(0);
   }, [videoUrl, playerKey]);
+
+  const shouldPublishSync = (event: string) => {
+    if (!isPresenter) return false;
+    if (layoutTransitionRef.current) return false;
+    if (isAparatSource) {
+      return event === 'start' && !aparatStartedRef.current;
+    }
+    return true;
+  };
 
   const handleOnReady = () => {
     if (mediaLoadFailedRef.current || !isPresenter || !playing || !playerRef.current) return;
@@ -460,7 +496,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   const handleOnStart = async () => {
     const currentTime = getServerCurrentTime();
     const playerCurrentTime = await getPlayerCurrentTime(playerRef.current as ReactPlayer);
-    if (isPresenter && !playing) {
+    if (isPresenter && !playing && shouldPublishSync('start')) {
       const rate = (internalPlayer instanceof HTMLVideoElement || internalPlayer instanceof HTMLAudioElement)
         ? internalPlayer.playbackRate
         : await internalPlayer?.getPlaybackRate?.() ?? 1;
@@ -470,6 +506,9 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
         time: currentTime,
         state: 'playing',
       });
+      if (isAparatSource) {
+        aparatStartedRef.current = true;
+      }
     }
 
     if (currentTime > playerCurrentTime) {
@@ -487,7 +526,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
     } catch (e) {
       isTwitch = false;
     }
-    if (isPresenter && !playing) {
+    if (isPresenter && !playing && shouldPublishSync('play')) {
       const rate = (internalPlayer instanceof HTMLVideoElement || internalPlayer instanceof HTMLAudioElement)
         ? internalPlayer.playbackRate
         : await internalPlayer?.getPlaybackRate?.() ?? 1;
@@ -519,7 +558,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
 
   const handleOnStop = async () => {
     setReactPlayerPlaying(false);
-    if (isPresenter && playing) {
+    if (isPresenter && playing && shouldPublishSync('stop')) {
       const internalPlayer = playerRef.current?.getInternalPlayer();
       let rate = (internalPlayer instanceof HTMLVideoElement || internalPlayer instanceof HTMLAudioElement)
         ? internalPlayer.playbackRate
@@ -544,11 +583,11 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   const handleProgress = async (state: OnProgressProps) => {
     setPlayed(state.played);
     setLoaded(state.loaded);
-    if (playing && isPresenter) {
+    if (playing && isPresenter && shouldPublishSync('seek')) {
       currentTime = getServerCurrentTime();
     }
     const interPlayerPlaybackRate = await getPlaybackRate(playerRef.current as ReactPlayer);
-    if (isPresenter && interPlayerPlaybackRate !== playerPlaybackRate) {
+    if (isPresenter && interPlayerPlaybackRate !== playerPlaybackRate && shouldPublishSync('seek')) {
       sendMessage('seek', {
         rate: interPlayerPlaybackRate,
         time: currentTime,
@@ -566,7 +605,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   };
 
   const handleOnSeek = async (cursor: { position: number } | number) => {
-    if (isPresenter) {
+    if (isPresenter && shouldPublishSync('seek')) {
       const internalPlayer = playerRef.current?.getInternalPlayer();
       let rate = (internalPlayer instanceof HTMLVideoElement || internalPlayer instanceof HTMLAudioElement)
         ? internalPlayer.playbackRate
@@ -591,7 +630,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   };
 
   const handlePlaybackRateChange = async () => {
-    if (isPresenter) {
+    if (isPresenter && shouldPublishSync('playbackRateChange')) {
       const internalPlayer = playerRef.current?.getInternalPlayer();
       let rate = (internalPlayer instanceof HTMLVideoElement || internalPlayer instanceof HTMLAudioElement)
         ? internalPlayer.playbackRate
@@ -610,13 +649,28 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   const isMinimized = width === 0 && height === 0;
 
   useEffect(() => {
-    if (!playerRef.current) return;
+    if (!playerRef.current) return undefined;
+    layoutTransitionRef.current = true;
+    const clearLayoutTransition = window.setTimeout(() => {
+      layoutTransitionRef.current = false;
+    }, 600);
+
     if (isMinimized) {
-      stopVideo(playerRef.current);
+      if (!isAparatSource) {
+        stopVideo(playerRef.current);
+      }
     } else if (playing) {
-      playVideo(playerRef.current);
+      if (isAparatSource) {
+        setPlayerKey(uniqueId('react-player'));
+      } else {
+        playVideo(playerRef.current);
+      }
     }
-  }, [isMinimized, playing, stopVideo, playVideo]);
+
+    return () => {
+      window.clearTimeout(clearLayoutTransition);
+    };
+  }, [isMinimized, playing, stopVideo, playVideo, isAparatSource, setPlayerKey]);
 
   // @ts-ignore accessing lib private property
   const playerName = playerRef.current && playerRef.current.player
@@ -639,9 +693,28 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
     return true;
   };
 
+  const handlePresentationMediaPlayPause = () => {
+    if (!playerRef.current) return;
+    if (playing || reactPlayerPlaying) {
+      stopVideo(playerRef.current);
+      return;
+    }
+    playVideo(playerRef.current);
+  };
+
+  const handlePresentationMediaSeek = (fraction: number) => {
+    playerRef.current?.seekTo(fraction, 'fraction');
+  };
+
+  const handlePresentationMediaDownload = () => {
+    if (!presentationMediaDownloadUri) return;
+    window.open(presentationMediaDownloadUri);
+  };
+
   return (
     <Styled.Container
       data-skyroom-stage-media="true"
+      data-presentation-media={isPresentationMedia ? presentationMediaKind || 'video' : undefined}
       style={{
         height,
         width,
@@ -672,6 +745,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
         {
           playerUrl ? (
             <Styled.VideoPlayer
+              className={isPresentationAudio ? 'presentation-media-audio-hidden' : undefined}
               config={videoPlayConfig}
               autoPlay
               url={playerUrl}
@@ -690,15 +764,41 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
               onProgress={handleProgress}
               onPause={handleOnStop}
               onEnded={handleOnStop}
+              onDuration={(mediaDuration) => setDuration(mediaDuration)}
               muted={mute || isEchoTest}
-              controls
+              controls={!isPresentationAudio}
               previewTabIndex={isPresenter ? 0 : -1}
               onPlaybackRateChange={handlePlaybackRateChange}
             />
           ) : null
         }
         {
-          shouldShowTools() ? (
+          isPresentationAudio ? (
+            <PresentationMediaAudioPlayer
+              title={presentationMediaTitle}
+              playing={playing || reactPlayerPlaying}
+              played={played}
+              loaded={loaded}
+              duration={duration}
+              volume={volume}
+              muted={mute || isEchoTest}
+              onPlayPause={handlePresentationMediaPlayPause}
+              onSeek={handlePresentationMediaSeek}
+              onVolumeChange={changeVolume}
+              onMuteToggle={setMute}
+            />
+          ) : null
+        }
+        {
+          presentationMediaDownloadUri ? (
+            <DownloadPresentationButton
+              handleDownloadPresentation={handlePresentationMediaDownload}
+              dark
+            />
+          ) : null
+        }
+        {
+          shouldShowTools() && !isPresentationAudio ? (
             <ExternalVideoPlayerToolbar
               handleOnMuted={(m: boolean) => setMute(m)}
               handleReload={() => setPlayerKey(uniqueId('react-player'))}
@@ -873,6 +973,28 @@ const ExternalVideoPlayerContainer: React.FC = () => {
   const { element } = fullscreen;
   const fullscreenContext = (element === fullscreenElementId);
   const [key, setKey] = React.useState(uniqueId('react-player'));
+  const externalVideoUrl = currentMeeting?.externalVideo?.externalVideoUrl ?? '';
+  const isPresentationMedia = isPresentationMediaUrl(externalVideoUrl);
+  const presentationMediaKind = isPresentationMedia
+    ? getPresentationMediaKindFromUrl(externalVideoUrl)
+    : null;
+
+  const { data: presentationPageData } = useDeduplicatedSubscription(
+    CURRENT_PRESENTATION_PAGE_SUBSCRIPTION,
+    { skip: !isPresentationMedia || !externalVideoUrl },
+  );
+
+  const APP_CONFIG = window.meetingClientSettings.public.app;
+  const presentationMediaDownloadUri = React.useMemo(() => {
+    if (!isPresentationMedia) return undefined;
+    const currentPresentationPage = presentationPageData?.pres_page_curr?.[0];
+    if (!currentPresentationPage?.downloadable) return undefined;
+    if (currentPresentationPage.downloadFileUri) {
+      return Auth.authenticateURL(`${APP_CONFIG.bbbWebBase}/${currentPresentationPage.downloadFileUri}`);
+    }
+    return getAuthenticatedPresentationMediaDownloadUrlFromPlaybackUrl(externalVideoUrl);
+  }, [isPresentationMedia, presentationPageData, externalVideoUrl]);
+
   if (!currentUser || !currentMeeting?.externalVideo || !externalVideo?.display) return null;
   if (!hasExternalVideoOnLayout) return null;
   const isPresenter = currentUser.presenter ?? false;
@@ -904,6 +1026,9 @@ const ExternalVideoPlayerContainer: React.FC = () => {
       setPlayerKey={setKey}
       sendMessage={sendMessage}
       updatedAt={updatedAt}
+      isPresentationMedia={isPresentationMedia}
+      presentationMediaKind={presentationMediaKind}
+      presentationMediaDownloadUri={presentationMediaDownloadUri}
     />
   );
 };

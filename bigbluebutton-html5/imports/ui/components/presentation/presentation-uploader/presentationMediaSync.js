@@ -82,8 +82,25 @@ export const startPresentationMediaExternalVideo = (
   return true;
 };
 
+export const restorePresentationMediaExternalVideo = (
+  presentations = [],
+  { startExternalVideo, stopExternalVideo } = {},
+  { delayMs = 150 } = {},
+) => {
+  const currentPresentation = presentations.find((p) => p?.current);
+  if (!currentPresentation) return false;
+
+  return startPresentationMediaExternalVideo(
+    currentPresentation,
+    presentations,
+    { startExternalVideo, stopExternalVideo },
+    { delayMs },
+  );
+};
+
 export default {
   resolvePresentationId,
   isPresentationMedia,
   startPresentationMediaExternalVideo,
+  restorePresentationMediaExternalVideo,
 };

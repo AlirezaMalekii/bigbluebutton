@@ -96,3 +96,21 @@
 #layout[data-skyroom-column="true"] .chat-message-container:has([data-skyroom="chat-presentation-download"]) {
   background: transparent !important;
 }
+
+/* Poll/quiz result chart in chat */
+#layout[data-skyroom-column="true"] [data-test="chatPollMessageText"] [class*="PollResultsLegendLabel"] {
+  color: var(--skyroom-text-primary, #eef4fb) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="chatPollMessageText"] [class*="PollResultsLegendCount"] {
+  color: var(--skyroom-text-secondary, #aab6c7) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="chatPollMessageText"] .recharts-cartesian-axis-tick-value {
+  fill: var(--skyroom-text-secondary, #aab6c7) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="chatPollMessageText"] [class*="PollResultsLegendSwatch"] {
+  border-radius: 3px;
+}
+

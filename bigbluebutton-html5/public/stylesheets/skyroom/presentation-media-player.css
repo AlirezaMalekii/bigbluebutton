@@ -1,0 +1,56 @@
+/* SafeMeet presentation media player (audio/video files shared via Manage Presentations) */
+
+#layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"][data-presentation-media="audio"] {
+  background: #060b12 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"] .presentation-media-audio-hidden,
+#layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"] .presentation-media-audio-hidden video,
+#layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"] .presentation-media-audio-hidden audio {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+}
+
+#layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"][data-presentation-media="video"] video {
+  border-radius: inherit;
+}
+
+#layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"] [data-presentation-media-audio="true"] {
+  border-radius: inherit;
+}
+
+#layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"] [data-test="presentationDownload"] {
+  z-index: 6;
+}
+
+#layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"][data-presentation-media="audio"] [data-test="presentationDownload"] {
+  bottom: 18px !important;
+  left: 18px !important;
+}
+
+[dir="rtl"] #layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"][data-presentation-media="audio"] [data-test="presentationDownload"] {
+  right: 18px !important;
+  left: auto !important;
+}
+
+#layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"][data-presentation-media="video"] [data-test="presentationDownload"] {
+  bottom: 12px !important;
+  left: 12px !important;
+}
+
+[dir="rtl"] #layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"][data-presentation-media="video"] [data-test="presentationDownload"] {
+  right: 12px !important;
+  left: auto !important;
+}
+
+@media (max-width: 768px) {
+  #layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"][data-presentation-media="audio"] [data-presentation-media-audio="true"] {
+    padding: 12px !important;
+  }
+}

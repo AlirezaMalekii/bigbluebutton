@@ -1,5 +1,5 @@
 import React, {
-  useEffect, useContext, useCallback, useState,
+  useEffect, useContext, useCallback, useState, useRef,
 } from 'react';
 import PropTypes from 'prop-types';
 import { useMutation, useReactiveVar } from '@apollo/client';
@@ -22,10 +22,16 @@ import { PluginsContext } from '/imports/ui/components/components-data/plugin-co
 import ScreenshareComponent from './component';
 import { layoutSelect, layoutSelectOutput, layoutDispatch } from '../layout/context';
 import getFromUserSettings from '/imports/ui/services/users-settings';
-import { EXTERNAL_VIDEO_STOP } from '../external-video-player/mutations';
+import {
+  EXTERNAL_VIDEO_START,
+  EXTERNAL_VIDEO_STOP,
+} from '../external-video-player/mutations';
 import AudioManager from '/imports/ui/services/audio-manager';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import { PIN_NOTES } from '../notes/mutations';
+import { PRESENTATIONS_SUBSCRIPTION } from '/imports/ui/components/whiteboard/queries';
+import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
+import { restorePresentationMediaExternalVideo } from '../presentation/presentation-uploader/presentationMediaSync';
 
 const screenshareIntlMessages = defineMessages({
   // SCREENSHARE
@@ -109,8 +115,21 @@ const ScreenshareContainer = (props) => {
   }));
   const { data: currentUserData } = useCurrentUser((u) => ({ presenter: u.presenter }));
   const [bridgeIsReady, setBridgeIsReady] = useState(false);
+  const [startExternalVideoMutation] = useMutation(EXTERNAL_VIDEO_START);
   const [stopExternalVideoShare] = useMutation(EXTERNAL_VIDEO_STOP);
   const [pinSharedNotes] = useMutation(PIN_NOTES);
+  const { data: presentationData } = useDeduplicatedSubscription(PRESENTATIONS_SUBSCRIPTION);
+  const presentations = (presentationData?.pres_presentation || []).filter(Boolean);
+  const wasBroadcastingRef = useRef(false);
+
+  const startExternalVideo = useCallback((externalVideoUrl) => {
+    if (!externalVideoUrl) return;
+    startExternalVideoMutation({ variables: { externalVideoUrl } });
+  }, [startExternalVideoMutation]);
+
+  const stopExternalVideo = useCallback(() => {
+    stopExternalVideoShare();
+  }, [stopExternalVideoShare]);
   const unpinSharedNotes = useCallback(() => {
     pinSharedNotes({ variables: { pinned: false } });
   }, [pinSharedNotes]);
@@ -167,6 +186,26 @@ const ScreenshareContainer = (props) => {
   useEffect(() => {
     setViewerScreenshareReconnectAllowed(isGloballyReceivingScreenshare);
   }, [isGloballyReceivingScreenshare]);
+
+  useEffect(() => {
+    const isBroadcasting = isScreenBroadcasting || isCameraAsContentBroadcasting;
+
+    if (wasBroadcastingRef.current && !isBroadcasting && isPresenter) {
+      restorePresentationMediaExternalVideo(
+        presentations,
+        { startExternalVideo, stopExternalVideo },
+      );
+    }
+
+    wasBroadcastingRef.current = isBroadcasting;
+  }, [
+    isScreenBroadcasting,
+    isCameraAsContentBroadcasting,
+    isPresenter,
+    presentations,
+    startExternalVideo,
+    stopExternalVideo,
+  ]);
 
   let pluginScreenshareHelperItems = [];
   if (pluginsExtensibleAreasAggregatedState.screenshareHelperItems) {

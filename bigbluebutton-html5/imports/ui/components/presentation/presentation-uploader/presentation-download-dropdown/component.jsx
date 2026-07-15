@@ -200,7 +200,6 @@ class PresentationDownloadDropdown extends PureComponent {
           disabled={disabled}
           customStyles={customStyles}
           overrideMobileStyles
-          minContent
           trigger={(
             <Trigger
               disabled={disabled}

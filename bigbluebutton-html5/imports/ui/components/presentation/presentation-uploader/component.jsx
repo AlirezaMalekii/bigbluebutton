@@ -959,13 +959,14 @@ class PresentationUploader extends Component {
     const PRESENTATION_CONFIG = window.meetingClientSettings.public.presentation;
 
     this.setState(({ presentations: rawPresentations }) => {
-      const nextPresentations = normalizePresentations(rawPresentations).map((p) => (
-        presentationIds.includes(p.presentationId)
-          ? update(p, { uploadStarted: { $set: true } })
-          : p
-      ));
-
-      return { presentations: nextPresentations };
+      const presentations = normalizePresentations(rawPresentations);
+      return {
+        presentations: presentations.map((p) => (
+          presentationIds.includes(p.presentationId)
+            ? update(p, { uploadStarted: { $set: true } })
+            : p
+        )),
+      };
     }, () => {
       const { presentations } = this.state;
 
@@ -1513,20 +1514,24 @@ class PresentationUploader extends Component {
               {fileUploadConstraintsHint ? this.renderExtraHint() : null}
             </Styled.ModalHint>
           </Styled.HintBanner>
-          {this.renderPresentationList()}
-          {this.renderDownloadableWithAnnotationsHint()}
-          {startExternalVideo ? (
-            <OnlineVideoSection
-              allowExternalVideo={allowExternalVideo}
-              isSharingVideo={isSharingVideo}
-              startExternalVideo={startExternalVideo}
-              stopExternalVideo={stopExternalVideo}
-            />
-          ) : null}
-          <Styled.DropzoneSection>
-            {this.renderDropzone()}
-          </Styled.DropzoneSection>
-          {this.renderExternalUpload()}
+          <Styled.ListSection data-skyroom="presentation-upload-list">
+            {this.renderPresentationList()}
+            {this.renderDownloadableWithAnnotationsHint()}
+          </Styled.ListSection>
+          <Styled.BottomPanels>
+            {startExternalVideo ? (
+              <OnlineVideoSection
+                allowExternalVideo={allowExternalVideo}
+                isSharingVideo={isSharingVideo}
+                startExternalVideo={startExternalVideo}
+                stopExternalVideo={stopExternalVideo}
+              />
+            ) : null}
+            <Styled.DropzoneSection>
+              {this.renderDropzone()}
+            </Styled.DropzoneSection>
+            {this.renderExternalUpload()}
+          </Styled.BottomPanels>
         </Styled.ModalBody>
       </ModalFullscreen>
     );

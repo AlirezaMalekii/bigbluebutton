@@ -104,6 +104,28 @@ const ModalBody = styled.div`
   }
 `;
 
+const ListSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 220px;
+  min-width: 0;
+  gap: 8px;
+  overflow: hidden;
+
+  @media (max-width: 640px) {
+    min-height: 140px;
+    flex: 1 1 42%;
+  }
+`;
+
+const BottomPanels = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: var(--space-2, 8px);
+`;
+
 const mobilePresentationRowLayout = `
   @media (max-width: 640px) {
     grid-template-columns: 1.75rem minmax(0, 1fr) auto !important;
@@ -139,13 +161,12 @@ const ListCard = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-height: 180px;
   flex: 1 1 auto;
 
   @media (max-width: 640px) {
-    flex: 1 1 60vh;
-    min-height: 180px;
-    max-height: 60vh;
+    min-height: 120px;
+    flex: 1 1 auto;
   }
 `;
 
@@ -212,8 +233,8 @@ const ListHeaderCell = styled.span`
 /* Do not use ScrollboxVertical here — its white fade gradients break dark modal rows */
 const FileList = styled.div`
   flex: 1 1 auto;
-  min-height: 72px;
-  max-height: min(280px, 38vh);
+  min-height: 120px;
+  max-height: min(400px, 50vh);
   padding: 0;
   margin-bottom: 0;
   overflow-x: hidden;
@@ -224,7 +245,7 @@ const FileList = styled.div`
 
   @media (max-width: 640px) {
     max-height: none;
-    min-height: 0;
+    min-height: 80px;
     flex: 1 1 auto;
   }
 
@@ -489,7 +510,7 @@ const UploaderDropzone = styled(Dropzone)`
   border: 2px dashed rgba(32, 199, 187, 0.35);
   color: ${skyroomTextMuted};
   border-radius: var(--radius-lg, 16px);
-  padding: var(--space-4, 16px) var(--space-3, 12px);
+  padding: var(--space-3, 12px) var(--space-3, 12px);
   text-align: center;
   font-size: ${fontSizeLarge};
   cursor: pointer;
@@ -497,7 +518,7 @@ const UploaderDropzone = styled(Dropzone)`
   transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 
   @media (max-width: 640px) {
-    padding: 10px 12px;
+    padding: 8px 10px;
     border-radius: 12px;
   }
 
@@ -831,6 +852,8 @@ const SetCurrentAction = styled.div`
 
 export default {
   ModalBody,
+  ListSection,
+  BottomPanels,
   HintBanner,
   DropzoneSection,
   ListCard,

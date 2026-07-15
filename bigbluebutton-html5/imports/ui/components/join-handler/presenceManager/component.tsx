@@ -17,6 +17,7 @@ import GuestWaitContainer, { GUEST_STATUSES } from '../guest-wait/component';
 import PluginTopLevelManager from '/imports/ui/components/plugin-top-level-manager/component';
 import meetingStaticData from '/imports/ui/core/singletons/meetingStaticData';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
+import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const connectionTimeout = 60000;
@@ -48,6 +49,7 @@ interface PresenceManagerProps extends PresenceManagerContainerProps {
     loggedOut: boolean;
     guestStatus: string;
     guestLobbyMessage: string | null;
+    publicGuestLobbyMessage: string | null;
     positionInWaitingQueue: number | null;
 }
 
@@ -73,6 +75,7 @@ const PresenceManager: React.FC<PresenceManagerProps> = ({
   customDarkLogoUrl,
   loggedOut,
   guestLobbyMessage,
+  publicGuestLobbyMessage,
   guestStatus,
   positionInWaitingQueue,
 }) => {
@@ -191,6 +194,7 @@ const PresenceManager: React.FC<PresenceManagerProps> = ({
           ? (
             <GuestWaitContainer
               guestLobbyMessage={guestLobbyMessage}
+              publicGuestLobbyMessage={publicGuestLobbyMessage}
               guestStatus={guestStatus}
               logoutUrl={logoutUrl}
               positionInWaitingQueue={positionInWaitingQueue}
@@ -224,6 +228,10 @@ const PresenceManagerContainer: React.FC<PresenceManagerContainerProps> = ({ chi
   const { error, data } = useDeduplicatedSubscription<GetGuestLobbyInfo>(getGuestLobbyInfo, {
     skip: !!currentUserLoading || !!currentUserErrors || (!!currentUserData && currentUserData.guestStatus === 'ALLOW'),
   });
+
+  const { data: meetingInfo } = useMeeting((meeting) => ({
+    publicGuestLobbyMessage: meeting?.usersPolicies?.guestLobbyMessage,
+  }));
 
   const meetingStaticStore = meetingStaticData.getMeetingData();
 
@@ -282,6 +290,7 @@ const PresenceManagerContainer: React.FC<PresenceManagerContainerProps> = ({ chi
       customLogoUrl={customLogoUrl ?? ''}
       customDarkLogoUrl={customDarkLogoUrl ?? ''}
       guestLobbyMessage={guestStatusDetails?.guestLobbyMessage ?? null}
+      publicGuestLobbyMessage={meetingInfo?.publicGuestLobbyMessage ?? null}
       positionInWaitingQueue={guestStatusDetails?.positionInWaitingQueue ?? null}
       guestStatus={guestStatus ?? ''}
     >

@@ -39,18 +39,39 @@ class ErrorScreen extends PureComponent {
       reloadLabel,
       technicalDetailLabel,
       technicalDetail,
+      iconName,
+      variant,
+      primaryAction,
       isRtl,
     } = resolveErrorScreen({ error, endedReason });
 
+    const handlePrimaryAction = () => {
+      if (primaryAction === 'acknowledge') {
+        if (window.history.length > 1) {
+          window.history.back();
+          return;
+        }
+
+        window.close();
+        return;
+      }
+
+      window.location.reload();
+    };
+
     return (
-      <div data-skyroom-error-screen="true" data-test="errorScreen">
+      <div
+        data-skyroom-error-screen="true"
+        data-skyroom-error-variant={variant}
+        data-test="errorScreen"
+      >
         <div data-skyroom-error-card="true">
           <div
             data-skyroom-error-content="true"
             dir={isRtl ? 'rtl' : 'ltr'}
           >
             <div data-skyroom-error-icon="true" aria-hidden="true">
-              <Icon iconName="alert" />
+              <Icon iconName={iconName} />
             </div>
 
             <h1 data-skyroom-error-title="true" data-test="errorScreenMessage">
@@ -81,7 +102,7 @@ class ErrorScreen extends PureComponent {
                 type="button"
                 data-skyroom-error-btn="true"
                 data-test="errorScreenReload"
-                onClick={() => window.location.reload()}
+                onClick={handlePrimaryAction}
               >
                 {reloadLabel}
               </button>

@@ -14,37 +14,53 @@ const Section = styled.section`
   background: ${skyroomSurface};
   border: 1px solid ${skyroomBorder};
   border-radius: var(--radius-md, 12px);
-  margin-bottom: var(--space-3, 12px);
-  padding: var(--space-4, 16px) var(--space-5, 20px);
+  margin-bottom: 0;
+  padding: 10px 14px;
   flex-shrink: 0;
+
+  @media (max-width: 640px) {
+    padding: 8px 10px;
+    border-radius: 10px;
+  }
 `;
 
 const SectionTitle = styled.h4`
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 700;
-  margin: 0 0 var(--space-3, 12px);
+  margin: 0 0 8px;
   color: ${skyroomText};
+
+  @media (max-width: 640px) {
+    font-size: 0.75rem;
+    margin-bottom: 6px;
+  }
 `;
 
 const ModeToggle = styled.div`
   display: flex;
-  gap: 8px;
-  margin-bottom: var(--space-3, 12px);
+  gap: 6px;
+  margin-bottom: 8px;
   flex-wrap: wrap;
 `;
 
 const ModeButton = styled.button`
   flex: 1 1 auto;
-  min-width: 120px;
-  padding: 8px 12px;
-  border-radius: 10px;
+  min-width: 100px;
+  padding: 6px 10px;
+  border-radius: 8px;
   border: 1px solid ${({ $active }) => ($active ? colorPrimary : skyroomBorder)};
   background: ${({ $active }) => ($active ? 'rgba(32, 199, 187, 0.18)' : 'transparent')};
   color: ${({ $active }) => ($active ? colorWhite : skyroomTextMuted)};
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
+
+  @media (max-width: 640px) {
+    min-width: 0;
+    padding: 5px 8px;
+    font-size: 0.7rem;
+  }
 
   &:hover {
     border-color: ${colorPrimary};
@@ -55,13 +71,13 @@ const ModeButton = styled.button`
 const InputGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 
   label {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    font-size: 0.8125rem;
+    gap: 4px;
+    font-size: 0.75rem;
     font-weight: 600;
     color: ${skyroomText};
   }
@@ -70,12 +86,12 @@ const InputGroup = styled.div`
 const inputStyles = `
   width: 100%;
   box-sizing: border-box;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
   border: 1px solid rgba(218, 230, 245, 0.14);
   background: rgba(8, 14, 24, 0.55);
   color: ${skyroomText};
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-family: inherit;
 
   &:focus {
@@ -96,43 +112,75 @@ const TextInput = styled.input`
 
 const TextArea = styled.textarea`
   ${inputStyles}
-  min-height: 96px;
+  min-height: 56px;
+  max-height: 96px;
   resize: vertical;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.75rem;
-  line-height: 1.45;
+  font-size: 0.68rem;
+  line-height: 1.4;
 `;
 
 const Hint = styled.p`
   margin: 0;
-  font-size: 0.75rem;
-  line-height: 1.5;
+  font-size: 0.68rem;
+  line-height: 1.45;
   color: ${skyroomTextMuted};
+
+  @media (max-width: 640px) {
+    font-size: 0.64rem;
+    line-height: 1.35;
+  }
 `;
 
 const HelpList = styled.div`
   margin: 0;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
   background: rgba(32, 199, 187, 0.08);
   border: 1px solid rgba(32, 199, 187, 0.16);
-  font-size: 0.75rem;
-  line-height: 1.55;
+  font-size: 0.68rem;
+  line-height: 1.45;
   color: ${skyroomTextMuted};
   white-space: pre-line;
+
+  @media (max-width: 640px) {
+    padding: 5px 7px;
+    font-size: 0.64rem;
+  }
 `;
 
 const Error = styled.p`
-  margin: 8px 0 0;
-  font-size: 0.8125rem;
+  margin: 4px 0 0;
+  font-size: 0.75rem;
   color: ${colorDanger};
 `;
 
 const Actions = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: var(--space-3, 12px);
+  gap: 8px;
+  margin-top: 8px;
+
+  .buttonWrapper button {
+    min-height: 32px !important;
+    padding: 6px 12px !important;
+    font-size: 0.75rem !important;
+  }
+
+  @media (max-width: 640px) {
+    gap: 6px;
+    margin-top: 6px;
+
+    .buttonWrapper {
+      flex: 1 1 auto;
+    }
+
+    .buttonWrapper button {
+      width: 100%;
+      min-height: 30px !important;
+      font-size: 0.72rem !important;
+    }
+  }
 `;
 
 export default {

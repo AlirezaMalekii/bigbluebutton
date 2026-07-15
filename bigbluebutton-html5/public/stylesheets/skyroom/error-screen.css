@@ -162,3 +162,29 @@
   outline: 2px solid rgba(32, 199, 187, 0.65);
   outline-offset: 2px;
 }
+
+[data-skyroom-error-screen="true"][data-skyroom-error-variant="access"] {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(251, 146, 60, 0.1) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at 50% 100%, rgba(13, 136, 126, 0.08) 0%, transparent 65%),
+    linear-gradient(180deg, #060a12 0%, #0b1220 100%);
+}
+
+[data-skyroom-error-screen="true"][data-skyroom-error-variant="access"] [data-skyroom-error-card="true"] {
+  border-color: rgba(251, 146, 60, 0.28);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 24px 64px rgba(0, 0, 0, 0.55),
+    0 0 48px rgba(251, 146, 60, 0.08);
+}
+
+[data-skyroom-error-screen="true"][data-skyroom-error-variant="access"] [data-skyroom-error-card="true"]::before {
+  background: linear-gradient(90deg, #fb923c 0%, #fbbf24 50%, rgba(32, 199, 187, 0.6) 100%);
+}
+
+[data-skyroom-error-screen="true"][data-skyroom-error-variant="access"] [data-skyroom-error-icon="true"] {
+  background: rgba(251, 146, 60, 0.12);
+  border-color: rgba(251, 146, 60, 0.32);
+  color: #fb923c;
+  box-shadow: 0 0 24px rgba(251, 146, 60, 0.15);
+}

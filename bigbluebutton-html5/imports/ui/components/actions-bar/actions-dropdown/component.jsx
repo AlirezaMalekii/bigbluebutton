@@ -104,6 +104,10 @@ const intlMessages = defineMessages({
     id: 'app.poll.pollPaneTitle',
     description: 'poll modal title',
   },
+  quizPaneTitle: {
+    id: 'app.poll.quiz',
+    description: 'quiz modal title',
+  },
   pollCloseHint: {
     id: 'app.poll.modal.closeHint',
     description: 'hint shown when clicking outside poll modal',
@@ -151,6 +155,11 @@ class ActionsDropdown extends PureComponent {
     this.handlePollActionClick = this.handlePollActionClick.bind(this);
     this.handlePollModalOutsideClick = this.handlePollModalOutsideClick.bind(this);
     this.handleSkyroomOpenPollResults = this.handleSkyroomOpenPollResults.bind(this);
+    this.handlePollPaneTitleChange = this.handlePollPaneTitleChange.bind(this);
+
+    this.state = {
+      pollModalIsQuiz: false,
+    };
   }
 
   componentDidMount() {
@@ -183,6 +192,10 @@ class ActionsDropdown extends PureComponent {
       Session.setItem('pollInitiated', true);
     }
     this.setPollModalIsOpen(true);
+  }
+
+  handlePollPaneTitleChange(isQuiz) {
+    this.setState({ pollModalIsQuiz: isQuiz });
   }
 
   handlePollModalOutsideClick() {
@@ -447,6 +460,7 @@ class ActionsDropdown extends PureComponent {
             open,
             close,
           }) => {
+            const { pollModalIsQuiz } = this.state;
             this.setPollModalIsOpen = (value) => {
               if (value) open();
               else close();
@@ -462,15 +476,22 @@ class ActionsDropdown extends PureComponent {
                 onOutsideClick={this.handlePollModalOutsideClick}
                 onRequestClose={() => {
                   Session.setItem('forcePollOpen', false);
+                  this.setState({ pollModalIsQuiz: false });
                   close();
                 }}
-                title={intl.formatMessage(intlMessages.pollPaneTitle)}
+                title={intl.formatMessage(
+                  pollModalIsQuiz
+                    ? intlMessages.quizPaneTitle
+                    : intlMessages.pollPaneTitle,
+                )}
               >
                 <Styled.PollModalBody data-test="pollModalBody">
                   <PollContainer
                     isEmbeddedInModal
+                    onPaneTitleChange={this.handlePollPaneTitleChange}
                     onRequestClose={() => {
                       Session.setItem('forcePollOpen', false);
+                      this.setState({ pollModalIsQuiz: false });
                       close();
                     }}
                   />

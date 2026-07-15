@@ -117,7 +117,7 @@ public class PageToConvert {
 
   private void createSvgImages(UploadedPresentation pres, int page, boolean useBlank) throws TimeoutException {
     //notifier.sendCreatingSvgImagesUpdateMessage(pres);
-    svgImageCreator.createSvgImage(pres, page, useBlank);
+    svgImageCreator.createSvgImage(pres, page, pageFile, useBlank);
   }
 
   private void createPngImages(UploadedPresentation pres, int page, File pageFile, boolean useBlank) {

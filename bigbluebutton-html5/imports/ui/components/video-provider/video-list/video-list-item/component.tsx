@@ -15,6 +15,7 @@ import {
 } from '/imports/ui/services/bbb-webrtc-sfu/stream-state-service';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import VideoService from '/imports/ui/components/video-provider/service';
+import Icon from '/imports/ui/components/common/icon/component';
 import Styled from './styles';
 import withDragAndDrop from './drag-and-drop/component';
 import Auth from '/imports/ui/services/auth';
@@ -487,6 +488,7 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
       talking={talking}
       customHighlight={webcamBorderHighlightColor}
       fullscreen={isFullscreenContext}
+      data-skyroom-webcam-fs-active={isFullscreenContext ? 'true' : undefined}
       data-test={talking ? 'webcamItemTalkingUser' : 'webcamItem'}
       animations={animations}
       isStream={isStream}
@@ -543,8 +545,15 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
 
       {isStream && ((isSelfViewDisabled && stream.userId === Auth.userID)
       || disabledCams.includes(cameraId)) && (
-        <Styled.VideoDisabled>
-          {intl.formatMessage(intlMessages.disableDesc)}
+        <Styled.VideoDisabled
+          data-test="webcamSelfViewDisabled"
+          $compact={isVideoSqueezed}
+          title={intl.formatMessage(intlMessages.disableDesc)}
+        >
+          <Icon iconName="video_off" />
+          {!isVideoSqueezed && (
+            <span>{intl.formatMessage(intlMessages.disableDesc)}</span>
+          )}
         </Styled.VideoDisabled>
       )}
 

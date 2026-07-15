@@ -10,6 +10,11 @@ import BBBWeb from '/imports/api/bbb-web-api';
 import { applySkyroomWhiteLabelSettings } from '/imports/ui/components/skyroom-layout/white-label';
 import MeetingStaticDataStore from '/imports/ui/core/singletons/meetingStaticData';
 import { MeetingStaticData } from '/imports/ui/Types/meetingStaticData';
+import {
+  clearJoinUrlErrorsFromUrl,
+  JoinUrlError,
+  parseJoinUrlErrors,
+} from '/imports/ui/core/utils/joinUrlErrors';
 
 const connectionTimeout = 60000;
 
@@ -37,12 +42,24 @@ const SettingsLoader: React.FC<SettingsLoaderProps> = (props) => {
   const [settingsFetched, setSettingsFetched] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState<boolean>(true);
+  const [joinUrlError] = React.useState<JoinUrlError | null>(() => {
+    const [firstError] = parseJoinUrlErrors();
+    return firstError ?? null;
+  });
   const timeoutRef = React.useRef<ReturnType<typeof setTimeout>>();
   const skyroomTheme = isSkyroomTheme();
 
-  useSkyroomLoadingSource('settings', skyroomTheme && loading);
+  useSkyroomLoadingSource('settings', skyroomTheme && loading && !joinUrlError);
+
+  React.useEffect(() => {
+    if (joinUrlError) {
+      clearJoinUrlErrorsFromUrl();
+    }
+  }, [joinUrlError]);
 
   useEffect(() => {
+    if (joinUrlError) return undefined;
+
     setLoading(true);
 
     const controller = new AbortController();
@@ -61,7 +78,9 @@ const SettingsLoader: React.FC<SettingsLoaderProps> = (props) => {
     if (!sessionToken) {
       setLoading(false);
       setError('Missing session token');
-      return;
+      return () => {
+        clearTimeout(timeoutRef.current);
+      };
     }
 
     BBBWeb.index(controller.signal)
@@ -98,7 +117,23 @@ const SettingsLoader: React.FC<SettingsLoaderProps> = (props) => {
         setLoading(false);
         setError('Error fetching GraphQL URL: '.concat(error.message || ''));
       });
-  }, []);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeoutRef.current);
+    };
+  }, [joinUrlError]);
+
+  if (joinUrlError) {
+    return (
+      <ErrorScreen
+        error={{
+          cause: joinUrlError.key,
+          message: joinUrlError.message,
+        }}
+      />
+    );
+  }
 
   return (
     <>

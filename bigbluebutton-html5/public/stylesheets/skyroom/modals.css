@@ -879,7 +879,9 @@ html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"]
 #fsmodal[data-test="managePresentationsModal"] {
   width: min(800px, 94vw) !important;
   max-width: 800px !important;
-  max-height: min(88vh, 720px) !important;
+  max-height: min(92vh, 860px) !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 #fsmodal[data-test="managePresentationsModal"] header {
@@ -941,8 +943,19 @@ html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"]
 [data-test="managePresentationsModalBody"] {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   min-height: 0;
+  flex: 1 1 auto;
+}
+
+[data-test="managePresentationsModalBody"] [data-skyroom="presentation-upload-list"] {
+  flex: 1 1 auto;
+  min-height: 200px;
+  overflow: hidden;
+}
+
+#fsmodal[data-test="managePresentationsModal"] [data-test="onlineVideoSection"] {
+  flex-shrink: 0;
 }
 
 /* Presentation list — grid rows; neutralize global [class*="Table"] modal rules */
@@ -1111,7 +1124,7 @@ html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"]
 
 #fsmodal[data-test="managePresentationsModal"] [data-test="fileUploadDropZone"],
 #fsmodal[data-test="managePresentationsModal"] [class*="UploaderDropzone"] {
-  min-height: 120px;
+  min-height: 88px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1137,22 +1150,66 @@ html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"]
   left: auto !important;
   right: auto !important;
   bottom: auto !important;
-  width: auto !important;
-  min-width: 200px !important;
-  max-width: min(280px, calc(100vw - 24px)) !important;
-  border-radius: 12px !important;
-  border: 1px solid rgba(32, 199, 187, 0.28) !important;
+  width: min(300px, calc(100vw - 24px)) !important;
+  min-width: min(260px, calc(100vw - 24px)) !important;
+  max-width: min(300px, calc(100vw - 24px)) !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(32, 199, 187, 0.32) !important;
   background: var(--skyroom-modal-surface, #0f1728) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38) !important;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(32, 199, 187, 0.08) inset !important;
   z-index: 1400 !important;
+  padding: 6px 0 !important;
+  overflow: hidden !important;
+}
+
+#presentation-download-dropdown .MuiList-root,
+.skyroom-presentation-options-menu .MuiList-root {
+  width: 100% !important;
+  padding: 0 !important;
 }
 
 #presentation-download-dropdown .MuiMenuItem-root,
 .skyroom-presentation-options-menu .MuiMenuItem-root {
   color: var(--skyroom-modal-text, #eef4fb) !important;
   font-size: 0.8125rem !important;
-  line-height: 1.35 !important;
+  font-weight: 500 !important;
+  line-height: 1.45 !important;
   white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  min-height: 44px !important;
+  width: 100% !important;
+  padding: 10px 14px !important;
+}
+
+#presentation-download-dropdown .MuiMenuItem-root [class*="MenuItemWrapper"],
+.skyroom-presentation-options-menu .MuiMenuItem-root [class*="MenuItemWrapper"] {
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  gap: 8px;
+}
+
+#presentation-download-dropdown .MuiMenuItem-root [class*="Option"],
+.skyroom-presentation-options-menu .MuiMenuItem-root [class*="Option"] {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: auto !important;
+  flex: 1 1 auto !important;
+  text-align: start !important;
+  writing-mode: horizontal-tb !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  line-height: 1.45 !important;
+}
+
+[dir="rtl"] #presentation-download-dropdown .MuiMenuItem-root [class*="Option"],
+[dir="rtl"] .skyroom-presentation-options-menu .MuiMenuItem-root [class*="Option"] {
+  text-align: start !important;
 }
 
 #presentation-download-dropdown .MuiMenuItem-root:hover,
@@ -1164,11 +1221,12 @@ html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"]
 @media (max-width: 640px) {
   [data-test="managePresentationsModal"].ReactModal__Content,
   #fsmodal[data-test="managePresentationsModal"] {
-    width: 94vw !important;
-    max-height: 92vh !important;
-    padding: 20px 16px !important;
+    width: 96vw !important;
+    max-height: 94vh !important;
+    padding: 16px 12px !important;
     display: flex !important;
     flex-direction: column !important;
+    border-radius: 16px !important;
   }
 
   #fsmodal[data-test="managePresentationsModal"] [data-test="managePresentationsModalBody"] {
@@ -1177,38 +1235,70 @@ html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"]
     overflow-y: auto !important;
     display: flex !important;
     flex-direction: column !important;
+    gap: 8px !important;
+    padding-bottom: 4px !important;
+  }
+
+  #fsmodal[data-test="managePresentationsModal"] [data-skyroom="presentation-upload-list"] {
+    flex: 1 1 auto !important;
+    min-height: 130px !important;
+    max-height: none !important;
   }
 
   #fsmodal[data-test="managePresentationsModal"] [class*="ListCard"] {
     flex: 1 1 auto !important;
-    min-height: 120px !important;
-    overflow: visible !important;
+    min-height: 110px !important;
+    overflow: hidden !important;
   }
 
   #fsmodal[data-test="managePresentationsModal"] [data-skyroom="presentation-list"] {
     min-height: 0 !important;
+    flex: 1 1 auto !important;
   }
 
   #fsmodal[data-test="managePresentationsModal"] [class*="FileList"] {
     overflow-y: auto !important;
     overflow-x: hidden !important;
+    min-height: 72px !important;
+    flex: 1 1 auto !important;
+  }
+
+  #fsmodal[data-test="managePresentationsModal"] [data-test="onlineVideoSection"] {
+    flex-shrink: 0 !important;
   }
 
   #fsmodal[data-test="managePresentationsModal"] [data-skyroom="presentation-row"] [class*="FileNameCell"] > span {
-    font-size: 0.8125rem !important;
+    font-size: 0.78rem !important;
     line-height: 1.25 !important;
   }
 
   #fsmodal[data-test="managePresentationsModal"] header {
-    margin: -20px -16px 0 !important;
-    width: calc(100% + 32px) !important;
-    padding: 0.75rem 1rem !important;
+    margin: -16px -12px 0 !important;
+    width: calc(100% + 24px) !important;
+    padding: 0.65rem 0.85rem !important;
   }
 
   #fsmodal[data-test="managePresentationsModal"] header [class*="Actions"] {
     flex: 1 1 100%;
     justify-content: flex-end;
-    gap: 8px;
+    gap: 6px;
+  }
+
+  #fsmodal[data-test="managePresentationsModal"] button[data-test="modalDismissButton"],
+  #fsmodal[data-test="managePresentationsModal"] button[data-test="modalConfirmButton"] {
+    min-width: 5.5rem !important;
+    min-height: 34px !important;
+    font-size: 0.78rem !important;
+  }
+
+  #fsmodal[data-test="managePresentationsModal"] [data-test="fileUploadDropZone"],
+  #fsmodal[data-test="managePresentationsModal"] [class*="UploaderDropzone"] {
+    min-height: 72px !important;
+    padding: 8px !important;
+  }
+
+  #fsmodal[data-test="managePresentationsModal"] [class*="DropzoneMessage"] {
+    font-size: 0.68rem !important;
   }
 }
 
@@ -1306,6 +1396,21 @@ html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"]
   fill: var(--skyroom-modal-text-muted, #aab6c7) !important;
 }
 
+.poll-creation-modal [data-test="pollLiveResultChart"] [class*="PollResultsLegendLabel"],
+.poll-creation-modal [data-test="pollResultsChart"] [class*="PollResultsLegendLabel"] {
+  color: var(--skyroom-modal-text, #eef4fb) !important;
+}
+
+.poll-creation-modal [data-test="pollLiveResultChart"] [class*="PollResultsLegendCount"],
+.poll-creation-modal [data-test="pollResultsChart"] [class*="PollResultsLegendCount"] {
+  color: var(--skyroom-modal-text-muted, #aab6c7) !important;
+}
+
+.poll-creation-modal [data-test="pollLiveResultChart"] .recharts-cartesian-axis-tick-value,
+.poll-creation-modal [data-test="pollResultsChart"] .recharts-cartesian-axis-tick-value {
+  fill: var(--skyroom-modal-text-muted, #aab6c7) !important;
+}
+
 .poll-creation-modal [class*="ButtonsActions"] {
   gap: 0.75rem !important;
 }
@@ -1352,8 +1457,19 @@ html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"]
   border: 1px solid rgba(6, 100, 247, 0.28) !important;
 }
 
+.poll-creation-modal [class*="InfoBoxContainer"][data-quiz="true"] p,
+.poll-creation-modal [class*="InfoBoxContainer"].quiz p {
+  color: var(--skyroom-modal-text, #eef4fb) !important;
+  font-weight: 500;
+}
+
 .poll-creation-modal [class*="InfoBoxContainer"] p {
   color: var(--skyroom-modal-text-muted, #aab6c7) !important;
+}
+
+.poll-creation-modal [class*="InfoBoxContainer"][data-quiz="false"] p {
+  color: var(--skyroom-modal-text, #eef4fb) !important;
+  font-weight: 500;
 }
 
 .poll-creation-modal [class*="SegmentedButtonContainer"] {

@@ -167,6 +167,24 @@ function getSizeWithUnit(size) {
 
 function renderPresentationItemStatus(item, intl) {
   if (!item) return null;
+
+  const hasLocalFile = !!item.file;
+  const uploadStarted = !!item.uploadStarted;
+  const uploadProgress = item.upload?.progress ?? item.progress ?? 0;
+  const uploadHasError = !!item.upload?.error;
+
+  if (
+    hasLocalFile
+    && uploadStarted
+    && uploadProgress === 0
+    && !uploadHasError
+    && !item.uploadErrorMsgKey
+  ) {
+    return intl.formatMessage(intlMessages.uploadProcess, {
+      progress: '0',
+    });
+  }
+
   if ((('progress' in item) && item.progress === 0) || (('upload' in item) && item.upload.progress === 0 && !item.upload.error)) {
     return intl.formatMessage(intlMessages.fileToUpload);
   }

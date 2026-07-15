@@ -4,7 +4,7 @@ import { useMutation } from '@apollo/client';
 import Session from '/imports/ui/services/storage/in-memory';
 import { UserCameraDropdownInterface, UserCameraDropdownOption } from 'bigbluebutton-html-plugin-sdk';
 import browserInfo from '/imports/utils/browserInfo';
-import FullscreenService from '/imports/ui/components/common/fullscreen-button/service';
+import { toggleWebcamFullscreen } from '/imports/ui/components/skyroom-layout/webcam-fullscreen/webcam-fullscreen';
 import BBBMenu from '/imports/ui/components/common/menu/component';
 import { UserCameraDropdownItemType } from 'bigbluebutton-html-plugin-sdk/dist/cjs/extensible-areas/user-camera-dropdown-item/enums';
 import Styled from './styles';
@@ -279,18 +279,11 @@ const UserActions: React.FC<UserActionProps> = (props) => {
             : intl.formatMessage(intlMessages.fullscreenLabel),
           dataTest: 'webcamsFullscreenButton',
           onClick: () => {
-            setTimeout(() => {
-              layoutContextDispatch({
-                type: ACTIONS.SET_FULLSCREEN_ELEMENT,
-                value: {
-                  element: isFullscreenContext ? '' : cameraId,
-                  group: isFullscreenContext ? '' : 'webcams',
-                },
-              });
-
-              // @ts-ignore JS code
-              FullscreenService.toggleFullScreen(videoContainer?.current);
-            }, 100);
+            toggleWebcamFullscreen({
+              cameraId,
+              isFullscreenContext,
+              layoutContextDispatch,
+            });
           },
         },
       );

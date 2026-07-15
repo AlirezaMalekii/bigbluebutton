@@ -75,7 +75,6 @@ const FullscreenButtonComponent = ({
       return;
     }
 
-    handleToggleFullScreen(fullscreenRef);
     const newElement = (elementId === currentElement) ? '' : elementId;
     const newGroup = (elementGroup === currentGroup) ? '' : elementGroup;
 
@@ -86,6 +85,11 @@ const FullscreenButtonComponent = ({
         group: newGroup,
       },
     });
+
+    // Webcam fullscreen uses layout-only overlay; browser Fullscreen API breaks SafeMeet zones.
+    if (elementGroup !== 'webcams') {
+      handleToggleFullScreen(fullscreenRef);
+    }
   };
 
   return (

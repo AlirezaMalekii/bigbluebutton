@@ -15,6 +15,7 @@ import Trigger from '/imports/ui/components/common/control-header/right/componen
 import { generateExportedMessages } from './services';
 import { getDateString } from '/imports/utils/string-utils';
 import { CHAT_PUBLIC_CLEAR_HISTORY } from './mutations';
+import ConfirmationModal from '/imports/ui/components/common/modal/confirmation/component';
 import useMeetingSettings from '/imports/ui/core/local-states/useMeetingSettings';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
@@ -44,6 +45,18 @@ const intlMessages = defineMessages({
     id: 'app.chat.dropdown.options',
     description: 'Chat Options',
   },
+  clearHistoryConfirmationTitle: {
+    id: 'app.chat.clearHistory.confirmationTitle',
+    description: 'Clear public chat history confirmation title',
+  },
+  clearHistoryConfirmationDescription: {
+    id: 'app.chat.clearHistory.confirmationDescription',
+    description: 'Clear public chat history confirmation description',
+  },
+  clearHistoryCancelLabel: {
+    id: 'app.chat.toolbar.delete.cancelLabel',
+    description: 'Cancel clear public chat history',
+  },
 });
 
 const ChatActions: React.FC = () => {
@@ -56,6 +69,7 @@ const ChatActions: React.FC = () => {
   const downloadOrCopyRef = useRef<'download' | 'copy' | null>(null);
   const [userIsModerator, setUserIsModerator] = useState<boolean>(false);
   const [meetingIsBreakout, setMeetingIsBreakout] = useState<boolean>(false);
+  const [isClearHistoryModalOpen, setIsClearHistoryModalOpen] = useState(false);
   const [chatPublicClearHistory] = useMutation(CHAT_PUBLIC_CLEAR_HISTORY);
   const { data: currentUserData, loading: currentUserLoading } = useCurrentUser((u) => ({
     isModerator: u.isModerator,
@@ -136,7 +150,7 @@ const ChatActions: React.FC = () => {
         icon: 'delete',
         dataTest: 'chatClear',
         label: intl.formatMessage(intlMessages.clear),
-        onClick: () => chatPublicClearHistory(),
+        onClick: () => setIsClearHistoryModalOpen(true),
         loading: currentUserLoading || meetingLoading,
       },
     ];
@@ -152,29 +166,46 @@ const ChatActions: React.FC = () => {
   }
 
   return (
-    <BBBMenu
-      trigger={(
-        <Trigger
-          label={intl.formatMessage(intlMessages.options)}
-          aria-label={intl.formatMessage(intlMessages.options)}
-          hideLabel
-          icon="more"
-          data-test="chatOptionsMenu"
-          onClick={() => {}}
+    <>
+      {isClearHistoryModalOpen ? (
+        <ConfirmationModal
+          intl={intl}
+          isOpen={isClearHistoryModalOpen}
+          setIsOpen={setIsClearHistoryModalOpen}
+          onRequestClose={() => setIsClearHistoryModalOpen(false)}
+          onConfirm={() => chatPublicClearHistory()}
+          priority="low"
+          title={intl.formatMessage(intlMessages.clearHistoryConfirmationTitle)}
+          description={intl.formatMessage(intlMessages.clearHistoryConfirmationDescription)}
+          confirmButtonLabel={intl.formatMessage(intlMessages.clear)}
+          cancelButtonLabel={intl.formatMessage(intlMessages.clearHistoryCancelLabel)}
+          confirmButtonDataTest="chatClearConfirmation"
         />
-      )}
-      opts={{
-        id: 'chat-options-dropdown-menu',
-        keepMounted: true,
-        transitionDuration: 0,
-        elevation: 3,
-        getcontentanchorel: null,
-        fullwidth: 'true',
-        anchorOrigin: { vertical: 'bottom', horizontal: isRTL ? 'right' : 'left' },
-        transformOrigin: { vertical: 'top', horizontal: isRTL ? 'right' : 'left' },
-      }}
-      actions={actions}
-    />
+      ) : null}
+      <BBBMenu
+        trigger={(
+          <Trigger
+            label={intl.formatMessage(intlMessages.options)}
+            aria-label={intl.formatMessage(intlMessages.options)}
+            hideLabel
+            icon="more"
+            data-test="chatOptionsMenu"
+            onClick={() => {}}
+          />
+        )}
+        opts={{
+          id: 'chat-options-dropdown-menu',
+          keepMounted: true,
+          transitionDuration: 0,
+          elevation: 3,
+          getcontentanchorel: null,
+          fullwidth: 'true',
+          anchorOrigin: { vertical: 'bottom', horizontal: isRTL ? 'right' : 'left' },
+          transformOrigin: { vertical: 'top', horizontal: isRTL ? 'right' : 'left' },
+        }}
+        actions={actions}
+      />
+    </>
   );
 };
 

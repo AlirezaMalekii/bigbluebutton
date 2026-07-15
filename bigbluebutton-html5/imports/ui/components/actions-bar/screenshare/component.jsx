@@ -233,8 +233,8 @@ const ScreenshareButton = ({
     && (!isMobile || isTabletApp)
     && (amIPresenter || showButtonForNonPresenters);
 
-  const dataTest = isScreenBroadcasting ? 'stopScreenShare' : 'startScreenShare';
-  const loading = isScreenBroadcasting && !isScreenGloballyBroadcasting;
+  const dataTest = amIBroadcasting ? 'stopScreenShare' : 'startScreenShare';
+  const loading = amIBroadcasting && !isScreenGloballyBroadcasting;
 
   return (
     <>

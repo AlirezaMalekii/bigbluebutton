@@ -543,6 +543,34 @@ header[role="banner"]::after,
   -webkit-text-fill-color: #ffffff !important;
 }
 
+/* Self-view hidden — compact pill above bottom chrome */
+[data-test="webcamSelfViewDisabled"] {
+  bottom: 30px !important;
+  max-width: calc(100% - 24px) !important;
+  padding: 4px 9px !important;
+  font-size: 0.64rem !important;
+  line-height: 1.35 !important;
+  border-radius: 7px !important;
+  background: rgba(6, 10, 18, 0.88) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.38) !important;
+}
+
+[data-test="webcamSelfViewDisabled"] span {
+  letter-spacing: 0.01em;
+}
+
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="webcamSelfViewDisabled"] {
+  bottom: 32px !important;
+  font-size: clamp(0.58rem, 1.8cqi, 0.66rem) !important;
+}
+
+#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="webcamSelfViewDisabled"] {
+  bottom: 24px !important;
+  font-size: 0.56rem !important;
+  padding: 3px 7px !important;
+}
+
 /* Talking ring — animated brand gradient */
 [data-test="webcamVideoItem"].talking::before,
 [data-test="webcamVideoItem"][data-talking="true"]::before {

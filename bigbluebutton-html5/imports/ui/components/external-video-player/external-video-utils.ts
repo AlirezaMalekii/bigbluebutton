@@ -12,7 +12,7 @@ const APARAT_PAGE_REGEX = /aparat\.com\/v\/([^/"'\s?&]+)/i;
 export const APARAT_EMBED_HOST = 'www.aparat.com';
 
 export const buildAparatEmbedUrl = (hash: string): string => (
-  `https://${APARAT_EMBED_HOST}/video/video/embed/videohash/${hash}/?data[responsive]=yes`
+  `https://${APARAT_EMBED_HOST}/video/video/embed/videohash/${hash}/vt/frame?data[responsive]=yes`
 );
 
 export const isAparatEmbedUrl = (url: string): boolean => (
@@ -33,6 +33,11 @@ export const parseAparatEmbed = (input: string): string | null => {
   if (pageMatch?.[1]) return buildAparatEmbedUrl(pageMatch[1]);
 
   return null;
+};
+
+export const isAparatVideoUrl = (url: string): boolean => {
+  if (!url) return false;
+  return isAparatEmbedUrl(url) || !!parseAparatEmbed(url);
 };
 
 export const isDirectVideoUrlValid = (url: string): boolean => {
@@ -81,6 +86,7 @@ export const normalizeVideoUrl = (url: string): string => {
 export default {
   buildAparatEmbedUrl,
   isAparatEmbedUrl,
+  isAparatVideoUrl,
   parseAparatEmbed,
   isDirectVideoUrlValid,
   normalizeVideoUrl,

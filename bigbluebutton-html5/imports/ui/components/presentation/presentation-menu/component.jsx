@@ -367,7 +367,8 @@ const PresentationMenu = (props) => {
       };
     }
 
-    if (!isIphone) {
+    // Presenters use the dock fullscreen chip; viewers use the top-left overlay button.
+    if (!isIphone && currentUser?.presenter) {
       actionItems.push({
         key: 'list-item-fullscreen',
         dataTest: 'presentationFullscreen',

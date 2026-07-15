@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import { LoadingContext } from '../../common/loading-screen/loading-screen-HOC/component';
+import { resolveGuestLobbyMessages } from '/imports/ui/core/utils/guestLobbyMessages';
 import Styled from './styles';
 
 const REDIRECT_TIMEOUT = 15000;
@@ -54,10 +55,15 @@ const intlMessages = defineMessages({
     id: 'app.guest.calculating',
     description: '',
   },
-  messageFromHost: {
-    id: 'app.guest.messageFromHost',
-    description: 'Label for host message',
-    defaultMessage: 'Message from host',
+  privateMessageFromHost: {
+    id: 'app.guest.privateMessageFromHost',
+    description: 'Label for private host message in guest lobby',
+    defaultMessage: 'Private message from host',
+  },
+  publicMessageFromHost: {
+    id: 'app.guest.publicMessageFromHost',
+    description: 'Label for public host message in guest lobby',
+    defaultMessage: 'Public message from host',
   },
   waitingForApproval: {
     id: 'app.guest.waitingForApproval',
@@ -81,13 +87,24 @@ function getSearchParam(name: string) {
 interface GuestWaitProps {
   guestStatus: string | null;
   guestLobbyMessage: string | null;
+  publicGuestLobbyMessage: string | null;
   positionInWaitingQueue: number | null;
   logoutUrl: string;
 }
 
+const renderLobbyMessage = (message: string) => (
+  <Styled.MessageText
+    aria-live="polite"
+    data-test="guestMessage"
+    // eslint-disable-next-line react/no-danger
+    dangerouslySetInnerHTML={{ __html: message }}
+  />
+);
+
 const GuestWait: React.FC<GuestWaitProps> = (props) => {
   const {
     guestLobbyMessage,
+    publicGuestLobbyMessage,
     guestStatus,
     logoutUrl,
     positionInWaitingQueue,
@@ -95,26 +112,10 @@ const GuestWait: React.FC<GuestWaitProps> = (props) => {
 
   const intl = useIntl();
   const [animate, setAnimate] = useState(true);
-  const [message, setMessage] = useState(intl.formatMessage(intlMessages.guestWait));
+  const [statusMessage, setStatusMessage] = useState(intl.formatMessage(intlMessages.guestWait));
   const [positionMessage, setPositionMessage] = useState(intl.formatMessage(intlMessages.calculating));
-  const lobbyMessageRef = useRef('');
   const positionInWaitingQueueRef = useRef('');
   const loadingContextInfo = useContext(LoadingContext);
-
-  const updateLobbyMessage = useCallback((message: string | null) => {
-    if (!message) {
-      setMessage(intl.formatMessage(intlMessages.guestWait));
-      return;
-    }
-    if (message !== lobbyMessageRef.current) {
-      lobbyMessageRef.current = message;
-      if (lobbyMessageRef.current.length !== 0) {
-        setMessage(lobbyMessageRef.current);
-      } else {
-        setMessage(intl.formatMessage(intlMessages.guestWait));
-      }
-    }
-  }, [intl]);
 
   const updatePositionInWaitingQueue = useCallback((newPositionInWaitingQueue: number) => {
     if (positionInWaitingQueueRef.current !== newPositionInWaitingQueue.toString()) {
@@ -140,20 +141,20 @@ const GuestWait: React.FC<GuestWaitProps> = (props) => {
 
     if (!sessionToken) {
       setAnimate(false);
-      setMessage(intl.formatMessage(intlMessages.noSessionToken));
+      setStatusMessage(intl.formatMessage(intlMessages.noSessionToken));
       return;
     }
 
     if (!guestStatus) {
       setAnimate(false);
       setPositionMessage('');
-      setMessage(intl.formatMessage(intlMessages.guestInvalid));
+      setStatusMessage(intl.formatMessage(intlMessages.guestInvalid));
       return;
     }
 
     if (guestStatus === GUEST_STATUSES.ALLOW) {
       setPositionMessage('');
-      updateLobbyMessage(intl.formatMessage(intlMessages.allow));
+      setStatusMessage(intl.formatMessage(intlMessages.allow));
       setAnimate(false);
       return;
     }
@@ -161,29 +162,31 @@ const GuestWait: React.FC<GuestWaitProps> = (props) => {
     if (guestStatus === GUEST_STATUSES.DENY) {
       setAnimate(false);
       setPositionMessage('');
-      setMessage(intl.formatMessage(intlMessages.deny));
+      setStatusMessage(intl.formatMessage(intlMessages.deny));
       setTimeout(() => {
         window.location.assign(logoutUrl);
       }, REDIRECT_TIMEOUT);
       return;
     }
 
-    // WAIT
-    updateLobbyMessage(guestLobbyMessage || '');
+    setStatusMessage(intl.formatMessage(intlMessages.guestWait));
     if (positionInWaitingQueue) {
       updatePositionInWaitingQueue(positionInWaitingQueue);
     }
   }, [
-    guestLobbyMessage,
     guestStatus,
     logoutUrl,
     positionInWaitingQueue,
     intl,
-    updateLobbyMessage,
     updatePositionInWaitingQueue,
   ]);
 
-  const hasCustomMessage = guestLobbyMessage && guestLobbyMessage.length > 0;
+  const { privateMessage, publicMessage } = resolveGuestLobbyMessages(
+    guestLobbyMessage,
+    publicGuestLobbyMessage,
+  );
+  const hasLobbyMessages = Boolean(privateMessage || publicMessage);
+  const showDefaultWaitMessage = guestStatus === GUEST_STATUSES.WAIT && !hasLobbyMessages;
 
   return (
     <Styled.Container>
@@ -192,25 +195,28 @@ const GuestWait: React.FC<GuestWaitProps> = (props) => {
         <Styled.Position id="positionInWaitingQueue">
           <p aria-live="polite">{positionMessage}</p>
         </Styled.Position>
-        {hasCustomMessage && (
-          <Styled.MessageContainer>
+        {publicMessage && (
+          <Styled.MessageContainer data-test="guestPublicLobbyMessage">
             <Styled.MessageLabel>
-              {intl.formatMessage(intlMessages.messageFromHost)}
+              {intl.formatMessage(intlMessages.publicMessageFromHost)}
             </Styled.MessageLabel>
-            <Styled.MessageText
-              aria-live="polite"
-              data-test="guestMessage"
-              // eslint-disable-next-line react/no-danger
-              dangerouslySetInnerHTML={{ __html: message }}
-            />
+            {renderLobbyMessage(publicMessage)}
           </Styled.MessageContainer>
         )}
-        {!hasCustomMessage && (
+        {privateMessage && (
+          <Styled.MessageContainer data-test="guestPrivateLobbyMessage">
+            <Styled.MessageLabel>
+              {intl.formatMessage(intlMessages.privateMessageFromHost)}
+            </Styled.MessageLabel>
+            {renderLobbyMessage(privateMessage)}
+          </Styled.MessageContainer>
+        )}
+        {(showDefaultWaitMessage || guestStatus !== GUEST_STATUSES.WAIT) && (
           <p
             aria-live="polite"
             data-test="guestMessage"
             // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{ __html: message }}
+            dangerouslySetInnerHTML={{ __html: statusMessage }}
           />
         )}
         {animate && (

@@ -29,6 +29,8 @@ import { useStorageKey } from '../../services/storage/hooks';
 import QuizAndPollTabSelector from './components/QuizAndPollTabSelector';
 import InfoBox from './components/InfoBox';
 import { useIsQuizEnabled } from '../../services/features';
+import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
+import { getCurrentPollData, getCurrentPollDataResponse } from './queries';
 
 const intlMessages = defineMessages({
   pollPaneTitle: {
@@ -237,6 +239,7 @@ interface PollCreationPanelProps {
   hasPoll: boolean;
   isEmbeddedInModal?: boolean;
   onRequestClose?: () => void;
+  onPaneTitleChange?: (isQuiz: boolean) => void;
 }
 
 const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
@@ -244,6 +247,7 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
   hasPoll,
   isEmbeddedInModal = false,
   onRequestClose,
+  onPaneTitleChange,
 }) => {
   const POLL_SETTINGS = window.meetingClientSettings.public.poll;
   const isQuizEnabled = useIsQuizEnabled();
@@ -268,6 +272,13 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
     text: string;
     index: number;
   }>({ text: '', index: -1 });
+
+  const { data: currentPollData } = useDeduplicatedSubscription<getCurrentPollDataResponse>(getCurrentPollData);
+  const activePollIsQuiz = hasPoll && (currentPollData?.poll?.[0]?.quiz ?? false);
+
+  useEffect(() => {
+    onPaneTitleChange?.(hasPoll ? activePollIsQuiz : isQuiz);
+  }, [hasPoll, activePollIsQuiz, isQuiz, onPaneTitleChange]);
 
   const quickPollVariables = useStorageKey('quickPollVariables') as {
     multipleResponse: boolean;
@@ -648,6 +659,7 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
               isQuiz={isQuiz}
               onTabChange={(isQuiz: boolean) => {
                 setIsQuiz(isQuiz);
+                onPaneTitleChange?.(isQuiz);
                 if (isQuiz) {
                   setMultipleResponse(false);
                   setSecretPoll(false);
@@ -828,11 +840,13 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
 type PollCreationPanelContainerProps = {
   isEmbeddedInModal?: boolean;
   onRequestClose?: () => void;
+  onPaneTitleChange?: (isQuiz: boolean) => void;
 };
 
 const PollCreationPanelContainer: React.FC<PollCreationPanelContainerProps> = ({
   isEmbeddedInModal = false,
   onRequestClose,
+  onPaneTitleChange,
 }) => {
   const sidebarContent = layoutSelectInput((i: Input) => i.sidebarContent);
   const layoutContextDispatch = layoutDispatch();
@@ -880,6 +894,7 @@ const PollCreationPanelContainer: React.FC<PollCreationPanelContainerProps> = ({
       hasPoll={currentMeeting?.componentsFlags?.hasPoll ?? false}
       isEmbeddedInModal={isEmbeddedInModal}
       onRequestClose={onRequestClose}
+      onPaneTitleChange={onPaneTitleChange}
     />
   );
 };

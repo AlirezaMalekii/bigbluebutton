@@ -8,7 +8,8 @@ public class PdfPageDownscaler {
     private long execTimeout = 10000;
 
     public boolean downscale(File source,File dest) {
-        String COMMAND = "gs -sDEVICE=pdfwrite -dNOPAUSE -dQUIET -dBATCH -dFirstPage=1 -dLastPage=1 -sOutputFile="
+        String COMMAND = "gs -sDEVICE=pdfwrite -dNOPAUSE -dQUIET -dBATCH -dAutoRotatePages=/None"
+                + " -dFirstPage=1 -dLastPage=1 -sOutputFile="
                 + dest.getAbsolutePath() + SPACE
                 + "/etc/bigbluebutton/nopdfmark.ps" + SPACE
                 + source.getAbsolutePath();

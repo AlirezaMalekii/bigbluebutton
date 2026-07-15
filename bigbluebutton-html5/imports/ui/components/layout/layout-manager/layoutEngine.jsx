@@ -123,7 +123,7 @@ const LayoutEngine = () => {
       cameraDockBounds.top = 0;
       cameraDockBounds.left = 0;
       cameraDockBounds.right = 0;
-      cameraDockBounds.zIndex = 99;
+      cameraDockBounds.zIndex = 1500;
 
       return cameraDockBounds;
     }

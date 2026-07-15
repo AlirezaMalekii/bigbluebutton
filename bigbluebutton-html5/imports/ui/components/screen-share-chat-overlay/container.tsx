@@ -3,7 +3,11 @@ import { useReactiveVar } from '@apollo/client';
 import { useIntl } from 'react-intl';
 import { layoutSelect } from '/imports/ui/components/layout/context';
 import { Layout } from '/imports/ui/components/layout/layoutTypes';
-import { useIsSharing } from '/imports/ui/components/screenshare/service';
+import {
+  CONTENT_TYPE_SCREENSHARE,
+  useIsSharing,
+  useSharingContentType,
+} from '/imports/ui/components/screenshare/service';
 import { notify } from '/imports/ui/services/notification';
 import useCurrentLocale from '/imports/ui/core/local-states/useCurrentLocale';
 import { setupOverlayRenderer } from './overlay-root';
@@ -24,10 +28,17 @@ const ensureRendererRegistered = (): void => {
   rendererRegistered = true;
 };
 
+const useIsLocalScreenShareActive = (): boolean => {
+  const isSharing = useIsSharing();
+  const sharingContentType = useSharingContentType();
+
+  return isSharing && sharingContentType === CONTENT_TYPE_SCREENSHARE;
+};
+
 const ScreenShareChatOverlayContainer: React.FC = () => {
   const intl = useIntl();
   const [currentLocale] = useCurrentLocale();
-  const isSharing = useIsSharing();
+  const isLocalScreenShareActive = useIsLocalScreenShareActive();
   const isRTL = layoutSelect((i: Layout) => i.isRTL);
   const wasSharingRef = useRef(false);
   const autoOpenAttemptedRef = useRef(false);
@@ -54,20 +65,20 @@ const ScreenShareChatOverlayContainer: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (isSharing && !wasSharingRef.current) {
+    if (isLocalScreenShareActive && !wasSharingRef.current) {
       autoOpenAttemptedRef.current = false;
     }
 
-    if (!isSharing && wasSharingRef.current) {
+    if (!isLocalScreenShareActive && wasSharingRef.current) {
       closeOverlayOnScreenshareEnd();
       autoOpenAttemptedRef.current = false;
     }
 
-    wasSharingRef.current = isSharing;
-  }, [isSharing]);
+    wasSharingRef.current = isLocalScreenShareActive;
+  }, [isLocalScreenShareActive]);
 
   useEffect(() => {
-    if (!isSharing || autoOpenAttemptedRef.current || isOverlayOpen()) {
+    if (!isLocalScreenShareActive || autoOpenAttemptedRef.current || isOverlayOpen()) {
       return undefined;
     }
 
@@ -88,7 +99,7 @@ const ScreenShareChatOverlayContainer: React.FC = () => {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [buildOpenOptions, intl, isSharing]);
+  }, [buildOpenOptions, intl, isLocalScreenShareActive]);
 
   return null;
 };
@@ -96,7 +107,7 @@ const ScreenShareChatOverlayContainer: React.FC = () => {
 export const useScreenShareChatOverlayControls = () => {
   const intl = useIntl();
   const [currentLocale] = useCurrentLocale();
-  const isSharing = useIsSharing();
+  const isLocalScreenShareActive = useIsLocalScreenShareActive();
   const isRTL = layoutSelect((i: Layout) => i.isRTL);
   const overlayVisibility = useReactiveVar(overlayVisibilityVar);
 
@@ -118,7 +129,7 @@ export const useScreenShareChatOverlayControls = () => {
   }, [buildOpenOptions]);
 
   return {
-    isSharing,
+    isSharing: isLocalScreenShareActive,
     overlayVisibility,
     isOverlayOpen: isOverlayOpen(),
     open,

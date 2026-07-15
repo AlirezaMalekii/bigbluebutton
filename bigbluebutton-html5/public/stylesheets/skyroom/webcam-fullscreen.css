@@ -1,0 +1,132 @@
+/* =====================================================================
+   Skyroom — per-webcam fullscreen overlay (layout-only, no browser FS)
+   ===================================================================== */
+
+#layout[data-skyroom-webcam-fullscreen] {
+  overflow: hidden !important;
+}
+
+/* Hide meeting chrome while a webcam tile is fullscreen */
+#layout[data-skyroom-webcam-fullscreen] header[role="banner"],
+#layout[data-skyroom-webcam-fullscreen] #Navbar,
+#layout[data-skyroom-webcam-fullscreen] #ActionsBar,
+#layout[data-skyroom-webcam-fullscreen] #Sidebar,
+#layout[data-skyroom-webcam-fullscreen] #Presentation,
+#layout[data-skyroom-webcam-fullscreen] [data-test="presentationContainer"],
+#layout[data-skyroom-webcam-fullscreen] [data-test="screenshareArea"],
+#layout[data-skyroom-webcam-fullscreen] [data-skyroom-sidebar],
+#layout[data-skyroom-webcam-fullscreen] .skyroom-mobile-zone-tabs,
+#layout[data-skyroom-webcam-fullscreen] .skyroom-mobile-status-rail,
+#layout[data-skyroom-webcam-fullscreen] .skyroom-mobile-talking-rail,
+#layout[data-skyroom-webcam-fullscreen] #bannerBar,
+#layout[data-skyroom-webcam-fullscreen] #notificationsBar {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Collapse layout regions so the engine does not reserve dead space */
+#layout[data-skyroom-webcam-fullscreen] .react-draggable:has(#cameraDock),
+#layout[data-skyroom-webcam-fullscreen] #cameraDock,
+#layout[data-skyroom-webcam-fullscreen] #skyroom-sidebar-webcam-dock,
+#layout[data-skyroom-webcam-fullscreen] #skyroom-stage-webcam-dock,
+#layout[data-skyroom-webcam-fullscreen] #skyroom-center-webcam-dock {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  z-index: 1500 !important;
+  overflow: hidden !important;
+  background: #000 !important;
+}
+
+/* Hide every webcam tile except the active one */
+#layout[data-skyroom-webcam-fullscreen] [data-test="webcamItem"]:not([data-skyroom-webcam-fs-active="true"]),
+#layout[data-skyroom-webcam-fullscreen] [data-test="webcamItemTalkingUser"]:not([data-skyroom-webcam-fs-active="true"]) {
+  display: none !important;
+}
+
+/* Active tile fills the viewport */
+#layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"] {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  z-index: 1501 !important;
+  background: #000 !important;
+  transform: none !important;
+}
+
+#layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"]::after {
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+#layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"] [class*="videoContainer"],
+#layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"] video {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  border-radius: 0 !important;
+  object-fit: contain !important;
+}
+
+/* Hide in-tile chrome; exit is via the overlay close button or Esc */
+#layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"] [class*="TopBar"],
+#layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"] [class*="BottomBar"],
+#layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"] .skyroom-webcam-fullscreen-btn,
+#layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"] [data-test="skyroomWebcamMenuHost"],
+#layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"] [class*="UserCameraButtonsContainerWrapper"] {
+  display: none !important;
+}
+
+/* Floating close control */
+.skyroom-webcam-fs-close {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top, 0px));
+  right: max(12px, env(safe-area-inset-right, 0px));
+  z-index: 1502;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.skyroom-webcam-fs-close:hover,
+.skyroom-webcam-fs-close:focus-visible {
+  background: rgba(0, 0, 0, 0.72);
+  outline: none;
+  transform: scale(1.04);
+}
+
+.skyroom-webcam-fs-close i,
+.skyroom-webcam-fs-close [class^="icon-bbb-"] {
+  font-size: 20px;
+  line-height: 1;
+}
+
+[dir="rtl"] .skyroom-webcam-fs-close {
+  right: auto;
+  left: max(12px, env(safe-area-inset-left, 0px));
+}

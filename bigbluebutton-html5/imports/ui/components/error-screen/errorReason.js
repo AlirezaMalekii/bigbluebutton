@@ -41,6 +41,18 @@ const ENDED_REASON_TO_KEY = {
   'Error fetching user custom settings': 'app.error.screen.userSettingsFetchFailed',
 };
 
+const JOIN_URL_ERROR_PROFILES = {
+  guestDeniedAccess: {
+    titleKey: 'app.error.guestDeniedAccess.title',
+    reasonKey: 'app.error.guestDeniedAccess.message',
+    hintKey: 'app.error.guestDeniedAccess.hint',
+    actionKey: 'app.error.guestDeniedAccess.action',
+    iconName: 'user',
+    variant: 'access',
+    primaryAction: 'acknowledge',
+  },
+};
+
 const BOOTSTRAP_MESSAGES = {
   fa: {
     'app.error.screen.title': 'خطایی رخ داد',
@@ -83,6 +95,10 @@ const BOOTSTRAP_MESSAGES = {
     'app.error.paramMissing': 'اطلاعات ورود ناقص است.',
     'app.error.tooManyConnections': 'تعداد درخواست‌ها بیش از حد مجاز است.',
     'app.error.serverClosed': 'سرور اتصال را بست.',
+    'app.error.guestDeniedAccess.title': 'ورود به کلاس ممکن نیست',
+    'app.error.guestDeniedAccess.message': 'ورود مهمان به این کلاس بسته است. مدیر کلاس، سیاست پذیرش مهمان را روی «رد خودکار همه» تنظیم کرده است.',
+    'app.error.guestDeniedAccess.hint': 'اگر فکر می‌کنید باید به این کلاس دسترسی داشته باشید، با برگزارکننده یا مدیر کلاس تماس بگیرید.',
+    'app.error.guestDeniedAccess.action': 'متوجه شدم',
   },
   en: {
     'app.error.screen.title': 'Something went wrong',
@@ -125,6 +141,10 @@ const BOOTSTRAP_MESSAGES = {
     'app.error.paramMissing': 'Required join information is missing.',
     'app.error.tooManyConnections': 'Too many requests were sent.',
     'app.error.serverClosed': 'The server closed the connection.',
+    'app.error.guestDeniedAccess.title': 'You cannot join this meeting',
+    'app.error.guestDeniedAccess.message': 'Guest access to this meeting is closed. The moderator has set the guest policy to always deny.',
+    'app.error.guestDeniedAccess.hint': 'If you believe you should have access, contact the meeting organizer or moderator.',
+    'app.error.guestDeniedAccess.action': 'Got it',
   },
 };
 
@@ -209,12 +229,48 @@ const isUserFacingReason = (value) => {
   return !/^(Error|TypeError|ReferenceError|ChunkLoadError)/.test(value);
 };
 
+const resolveJoinUrlErrorProfile = (errorKey) => {
+  if (!errorKey || typeof errorKey !== 'string') return null;
+  return JOIN_URL_ERROR_PROFILES[errorKey] ?? null;
+};
+
 export const resolveErrorScreenCopy = ({ error, endedReason }) => {
+  const joinUrlErrorProfile = resolveJoinUrlErrorProfile(error?.cause);
   const sessionReasonKey = Session.getItem('errorMessageDescription');
 
   const sessionReason = translateSessionReason(sessionReasonKey);
   const endedReasonText = translateEndedReason(endedReason);
   const errorCause = error?.cause ? translateSessionReason(error.cause) : null;
+
+  if (joinUrlErrorProfile) {
+    return {
+      title: formatMessage(
+        joinUrlErrorProfile.titleKey,
+        BOOTSTRAP_MESSAGES.en[joinUrlErrorProfile.titleKey],
+      ),
+      reason: formatMessage(
+        joinUrlErrorProfile.reasonKey,
+        BOOTSTRAP_MESSAGES.en[joinUrlErrorProfile.reasonKey],
+      ),
+      hint: formatMessage(
+        joinUrlErrorProfile.hintKey,
+        BOOTSTRAP_MESSAGES.en[joinUrlErrorProfile.hintKey],
+      ),
+      reloadLabel: formatMessage(
+        joinUrlErrorProfile.actionKey,
+        BOOTSTRAP_MESSAGES.en[joinUrlErrorProfile.actionKey],
+      ),
+      technicalDetailLabel: formatMessage(
+        'app.error.screen.technicalDetail',
+        BOOTSTRAP_MESSAGES.en['app.error.screen.technicalDetail'],
+      ),
+      technicalDetail: null,
+      iconName: joinUrlErrorProfile.iconName,
+      variant: joinUrlErrorProfile.variant,
+      primaryAction: joinUrlErrorProfile.primaryAction,
+      isRtl: isPersianLocale(),
+    };
+  }
 
   let reason = endedReasonText
     || sessionReason
@@ -264,6 +320,9 @@ export const resolveErrorScreenCopy = ({ error, endedReason }) => {
       BOOTSTRAP_MESSAGES.en['app.error.screen.technicalDetail'],
     ),
     technicalDetail,
+    iconName: 'alert',
+    variant: 'error',
+    primaryAction: 'reload',
     isRtl: isPersianLocale(),
   };
 };

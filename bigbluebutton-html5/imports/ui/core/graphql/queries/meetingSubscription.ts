@@ -85,6 +85,10 @@ const MEETING_SUBSCRIPTION = gql`
           isEtherpadSharedNotes
           showRemainingTime
           }
+
+        voiceSettings {
+          muteOnStart
+        }
     }
   }
 `;
