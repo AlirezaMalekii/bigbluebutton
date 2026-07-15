@@ -111,7 +111,7 @@ public class SvgImageCreatorImp implements SvgImageCreator {
             done = true;
         } catch (InterruptedException e) {
             done = false;
-            log.error("InterruptedException while verifing font type 3 on {} page {}: {}", pres.getName(), page, e);
+            log.error("InterruptedException while verifing font type 3 on {} page {}: {}", pres.getName(), pdfSource.pdftocairoPage, e);
         }
         return detectFontType3tHandler;
     }
