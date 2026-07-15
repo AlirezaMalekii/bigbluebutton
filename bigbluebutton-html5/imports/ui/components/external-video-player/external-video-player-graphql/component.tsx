@@ -28,7 +28,7 @@ import {
 } from '../../presentation/presentation-uploader/fileTypes';
 import Auth from '/imports/ui/services/auth';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
-import { CURRENT_PRESENTATION_PAGE_SUBSCRIPTION } from '../../whiteboard/queries';
+import { CURRENT_PRESENTATION_PAGE_SUBSCRIPTION, CurrentPresentationPagesSubscriptionResponse } from '../../whiteboard/queries';
 import DownloadPresentationButton from '../../presentation/download-presentation-button/component';
 import PresentationMediaAudioPlayer from '../presentation-media-audio-player/component';
 import {
@@ -764,7 +764,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
               onProgress={handleProgress}
               onPause={handleOnStop}
               onEnded={handleOnStop}
-              onDuration={(mediaDuration) => setDuration(mediaDuration)}
+              onDuration={(mediaDuration: number) => setDuration(mediaDuration)}
               muted={mute || isEchoTest}
               controls={!isPresentationAudio}
               previewTabIndex={isPresenter ? 0 : -1}
@@ -979,7 +979,7 @@ const ExternalVideoPlayerContainer: React.FC = () => {
     ? getPresentationMediaKindFromUrl(externalVideoUrl)
     : null;
 
-  const { data: presentationPageData } = useDeduplicatedSubscription(
+  const { data: presentationPageData } = useDeduplicatedSubscription<CurrentPresentationPagesSubscriptionResponse>(
     CURRENT_PRESENTATION_PAGE_SUBSCRIPTION,
     { skip: !isPresentationMedia || !externalVideoUrl },
   );

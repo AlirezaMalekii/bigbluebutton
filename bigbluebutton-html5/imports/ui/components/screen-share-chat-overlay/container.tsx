@@ -32,7 +32,7 @@ const useIsLocalScreenShareActive = (): boolean => {
   const isSharing = useIsSharing();
   const sharingContentType = useSharingContentType();
 
-  return isSharing && sharingContentType === CONTENT_TYPE_SCREENSHARE;
+  return isSharing && String(sharingContentType) === CONTENT_TYPE_SCREENSHARE;
 };
 
 const ScreenShareChatOverlayContainer: React.FC = () => {

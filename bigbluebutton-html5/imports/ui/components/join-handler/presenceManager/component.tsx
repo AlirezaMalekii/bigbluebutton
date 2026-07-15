@@ -230,7 +230,7 @@ const PresenceManagerContainer: React.FC<PresenceManagerContainerProps> = ({ chi
   });
 
   const { data: meetingInfo } = useMeeting((meeting) => ({
-    publicGuestLobbyMessage: meeting?.usersPolicies?.guestLobbyMessage,
+    usersPolicies: meeting?.usersPolicies,
   }));
 
   const meetingStaticStore = meetingStaticData.getMeetingData();
@@ -290,7 +290,7 @@ const PresenceManagerContainer: React.FC<PresenceManagerContainerProps> = ({ chi
       customLogoUrl={customLogoUrl ?? ''}
       customDarkLogoUrl={customDarkLogoUrl ?? ''}
       guestLobbyMessage={guestStatusDetails?.guestLobbyMessage ?? null}
-      publicGuestLobbyMessage={meetingInfo?.publicGuestLobbyMessage ?? null}
+      publicGuestLobbyMessage={meetingInfo?.usersPolicies?.guestLobbyMessage ?? null}
       positionInWaitingQueue={guestStatusDetails?.positionInWaitingQueue ?? null}
       guestStatus={guestStatus ?? ''}
     >

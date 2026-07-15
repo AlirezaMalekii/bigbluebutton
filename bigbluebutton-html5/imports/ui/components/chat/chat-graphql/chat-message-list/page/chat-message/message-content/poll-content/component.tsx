@@ -25,6 +25,12 @@ interface Answers {
   isCorrectAnswer: boolean;
 }
 
+type TranslatedPollAnswer = {
+  label: string;
+  count: number;
+  isCorrectAnswer: boolean;
+};
+
 const intlMessages = defineMessages({
   true: {
     id: 'app.poll.t',
@@ -94,7 +100,7 @@ const ChatPollContent: React.FC<ChatPollContentProps> = ({
 
   const answers = pollData.answers.reduce(caseInsensitiveReducer, []);
 
-  const translatedAnswers = answers.map((answer: Answers) => {
+  const translatedAnswers: TranslatedPollAnswer[] = answers.map((answer: Answers) => {
     const translationKey = intlMessages[answer.key.toLowerCase() as keyof typeof intlMessages];
     const pollAnswer = translationKey ? intl.formatMessage(translationKey) : answer.key;
     return {
@@ -119,14 +125,14 @@ const ChatPollContent: React.FC<ChatPollContentProps> = ({
       <p className="sr-only">
         {pollData.questionText ? `${pollData.questionText}: ` : ''}
         {`${translatedAnswers
-          .map((a) => `${a.isCorrectAnswer ? `${intl.formatMessage(intlMessages.correctAnswer)}: ` : ''}${a.label}: ${a.count} ${
-            a.count === 1 ? intl.formatMessage(intlMessages.vote) : intl.formatMessage(intlMessages.votes)
+          .map((answer: TranslatedPollAnswer) => `${answer.isCorrectAnswer ? `${intl.formatMessage(intlMessages.correctAnswer)}: ` : ''}${answer.label}: ${answer.count} ${
+            answer.count === 1 ? intl.formatMessage(intlMessages.vote) : intl.formatMessage(intlMessages.votes)
           }`)
           .join(', ')}.`}
       </p>
       <ul className="sr-only">
-        {translatedAnswers.map((a) => (
-          <li key={a.label}>{`${a.isCorrectAnswer ? `${intl.formatMessage(intlMessages.correctAnswer)}: ` : ''}${a.label} — ${a.count}`}</li>
+        {translatedAnswers.map((answer: TranslatedPollAnswer) => (
+          <li key={answer.label}>{`${answer.isCorrectAnswer ? `${intl.formatMessage(intlMessages.correctAnswer)}: ` : ''}${answer.label} — ${answer.count}`}</li>
         ))}
       </ul>
     </>
