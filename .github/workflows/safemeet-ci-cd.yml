@@ -15,7 +15,7 @@ on:
 
 concurrency:
   group: safemeet-ci-cd-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   changes:
@@ -183,12 +183,39 @@ jobs:
               | grep -c '^Package:' || true
           )"
 
+          pick_oldest_baseline() {
+            local head="$1"
+            shift
+            local commit oldest=""
+            for commit in "$@"; do
+              [[ -n "$commit" ]] || continue
+              git cat-file -e "${commit}^{commit}" 2>/dev/null || continue
+              git merge-base --is-ancestor "$commit" "$head" || continue
+              if [[ -z "$oldest" ]] || git merge-base --is-ancestor "$commit" "$oldest"; then
+                oldest="$commit"
+              fi
+            done
+            printf '%s' "$oldest"
+          }
+
+          BASELINE_CANDIDATES=()
           if [[ "${EXISTING_REPO_PACKAGES:-0}" == "0" ]]; then
             git fetch --no-tags origin v3.0.x-release
             BASELINE="$(git merge-base HEAD origin/v3.0.x-release)"
             echo "SafeMeet repo is empty; initial package baseline: ${BASELINE}"
-          elif [[ -n "${GITHUB_EVENT_BEFORE:-}" && "$GITHUB_EVENT_BEFORE" != 0000000000000000000000000000000000000000 ]]; then
-            BASELINE="$GITHUB_EVENT_BEFORE"
+          else
+            if [[ -n "${GITHUB_EVENT_BEFORE:-}" && "$GITHUB_EVENT_BEFORE" != 0000000000000000000000000000000000000000 ]]; then
+              BASELINE_CANDIDATES+=("$GITHUB_EVENT_BEFORE")
+            fi
+            PUBLISHED_BASELINE="$(bash scripts/safemeet-repo-published-baseline.sh HEAD || true)"
+            if [[ -n "${PUBLISHED_BASELINE:-}" ]]; then
+              BASELINE_CANDIDATES+=("$PUBLISHED_BASELINE")
+              echo "Latest published package baseline: ${PUBLISHED_BASELINE}"
+            fi
+            BASELINE="$(pick_oldest_baseline HEAD "${BASELINE_CANDIDATES[@]}")"
+            if [[ -n "$BASELINE" ]]; then
+              echo "Package diff baseline: ${BASELINE}"
+            fi
           fi
           if [[ -n "$BASELINE" ]]; then
             git fetch --no-tags --depth=1 origin "$BASELINE" 2>/dev/null || git fetch --no-tags origin "$BASELINE" 2>/dev/null || true
