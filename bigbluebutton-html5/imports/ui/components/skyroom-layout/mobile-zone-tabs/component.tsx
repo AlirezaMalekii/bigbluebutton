@@ -190,8 +190,9 @@ const SkyroomMobileZoneTabs: React.FC = () => {
         const showUnread = key === 'chat' && !active && totalUnread > 0;
         const showWaitingBadge = key === 'waiting' && !active && guestCount > 0;
         const showUsersBadge = key === 'users' && !active && usersCount > 0;
+        const showBreakoutBadge = key === 'breakout' && !active && showBreakout;
         const badgeCount = key === 'waiting' ? guestCount : usersCount;
-        const badgeClass = key === 'users'
+        const badgeClass = key === 'users' || key === 'breakout'
           ? 'skyroom-mobile-zone-tab-badge skyroom-mobile-zone-tab-badge--count'
           : 'skyroom-mobile-zone-tab-badge';
 
@@ -210,6 +211,9 @@ const SkyroomMobileZoneTabs: React.FC = () => {
               <span className={badgeClass} aria-hidden="true">
                 {badgeCount > 9 ? '9+' : badgeCount}
               </span>
+            ) : null}
+            {showBreakoutBadge ? (
+              <span className={badgeClass} aria-hidden="true" />
             ) : null}
           </button>
         );

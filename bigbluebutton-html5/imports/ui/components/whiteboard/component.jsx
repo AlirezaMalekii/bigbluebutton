@@ -87,6 +87,56 @@ const calculateCenteredCameraOffsets = (
   return { xOffset, yOffset };
 };
 
+// Pan bounds must allow positive offsets used for letterbox/pillarbox centering.
+// The previous max of 0 forced fit-to-area slides into the top-left corner.
+const clampCameraPanOffsets = (
+  x,
+  y,
+  zoom,
+  presentationWidth,
+  presentationHeight,
+  viewportPageWidth,
+  viewportPageHeight,
+) => {
+  const cameraZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
+  const safeViewportPageWidth = Number.isFinite(viewportPageWidth) ? viewportPageWidth : 0;
+  const safeViewportPageHeight = Number.isFinite(viewportPageHeight) ? viewportPageHeight : 0;
+  const viewportScreenWidth = safeViewportPageWidth * cameraZoom;
+  const viewportScreenHeight = safeViewportPageHeight * cameraZoom;
+  const slideScreenWidth = presentationWidth * cameraZoom;
+  const slideScreenHeight = presentationHeight * cameraZoom;
+
+  // Upper bound is screen-space so it matches calculateCenteredCameraOffsets.
+  const maxX = Math.max(0, (viewportScreenWidth - slideScreenWidth) / 2);
+  const maxY = Math.max(0, (viewportScreenHeight - slideScreenHeight) / 2);
+  // Keep the historical page-space lower bound for zoomed-in panning, but never
+  // allow it above the centering max (that would reject valid centered cameras).
+  const minX = Math.min(maxX, -(presentationWidth - safeViewportPageWidth));
+  const minY = Math.min(maxY, -(presentationHeight - safeViewportPageHeight));
+
+  let nextX = x;
+  let nextY = y;
+
+  if (nextX > maxX) {
+    nextX = maxX;
+  } else if (nextX < minX) {
+    nextX = minX;
+  }
+
+  if (nextY > maxY) {
+    nextY = maxY;
+  } else if (nextY < minY) {
+    nextY = minY;
+  }
+
+  return { x: nextX, y: nextY };
+};
+
+const shouldLocallyCenterCamera = (backendX, backendY) => (
+  Math.abs(backendX ?? 0) < CENTER_OFFSET_PUBLISH_EPSILON
+  && Math.abs(backendY ?? 0) < CENTER_OFFSET_PUBLISH_EPSILON
+);
+
 const CAMERA_TYPE = 'camera';
 const colorStyles = [
   'black',
@@ -1172,7 +1222,6 @@ const Whiteboard = React.memo((props) => {
       ) {
         let baseZoom = calculateZoomValueRef.current(scaledWidth, scaledHeight);
         throwIfInvalid(baseZoom, 'baseZoom');
-        const isSkyroomMobileStage = isSkyroomColumnLayout() && isSkyroomMobileViewport();
 
         if (isPresenterRef.current) {
           const { widthGap } = getContainerDimensions();
@@ -1232,13 +1281,9 @@ const Whiteboard = React.memo((props) => {
           baseZoom = calculateZoomValueRef.current(scaledViewBoxWidth, scaledViewBoxHeight);
           let viewerXOffset = xOffset;
           let viewerYOffset = yOffset;
-          const backendX = xOffset ?? 0;
-          const backendY = yOffset ?? 0;
-          const shouldCenterViewer = isSkyroomMobileStage
-            && scaledViewBoxWidth > 0
+          const shouldCenterViewer = scaledViewBoxWidth > 0
             && scaledViewBoxHeight > 0
-            && Math.abs(backendX) < CENTER_OFFSET_PUBLISH_EPSILON
-            && Math.abs(backendY) < CENTER_OFFSET_PUBLISH_EPSILON;
+            && shouldLocallyCenterCamera(xOffset, yOffset);
 
           if (shouldCenterViewer) {
             const centeredCamera = calculateCenteredCameraOffsets(
@@ -1806,19 +1851,17 @@ const Whiteboard = React.memo((props) => {
         // Adjust camera position to ensure it stays within bounds
         const panned = next?.id?.includes('camera') && (prev.x !== next.x || prev.y !== next.y);
         if (panned && !currentPresentationPageRef.current?.infiniteWhiteboard) {
-          // Horizontal bounds check
-          if (next.x > 0) {
-            newNext.x = 0;
-          } else if (next.x < -(presentationWidthLocal - viewportWidth)) {
-            newNext.x = -(presentationWidthLocal - viewportWidth);
-          }
-
-          // Vertical bounds check
-          if (next.y > 0) {
-            newNext.y = 0;
-          } else if (next.y < -(presentationHeightLocal - viewportHeight)) {
-            newNext.y = -(presentationHeightLocal - viewportHeight);
-          }
+          const { x: clampedX, y: clampedY } = clampCameraPanOffsets(
+            next.x,
+            next.y,
+            next.z,
+            presentationWidthLocal,
+            presentationHeightLocal,
+            viewportWidth,
+            viewportHeight,
+          );
+          newNext.x = clampedX;
+          newNext.y = clampedY;
         }
 
         return newNext;
@@ -2009,7 +2052,6 @@ const Whiteboard = React.memo((props) => {
     }
 
     const baseZoom = calculateZoomValue(scaledWidth, scaledHeight);
-    const isSkyroomMobileStage = isSkyroomColumnLayout() && isSkyroomMobileViewport();
 
     // Use the actual stored zoom ratio for this page if available (preserves wheel zoom
     // across slide switches). The ratio is zoom-level-independent so it scales correctly
@@ -2038,23 +2080,41 @@ const Whiteboard = React.memo((props) => {
 
       const camera = tlEditorRef.current.getCamera();
       const newZ = adjustedZoom;
-      const centeredCamera = isSkyroomMobileStage
-        ? calculateCenteredCameraOffsets(
+      const backendX = xOffset ?? 0;
+      const backendY = yOffset ?? 0;
+      // Force absolute center when the view is still stuck at default corner offsets.
+      // Otherwise keep the presenter's pan relative to the centered fit position on resize.
+      const forceAbsoluteCenter = fitToWidthRef.current
+        || shouldLocallyCenterCamera(backendX, backendY)
+        || shouldLocallyCenterCamera(camera.x, camera.y);
+      const nextCentered = calculateCenteredCameraOffsets(
+        scaledWidth,
+        scaledHeight,
+        newZ,
+        presentationAreaWidth,
+        presentationAreaHeight,
+        fitToWidthRef.current,
+      );
+      let nextX = nextCentered.xOffset;
+      let nextY = nextCentered.yOffset;
+
+      if (!forceAbsoluteCenter) {
+        const prevCentered = calculateCenteredCameraOffsets(
           scaledWidth,
           scaledHeight,
-          newZ,
+          camera.z,
           presentationAreaWidth,
           presentationAreaHeight,
           fitToWidthRef.current,
-        )
-        : null;
+        );
+        nextX = nextCentered.xOffset + (camera.x - prevCentered.xOffset);
+        nextY = nextCentered.yOffset + (camera.y - prevCentered.yOffset);
+      }
 
       const updatedCurrentCam = {
         ...camera,
-        ...(centeredCamera && {
-          x: centeredCamera.xOffset,
-          y: centeredCamera.yOffset,
-        }),
+        x: nextX,
+        y: nextY,
         z: newZ,
       };
       tlEditorRef.current.store.mergeRemoteChanges(() => {
@@ -2062,8 +2122,12 @@ const Whiteboard = React.memo((props) => {
       });
 
       // Remote camera updates do not trigger the user-source listener,
-      // so publish the final settled presenter view explicitly.
-      if (fitToWidthRef.current || isSkyroomMobileStage) {
+      // so publish the final settled presenter view when it differs from backend.
+      const shouldPublishSettledView = forceAbsoluteCenter
+        || Math.abs(backendX - nextX) > CENTER_OFFSET_PUBLISH_EPSILON
+        || Math.abs(backendY - nextY) > CENTER_OFFSET_PUBLISH_EPSILON;
+
+      if (shouldPublishSettledView) {
         requestAnimationFrame(() => {
           const viewportPageBounds = tlEditorRef.current?.getViewportPageBounds();
           if (!viewportPageBounds?.w || !viewportPageBounds?.h) {
@@ -2114,13 +2178,9 @@ const Whiteboard = React.memo((props) => {
         scaledViewBoxHeight,
       );
       const camera = tlEditorRef.current.getCamera();
-      const backendX = xOffset ?? 0;
-      const backendY = yOffset ?? 0;
-      const shouldCenterViewer = isSkyroomMobileStage
-        && scaledViewBoxWidth > 0
+      const shouldCenterViewer = scaledViewBoxWidth > 0
         && scaledViewBoxHeight > 0
-        && Math.abs(backendX) < CENTER_OFFSET_PUBLISH_EPSILON
-        && Math.abs(backendY) < CENTER_OFFSET_PUBLISH_EPSILON;
+        && shouldLocallyCenterCamera(xOffset, yOffset);
       const centeredCamera = shouldCenterViewer
         ? calculateCenteredCameraOffsets(
           scaledViewBoxWidth,
@@ -2342,8 +2402,29 @@ const Whiteboard = React.memo((props) => {
         currentPresentationPage.scaledViewBoxHeight,
       );
 
-      const adjustedXPos = currentPresentationPage.xOffset;
-      const adjustedYPos = currentPresentationPage.yOffset;
+      let adjustedXPos = currentPresentationPage.xOffset;
+      let adjustedYPos = currentPresentationPage.yOffset;
+      const {
+        scaledViewBoxWidth,
+        scaledViewBoxHeight,
+      } = currentPresentationPage;
+
+      if (
+        scaledViewBoxWidth > 0
+        && scaledViewBoxHeight > 0
+        && shouldLocallyCenterCamera(adjustedXPos, adjustedYPos)
+      ) {
+        const centeredCamera = calculateCenteredCameraOffsets(
+          scaledViewBoxWidth,
+          scaledViewBoxHeight,
+          newZoom,
+          presentationAreaWidth,
+          presentationAreaHeight,
+          fitToWidth,
+        );
+        adjustedXPos = centeredCamera.xOffset;
+        adjustedYPos = centeredCamera.yOffset;
+      }
 
       setCamera(
         newZoom,
@@ -2351,7 +2432,7 @@ const Whiteboard = React.memo((props) => {
         adjustedYPos,
       );
     }
-  }, [currentPresentationPage, isPresenter, viewerCanPan]);
+  }, [currentPresentationPage, isPresenter, viewerCanPan, presentationAreaWidth, presentationAreaHeight, fitToWidth]);
 
   React.useEffect(() => {
     if (tlEditorRef.current) {

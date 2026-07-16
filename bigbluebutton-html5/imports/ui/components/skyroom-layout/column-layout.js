@@ -444,8 +444,22 @@ const adjustSkyroomColumnLayout = ({
 
   const sidebarWebcamReserved = sidebarStackActive && sidebarCount > 0;
   const sidebarWebcamH = sidebarWebcamReserved ? SKYROOM_SIDEBAR_WEBCAM_H : 0;
+
+  // Stage width must be known before strip height (columns drive 1 vs 2 reserved rows).
+  const notesColumnW = notesOpen ? columnW : 0;
+  const notesColumnGap = notesOpen ? STAGE_GAP : 0;
+  const sidebarStackW = (usersOpen || contentPanelOpen) ? columnW : 0;
+  const sidebarStackGap = sidebarStackW > 0 ? STAGE_GAP : 0;
+  const notesOffset = sidebarStackW + sidebarStackGap + notesColumnGap;
+  const totalLeftColumnsW = sidebarStackW + notesColumnW + (sidebarStackW > 0 ? sidebarStackGap : 0)
+    + (notesOpen ? notesColumnGap : 0);
+
+  const stageWidth = columnVisible
+    ? viewportW - totalLeftColumnsW - STAGE_GAP * 2
+    : viewportW - STAGE_GAP * 2;
+
   let stageStripH = stageCount > 0
-    ? calcStageWebcamHeight(stageCount)
+    ? calcStageWebcamHeight(stageCount, stageWidth)
     : 0;
 
   const sidebarPanelTop = areaTop + sidebarWebcamH + (sidebarWebcamH ? GAP : 0);
@@ -508,17 +522,6 @@ const adjustSkyroomColumnLayout = ({
 
   const nextSidebarContentHeight = chatH;
 
-  const notesColumnW = notesOpen ? columnW : 0;
-  const notesColumnGap = notesOpen ? STAGE_GAP : 0;
-  const sidebarStackW = (usersOpen || contentPanelOpen) ? columnW : 0;
-  const sidebarStackGap = sidebarStackW > 0 ? STAGE_GAP : 0;
-  const notesOffset = sidebarStackW + sidebarStackGap + notesColumnGap;
-  const totalLeftColumnsW = sidebarStackW + notesColumnW + (sidebarStackW > 0 ? sidebarStackGap : 0)
-    + (notesOpen ? notesColumnGap : 0);
-
-  const stageWidth = columnVisible
-    ? viewportW - totalLeftColumnsW - STAGE_GAP * 2
-    : viewportW - STAGE_GAP * 2;
   mediaAreaBounds.width = stageWidth;
   if (isRTL) {
     mediaAreaBounds.left = STAGE_GAP;
@@ -550,7 +553,7 @@ const adjustSkyroomColumnLayout = ({
 
   if (stageMediaMinimized && totalCount > 0) {
     if (stageCount > 0) {
-      stageStripH = calcStageWebcamHeight(stageCount);
+      stageStripH = calcStageWebcamHeight(stageCount, stageWidth);
       stageWebcamStripTop = presentationTop;
       presentationTop = stageWebcamStripTop + stageStripH + GAP;
       presentationHeight = Math.max(120, panelStackBottom - presentationTop);

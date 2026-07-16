@@ -395,7 +395,7 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
         pageChangeDebounceTime: 2500,
         desktopPageSizes: {
           moderator: 0,
-          viewer: 5,
+          viewer: 0,
         },
         mobilePageSizes: {
           moderator: 2,

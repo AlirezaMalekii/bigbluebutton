@@ -53,7 +53,17 @@
   box-shadow: none !important;
   color: var(--skyroom-panel-text-muted, rgba(210, 224, 238, 0.82)) !important;
   margin-bottom: 0 !important;
-  padding: 0.65rem 0.75rem !important;
+  padding: 0.75rem 0.85rem !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="breakoutDurationBox"] time,
+#layout[data-skyroom-column="true"] [data-test="breakoutDurationBox"] [class*="TimeRemaining"],
+#layout[data-skyroom-column="true"] [data-test="breakoutDurationBox"] span:last-child {
+  color: var(--skyroom-panel-text, #eef4fb) !important;
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: 0.02em !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="breakoutManagerToolbar"] {

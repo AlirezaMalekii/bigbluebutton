@@ -257,7 +257,7 @@ const CreateBreakoutRoom: React.FC<CreateBreakoutRoomProps> = ({
   const captureWhiteboardByDefault = BREAKOUT_SETTINGS.captureWhiteboardByDefault
                                     && isImportPresentationWithAnnotationsEnabled;
   const captureSharedNotesByDefault = BREAKOUT_SETTINGS.captureSharedNotesByDefault
-                                    && isImportPresentationWithAnnotationsEnabled;
+                                    && isImportSharedNotesEnabled;
   const inviteModsByDefault = BREAKOUT_SETTINGS.sendInvitationToAssignedModeratorsByDefault;
 
   const [numberOfRoomsIsValid, setNumberOfRoomsIsValid] = React.useState(true);
@@ -479,8 +479,8 @@ const CreateBreakoutRoom: React.FC<CreateBreakoutRoomProps> = ({
 
     return (
       <React.Fragment key="breakout-form">
-        <Styled.BreakoutSettings>
-          <div>
+        <Styled.BreakoutSettings data-test="breakoutCreateSettings">
+          <div data-test="breakoutNumberOfRooms">
             <Styled.FormLabel valid={numberOfRoomsIsValid} aria-hidden>
               {intl.formatMessage(intlMessages.numberOfRooms)}
             </Styled.FormLabel>
@@ -559,7 +559,10 @@ const CreateBreakoutRoom: React.FC<CreateBreakoutRoomProps> = ({
               )
             }
           </Styled.DurationLabel>
-          <Styled.CheckBoxesContainer key="breakout-checkboxes">
+          <Styled.CheckBoxesContainer
+            key="breakout-checkboxes"
+            data-test="breakoutCreateCheckboxes"
+          >
             {checkboxesInfo
               .filter((item) => item.allowed)
               .map((item) => (
@@ -567,6 +570,7 @@ const CreateBreakoutRoom: React.FC<CreateBreakoutRoomProps> = ({
                   <Styled.FreeJoinCheckbox
                     type="checkbox"
                     id={item.id}
+                    data-test={item.id}
                     onChange={item.onChange}
                     aria-label={item.label}
                     checked={item.checked}
@@ -616,6 +620,7 @@ const CreateBreakoutRoom: React.FC<CreateBreakoutRoomProps> = ({
       }}
       isOpen={isOpen}
       priority={priority}
+      data-test="createBreakoutRoomModal"
     >
       <Styled.Content>
         {title}

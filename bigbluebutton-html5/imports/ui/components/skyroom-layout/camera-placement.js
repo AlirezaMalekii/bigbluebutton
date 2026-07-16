@@ -9,7 +9,12 @@ export const PRIVILEGED_SIDEBAR_MAX = 2;
 
 export const SKYROOM_SIDEBAR_WEBCAM_H = 100;
 export const SKYROOM_STAGE_WEBCAM_MIN_H = 100;
+/** @deprecated Prefer SKYROOM_STAGE_WEBCAM_MAX_ROWS; kept for max-height callers. */
 export const SKYROOM_STAGE_WEBCAM_MAX_H = 160;
+/** Desktop stage strip reserves at most this many rows; further cams scroll inside the dock. */
+export const SKYROOM_STAGE_WEBCAM_MAX_ROWS = 2;
+/** Default grid gap for stage strip height/column math (matches layout.css --space-2). */
+export const SKYROOM_STAGE_WEBCAM_GUTTER = 8;
 
 const WEBCAM_TILE_ASPECT = 4 / 3;
 
@@ -96,15 +101,35 @@ export const resolveSkyroomCameraPlacement = ({ privilegedCount, viewerCount }) 
   };
 };
 
-/** Fixed-height strip row — tile size matches sidebar webcams. */
-export const calcStageWebcamHeight = (cameraCount) => {
+/** How many fixed-width tiles fit in one stage strip row. */
+export const calcStageWebcamColumns = (
+  containerWidth,
+  gutter = SKYROOM_STAGE_WEBCAM_GUTTER,
+) => {
+  if (containerWidth < 1) return 1;
+  const cols = Math.floor((containerWidth + gutter) / (SKYROOM_WEBCAM_TILE_W + gutter));
+  return Math.max(1, cols);
+};
+
+/**
+ * Dock height reserved above presentation: 1 or 2 tile rows based on count/width.
+ * Content taller than 2 rows scrolls inside the dock (height stays capped).
+ */
+export const calcStageWebcamHeight = (
+  cameraCount,
+  containerWidth = 0,
+  gutter = SKYROOM_STAGE_WEBCAM_GUTTER,
+) => {
   if (cameraCount <= 0) return 0;
-  return SKYROOM_SIDEBAR_WEBCAM_H;
+  const cols = calcStageWebcamColumns(containerWidth, gutter);
+  const neededRows = Math.ceil(cameraCount / cols);
+  const displayRows = Math.min(neededRows, SKYROOM_STAGE_WEBCAM_MAX_ROWS);
+  return (displayRows * SKYROOM_WEBCAM_TILE_H) + ((displayRows - 1) * gutter);
 };
 
 /**
  * Fixed-size tiles for sidebar and stage strip (same visual size).
- * Stage: single horizontal row. Sidebar: up to 2 columns, centered when fewer.
+ * Stage: wrap across rows (capped dock height + scroll). Sidebar: up to 2 columns.
  * Tiles use a constant size and only shrink when the container is too small.
  */
 export const computeSkyroomFixedTileGrid = (
@@ -112,7 +137,12 @@ export const computeSkyroomFixedTileGrid = (
   containerWidth,
   containerHeight,
   gutter = 4,
-  { maxColumns = numItems, horizontal = true } = {},
+  {
+    maxColumns = numItems,
+    horizontal = true,
+    /** When true, keep fixed tile size even if container height is only 1–2 rows (scroll case). */
+    preserveTileSize = false,
+  } = {},
 ) => {
   if (numItems < 1 || containerWidth < 1 || containerHeight < 1) return null;
 
@@ -122,13 +152,22 @@ export const computeSkyroomFixedTileGrid = (
   const gutterH = (rows - 1) * gutter;
 
   const maxCellW = Math.floor((containerWidth - gutterW) / columns);
-  const maxCellH = Math.floor((containerHeight - gutterH) / rows);
   const cellW = Math.min(SKYROOM_WEBCAM_TILE_W, maxCellW);
-  const cellH = Math.min(
-    SKYROOM_WEBCAM_TILE_H,
-    maxCellH,
-    Math.floor(cellW / WEBCAM_TILE_ASPECT),
-  );
+
+  let cellH;
+  if (preserveTileSize) {
+    // Prefer exact sidebar tile height when full width fits; avoid floor(133/(4/3))=99.
+    cellH = cellW >= SKYROOM_WEBCAM_TILE_W
+      ? SKYROOM_WEBCAM_TILE_H
+      : Math.min(SKYROOM_WEBCAM_TILE_H, Math.floor(cellW / WEBCAM_TILE_ASPECT));
+  } else {
+    const maxCellH = Math.floor((containerHeight - gutterH) / rows);
+    cellH = Math.min(
+      SKYROOM_WEBCAM_TILE_H,
+      maxCellH,
+      Math.floor(cellW / WEBCAM_TILE_ASPECT),
+    );
+  }
 
   return {
     columns,
@@ -153,12 +192,36 @@ export const buildSkyroomFixedGridStyle = (grid) => {
   };
 };
 
-export const computeSkyroomStripGrid = (numItems, canvasWidth, canvasHeight, gutter = 4) => (
-  computeSkyroomFixedTileGrid(numItems, canvasWidth, canvasHeight, gutter, {
-    maxColumns: numItems,
-    horizontal: true,
-  })
-);
+/**
+ * Stage strip grid: wrap to multiple rows using fixed tile size.
+ * Pass the dock's reserved height as canvasHeight; when content rows exceed
+ * the dock, grid height grows and the dock scrolls.
+ */
+export const computeSkyroomStripGrid = (
+  numItems,
+  canvasWidth,
+  canvasHeight,
+  gutter = SKYROOM_STAGE_WEBCAM_GUTTER,
+) => {
+  const maxColumns = calcStageWebcamColumns(canvasWidth, gutter);
+  // Use at least the content height so preserveTileSize math has a valid container.
+  const contentRows = Math.ceil(numItems / Math.max(1, Math.min(numItems, maxColumns)));
+  const contentHeight = (contentRows * SKYROOM_WEBCAM_TILE_H)
+    + (Math.max(0, contentRows - 1) * gutter);
+  const effectiveHeight = Math.max(canvasHeight || 0, contentHeight, SKYROOM_WEBCAM_TILE_H);
+
+  return computeSkyroomFixedTileGrid(
+    numItems,
+    canvasWidth,
+    effectiveHeight,
+    gutter,
+    {
+      maxColumns,
+      horizontal: false,
+      preserveTileSize: true,
+    },
+  );
+};
 
 export const computeSkyroomSidebarGrid = (numItems, canvasWidth, canvasHeight, gutter = 4) => (
   computeSkyroomFixedTileGrid(numItems, canvasWidth, canvasHeight, gutter, {

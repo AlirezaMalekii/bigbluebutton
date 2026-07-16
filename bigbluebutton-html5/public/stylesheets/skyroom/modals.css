@@ -690,8 +690,65 @@ html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"]
 }
 
 /* ---------------------------------------------------------------------
-   8) Breakout room — room management grid
+   8) Breakout room — create modal settings + room management grid
    --------------------------------------------------------------------- */
+#fsmodal[data-test="createBreakoutRoomModal"] {
+  width: min(1100px, 96vw) !important;
+  max-width: 1100px !important;
+  max-height: min(92vh, 860px) !important;
+}
+
+#fsmodal[data-test="createBreakoutRoomModal"] [data-test="breakoutCreateSettings"] {
+  display: grid !important;
+  grid-template-columns: minmax(8rem, 1fr) minmax(8rem, 1fr) minmax(14rem, 2fr) !important;
+  grid-gap: 1.25rem 1.5rem !important;
+  align-items: start !important;
+  width: 100% !important;
+  margin: 0.75rem 0 0.25rem !important;
+  padding: 1rem 1.1rem !important;
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(20, 169, 158, 0.18) !important;
+  box-sizing: border-box !important;
+}
+
+#fsmodal[data-test="createBreakoutRoomModal"] [data-test="breakoutCreateCheckboxes"] {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.55rem !important;
+  justify-content: flex-start !important;
+  min-width: 0 !important;
+}
+
+#fsmodal[data-test="createBreakoutRoomModal"] [data-test="breakoutCreateCheckboxes"] label {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.55rem !important;
+  margin: 0 !important;
+  color: var(--skyroom-modal-text, #eef4fb) !important;
+  font-weight: 500 !important;
+  line-height: 1.35 !important;
+  cursor: pointer !important;
+}
+
+#fsmodal[data-test="createBreakoutRoomModal"] [data-test="breakoutCreateCheckboxes"] label > input[type="checkbox"] {
+  flex-shrink: 0 !important;
+  margin-top: 0.15rem !important;
+}
+
+#fsmodal[data-test="createBreakoutRoomModal"] [data-test="breakoutCreateSettings"] select,
+#fsmodal[data-test="createBreakoutRoomModal"] [data-test="durationTime"] {
+  width: 100% !important;
+  min-height: 2.4rem !important;
+}
+
+@media (max-width: 640px) {
+  #fsmodal[data-test="createBreakoutRoomModal"] [data-test="breakoutCreateSettings"] {
+    grid-template-columns: 1fr !important;
+    padding: 0.85rem 0.9rem !important;
+  }
+}
+
 [role="dialog"] [data-test="roomGrid"] {
   width: 100%;
 }

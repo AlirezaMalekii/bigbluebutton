@@ -139,6 +139,7 @@
 /* Panel toggle chips */
 #layout[data-skyroom-column="true"] #Navbar [data-test="toggleUserList"],
 #layout[data-skyroom-column="true"] #Navbar [data-test="togglePublicChatNav"],
+#layout[data-skyroom-column="true"] #Navbar [data-test="toggleBreakoutNav"],
 #layout[data-skyroom-column="true"] #Navbar [data-test="toggleSharedNotesNav"],
 #layout[data-skyroom-column="true"] #Navbar [data-test="hasUnreadMessages"],
 #layout[data-skyroom-column="true"] #Navbar [data-test="connectionStatusButton"] {
@@ -157,6 +158,7 @@
 
 #layout[data-skyroom-column="true"] #Navbar [data-test="toggleUserList"] > span,
 #layout[data-skyroom-column="true"] #Navbar [data-test="togglePublicChatNav"] > span,
+#layout[data-skyroom-column="true"] #Navbar [data-test="toggleBreakoutNav"] > span,
 #layout[data-skyroom-column="true"] #Navbar [data-test="toggleSharedNotesNav"] > span,
 #layout[data-skyroom-column="true"] #Navbar [data-test="hasUnreadMessages"] > span {
   border-radius: 9px !important;
@@ -167,6 +169,7 @@
 
 #layout[data-skyroom-column="true"] #Navbar [data-test="toggleUserList"]:hover,
 #layout[data-skyroom-column="true"] #Navbar [data-test="togglePublicChatNav"]:hover,
+#layout[data-skyroom-column="true"] #Navbar [data-test="toggleBreakoutNav"]:hover,
 #layout[data-skyroom-column="true"] #Navbar [data-test="toggleSharedNotesNav"]:hover,
 #layout[data-skyroom-column="true"] #Navbar [data-test="hasUnreadMessages"]:hover,
 #layout[data-skyroom-column="true"] #Navbar [data-test="connectionStatusButton"]:hover:not(:disabled) {
@@ -178,6 +181,7 @@
 
 #layout[data-skyroom-column="true"] #Navbar [data-test="toggleUserList"]:hover > span,
 #layout[data-skyroom-column="true"] #Navbar [data-test="togglePublicChatNav"]:hover > span,
+#layout[data-skyroom-column="true"] #Navbar [data-test="toggleBreakoutNav"]:hover > span,
 #layout[data-skyroom-column="true"] #Navbar [data-test="toggleSharedNotesNav"]:hover > span,
 #layout[data-skyroom-column="true"] #Navbar [data-test="hasUnreadMessages"]:hover > span {
   background: transparent !important;
@@ -192,6 +196,7 @@
 #layout[data-skyroom-column="true"] #Navbar [data-test="toggleUserList"][aria-expanded="true"],
 #layout[data-skyroom-column="true"] #Navbar [data-test="hasUnreadMessages"][aria-expanded="true"],
 #layout[data-skyroom-column="true"] #Navbar [data-test="togglePublicChatNav"][aria-expanded="true"],
+#layout[data-skyroom-column="true"] #Navbar [data-test="toggleBreakoutNav"][aria-expanded="true"],
 #layout[data-skyroom-column="true"] #Navbar [data-test="toggleSharedNotesNav"][aria-expanded="true"] {
   border-color: var(--skyroom-accent-border, rgba(32, 199, 187, 0.5)) !important;
   color: #fff !important;
@@ -206,6 +211,7 @@
 #layout[data-skyroom-column="true"] #Navbar [data-test="toggleUserList"][aria-expanded="true"] > span,
 #layout[data-skyroom-column="true"] #Navbar [data-test="hasUnreadMessages"][aria-expanded="true"] > span,
 #layout[data-skyroom-column="true"] #Navbar [data-test="togglePublicChatNav"][aria-expanded="true"] > span,
+#layout[data-skyroom-column="true"] #Navbar [data-test="toggleBreakoutNav"][aria-expanded="true"] > span,
 #layout[data-skyroom-column="true"] #Navbar [data-test="toggleSharedNotesNav"][aria-expanded="true"] > span {
   background: transparent !important;
   box-shadow: none !important;

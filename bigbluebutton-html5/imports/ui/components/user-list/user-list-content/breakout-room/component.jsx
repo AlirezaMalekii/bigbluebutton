@@ -50,7 +50,7 @@ const BreakoutRoomItem = ({
 
   if (hasBreakoutRoom) {
     return (
-      <Styled.Messages>
+      <Styled.Messages data-test="skyroomBreakoutEntry">
         <Styled.Container>
           <Styled.SmallTitle data-test="breakoutRoomsTitle">
             {intl.formatMessage(intlMessages.breakoutTitle)}

@@ -11,6 +11,8 @@ import Styled from './styles';
 import PadContent from './content/component';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
+import applySkyroomEtherpadSkin from './skyroomEtherpadSkin';
+import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const intlMessages = defineMessages({
   hint: {
@@ -53,63 +55,14 @@ const PadGraphql: React.FC<PadGraphqlProps> = (props) => {
     setPadURL(Service.buildPadURL(padId, sessionIds));
   }, [isRTL, hasSession, intl.locale]);
 
-  // The Etherpad toolbar lives inside the (same-origin) iframe, so it can't be styled from the
-  // parent stylesheet. On load, inject the Skyroom etherpad stylesheet into the iframe document
-  // to reskin the toolbar/icons. Absolute URL is derived from an already-loaded skyroom sheet so
-  // it resolves regardless of the client base path. Guarded so a cross-origin pad degrades safely.
+  // Etherpad chrome (toolbar/popups/editor) lives in a same-origin iframe tree, so Skyroom
+  // styles must be injected at runtime. Cross-origin pads degrade to native Etherpad chrome.
   const handleIFrameLoad = useCallback((e: React.SyntheticEvent<HTMLIFrameElement>) => {
+    if (!isSkyroomTheme()) return;
     try {
       const doc = e.currentTarget.contentDocument;
       if (!doc) return;
-
-      if (!doc.getElementById('skyroom-etherpad-styles')) {
-        const skyroomSheet = Array.from(document.styleSheets)
-          .find((s) => s.href && s.href.includes('/stylesheets/skyroom/'));
-        const href = skyroomSheet?.href
-          ? skyroomSheet.href.replace(/[^/]+$/, 'etherpad.css')
-          : null;
-        if (href) {
-          const link = doc.createElement('link');
-          link.id = 'skyroom-etherpad-styles';
-          link.rel = 'stylesheet';
-          link.href = href;
-          doc.head.appendChild(link);
-        }
-      }
-
-      // Etherpad collapses overflow toolbar items behind a "+" show-more control.
-      // Reveal every action inline so Skyroom can wrap icons across lines.
-      const revealToolbarItems = () => {
-        doc.querySelectorAll('.toolbar ul li, #editbar ul li').forEach((item) => {
-          const el = item as HTMLElement;
-          el.classList.remove('hidden', 'hide');
-          el.style.removeProperty('display');
-          el.style.removeProperty('visibility');
-        });
-
-        doc.querySelectorAll('.show-more-icon-btn, #showMoreIcon, .showMoreButton').forEach((btn) => {
-          const el = btn as HTMLElement;
-          el.style.display = 'none';
-        });
-
-        const popup = doc.querySelector('#toolbar-popup, .toolbar-popup, #editbarPopup');
-        if (popup) {
-          popup.querySelectorAll('li').forEach((item) => {
-            const el = item as HTMLElement;
-            const list = doc.querySelector('.toolbar .menu_left > ul, #editbar .menu_left > ul');
-            if (list && !list.contains(el)) {
-              list.appendChild(el);
-            }
-            el.classList.remove('hidden', 'hide');
-            el.style.removeProperty('display');
-          });
-          (popup as HTMLElement).style.display = 'none';
-        }
-      };
-
-      revealToolbarItems();
-      window.setTimeout(revealToolbarItems, 250);
-      window.setTimeout(revealToolbarItems, 1000);
+      applySkyroomEtherpadSkin(doc);
     } catch (err) {
       // Cross-origin pad (non-default deployment) — leave the native Etherpad chrome as-is.
     }

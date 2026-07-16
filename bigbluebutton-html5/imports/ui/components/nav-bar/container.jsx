@@ -69,8 +69,10 @@ const NavBarContainer = ({ children, ...props }) => {
 
   const { data: currentUserData } = useCurrentUser((user) => ({
     isModerator: user.isModerator,
+    breakoutRoomsSummary: user.breakoutRoomsSummary,
   }));
   const amIModerator = currentUserData?.isModerator;
+  const hasBreakoutInvitation = (currentUserData?.breakoutRoomsSummary?.totalOfJoinURL ?? 0) > 0;
 
   const isExpanded = !!sidebarContentPanel || !!sidebarNavPanel;
 
@@ -96,10 +98,20 @@ const NavBarContainer = ({ children, ...props }) => {
   const { data: meeting } = useMeeting((m) => ({
     name: m.name,
     meetingId: m.meetingId,
+    isBreakout: m.isBreakout,
+    componentsFlags: m.componentsFlags,
     breakoutPolicies: {
       sequence: m.breakoutPolicies.sequence,
     },
   }));
+
+  const hasBreakoutRooms = meeting?.componentsFlags?.hasBreakoutRoom ?? false;
+  const showBreakoutToggle = Boolean(
+    isSkyroomColumnLayout()
+    && !meeting?.isBreakout
+    && hasBreakoutRooms
+    && (amIModerator || hasBreakoutInvitation),
+  );
 
   const { data: welcomeData } = useQuery(GET_WELCOME_MESSAGE);
 
@@ -165,6 +177,7 @@ const NavBarContainer = ({ children, ...props }) => {
         hideTopRow: navBar.hideTopRow,
         showSessionDetailsOnJoin: SHOW_SESSION_DETAILS_ON_JOIN,
         hasSessionDetails,
+        showBreakoutToggle,
         ...props,
       }}
       style={{ ...navBar }}

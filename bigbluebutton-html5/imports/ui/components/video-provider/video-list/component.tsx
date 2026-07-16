@@ -27,6 +27,7 @@ import {
   computeSkyroomSidebarGrid,
   buildSkyroomFixedGridStyle,
   SKYROOM_SIDEBAR_WEBCAM_H,
+  SKYROOM_STAGE_WEBCAM_GUTTER,
   SKYROOM_WEBCAM_TILE_W,
   SKYROOM_WEBCAM_TILE_H,
 } from '/imports/ui/components/skyroom-layout/camera-placement';
@@ -394,12 +395,15 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       const stageGridEl = this.stageGrid ?? this.grid;
       if (visibleStage.length > 0 && stageGridEl) {
         const gridGutter = parseInt(window.getComputedStyle(stageGridEl)
-          .getPropertyValue('grid-row-gap'), 10) || 2;
+          .getPropertyValue('grid-row-gap'), 10) || SKYROOM_STAGE_WEBCAM_GUTTER;
         const stageBoundsWidth = skyroomLayout.stage?.width ?? cameraDock?.width;
+        const stageBoundsHeight = skyroomLayout.stage?.height
+          ?? cameraDock?.height
+          ?? SKYROOM_SIDEBAR_WEBCAM_H;
         const computedStageGrid = computeSkyroomStripGrid(
           visibleStage.length,
           stageBoundsWidth,
-          SKYROOM_SIDEBAR_WEBCAM_H,
+          stageBoundsHeight,
           gridGutter,
         );
         if (computedStageGrid) {
@@ -747,11 +751,12 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       height: stageBounds.height,
       zIndex: stageBounds.zIndex ?? 8,
       display: 'flex',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       justifyContent: 'center',
       pointerEvents: 'auto',
       margin: 0,
-      overflow: 'hidden',
+      overflowX: 'hidden',
+      overflowY: 'auto',
     } : {};
 
     const stageDock = stageInPortal ? (

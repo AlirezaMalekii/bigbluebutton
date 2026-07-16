@@ -533,9 +533,10 @@ public:
       # video page sizes for DESKTOP endpoints. It stands for the number of SUBSCRIBER streams.
       # PUBLISHERS aren't accounted for .
       # A page size of 0 (zero) means that the page size is unlimited (disabled).
+      # SafeMeet: viewers see all desktop webcams (same as moderators).
       desktopPageSizes:
         moderator: 0
-        viewer: 5
+        viewer: 0
       # video page sizes for MOBILE endpoints
       mobilePageSizes:
         moderator: 2
