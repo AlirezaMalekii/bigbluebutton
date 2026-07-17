@@ -96,6 +96,8 @@ const StageReactionOverlay = ({ reactions }) => {
 
   // Drop in-flight bubbles when the stage is hidden so remount does not
   // restart CSS animations for reactions that were already playing.
+  // Do NOT mark stream events as seen here — that would drop live reactions
+  // for viewers whose bounds are briefly unavailable.
   useEffect(() => {
     if (boundsVisible) return undefined;
 
@@ -111,7 +113,9 @@ const StageReactionOverlay = ({ reactions }) => {
   useEffect(() => {
     // Do not gate on document.hidden: presenter may be on another display while
     // viewers still need bubbles; stream delivery already handles freshness.
-    if (!animations) return;
+    // When bounds are hidden, skip intake without consuming — fresh events can
+    // still animate once the stage is visible again.
+    if (!animations || !boundsVisible) return;
 
     const currentReactions = reactionsRef.current;
     const now = Date.now();
@@ -121,19 +125,6 @@ const StageReactionOverlay = ({ reactions }) => {
     });
 
     if (reactionsToShow.length === 0) return;
-
-    // While the stage is hidden, consume fresh events without animating so a
-    // later show/file-change does not dump a backlog of "new" bubbles.
-    if (!boundsVisible) {
-      reactionsToShow.forEach((reaction) => {
-        const createdAt = reaction.creationDate.getTime();
-        const key = getReactionKey(reaction);
-        const duplicateKey = `${reaction.userId || 'unknown'}-${reaction.reaction}`;
-        seenReactionsRef.current.add(key);
-        recentReactionRef.current.set(duplicateKey, createdAt);
-      });
-      return;
-    }
 
     const nextReactions = reactionsToShow.reduce((acc, reaction) => {
       const createdAt = reaction.creationDate.getTime();

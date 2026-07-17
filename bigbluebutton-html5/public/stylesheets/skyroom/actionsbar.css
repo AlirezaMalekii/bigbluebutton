@@ -512,15 +512,20 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  padding: 0 !important;
 }
 
 #layout[data-skyroom-column="true"] #ActionsBar [data-test="reactionsButton"] > span:first-child > span {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 1.35rem !important;
+  height: 1.35rem !important;
   margin: 0 !important;
   padding: 0 !important;
+  font-size: 1.35rem !important;
   line-height: 1 !important;
+  /* Optical vertical centering for native emoji glyphs in the circle */
+  transform: translateY(0.18em) !important;
 }
 
 /* -----------------------------------------------------------------------

@@ -20,21 +20,23 @@ ${({ ghost }) => ghost && `
 
   & > span {
     display: flex !important;
-    align-items: center;
-    justify-content: center;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
   }
 `;
 
 const ReactionEmoji = styled.span`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  font-size: 1.5rem;
+  display: inline-grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  font-size: 1.35rem;
   line-height: 1;
   margin: 0;
   padding: 0;
+  /* Color-emoji fonts sit high in the em-box; nudge down for optical center */
+  transform: translateY(0.18em);
 `;
 
 const ReactionsDropdown = styled.div`

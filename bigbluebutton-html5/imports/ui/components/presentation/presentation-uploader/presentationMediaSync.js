@@ -46,13 +46,14 @@ export const startPresentationMediaExternalVideo = (
   { startExternalVideo, stopExternalVideo } = {},
   { delayMs = 0 } = {},
 ) => {
+  // Always clear Aparat/online share before (re)starting uploaded media.
+  stopExternalVideo?.();
+
   if (!presentation || !isPresentationMedia(presentation)) {
-    stopExternalVideo?.();
     return false;
   }
 
   if (!startExternalVideo) {
-    stopExternalVideo?.();
     return false;
   }
 
@@ -63,8 +64,6 @@ export const startPresentationMediaExternalVideo = (
   );
 
   if (!presentationId || !authenticatedUrl) {
-    // Still stop Aparat/online video so the selected presentation can surface.
-    stopExternalVideo?.();
     logger.warn({
       logCode: 'presentation_media_sync_skipped',
       extraInfo: {
@@ -85,8 +84,10 @@ export const startPresentationMediaExternalVideo = (
     startExternalVideo(authenticatedUrl);
   };
 
-  if (delayMs > 0) {
-    window.setTimeout(start, delayMs);
+  // Default delay lets StopExternalVideo commit before StartExternalVideo.
+  const waitMs = Number.isFinite(delayMs) ? delayMs : 250;
+  if (waitMs > 0) {
+    window.setTimeout(start, waitMs);
   } else {
     start();
   }

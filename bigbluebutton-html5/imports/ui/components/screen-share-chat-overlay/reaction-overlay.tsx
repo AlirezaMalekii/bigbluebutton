@@ -86,23 +86,10 @@ const ScreenShareChatReactionOverlay: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // When overlay is hidden, skip without consuming — do not mark as seen.
+    if (!overlayVisible) return;
+
     const currentReactions = reactionsRef.current;
-
-    if (!overlayVisible) {
-      const now = Date.now();
-      currentReactions.forEach((reaction) => {
-        if (!reaction.reaction || reaction.reaction === 'none') return;
-        if (!isFreshReaction(reaction.creationDate, now)) return;
-
-        const createdAt = reaction.creationDate.getTime();
-        const key = getReactionKey(reaction);
-        const duplicateKey = `${reaction.userId || 'unknown'}-${reaction.reaction}`;
-        seenReactionsRef.current.add(key);
-        recentReactionRef.current.set(duplicateKey, createdAt);
-      });
-      return;
-    }
-
     const now = Date.now();
     const reactionsToShow = currentReactions.filter(({ reaction, creationDate }) => {
       if (!reaction || reaction === 'none') return false;

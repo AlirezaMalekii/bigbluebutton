@@ -499,21 +499,18 @@ class PresentationUploader extends Component {
   }
 
   syncExternalVideoForSelection(selectedItem, propPresentations, options = {}) {
-    const { startExternalVideo, stopExternalVideo, isSharingVideo } = this.props;
-    // Always detach Aparat/online share when confirming a non-media file.
-    // startPresentationMediaExternalVideo also stops, but guard here so a missing
-    // selection or failed media URL never leaves the online player stuck on stage.
+    const { startExternalVideo, stopExternalVideo } = this.props;
+    // Always detach Aparat/online first. Media files restart after a short delay so
+    // StopExternalVideo settles before StartExternalVideo replaces the stage.
     if (!selectedItem || !isPresentationMedia(selectedItem)) {
-      if (isSharingVideo || stopExternalVideo) {
-        stopExternalVideo?.();
-      }
+      stopExternalVideo?.();
       return;
     }
     startPresentationMediaExternalVideo(
       selectedItem,
       propPresentations,
       { startExternalVideo, stopExternalVideo },
-      options,
+      { delayMs: 250, ...options },
     );
   }
 

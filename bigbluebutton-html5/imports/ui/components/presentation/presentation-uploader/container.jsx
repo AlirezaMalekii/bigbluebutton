@@ -29,7 +29,6 @@ import {
   EXTERNAL_VIDEO_START,
   EXTERNAL_VIDEO_STOP,
 } from '/imports/ui/components/external-video-player/mutations';
-import { isPresentationMedia } from './presentationMediaSync';
 
 const PresentationUploaderContainer = (props) => {
   const { data: currentUserData } = useCurrentUser((user) => ({
@@ -67,12 +66,13 @@ const PresentationUploaderContainer = (props) => {
     });
   };
 
-  const setPresentation = (presentationId) => {
-    const presentation = presentations.find((p) => p.presentationId === presentationId);
-    // Leave Aparat/online-video mode when switching to a non-media presentation
-    // (PDF/PPT/image). Uploaded media is started afterward by syncExternalVideoForSelection.
-    if (!isPresentationMedia(presentation)) {
-      stopExternalVideoMutation();
+  const setPresentation = async (presentationId) => {
+    // Always leave Aparat/online share when switching presentation. Uploaded media
+    // is restarted afterward by syncExternalVideoForSelection (with a short delay).
+    try {
+      await stopExternalVideoMutation();
+    } catch (e) {
+      // Still set current presentation even if stop races or fails.
     }
     return presentationSetCurrent({ variables: { presentationId } });
   };
@@ -81,8 +81,14 @@ const PresentationUploaderContainer = (props) => {
     presentationRemove({ variables: { presentationId } })
   );
 
-  const startExternalVideo = (externalVideoUrl) => {
+  const startExternalVideo = async (externalVideoUrl) => {
     if (!externalVideoUrl) return;
+    // Replace any active Aparat/online URL — Start alone can race with a stuck share.
+    try {
+      await stopExternalVideoMutation();
+    } catch (e) {
+      // Continue to start.
+    }
     startExternalVideoMutation({ variables: { externalVideoUrl } });
   };
 

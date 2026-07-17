@@ -10,8 +10,9 @@ import {
 const APARAT_MATCH_URL = /aparat\.com/i;
 
 /**
- * Aparat has no reliable iframe playback API — `autoplay` query params are ignored
- * (embedAutoplay stays false). Users must use Aparat's own player UI.
+ * Aparat iframe has no reliable postMessage API. SafeMeet drives play/pause by
+ * remounting the official /vt/frame embed (with autoplay on play). Seek/rate
+ * are not available — PresenterSyncToolbar disables those for Aparat.
  */
 export class AparatPlayer extends Component {
   static canPlay(url) {
@@ -25,6 +26,7 @@ export class AparatPlayer extends Component {
     this.player = this;
     this.currentTime = 0;
     this.playbackRate = 1;
+    this.iframeKey = 0;
     this._playing = false;
     this.container = null;
 
@@ -33,7 +35,11 @@ export class AparatPlayer extends Component {
   }
 
   componentDidMount() {
-    const { onMount } = this.props;
+    const { onMount, config } = this.props;
+    const shouldAutoplay = Boolean(config?.aparat?.playing);
+    if (shouldAutoplay) {
+      this._playing = true;
+    }
     if (onMount) {
       onMount(this);
     }
@@ -41,10 +47,36 @@ export class AparatPlayer extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const { url } = this.props;
-    if (url && url !== prevProps.url) {
-      this._playing = false;
+    const {
+      config, url, onStart, onPlay,
+    } = this.props;
+    const prevUrl = prevProps.url;
+    const prevPlaying = Boolean(prevProps.config?.aparat?.playing);
+    const nextPlaying = Boolean(config?.aparat?.playing);
+
+    if (url && url !== prevUrl) {
+      this._playing = nextPlaying;
+      this.remountIframe(() => {
+        if (this._playing) {
+          onStart?.();
+          onPlay?.();
+        }
+      });
+      return;
     }
+
+    if (prevPlaying === nextPlaying) return;
+
+    if (nextPlaying) {
+      this.play();
+    } else {
+      this.pause();
+    }
+  }
+
+  getAparatConfig() {
+    const { config } = this.props;
+    return config?.aparat || {};
   }
 
   getEmbedUrl(url) {
@@ -52,10 +84,17 @@ export class AparatPlayer extends Component {
     const targetUrl = url || propUrl;
     const hash = extractAparatHash(targetUrl);
     if (!hash) {
+      if (isAparatEmbedUrl(targetUrl)) {
+        const fallbackHash = extractAparatHash(targetUrl);
+        return fallbackHash ? buildAparatEmbedUrl(fallbackHash) : targetUrl;
+      }
       return parseAparatEmbed(targetUrl) || targetUrl;
     }
-    // Stable official frame URL — no autoplay remounts (Aparat ignores them).
-    return buildAparatEmbedUrl(hash);
+
+    return buildAparatEmbedUrl(hash, {
+      autoplay: this._playing || Boolean(this.getAparatConfig().playing),
+      muted: false,
+    });
   }
 
   getCurrentTime() {
@@ -90,27 +129,47 @@ export class AparatPlayer extends Component {
     return this;
   }
 
+  remountIframe(callback) {
+    this.iframeKey += 1;
+    this.forceUpdate(callback);
+  }
+
   load() {
     Promise.resolve().then(() => {
-      const { onReady } = this.props;
+      const { onReady, onStart, onPlay } = this.props;
       onReady?.();
+      if (this._playing) {
+        onStart?.();
+        onPlay?.();
+      }
     });
     return this;
   }
 
-  // No-op: Aparat playback is only controllable via its native iframe UI.
   play() {
     const { onPlay, onStart } = this.props;
+    if (this._playing) {
+      onPlay?.();
+      return this;
+    }
     this._playing = true;
-    onStart?.();
-    onPlay?.();
+    this.remountIframe(() => {
+      onStart?.();
+      onPlay?.();
+    });
     return this;
   }
 
   pause() {
     const { onPause } = this.props;
+    if (!this._playing) {
+      onPause?.();
+      return this;
+    }
     this._playing = false;
-    onPause?.();
+    this.remountIframe(() => {
+      onPause?.();
+    });
     return this;
   }
 
@@ -140,6 +199,7 @@ export class AparatPlayer extends Component {
 
   render() {
     const { url } = this.props;
+    // Clicks go to SafeMeet toolbar / viewer blocker — not Aparat's own chrome.
     const style = {
       width: '100%',
       height: '100%',
@@ -147,19 +207,19 @@ export class AparatPlayer extends Component {
       padding: 0,
       border: 0,
       overflow: 'hidden',
-      // Aparat's own controls must receive clicks (play, seek, volume, fullscreen).
-      pointerEvents: 'auto',
+      pointerEvents: 'none',
     };
 
     return (
       <iframe
-        key={url}
+        key={`${url}-${this.iframeKey}-${this._playing ? 'play' : 'pause'}`}
         style={style}
         src={this.getEmbedUrl(url)}
         title="Aparat video player"
         allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
         allowFullScreen
         referrerPolicy="strict-origin-when-cross-origin"
+        tabIndex={-1}
         ref={(container) => {
           this.container = container;
         }}
@@ -178,6 +238,7 @@ AparatPlayer.propTypes = {
   config: PropTypes.shape({
     aparat: PropTypes.shape({
       playing: PropTypes.bool,
+      isPresenter: PropTypes.bool,
     }),
   }),
 };

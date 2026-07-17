@@ -30,12 +30,17 @@ export const getReactionBubbleFreshnessMs = (): number => {
   return DEFAULT_FRESHNESS_MS;
 };
 
+/** Allow a small negative age so server clock slightly ahead of the client
+ *  does not drop just-received stream rows for remote viewers. */
+const CLOCK_SKEW_TOLERANCE_MS = 3000;
+
 export const isFreshReaction = (
   creationDate: Date,
   now: number = Date.now(),
 ): boolean => {
   const ageMs = now - creationDate.getTime();
-  return ageMs >= 0 && ageMs <= getReactionBubbleFreshnessMs();
+  if (Number.isNaN(ageMs)) return false;
+  return ageMs >= -CLOCK_SKEW_TOLERANCE_MS && ageMs <= getReactionBubbleFreshnessMs();
 };
 
 export const normalizeReactionStream = (

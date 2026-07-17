@@ -87,12 +87,14 @@ const OnlineVideoSection = ({
   const hasMode = isLinkMode || isAparatMode;
 
   const linkValid = isDirectVideoUrlValid(videoUrl);
-  const aparatValid = !!parseAparatEmbed(aparatEmbed);
+  const aparatParsed = parseAparatEmbed(aparatEmbed);
+  const aparatValid = !!aparatParsed;
+  // Link mode also accepts Aparat page/embed paste (normalize handles both).
   const canStart = isLinkMode
-    ? (linkValid && !!videoUrl)
+    ? (linkValid && !!videoUrl.trim())
     : (isAparatMode && aparatValid);
   const showError = isLinkMode
-    ? (!linkValid && !!videoUrl)
+    ? (!linkValid && !!videoUrl.trim())
     : (isAparatMode && !aparatValid && !!aparatEmbed.trim());
 
   const toggleMode = (nextMode) => {
@@ -100,10 +102,10 @@ const OnlineVideoSection = ({
   };
 
   const handleStart = () => {
-    if (!hasMode) return;
+    if (!hasMode || !canStart) return;
     const raw = isLinkMode ? videoUrl : aparatEmbed;
     const externalVideoUrl = normalizeVideoUrl(raw);
-    if (!externalVideoUrl) return;
+    if (!externalVideoUrl || !isDirectVideoUrlValid(externalVideoUrl)) return;
 
     startExternalVideo(externalVideoUrl);
     Session.setItem('showUploadPresentationView', false);

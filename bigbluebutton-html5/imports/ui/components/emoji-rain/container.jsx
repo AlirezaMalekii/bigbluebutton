@@ -98,17 +98,13 @@ const EmojiRainContainer = () => {
     }
   }, [usersReactionData]);
 
-  const reactions = useMemo(() => {
-    const now = Date.now();
-    return dedupeReactions([
-      ...normalizeReactionStream(emojisArray),
-      ...fallbackReactions,
-    ]).filter((reaction) => (
-      reaction.reaction
-      && reaction.reaction !== 'none'
-      && isFreshReaction(reaction.creationDate, now)
-    ));
-  }, [emojisArray, fallbackReactions]);
+  // Keep stream + fallback items; overlays apply freshness when animating.
+  // Avoid filtering here so slight server/client clock skew cannot drop live
+  // reactions before remote viewers receive them.
+  const reactions = useMemo(() => dedupeReactions([
+    ...normalizeReactionStream(emojisArray),
+    ...fallbackReactions,
+  ]), [emojisArray, fallbackReactions]);
 
   useEffect(() => {
     reactionStreamVar(reactions);
