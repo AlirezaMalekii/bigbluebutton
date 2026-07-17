@@ -55,6 +55,9 @@ const USER_CAMERA_INTERACTION_MS = (
 
 const CENTER_OFFSET_PUBLISH_EPSILON = 0.5;
 
+// tldraw camera.x/y are page-space (page = screen/z + camera).
+// Letterbox/pillarbox centering therefore uses negative offsets when the slide
+// is smaller than the viewport — not positive screen-pixel margins.
 const calculateCenteredCameraOffsets = (
   scaledWidth,
   scaledHeight,
@@ -63,56 +66,66 @@ const calculateCenteredCameraOffsets = (
   areaHeight,
   fitToWidthMode,
 ) => {
-  const scaledDisplayWidth = scaledWidth * baseZoom;
-  const scaledDisplayHeight = scaledHeight * baseZoom;
-  const slideAspectRatio = scaledWidth / scaledHeight;
-  const areaAspectRatio = areaWidth / areaHeight;
+  const zoom = Number.isFinite(baseZoom) && baseZoom > 0 ? baseZoom : 1;
+  const pageViewportWidth = areaWidth / zoom;
+  const pageViewportHeight = areaHeight / zoom;
 
   let xOffset = 0;
   let yOffset = 0;
 
-  if (fitToWidthMode && slideAspectRatio < areaAspectRatio) {
-    yOffset = (areaHeight - scaledDisplayHeight) / 2;
-  } else if (fitToWidthMode && slideAspectRatio > areaAspectRatio) {
-    xOffset = (areaWidth - scaledDisplayWidth) / 2;
-  } else {
-    if (scaledDisplayWidth < areaWidth) {
-      xOffset = (areaWidth - scaledDisplayWidth) / 2;
+  if (fitToWidthMode) {
+    // Width fills the area; only letterbox vertically when the slide is shorter.
+    if (scaledHeight < pageViewportHeight) {
+      yOffset = (scaledHeight - pageViewportHeight) / 2;
     }
-    if (scaledDisplayHeight < areaHeight) {
-      yOffset = (areaHeight - scaledDisplayHeight) / 2;
+  } else {
+    if (scaledWidth < pageViewportWidth) {
+      xOffset = (scaledWidth - pageViewportWidth) / 2;
+    }
+    if (scaledHeight < pageViewportHeight) {
+      yOffset = (scaledHeight - pageViewportHeight) / 2;
     }
   }
 
   return { xOffset, yOffset };
 };
 
-// Pan bounds must allow positive offsets used for letterbox/pillarbox centering.
-// The previous max of 0 forced fit-to-area slides into the top-left corner.
+// Pan bounds in page-space. When the slide is smaller than the viewport, lock to
+// the centered camera so letterbox/pillarbox cannot collapse back to the corner.
 const clampCameraPanOffsets = (
   x,
   y,
-  zoom,
+  _zoom,
   presentationWidth,
   presentationHeight,
   viewportPageWidth,
   viewportPageHeight,
 ) => {
-  const cameraZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
   const safeViewportPageWidth = Number.isFinite(viewportPageWidth) ? viewportPageWidth : 0;
   const safeViewportPageHeight = Number.isFinite(viewportPageHeight) ? viewportPageHeight : 0;
-  const viewportScreenWidth = safeViewportPageWidth * cameraZoom;
-  const viewportScreenHeight = safeViewportPageHeight * cameraZoom;
-  const slideScreenWidth = presentationWidth * cameraZoom;
-  const slideScreenHeight = presentationHeight * cameraZoom;
 
-  // Upper bound is screen-space so it matches calculateCenteredCameraOffsets.
-  const maxX = Math.max(0, (viewportScreenWidth - slideScreenWidth) / 2);
-  const maxY = Math.max(0, (viewportScreenHeight - slideScreenHeight) / 2);
-  // Keep the historical page-space lower bound for zoomed-in panning, but never
-  // allow it above the centering max (that would reject valid centered cameras).
-  const minX = Math.min(maxX, -(presentationWidth - safeViewportPageWidth));
-  const minY = Math.min(maxY, -(presentationHeight - safeViewportPageHeight));
+  let minX;
+  let maxX;
+  let minY;
+  let maxY;
+
+  if (presentationWidth <= safeViewportPageWidth) {
+    const centeredX = (presentationWidth - safeViewportPageWidth) / 2;
+    minX = centeredX;
+    maxX = centeredX;
+  } else {
+    maxX = 0;
+    minX = -(presentationWidth - safeViewportPageWidth);
+  }
+
+  if (presentationHeight <= safeViewportPageHeight) {
+    const centeredY = (presentationHeight - safeViewportPageHeight) / 2;
+    minY = centeredY;
+    maxY = centeredY;
+  } else {
+    maxY = 0;
+    minY = -(presentationHeight - safeViewportPageHeight);
+  }
 
   let nextX = x;
   let nextY = y;
@@ -135,6 +148,13 @@ const clampCameraPanOffsets = (
 const shouldLocallyCenterCamera = (backendX, backendY) => (
   Math.abs(backendX ?? 0) < CENTER_OFFSET_PUBLISH_EPSILON
   && Math.abs(backendY ?? 0) < CENTER_OFFSET_PUBLISH_EPSILON
+);
+
+// Older SafeMeet builds published positive screen-pixel margins as camera.x/y.
+// tldraw page-space never needs those for fit-to-area letterboxing — recover.
+const hasLegacyScreenSpaceOffset = (x, y) => (
+  (x ?? 0) > CENTER_OFFSET_PUBLISH_EPSILON
+  || (y ?? 0) > CENTER_OFFSET_PUBLISH_EPSILON
 );
 
 const CAMERA_TYPE = 'camera';
@@ -1283,7 +1303,10 @@ const Whiteboard = React.memo((props) => {
           let viewerYOffset = yOffset;
           const shouldCenterViewer = scaledViewBoxWidth > 0
             && scaledViewBoxHeight > 0
-            && shouldLocallyCenterCamera(xOffset, yOffset);
+            && (
+              shouldLocallyCenterCamera(xOffset, yOffset)
+              || hasLegacyScreenSpaceOffset(xOffset, yOffset)
+            );
 
           if (shouldCenterViewer) {
             const centeredCamera = calculateCenteredCameraOffsets(
@@ -2086,7 +2109,9 @@ const Whiteboard = React.memo((props) => {
       // Otherwise keep the presenter's pan relative to the centered fit position on resize.
       const forceAbsoluteCenter = fitToWidthRef.current
         || shouldLocallyCenterCamera(backendX, backendY)
-        || shouldLocallyCenterCamera(camera.x, camera.y);
+        || shouldLocallyCenterCamera(camera.x, camera.y)
+        || hasLegacyScreenSpaceOffset(backendX, backendY)
+        || hasLegacyScreenSpaceOffset(camera.x, camera.y);
       const nextCentered = calculateCenteredCameraOffsets(
         scaledWidth,
         scaledHeight,
@@ -2180,7 +2205,10 @@ const Whiteboard = React.memo((props) => {
       const camera = tlEditorRef.current.getCamera();
       const shouldCenterViewer = scaledViewBoxWidth > 0
         && scaledViewBoxHeight > 0
-        && shouldLocallyCenterCamera(xOffset, yOffset);
+        && (
+          shouldLocallyCenterCamera(xOffset, yOffset)
+          || hasLegacyScreenSpaceOffset(xOffset, yOffset)
+        );
       const centeredCamera = shouldCenterViewer
         ? calculateCenteredCameraOffsets(
           scaledViewBoxWidth,
@@ -2412,7 +2440,10 @@ const Whiteboard = React.memo((props) => {
       if (
         scaledViewBoxWidth > 0
         && scaledViewBoxHeight > 0
-        && shouldLocallyCenterCamera(adjustedXPos, adjustedYPos)
+        && (
+          shouldLocallyCenterCamera(adjustedXPos, adjustedYPos)
+          || hasLegacyScreenSpaceOffset(adjustedXPos, adjustedYPos)
+        )
       ) {
         const centeredCamera = calculateCenteredCameraOffsets(
           scaledViewBoxWidth,

@@ -487,7 +487,8 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
       ref={videoContainer}
       talking={talking}
       customHighlight={webcamBorderHighlightColor}
-      fullscreen={isFullscreenContext}
+      /* Skyroom uses layout CSS overlay (data attr); BBB fixed styles block taps after exit. */
+      fullscreen={isSkyroomColumnLayout() ? false : isFullscreenContext}
       data-skyroom-webcam-fs-active={isFullscreenContext ? 'true' : undefined}
       data-test={talking ? 'webcamItemTalkingUser' : 'webcamItem'}
       animations={animations}

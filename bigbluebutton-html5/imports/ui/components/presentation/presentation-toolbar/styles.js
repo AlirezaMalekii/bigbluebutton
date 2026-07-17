@@ -243,17 +243,33 @@ const FitToWidthButton = styled(Button)`
   box-shadow: none !important;
   border: 0;
 
+  /* Selected (fit-to-width on): teal glass — never stock light/white focus fill */
   ${({ $fitToWidth }) => $fitToWidth && `
     & > span {
-      background-color: rgba(13, 136, 126, 0.22);
-      border: solid ${borderSizeLarge} #20c7bb;
-      color: #ffffff;
-      box-shadow: 0 0 0 2px rgba(32, 199, 187, 0.12);
+      background-color: rgba(13, 136, 126, 0.32) !important;
+      border: solid ${borderSizeLarge} #20c7bb !important;
+      color: #e8fffc !important;
+      box-shadow:
+        0 0 0 2px rgba(32, 199, 187, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+    }
+
+    &:hover:not([aria-disabled="true"]) > span,
+    &:focus:not([aria-disabled="true"]) > span,
+    &:focus:hover:not([aria-disabled="true"]) > span,
+    &:active:not([aria-disabled="true"]) > span,
+    &:focus:active:not([aria-disabled="true"]) > span {
+      background-color: rgba(13, 136, 126, 0.42) !important;
+      border-color: #20c7bb !important;
+      color: #ffffff !important;
+      box-shadow:
+        0 0 0 2px rgba(32, 199, 187, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
     }
   `}
 
   &:focus {
-    background-color: ${colorOffWhite};
+    background-color: transparent;
     border: 0;
   }
 `;

@@ -30,17 +30,30 @@ const futch = (url, opts = {}, onProgress) => new Promise((res, rej) => {
 
   xhr.onload = (e) => {
     if (e.target.status !== 200) {
-      return rej(new Error({ code: e.target.status, message: e.target.statusText }));
+      const err = new Error(e.target.statusText || 'upload-http-error');
+      err.code = e.target.status;
+      return rej(err);
     }
 
     const responseText = (e.target.responseText || '').trim();
     if (responseText === 'upload-failed') {
-      return rej(new Error({ code: 'upload-failed', message: 'upload-failed' }));
+      const err = new Error('upload-failed');
+      err.code = 'INVALID_MIME_TYPE';
+      return rej(err);
+    }
+    if (responseText && responseText !== 'upload-success') {
+      const err = new Error(responseText);
+      err.code = responseText;
+      return rej(err);
     }
 
     return res(responseText);
   };
-  xhr.onerror = rej;
+  xhr.onerror = () => {
+    const err = new Error('network-error');
+    err.code = 'network-error';
+    rej(err);
+  };
   if (xhr.upload && onProgress) {
     xhr.upload.addEventListener('progress', onProgress, false);
   }
@@ -63,7 +76,9 @@ const requestPresentationUploadToken = (
   });
 
   const timeout = setTimeout(() => {
-    reject(new Error({ code: 408, message: 'requestPresentationUploadToken timeout' }));
+    const err = new Error('requestPresentationUploadToken timeout');
+    err.code = 408;
+    reject(err);
   }, TOKEN_TIMEOUT);
 
   const getData = (n = 0) => {
@@ -109,9 +124,12 @@ const uploadAndConvertPresentation = (
   if (!file) return Promise.resolve();
 
   const uploadFile = normalizeUploadFile(file);
+  const uploadFileName = filename || uploadFile.name || 'upload.bin';
 
   const data = new FormData();
-  data.append('fileUpload', uploadFile);
+  // Always send an explicit filename so the server can read the extension
+  // even when browsers rewrite File.name for reconstructed blobs.
+  data.append('fileUpload', uploadFile, uploadFileName);
   data.append('conference', meetingId);
   data.append('room', meetingId);
   data.append('temporaryPresentationId', temporaryPresentationId);
@@ -132,7 +150,13 @@ const uploadAndConvertPresentation = (
       if (presentationId && typeof onServerPresentationId === 'function') {
         onServerPresentationId(presentationId);
       }
-      return futch(endpoint.replace('upload', `${uploadToken}/upload`), opts, onProgress);
+      return futch(endpoint.replace('upload', `${uploadToken}/upload`), opts, onProgress)
+        .then((result) => {
+          if (typeof onUpload === 'function') {
+            onUpload({ error: false, done: true, progress: 100 });
+          }
+          return result;
+        });
     })
     // Trap the error so we can have parallel upload
     .catch((error) => {
@@ -140,9 +164,18 @@ const uploadAndConvertPresentation = (
         logCode: 'presentation_uploader_service',
         extraInfo: {
           error,
+          errorCode: error?.code,
+          errorMessage: error?.message,
         },
       }, 'Generic presentation upload exception catcher');
-      onUpload({ error: true, done: true, status: error.code });
+      if (typeof onUpload === 'function') {
+        onUpload({
+          error: true,
+          done: true,
+          progress: 0,
+          status: error?.code || error?.message || 'genericError',
+        });
+      }
       return Promise.resolve();
     });
 };
@@ -165,6 +198,7 @@ const removePresentations = (
 const isPresentationEligibleForUpload = (p) => {
   if (!p?.file || p.uploadCompleted) return false;
   if (p.upload?.done) return false;
+  if (p.upload?.error || p.uploadErrorMsgKey) return false;
   // Keep uploading while the local File handle exists, even if GraphQL already
   // marked uploadInProgress from the upload-token handshake.
   return true;
@@ -359,25 +393,24 @@ function handleFiledrop(files, files2, that, intl, intlMessages) {
         upload: { done: false, error: false, progress: 0 },
         exportation: { error: false },
         onProgress: (event) => {
-          if (!event.lengthComputable) {
-            that.deepMergeUpdateFileKey(id, 'upload', {
-              progress: 100,
-              done: true,
-            });
-
-            return;
-          }
-
-          that.deepMergeUpdateFileKey(id, 'upload', {
-            progress: (event.loaded / event.total) * 100,
-            done: event.loaded === event.total,
-          });
+          const progressUpdate = !event.lengthComputable
+            ? { progress: 100, done: true }
+            : {
+              progress: (event.loaded / event.total) * 100,
+              done: event.loaded === event.total,
+            };
+          that.deepMergeUpdateFileKey(id, 'upload', progressUpdate);
         },
         onConversion: (conversion) => {
           that.deepMergeUpdateFileKey(id, 'conversion', conversion);
         },
         onUpload: (upload) => {
-          that.deepMergeUpdateFileKey(id, 'upload', upload);
+          that.deepMergeUpdateFileKey(id, 'upload', {
+            ...upload,
+            progress: upload?.done && !upload?.error
+              ? Math.max(Number(upload.progress) || 0, 100)
+              : upload?.progress,
+          });
         },
         onServerPresentationId: (serverPresentationId) => {
           if (typeof that.assignServerPresentationId === 'function') {
@@ -385,6 +418,11 @@ function handleFiledrop(files, files2, that, intl, intlMessages) {
           }
         },
         onDone: (newId) => {
+          that.deepMergeUpdateFileKey(id, 'upload', {
+            done: true,
+            progress: 100,
+            error: false,
+          });
           if (typeof that.assignServerPresentationId === 'function') {
             that.assignServerPresentationId(id, newId);
           }

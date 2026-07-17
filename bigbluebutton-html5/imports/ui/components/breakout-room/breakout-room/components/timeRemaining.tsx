@@ -113,7 +113,7 @@ const TimeRemaingPanel: React.FC<TimeRemainingPanelProps> = ({
       data-test="breakoutDurationBox"
     >
       <BreakoutRemainingTime
-        boldText
+        boldText={false}
       />
       {isModerator && showChangeTimeForm ? (
         <Styled.SetTimeContainer>

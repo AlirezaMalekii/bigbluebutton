@@ -1,4 +1,5 @@
 /* Breakout join — body inside #fsmodal (ModalFullscreen) */
+#fsmodal[data-test="breakoutJoinConfirmationModal"] [data-test="breakoutJoinModalBody"],
 #fsmodal [data-test="breakoutJoinModalBody"] {
   display: flex;
   flex-direction: column;
@@ -8,6 +9,7 @@
   padding: 0.5rem 0;
 }
 
+#fsmodal[data-test="breakoutJoinConfirmationModal"] [data-test="breakoutJoinRoomName"],
 #fsmodal [data-test="breakoutJoinRoomName"] {
   display: flex;
   align-items: center;
@@ -23,6 +25,7 @@
   border: 1px solid rgba(32, 199, 187, 0.28);
 }
 
+#fsmodal[data-test="breakoutJoinConfirmationModal"] [data-test="breakoutJoinModalHint"],
 #fsmodal [data-test="breakoutJoinModalHint"] {
   font-size: 0.78rem;
   line-height: 1.45;
@@ -30,9 +33,73 @@
   margin: 0;
 }
 
+#fsmodal[data-test="breakoutJoinConfirmationModal"] [data-test="breakoutJoinModalMessage"],
 #fsmodal [data-test="breakoutJoinModalMessage"] {
   font-size: 0.92rem;
   line-height: 1.5;
   margin: 0;
   color: rgba(210, 224, 238, 0.9);
+}
+
+/* Mobile: keep join invite as a centered card (not full-screen sheet) */
+@media (max-width: 640px) {
+  html[data-skyroom="true"] .fullscreenModalOverlay:has(#fsmodal[data-test="breakoutJoinConfirmationModal"]) {
+    padding: max(16px, env(safe-area-inset-top, 0px)) 16px max(16px, env(safe-area-inset-bottom, 0px)) !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal[data-test="breakoutJoinConfirmationModal"].ReactModal__Content,
+  html[data-skyroom="true"] .ReactModal__Content#fsmodal[data-test="breakoutJoinConfirmationModal"] {
+    position: relative !important;
+    inset: auto !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    width: min(420px, 92vw) !important;
+    min-width: 0 !important;
+    max-width: 420px !important;
+    height: auto !important;
+    max-height: min(78dvh, 560px) !important;
+    margin: 0 !important;
+    border-radius: 18px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border: 1px solid rgba(20, 169, 158, 0.3) !important;
+    box-shadow:
+      0 18px 48px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+    background:
+      radial-gradient(420px 220px at 12% -20%, rgba(20, 169, 158, 0.18), transparent 62%),
+      linear-gradient(165deg, #1a2234 0%, #121a28 55%, #0e1522 100%) !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal[data-test="breakoutJoinConfirmationModal"] header {
+    position: static !important;
+    padding: 14px 16px !important;
+    border-radius: 0 !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal[data-test="breakoutJoinConfirmationModal"] > header + div:not([hidden]),
+  html[data-skyroom="true"] #fsmodal[data-test="breakoutJoinConfirmationModal"] [data-test="fullscreenModalBody"] {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    padding: 12px 16px 16px !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal[data-test="breakoutJoinConfirmationModal"] header [class*="Actions"] {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal[data-test="breakoutJoinConfirmationModal"] button[data-test="modalDismissButton"],
+  html[data-skyroom="true"] #fsmodal[data-test="breakoutJoinConfirmationModal"] button[data-test="modalConfirmButton"] {
+    min-height: 36px !important;
+    border-radius: 10px !important;
+  }
 }

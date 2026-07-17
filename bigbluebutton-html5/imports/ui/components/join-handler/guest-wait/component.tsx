@@ -195,20 +195,20 @@ const GuestWait: React.FC<GuestWaitProps> = (props) => {
         <Styled.Position id="positionInWaitingQueue">
           <p aria-live="polite">{positionMessage}</p>
         </Styled.Position>
-        {publicMessage && (
-          <Styled.MessageContainer data-test="guestPublicLobbyMessage">
-            <Styled.MessageLabel>
-              {intl.formatMessage(intlMessages.publicMessageFromHost)}
-            </Styled.MessageLabel>
-            {renderLobbyMessage(publicMessage)}
-          </Styled.MessageContainer>
-        )}
         {privateMessage && (
           <Styled.MessageContainer data-test="guestPrivateLobbyMessage">
             <Styled.MessageLabel>
               {intl.formatMessage(intlMessages.privateMessageFromHost)}
             </Styled.MessageLabel>
             {renderLobbyMessage(privateMessage)}
+          </Styled.MessageContainer>
+        )}
+        {publicMessage && (
+          <Styled.MessageContainer data-test="guestPublicLobbyMessage">
+            <Styled.MessageLabel>
+              {intl.formatMessage(intlMessages.publicMessageFromHost)}
+            </Styled.MessageLabel>
+            {renderLobbyMessage(publicMessage)}
           </Styled.MessageContainer>
         )}
         {(showDefaultWaitMessage || guestStatus !== GUEST_STATUSES.WAIT) && (

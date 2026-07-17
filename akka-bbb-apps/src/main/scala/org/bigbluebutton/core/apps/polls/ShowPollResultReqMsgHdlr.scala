@@ -1,5 +1,6 @@
 package org.bigbluebutton.core.apps.polls
 
+import org.bigbluebutton.ClientSettings.getConfigPropertyValueByPathAsBooleanOrElse
 import org.bigbluebutton.common2.domain.SimplePollResultOutVO
 import org.bigbluebutton.common2.msgs._
 import org.bigbluebutton.core.apps.groupchats.GroupChatApp
@@ -65,6 +66,9 @@ trait ShowPollResultReqMsgHdlr extends RightsManagementTrait {
 
         broadcastEvent(msg, result, poll.questions(0).quiz)
 
+        // Mark poll published even when whiteboard annotation is disabled.
+        Polls.showPollResult(msg.body.pollId, liveMeeting.polls, msg.body.showAnswer)
+
         //Send notification
         val notifyEvent = MsgBuilder.buildNotifyAllInMeetingEvtMsg(
           liveMeeting.props.meetingProp.intId,
@@ -80,13 +84,20 @@ trait ShowPollResultReqMsgHdlr extends RightsManagementTrait {
         // Add Chat message with result
         ChatMessageDAO.insertSystemMsg(liveMeeting.props.meetingProp.intId, GroupChatApp.MAIN_PUBLIC_CHAT, "", "", GroupChatMessageType.POLL, resultAsSimpleMap, "")
 
-        //Add whiteboard annotation
-        for {
-          pod <- state.presentationPodManager.getDefaultPod()
-          currentPres <- pod.getCurrentPresentation()
-        } {
-          if (currentPres.current) {
-            Polls.handleShowPollResultReqMsgForAnnotation(state, msg.header.userId, msg.body.pollId, msg.body.showAnswer, liveMeeting, result, bus)
+        // Optional whiteboard annotation (SafeMeet: chat-only unless explicitly enabled)
+        val publishToWhiteboard = getConfigPropertyValueByPathAsBooleanOrElse(
+          liveMeeting.clientSettings,
+          "public.poll.publishToWhiteboard",
+          false
+        )
+        if (publishToWhiteboard) {
+          for {
+            pod <- state.presentationPodManager.getDefaultPod()
+            currentPres <- pod.getCurrentPresentation()
+          } {
+            if (currentPres.current) {
+              Polls.handleShowPollResultReqMsgForAnnotation(state, msg.header.userId, msg.body.pollId, msg.body.showAnswer, liveMeeting, result, bus)
+            }
           }
         }
 

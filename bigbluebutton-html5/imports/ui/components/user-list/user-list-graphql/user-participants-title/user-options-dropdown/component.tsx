@@ -136,14 +136,6 @@ const intlMessages = defineMessages({
     id: 'app.userList.userOptions.clearedReactions',
     description: 'Used in toast notification when reactions have been cleared',
   },
-  usersJoinMutedOnToast: {
-    id: 'app.toast.usersJoinMutedOn.label',
-    description: 'Toast when users join muted is enabled',
-  },
-  usersJoinMutedOffToast: {
-    id: 'app.toast.usersJoinMutedOff.label',
-    description: 'Toast when users join muted is disabled',
-  },
 });
 
 interface UserTitleOptionsProps {
@@ -237,13 +229,8 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
       },
     })
       .then(() => {
-        if (!exceptPresenter) {
-          notify(
-            intl.formatMessage(intlMessages[muted ? 'usersJoinMutedOnToast' : 'usersJoinMutedOffToast']),
-            'info',
-            muted ? 'mute' : 'unmute',
-          );
-        }
+        // Toast comes from the server NotifyAllInMeetingEvtMsg / NotificationDAO path.
+        // Do not notify() here or the moderator sees a duplicate toast.
 
         if (!muted) {
           logger.info(

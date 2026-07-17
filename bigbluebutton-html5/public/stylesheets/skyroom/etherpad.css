@@ -53,6 +53,19 @@ body,
   color: #e6edf7 !important;
 }
 
+/* Let floating popups/toasts use the full pad viewport without clipping. */
+html,
+body,
+#padmain,
+#editorcontainerbox {
+  overflow: hidden !important;
+  height: 100% !important;
+}
+
+#editorcontainer {
+  overflow: hidden !important;
+}
+
 html,
 body,
 #outerdocbody,
@@ -87,15 +100,33 @@ div {
   font-family: 'fontawesome-etherpad' !important;
 }
 
-/* ── Toolbar bar ───────────────────────────────────────────────────────────── */
+/* ── Toolbar bar (compact, single-row) ─────────────────────────────────────── */
 #editbar,
 .toolbar {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 2px !important;
   background: #101826 !important;
   border: none !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
   box-shadow: none !important;
-  padding: 6px 8px !important;
-  overflow: visible !important;
+  padding: 2px 4px !important;
+  min-height: 28px !important;
+  height: 28px !important;
+  max-height: 28px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+}
+
+#editbar::-webkit-scrollbar,
+.toolbar::-webkit-scrollbar {
+  display: none !important;
+  height: 0 !important;
 }
 
 .show-more-icon-btn,
@@ -109,22 +140,34 @@ div {
 .toolbar .menu_left,
 .toolbar .menu_right {
   display: flex !important;
-  flex-wrap: wrap !important;
+  flex: 0 0 auto !important;
+  flex-wrap: nowrap !important;
   align-items: center !important;
-  gap: 3px !important;
-  max-width: 100% !important;
+  gap: 1px !important;
+  max-width: none !important;
+  height: 24px !important;
   overflow: visible !important;
+  position: static !important;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 #editbar .menu_left > ul,
 #editbar .menu_right > ul,
 .toolbar .menu_left > ul,
-.toolbar .menu_right > ul {
+.toolbar .menu_right > ul,
+.toolbar ul {
   display: flex !important;
-  flex-wrap: wrap !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
   align-items: center !important;
-  gap: 3px !important;
-  max-width: 100% !important;
+  gap: 1px !important;
+  max-width: none !important;
+  height: 24px !important;
+  margin: 0 !important;
+  overflow: visible !important;
 }
 
 #editbar .menu_left li,
@@ -132,6 +175,27 @@ div {
 .toolbar .menu_left li,
 .toolbar .menu_right li {
   display: inline-flex !important;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+}
+
+/* Keep Etherpad mobile bottom-bar from splitting the toolbar into two rows. */
+.mobile-layout .toolbar .menu_right,
+.mobile-layout #editbar .menu_right {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.toolbar.cropped .menu_left,
+.toolbar.full-icons .menu_left {
+  width: auto !important;
+  height: 24px !important;
+  flex-wrap: nowrap !important;
 }
 
 /* ── Toolbar buttons + icons ───────────────────────────────────────────────── */
@@ -139,9 +203,18 @@ div {
 #editbar ul li {
   border: none !important;
   background: transparent !important;
-  border-radius: 9px !important;
-  margin: 0 1px !important;
+  border-radius: 6px !important;
+  margin: 0 !important;
   box-shadow: none !important;
+}
+
+.toolbar ul li a,
+#editbar ul li a {
+  min-width: 22px !important;
+  width: 22px !important;
+  height: 22px !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
 }
 
 .toolbar ul li a,
@@ -151,9 +224,16 @@ div {
   color: #cdd8e6 !important;
   background: transparent !important;
   border: none !important;
-  border-radius: 9px !important;
+  border-radius: 6px !important;
   box-shadow: none !important;
   transition: background 130ms ease, color 130ms ease !important;
+}
+
+.buttonicon:before,
+[class^='buttonicon-']:before,
+[class*=' buttonicon-']:before {
+  font-size: 12px !important;
+  line-height: 1 !important;
 }
 
 .toolbar ul li a:hover,
@@ -177,6 +257,12 @@ div {
 .separator {
   background: rgba(255, 255, 255, 0.08) !important;
   border: none !important;
+  width: 1px !important;
+  min-width: 1px !important;
+  height: 14px !important;
+  margin: 0 2px !important;
+  visibility: visible !important;
+  align-self: center !important;
 }
 
 .toolbar select,
@@ -184,9 +270,11 @@ div {
   background: rgba(255, 255, 255, 0.05) !important;
   color: #e6edf7 !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 8px !important;
-  padding: 2px 6px !important;
-  font-size: 12px !important;
+  border-radius: 6px !important;
+  padding: 0 4px !important;
+  font-size: 11px !important;
+  height: 22px !important;
+  max-width: 72px !important;
 }
 
 /* ── Editor surface ────────────────────────────────────────────────────────── */
@@ -227,13 +315,17 @@ div {
   box-sizing: border-box !important;
   right: 12px !important;
   left: auto !important;
-  top: 44px !important;
+  top: 34px !important;
   max-width: min(360px, calc(100% - 24px)) !important;
   width: min(360px, calc(100% - 24px)) !important;
+  max-height: calc(100% - 40px) !important;
   margin: 0 !important;
   transform: none !important;
   opacity: 1 !important;
   z-index: 800 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
 }
 
 /* Small popovers anchored to a toolbar control (e.g. hyperlink). */
@@ -242,6 +334,8 @@ div {
   max-width: min(280px, calc(100% - 16px)) !important;
   top: auto !important;
   margin: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
 }
 
 .popup:not(.popup-show):not(#users.chatAndUsers):not(.gritter-item) {
@@ -263,13 +357,26 @@ div {
   box-shadow:
     0 12px 32px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
-  padding: 14px 16px !important;
+  padding: 12px 14px 28px !important;
   min-width: 0 !important;
   max-width: 100% !important;
   width: 100% !important;
   box-sizing: border-box !important;
-  overflow: auto !important;
-  max-height: min(70vh, 480px) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scroll-padding-bottom: 28px !important;
+  flex: 1 1 auto !important;
+  max-height: none !important;
+  min-height: 0 !important;
+}
+
+/* Extra spacer so the last scrollable item is never clipped. */
+.popup-content::after {
+  content: '' !important;
+  display: block !important;
+  height: 12px !important;
+  flex-shrink: 0 !important;
 }
 
 .popup h1 {
@@ -337,7 +444,7 @@ div {
 }
 
 #import_export .popup-content {
-  padding: 12px 14px !important;
+  padding: 12px 14px 32px !important;
 }
 
 #import_export .exportlink {
@@ -354,6 +461,10 @@ div {
   font-size: 12.5px !important;
   line-height: 1.35 !important;
   transition: background 130ms ease, border-color 130ms ease !important;
+}
+
+#import_export .exportlink:last-child {
+  margin-bottom: 10px !important;
 }
 
 #import_export .exportlink:hover {
@@ -386,15 +497,22 @@ div {
 /* ── Saved-revision (star) toast / gritter ─────────────────────────────────── */
 #gritter-container {
   position: absolute !important;
-  top: 52px !important;
-  left: 12px !important;
-  right: 12px !important;
+  top: 34px !important;
+  left: 8px !important;
+  right: 8px !important;
+  bottom: 8px !important;
   transform: none !important;
   width: auto !important;
   max-width: none !important;
+  max-height: calc(100% - 42px) !important;
   text-align: center !important;
   z-index: 900 !important;
   pointer-events: none !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: 16px !important;
+  box-sizing: border-box !important;
 }
 
 #gritter-container .gritter-item {
@@ -410,20 +528,29 @@ div {
   bottom: auto !important;
   width: 100% !important;
   max-width: min(420px, 100%) !important;
-  margin: 0 auto 8px !important;
+  max-height: none !important;
+  margin: 0 auto 12px !important;
   transform: none !important;
   opacity: 1 !important;
+  overflow: visible !important;
+  display: block !important;
 }
 
 .gritter-item .popup-content {
   display: flex !important;
   align-items: flex-start !important;
   gap: 10px !important;
-  padding: 12px 14px !important;
+  padding: 12px 14px 18px !important;
   background: #131d2c !important;
   border: 1px solid rgba(32, 199, 187, 0.35) !important;
   border-radius: 12px !important;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4) !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.gritter-item .popup-content::after {
+  display: none !important;
 }
 
 .gritter-item .gritter-content {
@@ -434,14 +561,15 @@ div {
   font-size: 12.5px !important;
   line-height: 1.55 !important;
   color: #e6edf7 !important;
+  padding-bottom: 2px !important;
 }
 
 .gritter-item .gritter-title {
   font-size: 13px !important;
   font-weight: 700 !important;
-  margin: 0 0 4px !important;
+  margin: 0 0 6px !important;
   color: #ffffff !important;
-  line-height: 1.4 !important;
+  line-height: 1.45 !important;
 }
 
 .gritter-item .gritter-close {
@@ -497,48 +625,94 @@ div {
 
 /* ── Mobile / narrow pad panel ─────────────────────────────────────────────── */
 @media only screen and (max-width: 800px) {
+  #editbar,
+  .toolbar {
+    height: 26px !important;
+    min-height: 26px !important;
+    max-height: 26px !important;
+    padding: 1px 3px !important;
+  }
+
+  .toolbar ul li a,
+  #editbar ul li a {
+    min-width: 20px !important;
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .buttonicon:before,
+  [class^='buttonicon-']:before,
+  [class*=' buttonicon-']:before {
+    font-size: 11px !important;
+  }
+
+  .toolbar ul li.separator,
+  .separator {
+    height: 12px !important;
+    margin: 0 1px !important;
+  }
+
   .popup,
   #import_export.popup {
-    top: 48px !important;
-    left: 8px !important;
-    right: 8px !important;
+    top: 30px !important;
+    left: 6px !important;
+    right: 6px !important;
+    bottom: 6px !important;
     width: auto !important;
     max-width: none !important;
+    max-height: calc(100% - 36px) !important;
     margin: 0 !important;
     transform: none !important;
   }
 
   .mobile-layout .popup:not(.toolbar-popup):not(.gritter-item) {
-    top: 48px !important;
-    bottom: auto !important;
-    left: 8px !important;
-    right: 8px !important;
+    top: 30px !important;
+    bottom: 6px !important;
+    left: 6px !important;
+    right: 6px !important;
   }
 
   .popup-content,
   #import_export .popup-content {
-    max-height: min(62vh, 380px) !important;
-    padding: 12px !important;
+    padding: 10px 12px 36px !important;
     border-radius: 12px !important;
+    scroll-padding-bottom: 36px !important;
+  }
+
+  .popup-content::after {
+    height: 20px !important;
   }
 
   .popup h1 {
-    font-size: 14px !important;
+    font-size: 13px !important;
+    margin-bottom: 8px !important;
   }
 
   .popup h2 {
-    font-size: 11.5px !important;
+    font-size: 11px !important;
   }
 
   #import_export .exportlink {
     padding: 6px 8px !important;
     font-size: 12px !important;
+    margin-bottom: 5px !important;
+  }
+
+  #import_export .exportlink:last-child {
+    margin-bottom: 14px !important;
   }
 
   #gritter-container {
-    top: 48px !important;
-    left: 8px !important;
-    right: 8px !important;
+    top: 30px !important;
+    left: 6px !important;
+    right: 6px !important;
+    bottom: 6px !important;
+    max-height: calc(100% - 36px) !important;
+    padding-bottom: 20px !important;
+  }
+
+  .gritter-item .popup-content {
+    padding: 10px 12px 20px !important;
   }
 
   .gritter-item .gritter-content,

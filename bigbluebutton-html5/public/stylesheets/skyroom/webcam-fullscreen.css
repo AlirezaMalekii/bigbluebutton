@@ -2,7 +2,8 @@
    Skyroom — per-webcam fullscreen overlay (layout-only, no browser FS)
    ===================================================================== */
 
-#layout[data-skyroom-webcam-fullscreen] {
+#layout[data-skyroom-webcam-fullscreen],
+html.skyroom-webcam-fs #layout {
   overflow: hidden !important;
 }
 
@@ -18,52 +19,120 @@
 #layout[data-skyroom-webcam-fullscreen] .skyroom-mobile-zone-tabs,
 #layout[data-skyroom-webcam-fullscreen] .skyroom-mobile-status-rail,
 #layout[data-skyroom-webcam-fullscreen] .skyroom-mobile-talking-rail,
+#layout[data-skyroom-webcam-fullscreen] .skyroom-mobile-zone-fs-btn,
 #layout[data-skyroom-webcam-fullscreen] #bannerBar,
 #layout[data-skyroom-webcam-fullscreen] #notificationsBar {
   visibility: hidden !important;
   pointer-events: none !important;
 }
 
-/* Collapse layout regions so the engine does not reserve dead space */
+/*
+ * Break transform / contain containing-blocks so the active tile's
+ * position:fixed is viewport-relative.
+ * Specificity must beat mobile dock rules in responsive.css which set
+ * transform: translate3d(0,0,0) and pin the dock to a small zone rect.
+ */
 #layout[data-skyroom-webcam-fullscreen] .react-draggable:has(#cameraDock),
 #layout[data-skyroom-webcam-fullscreen] #cameraDock,
 #layout[data-skyroom-webcam-fullscreen] #skyroom-sidebar-webcam-dock,
 #layout[data-skyroom-webcam-fullscreen] #skyroom-stage-webcam-dock,
-#layout[data-skyroom-webcam-fullscreen] #skyroom-center-webcam-dock {
+#layout[data-skyroom-webcam-fullscreen] #skyroom-center-webcam-dock,
+#layout[data-skyroom-webcam-fullscreen][data-skyroom-column="true"][data-skyroom-mobile="true"] .react-draggable:has(#cameraDock),
+#layout[data-skyroom-webcam-fullscreen][data-skyroom-column="true"][data-skyroom-mobile="true"][data-skyroom-mobile-bottom-webcams="true"] .react-draggable:has(#cameraDock),
+#layout[data-skyroom-webcam-fullscreen][data-skyroom-column="true"][data-skyroom-mobile="true"][data-skyroom-mobile-top-webcams="true"] .react-draggable:has(#cameraDock),
+#layout[data-skyroom-webcam-fullscreen][data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock,
+#layout[data-skyroom-webcam-fullscreen][data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] {
+  transform: none !important;
+  translate: none !important;
+  filter: none !important;
+  perspective: none !important;
+  contain: none !important;
+  content-visibility: visible !important;
+  visibility: visible !important;
+  z-index: 1500 !important;
+  /* Empty dock chrome must not steal taps outside the active tile */
+  pointer-events: none !important;
+  overflow: visible !important;
+}
+
+/*
+ * Mobile: lift the dock to the viewport while fullscreen so overflow/size
+ * constraints from the zone card cannot clip the active tile. Attribute is
+ * cleared synchronously on exit so this cannot linger as a tap blocker.
+ */
+#layout[data-skyroom-webcam-fullscreen][data-skyroom-mobile="true"] .react-draggable:has(#cameraDock),
+#layout[data-skyroom-webcam-fullscreen][data-skyroom-column="true"][data-skyroom-mobile="true"][data-skyroom-mobile-bottom-webcams="true"] .react-draggable:has(#cameraDock),
+#layout[data-skyroom-webcam-fullscreen][data-skyroom-column="true"][data-skyroom-mobile="true"][data-skyroom-mobile-top-webcams="true"] .react-draggable:has(#cameraDock),
+#layout[data-skyroom-webcam-fullscreen][data-skyroom-mobile="true"] #cameraDock,
+#layout[data-skyroom-webcam-fullscreen][data-skyroom-mobile="true"] [data-test="cameraDock"] {
   position: fixed !important;
   inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
   width: 100vw !important;
+  width: 100dvw !important;
   height: 100vh !important;
-  max-width: 100vw !important;
-  max-height: 100vh !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  max-height: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
-  transform: none !important;
-  z-index: 1500 !important;
-  overflow: hidden !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
   background: #000 !important;
+}
+
+#layout[data-skyroom-webcam-fullscreen][data-skyroom-mobile="true"] .react-draggable:has(#cameraDock) > div,
+#layout[data-skyroom-webcam-fullscreen][data-skyroom-mobile="true"] #cameraDock > div,
+#layout[data-skyroom-webcam-fullscreen][data-skyroom-mobile="true"] [data-test="cameraDock"] > div,
+#layout[data-skyroom-webcam-fullscreen][data-skyroom-mobile="true"] [class*="VideoCanvas"],
+#layout[data-skyroom-webcam-fullscreen][data-skyroom-mobile="true"] [class*="VideoList"] {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  overflow: visible !important;
 }
 
 /* Hide every webcam tile except the active one */
 #layout[data-skyroom-webcam-fullscreen] [data-test="webcamItem"]:not([data-skyroom-webcam-fs-active="true"]),
-#layout[data-skyroom-webcam-fullscreen] [data-test="webcamItemTalkingUser"]:not([data-skyroom-webcam-fs-active="true"]) {
+#layout[data-skyroom-webcam-fullscreen] [data-test="webcamItemTalkingUser"]:not([data-skyroom-webcam-fs-active="true"]),
+#layout[data-skyroom-webcam-fullscreen] [data-test="webcamVideoItem"]:not(:has([data-skyroom-webcam-fs-active="true"])),
+#layout[data-skyroom-webcam-fullscreen] .skyroom-webcam-zone-drag:not(:has([data-skyroom-webcam-fs-active="true"])) {
   display: none !important;
 }
 
-/* Active tile fills the viewport */
-#layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"] {
+/* Active tile + wrappers fill the viewport */
+#layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"],
+#layout[data-skyroom-webcam-fullscreen] [data-test="webcamVideoItem"]:has([data-skyroom-webcam-fs-active="true"]),
+#layout[data-skyroom-webcam-fullscreen] .skyroom-webcam-zone-drag:has([data-skyroom-webcam-fs-active="true"]) {
   position: fixed !important;
   inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
   width: 100vw !important;
+  width: 100dvw !important;
   height: 100vh !important;
-  max-width: 100vw !important;
-  max-height: 100vh !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  max-height: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
   border-radius: 0 !important;
   z-index: 1501 !important;
   background: #000 !important;
   transform: none !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
 }
 
 #layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"]::after {
@@ -72,11 +141,14 @@
 }
 
 #layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"] [class*="videoContainer"],
-#layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"] video {
+#layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"] [data-test="videoContainer"],
+#layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"] video,
+#layout[data-skyroom-webcam-fullscreen][data-skyroom-mobile="true"] [data-skyroom-webcam-fs-active="true"] video,
+#layout[data-skyroom-webcam-fullscreen][data-skyroom-column="true"][data-skyroom-mobile="true"] [data-skyroom-webcam-fs-active="true"] video {
   width: 100% !important;
   height: 100% !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
   border-radius: 0 !important;
   object-fit: contain !important;
 }
@@ -88,6 +160,12 @@
 #layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"] [data-test="skyroomWebcamMenuHost"],
 #layout[data-skyroom-webcam-fullscreen] [data-skyroom-webcam-fs-active="true"] [class*="UserCameraButtonsContainerWrapper"] {
   display: none !important;
+}
+
+/* Zone-drag must not capture the close control / taps during FS */
+#layout[data-skyroom-webcam-fullscreen] .skyroom-webcam-zone-drag {
+  cursor: default !important;
+  touch-action: none !important;
 }
 
 /* Floating close control */
@@ -108,6 +186,8 @@
   background: rgba(0, 0, 0, 0.55);
   color: #fff;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   transition: background 0.15s ease, transform 0.15s ease;

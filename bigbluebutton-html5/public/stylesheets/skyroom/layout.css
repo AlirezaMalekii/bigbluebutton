@@ -640,12 +640,59 @@
   color: #ffffff !important;
 }
 
-#layout[data-skyroom-column="true"] [class*="FitToWidthButton"] > span {
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"] > span {
   transition:
     background-color 120ms ease,
     border-color 120ms ease,
     box-shadow 120ms ease,
     color 120ms ease !important;
+}
+
+/*
+ * Fit-to-width selected state — Button color="light" uses #DCE4EC on focus.
+ * Keep a teal selected pill (and icon) so the toggle never flashes white.
+ */
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"]:focus,
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"]:focus-visible,
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"]:hover,
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"]:active {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"]:focus > span,
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"]:focus-visible > span,
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"]:hover > span,
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"]:active > span,
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"]:focus:hover > span,
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"]:focus:active > span {
+  background-color: var(--skyroom-accent-hover-bg, rgba(32, 199, 187, 0.14)) !important;
+  border-color: var(--skyroom-accent-border, rgba(32, 199, 187, 0.40)) !important;
+  box-shadow: 0 2px 10px var(--skyroom-accent-glow, rgba(32, 199, 187, 0.12)) !important;
+  color: var(--skyroom-brand-300, #3fc2b8) !important;
+}
+
+/* Selected = fit-to-width ON */
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"][aria-pressed="true"] > span,
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"][aria-pressed="true"]:hover > span,
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"][aria-pressed="true"]:focus > span,
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"][aria-pressed="true"]:focus-visible > span,
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"][aria-pressed="true"]:active > span,
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"][aria-pressed="true"]:focus:hover > span,
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"][aria-pressed="true"]:focus:active > span {
+  background-color: rgba(13, 136, 126, 0.38) !important;
+  border: 1px solid var(--skyroom-accent, #20c7bb) !important;
+  color: #e8fffc !important;
+  box-shadow:
+    0 0 0 2px rgba(32, 199, 187, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"][aria-pressed="true"] i,
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"][aria-pressed="true"] i::before,
+#layout[data-skyroom-column="true"] [data-test="fitToWidthButton"][aria-pressed="true"] [class^="icon-bbb-"] {
+  color: #e8fffc !important;
+  fill: #e8fffc !important;
 }
 
 /* Slide page number / input */

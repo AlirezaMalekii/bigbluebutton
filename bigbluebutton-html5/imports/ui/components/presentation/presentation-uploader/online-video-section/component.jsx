@@ -28,8 +28,8 @@ const intlMessages = defineMessages({
     description: 'URL input placeholder',
   },
   urlNote: {
-    id: 'app.externalVideo.noteLabel',
-    description: 'External video hint',
+    id: 'app.presentationUploder.onlineVideoUrlNote',
+    description: 'Short external video recording hint for presentation modal',
   },
   aparatInput: {
     id: 'app.presentationUploder.aparatEmbedInput',
@@ -62,6 +62,7 @@ const intlMessages = defineMessages({
 });
 
 const MODES = {
+  NONE: null,
   LINK: 'link',
   APARAT: 'aparat',
 };
@@ -73,7 +74,7 @@ const OnlineVideoSection = ({
   startExternalVideo,
   stopExternalVideo,
 }) => {
-  const [mode, setMode] = useState(MODES.LINK);
+  const [mode, setMode] = useState(MODES.NONE);
   const [videoUrl, setVideoUrl] = useState('');
   const [aparatEmbed, setAparatEmbed] = useState('');
 
@@ -81,15 +82,25 @@ const OnlineVideoSection = ({
 
   const { formatMessage } = intl;
 
+  const isLinkMode = mode === MODES.LINK;
+  const isAparatMode = mode === MODES.APARAT;
+  const hasMode = isLinkMode || isAparatMode;
+
   const linkValid = isDirectVideoUrlValid(videoUrl);
   const aparatValid = !!parseAparatEmbed(aparatEmbed);
-  const isLinkMode = mode === MODES.LINK;
-  const canStart = isLinkMode ? (linkValid && !!videoUrl) : aparatValid;
+  const canStart = isLinkMode
+    ? (linkValid && !!videoUrl)
+    : (isAparatMode && aparatValid);
   const showError = isLinkMode
     ? (!linkValid && !!videoUrl)
-    : (!aparatValid && !!aparatEmbed.trim());
+    : (isAparatMode && !aparatValid && !!aparatEmbed.trim());
+
+  const toggleMode = (nextMode) => {
+    setMode((current) => (current === nextMode ? MODES.NONE : nextMode));
+  };
 
   const handleStart = () => {
+    if (!hasMode) return;
     const raw = isLinkMode ? videoUrl : aparatEmbed;
     const externalVideoUrl = normalizeVideoUrl(raw);
     if (!externalVideoUrl) return;
@@ -98,6 +109,7 @@ const OnlineVideoSection = ({
     Session.setItem('showUploadPresentationView', false);
     setVideoUrl('');
     setAparatEmbed('');
+    setMode(MODES.NONE);
   };
 
   const handleStop = () => {
@@ -105,7 +117,7 @@ const OnlineVideoSection = ({
   };
 
   return (
-    <Styled.Section data-test="onlineVideoSection">
+    <Styled.Section data-test="onlineVideoSection" data-collapsed={!hasMode ? 'true' : undefined}>
       <Styled.SectionTitle>
         {formatMessage(intlMessages.title)}
       </Styled.SectionTitle>
@@ -116,7 +128,7 @@ const OnlineVideoSection = ({
           role="tab"
           aria-selected={isLinkMode}
           $active={isLinkMode}
-          onClick={() => setMode(MODES.LINK)}
+          onClick={() => toggleMode(MODES.LINK)}
           data-test="onlineVideoModeLink"
         >
           {formatMessage(intlMessages.modeLink)}
@@ -124,9 +136,9 @@ const OnlineVideoSection = ({
         <Styled.ModeButton
           type="button"
           role="tab"
-          aria-selected={!isLinkMode}
-          $active={!isLinkMode}
-          onClick={() => setMode(MODES.APARAT)}
+          aria-selected={isAparatMode}
+          $active={isAparatMode}
+          onClick={() => toggleMode(MODES.APARAT)}
           data-test="onlineVideoModeAparat"
         >
           {formatMessage(intlMessages.modeAparat)}
@@ -152,7 +164,9 @@ const OnlineVideoSection = ({
             {formatMessage(intlMessages.urlNote)}
           </Styled.Hint>
         </Styled.InputGroup>
-      ) : (
+      ) : null}
+
+      {isAparatMode ? (
         <Styled.InputGroup>
           <label htmlFor="online-video-aparat-input">
             {formatMessage(intlMessages.aparatInput)}
@@ -173,31 +187,35 @@ const OnlineVideoSection = ({
             {formatMessage(intlMessages.aparatSyncNote)}
           </Styled.Hint>
         </Styled.InputGroup>
-      )}
+      ) : null}
 
-      {showError ? (
+      {hasMode && showError ? (
         <Styled.Error data-test="onlineVideoError">
           {formatMessage(isLinkMode ? intlMessages.urlError : intlMessages.aparatError)}
         </Styled.Error>
       ) : null}
 
-      <Styled.Actions>
-        <Button
-          label={formatMessage(intlMessages.start)}
-          color="primary"
-          disabled={!canStart}
-          onClick={handleStart}
-          data-test="startOnlineVideo"
-        />
-        {isSharingVideo ? (
-          <Button
-            label={formatMessage(intlMessages.stop)}
-            color="default"
-            onClick={handleStop}
-            data-test="stopOnlineVideo"
-          />
-        ) : null}
-      </Styled.Actions>
+      {(hasMode || isSharingVideo) ? (
+        <Styled.Actions>
+          {hasMode ? (
+            <Button
+              label={formatMessage(intlMessages.start)}
+              color="primary"
+              disabled={!canStart}
+              onClick={handleStart}
+              data-test="startOnlineVideo"
+            />
+          ) : null}
+          {isSharingVideo ? (
+            <Button
+              label={formatMessage(intlMessages.stop)}
+              color="default"
+              onClick={handleStop}
+              data-test="stopOnlineVideo"
+            />
+          ) : null}
+        </Styled.Actions>
+      ) : null}
     </Styled.Section>
   );
 };

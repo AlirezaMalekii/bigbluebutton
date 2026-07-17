@@ -24,7 +24,7 @@ import connectionStatus from '/imports/ui/core/graphql/singletons/connectionStat
 import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
-  openSkyroomMobileBox,
+  closeSkyroomBreakoutPanel,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 export type BreakoutRoomPresentation = 'sidebar' | 'mobile';
@@ -144,6 +144,10 @@ const BreakoutRoom: React.FC<BreakoutRoomProps> = ({
       onClose();
       return;
     }
+    if (isSkyroomColumnLayout()) {
+      closeSkyroomBreakoutPanel(layoutContextDispatch);
+      return;
+    }
     layoutContextDispatch({
       type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
       value: false,
@@ -173,6 +177,72 @@ const BreakoutRoom: React.FC<BreakoutRoomProps> = ({
     })
     : intl.formatMessage(intlMessages.userGuide);
 
+  const isMobilePresentation = presentation === 'mobile';
+
+  const durationBlock = (
+    <TimeRemaingPanel
+      showChangeTimeForm={showChangeTimeForm}
+      isModerator={isModerator}
+      durationInSeconds={durationInSeconds}
+      createdTime={createdTime}
+      toggleShowChangeTimeForm={setShowChangeTimeForm}
+      presentation={presentation}
+    />
+  );
+
+  const managerChrome = (
+    <>
+      {isModerator ? (
+        <ModeratorToolbar
+          onChangeTime={() => setShowChangeTimeForm(true)}
+          onEndAll={() => {
+            closePanel();
+            breakoutRoomEndAll();
+          }}
+          isConnected={isConnected}
+        />
+      ) : (
+        <Styled.UserGuideBanner data-test="breakoutUserGuide">
+          {userGuideMessage}
+        </Styled.UserGuideBanner>
+      )}
+
+      <Styled.SummaryBar data-test="breakoutSummaryBar">
+        <span>
+          {intl.formatMessage(intlMessages.summaryRooms, { count: breakouts.length })}
+        </span>
+        {isModerator ? (
+          <span>
+            {intl.formatMessage(intlMessages.summaryParticipants, { count: totalAssignedParticipants })}
+          </span>
+        ) : null}
+      </Styled.SummaryBar>
+
+      {isModerator ? <BreakoutMessageForm /> : null}
+      {isModerator ? <Styled.Separator /> : null}
+    </>
+  );
+
+  const roomsList = (
+    <Styled.BreakoutsList>
+      {breakouts.map((breakout) => (
+        <RoomCard
+          key={`breakoutRoomItems-${breakout.breakoutRoomMeetingId}`}
+          breakout={breakout}
+          isModerator={isModerator}
+          isYourRoom={!isModerator && (breakout.showInvitation || breakout.isLastAssignedRoom)}
+          userId={userId}
+          meetingId={meetingId}
+          userJoinedAudio={userJoinedAudio}
+          audioBridge={audioBridge}
+          isRequesting={requestedBreakoutRoomId === breakout.breakoutRoomMeetingId}
+          onJoin={() => handleJoinRoom(breakout)}
+          onTransferAudio={transferUserToMeeting}
+        />
+      ))}
+    </Styled.BreakoutsList>
+  );
+
   return (
     <Styled.Panel
       ref={panelRef}
@@ -183,75 +253,38 @@ const BreakoutRoom: React.FC<BreakoutRoomProps> = ({
         e.preventDefault();
       }}
     >
-      <Styled.PanelHeader data-test="breakoutRoomPanelHeader">
-        <Header
-          leftButtonProps={{
-            'aria-label': intl.formatMessage(intlMessages.breakoutAriaTitle),
-            label: intl.formatMessage(intlMessages.breakoutTitle),
-            onClick: closePanel,
-          }}
-          data-test="breakoutRoomManagerHeader"
-          rightButtonProps={{}}
-          customRightButton={null}
-        />
-        <TimeRemaingPanel
-          showChangeTimeForm={showChangeTimeForm}
-          isModerator={isModerator}
-          durationInSeconds={durationInSeconds}
-          createdTime={createdTime}
-          toggleShowChangeTimeForm={setShowChangeTimeForm}
-          presentation={presentation}
-        />
-
-        {isModerator ? (
-          <ModeratorToolbar
-            onChangeTime={() => setShowChangeTimeForm(true)}
-            onEndAll={() => {
-              closePanel();
-              breakoutRoomEndAll();
-            }}
-            isConnected={isConnected}
-          />
-        ) : (
-          <Styled.UserGuideBanner data-test="breakoutUserGuide">
-            {userGuideMessage}
-          </Styled.UserGuideBanner>
-        )}
-
-        <Styled.SummaryBar data-test="breakoutSummaryBar">
-          <span>
-            {intl.formatMessage(intlMessages.summaryRooms, { count: breakouts.length })}
-          </span>
-          {isModerator ? (
-            <span>
-              {intl.formatMessage(intlMessages.summaryParticipants, { count: totalAssignedParticipants })}
-            </span>
-          ) : null}
-        </Styled.SummaryBar>
-
-        {isModerator ? <BreakoutMessageForm /> : null}
-        {isModerator ? <Styled.Separator /> : null}
-      </Styled.PanelHeader>
-
-      <Styled.ScrollableBody data-test="breakoutRoomScrollBody">
-        <Styled.BreakoutsList>
-          {breakouts.map((breakout) => (
-            <RoomCard
-              key={`breakoutRoomItems-${breakout.breakoutRoomMeetingId}`}
-              breakout={breakout}
-              isModerator={isModerator}
-              isYourRoom={!isModerator && (breakout.showInvitation || breakout.isLastAssignedRoom)}
-              userId={userId}
-              meetingId={meetingId}
-              userJoinedAudio={userJoinedAudio}
-              audioBridge={audioBridge}
-              isRequesting={requestedBreakoutRoomId === breakout.breakoutRoomMeetingId}
-              onJoin={() => handleJoinRoom(breakout)}
-              onTransferAudio={transferUserToMeeting}
+      {isMobilePresentation ? (
+        <>
+          <Styled.MobilePanelTitle data-test="breakoutRoomManagerHeader">
+            {intl.formatMessage(intlMessages.breakoutTitle)}
+          </Styled.MobilePanelTitle>
+          <Styled.ScrollableBody data-test="breakoutRoomScrollBody">
+            {durationBlock}
+            {managerChrome}
+            {roomsList}
+          </Styled.ScrollableBody>
+        </>
+      ) : (
+        <>
+          <Styled.PanelHeader data-test="breakoutRoomPanelHeader">
+            <Header
+              leftButtonProps={{
+                'aria-label': intl.formatMessage(intlMessages.breakoutAriaTitle),
+                label: intl.formatMessage(intlMessages.breakoutTitle),
+                onClick: closePanel,
+              }}
+              data-test="breakoutRoomManagerHeader"
+              rightButtonProps={{}}
+              customRightButton={null}
             />
-          ))}
-        </Styled.BreakoutsList>
-      </Styled.ScrollableBody>
+            {durationBlock}
+            {managerChrome}
+          </Styled.PanelHeader>
+          <Styled.ScrollableBody data-test="breakoutRoomScrollBody">
+            {roomsList}
+          </Styled.ScrollableBody>
+        </>
+      )}
     </Styled.Panel>
   );
 };
@@ -271,8 +304,8 @@ const BreakoutRoomContainer: React.FC<BreakoutRoomContainerProps> = ({
   );
 
   const handleClose = onClose ?? (
-    presentation === 'mobile' && isSkyroomColumnLayout() && isSkyroomMobileViewport()
-      ? () => openSkyroomMobileBox(layoutContextDispatch, null)
+    isSkyroomColumnLayout()
+      ? () => closeSkyroomBreakoutPanel(layoutContextDispatch)
       : undefined
   );
 

@@ -57,6 +57,7 @@ import PeerTube from '../custom-players/peertube';
 import { ArcPlayer } from '../custom-players/arc-player';
 import { AparatPlayer } from '../custom-players/aparat';
 import getStorageSingletonInstance from '/imports/ui/services/storage';
+import Session from '/imports/ui/services/storage/in-memory';
 
 const AUTO_PLAY_BLOCK_DETECTION_TIMEOUT_SECONDS = 5;
 const TWITCH_VIDEO_SEEK_TIME_WINDOW = 1; // Twitch video seek time in seconds
@@ -80,6 +81,15 @@ const intlMessages = defineMessages({
   },
   closeExternalVideoLabel: {
     id: 'app.externalVideo.stopShareExternalVideo',
+  },
+  aparatPlay: {
+    id: 'app.presentationMedia.play',
+  },
+  aparatPause: {
+    id: 'app.presentationMedia.pause',
+  },
+  aparatViewerHint: {
+    id: 'app.presentationUploder.aparatSyncNote',
   },
 });
 
@@ -160,26 +170,31 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   }), []);
 
   const videoPlayConfig = useMemo(() => {
-    const isPresentationMedia = isPresentationMediaUrl(videoUrl);
-    const presentationMediaKind = isPresentationMedia
+    const isPresentationMediaFile = isPresentationMediaUrl(videoUrl);
+    const mediaKind = isPresentationMediaFile
       ? getPresentationMediaKindFromUrl(videoUrl)
       : null;
+    const isPresentationAudioFile = mediaKind === 'audio';
 
     return {
       // default option for all players, can be overwritten
       playerOptions: {
-        autoPlay: true,
+        autoPlay: !isPresentationMediaFile,
         playsInline: true,
-        controls: true,
+        controls: !isPresentationAudioFile,
       },
       file: {
-        forceVideo: presentationMediaKind === 'video',
-        forceAudio: presentationMediaKind === 'audio',
+        // Authenticated BBB media URLs keep the extension in query params, so
+        // react-player cannot detect audio/video from the path — force the element type.
+        forceVideo: mediaKind === 'video',
+        forceAudio: mediaKind === 'audio',
         attributes: {
-          controls: true,
-          autoPlay: true,
+          // Custom SafeMeet UI drives presentation audio; native autoPlay+controls
+          // on a hidden element races with ReactPlayer `playing` and can glitch AAC/MP3.
+          controls: !isPresentationMediaFile,
+          autoPlay: !isPresentationMediaFile,
           playsInline: true,
-          preload: 'auto',
+          preload: isPresentationAudioFile ? 'metadata' : 'auto',
         },
       },
       facebook: {
@@ -202,7 +217,11 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
         },
       },
       peertube: {
-        isPresenter: true,
+        isPresenter,
+      },
+      aparat: {
+        isPresenter,
+        playing,
       },
       twitch: {
         options: {
@@ -213,7 +232,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
       preload: true,
       showHoverToolBar: false,
     };
-  }, [videoUrl]);
+  }, [videoUrl, isPresenter, playing]);
 
   const [showUnsynchedMsg, setShowUnsynchedMsg] = React.useState(false);
   const [showHoverToolBar, setShowHoverToolBar] = React.useState(false);
@@ -235,6 +254,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   const mediaLoadFailedRef = useRef(false);
   const layoutTransitionRef = useRef(false);
   const aparatStartedRef = useRef(false);
+  const presentationMediaAnchoredRef = useRef(false);
   const isAparatSource = isAparatVideoUrl(videoUrl);
 
   let currentTime = getServerCurrentTime();
@@ -404,9 +424,18 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   }, []);
 
   useEffect(() => {
-    if (playerRef.current && !isPresenter) {
-      playerRef.current.seekTo(truncateTime(currentTime), 'seconds');
+    if (!playerRef.current || isPresenter) return;
+    // Avoid seek storms on presentation media — small drifts are normal while buffering.
+    if (isPresentationMedia) {
+      const target = truncateTime(currentTime);
+      getPlayerCurrentTime(playerRef.current as ReactPlayer).then((localTime) => {
+        if (Math.abs(target - localTime) > 1.25) {
+          playerRef.current?.seekTo(target, 'seconds');
+        }
+      });
+      return;
     }
+    playerRef.current.seekTo(truncateTime(currentTime), 'seconds');
   }, [playerRef.current, updatedAt]);
 
   // --- Plugin related code ---;
@@ -463,6 +492,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   useEffect(() => {
     mediaLoadFailedRef.current = false;
     aparatStartedRef.current = false;
+    presentationMediaAnchoredRef.current = false;
     setDuration(0);
     setPlayed(0);
     setLoaded(0);
@@ -472,13 +502,40 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
     if (!isPresenter) return false;
     if (layoutTransitionRef.current) return false;
     if (isAparatSource) {
-      return event === 'start' && !aparatStartedRef.current;
+      // Aparat has no reliable iframe events — presenter SafeMeet controls publish play/stop.
+      return event === 'play' || event === 'stop' || event === 'start';
     }
     return true;
   };
 
   const handleOnReady = () => {
-    if (mediaLoadFailedRef.current || !isPresenter || !playing || !playerRef.current) return;
+    if (mediaLoadFailedRef.current || !playerRef.current) return;
+    if (isAparatSource) {
+      if (playing) playVideo(playerRef.current);
+      return;
+    }
+    // Presentation media: ReactPlayer `playing` already drives playback. Extra play()
+    // calls after auto-share (playerPlaying=true from insert) glitch AAC/MP3 and can
+    // sound like overlapping tracks. Only re-anchor the share clock once media is ready.
+    if (isPresentationMedia) {
+      if (
+        isPresenter
+        && playing
+        && !presentationMediaAnchoredRef.current
+        && shouldPublishSync('play')
+      ) {
+        presentationMediaAnchoredRef.current = true;
+        getPlayerCurrentTime(playerRef.current as ReactPlayer).then((time) => {
+          sendMessage('play', {
+            rate: playerPlaybackRate || 1,
+            time: Number.isFinite(time) ? time : 0,
+            state: 'playing',
+          });
+        });
+      }
+      return;
+    }
+    if (!isPresenter || !playing) return;
     playVideo(playerRef.current);
   };
 
@@ -494,6 +551,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   };
 
   const handleOnStart = async () => {
+    const internalPlayer = playerRef.current?.getInternalPlayer();
     const currentTime = getServerCurrentTime();
     const playerCurrentTime = await getPlayerCurrentTime(playerRef.current as ReactPlayer);
     if (isPresenter && !playing && shouldPublishSync('start')) {
@@ -509,6 +567,16 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
       if (isAparatSource) {
         aparatStartedRef.current = true;
       }
+    }
+
+    // Local file audio/video: wall-clock already advances while the file buffers.
+    // Seeking on start overlaps buffers and sounds like doubled/garbled audio.
+    if (isPresentationMedia) {
+      const drift = Math.abs(currentTime - playerCurrentTime);
+      if (!isPresenter && drift > 1.25) {
+        playerRef?.current?.seekTo(truncateTime(currentTime), 'seconds');
+      }
+      return;
     }
 
     if (currentTime > playerCurrentTime) {
@@ -660,18 +728,35 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
         stopVideo(playerRef.current);
       }
     } else if (playing) {
-      if (isAparatSource) {
-        setPlayerKey(uniqueId('react-player'));
-      } else {
+      // Presentation media: let ReactPlayer `playing` prop own playback to avoid double start.
+      if (!isPresentationMedia) {
         playVideo(playerRef.current);
       }
+    } else if (isAparatSource) {
+      stopVideo(playerRef.current);
     }
 
     return () => {
       window.clearTimeout(clearLayoutTransition);
     };
-  }, [isMinimized, playing, stopVideo, playVideo, isAparatSource, setPlayerKey]);
+  }, [isMinimized, playing, stopVideo, playVideo, isAparatSource, isPresentationMedia]);
 
+  const handleAparatPresenterToggle = () => {
+    if (!isPresenter || !isAparatSource) return;
+    const nextPlaying = !(playing || reactPlayerPlaying);
+    sendMessage(nextPlaying ? 'play' : 'stop', {
+      rate: 1,
+      time: getServerCurrentTime(),
+      state: nextPlaying ? 'playing' : '',
+    });
+    if (playerRef.current) {
+      if (nextPlaying) {
+        playVideo(playerRef.current);
+      } else {
+        stopVideo(playerRef.current);
+      }
+    }
+  };
   // @ts-ignore accessing lib private property
   const playerName = playerRef.current && playerRef.current.player
     // @ts-ignore accessing lib private property
@@ -747,7 +832,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
             <Styled.VideoPlayer
               className={isPresentationAudio ? 'presentation-media-audio-hidden' : undefined}
               config={videoPlayConfig}
-              autoPlay
+              autoPlay={!isPresentationMedia}
               url={playerUrl}
               playing={playing}
               playbackRate={playerPlaybackRate}
@@ -798,7 +883,36 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
           ) : null
         }
         {
-          shouldShowTools() && !isPresentationAudio ? (
+          isAparatSource && !isPresenter ? (
+            <Styled.AparatViewerBlocker
+              data-test="aparatViewerBlocker"
+              aria-hidden="true"
+            />
+          ) : null
+        }
+        {
+          isAparatSource && isPresenter ? (
+            <Styled.AparatPresenterControls data-test="aparatPresenterControls">
+              <Styled.AparatPlayPauseButton
+                type="button"
+                onClick={handleAparatPresenterToggle}
+                aria-label={intl.formatMessage(
+                  (playing || reactPlayerPlaying)
+                    ? intlMessages.aparatPause
+                    : intlMessages.aparatPlay,
+                )}
+              >
+                {intl.formatMessage(
+                  (playing || reactPlayerPlaying)
+                    ? intlMessages.aparatPause
+                    : intlMessages.aparatPlay,
+                )}
+              </Styled.AparatPlayPauseButton>
+            </Styled.AparatPresenterControls>
+          ) : null
+        }
+        {
+          shouldShowTools() && !isPresentationAudio && !isAparatSource ? (
             <ExternalVideoPlayerToolbar
               handleOnMuted={(m: boolean) => setMute(m)}
               handleReload={() => setPlayerKey(uniqueId('react-player'))}
@@ -895,26 +1009,6 @@ const ExternalVideoPlayerContainer: React.FC = () => {
       lastMessageRef.current.time = 0;
       lastMessageRef.current.state = undefined;
     }
-
-    if (!currentMeeting?.externalVideo?.externalVideoUrl && hasExternalVideo.current) {
-      layoutContextDispatch({
-        type: ACTIONS.SET_PILE_CONTENT_FOR_PRESENTATION_AREA,
-        value: {
-          content: PRESENTATION_AREA.EXTERNAL_VIDEO,
-          open: false,
-        },
-      });
-      hasExternalVideo.current = false;
-    } else if (currentMeeting?.externalVideo?.externalVideoUrl && !hasExternalVideo.current) {
-      layoutContextDispatch({
-        type: ACTIONS.SET_PILE_CONTENT_FOR_PRESENTATION_AREA,
-        value: {
-          content: PRESENTATION_AREA.EXTERNAL_VIDEO,
-          open: true,
-        },
-      });
-      hasExternalVideo.current = true;
-    }
   }, [currentMeeting?.externalVideo?.externalVideoUrl]);
 
   // --- Plugin related code ---
@@ -978,6 +1072,48 @@ const ExternalVideoPlayerContainer: React.FC = () => {
   const presentationMediaKind = isPresentationMedia
     ? getPresentationMediaKindFromUrl(externalVideoUrl)
     : null;
+
+  // Keep layout pile + stage visibility in sync for ALL clients. After screenshare
+  // ends, viewers can be left with a missing EXTERNAL_VIDEO pile entry while the
+  // GraphQL URL is restored — re-push and open the stage so they do not need a
+  // manual hide/show presentation toggle.
+  useEffect(() => {
+    const hasUrl = Boolean(externalVideoUrl);
+
+    if (hasUrl) {
+      if (!hasExternalVideoOnLayout) {
+        layoutContextDispatch({
+          type: ACTIONS.SET_PILE_CONTENT_FOR_PRESENTATION_AREA,
+          value: {
+            content: PRESENTATION_AREA.EXTERNAL_VIDEO,
+            open: true,
+          },
+        });
+        layoutContextDispatch({
+          type: ACTIONS.SET_PRESENTATION_IS_OPEN,
+          value: true,
+        });
+        Session.setItem('presentationLastState', true);
+      }
+      hasExternalVideo.current = true;
+      return;
+    }
+
+    if (hasExternalVideo.current || hasExternalVideoOnLayout) {
+      layoutContextDispatch({
+        type: ACTIONS.SET_PILE_CONTENT_FOR_PRESENTATION_AREA,
+        value: {
+          content: PRESENTATION_AREA.EXTERNAL_VIDEO,
+          open: false,
+        },
+      });
+      hasExternalVideo.current = false;
+    }
+  }, [
+    externalVideoUrl,
+    hasExternalVideoOnLayout,
+    layoutContextDispatch,
+  ]);
 
   const { data: presentationPageData } = useDeduplicatedSubscription<CurrentPresentationPagesSubscriptionResponse>(
     CURRENT_PRESENTATION_PAGE_SUBSCRIPTION,

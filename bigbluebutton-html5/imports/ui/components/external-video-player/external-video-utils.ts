@@ -11,28 +11,50 @@ const APARAT_PAGE_REGEX = /aparat\.com\/v\/([^/"'\s?&]+)/i;
 
 export const APARAT_EMBED_HOST = 'www.aparat.com';
 
-export const buildAparatEmbedUrl = (hash: string): string => (
-  `https://${APARAT_EMBED_HOST}/video/video/embed/videohash/${hash}/vt/frame?data[responsive]=yes`
-);
+export type AparatEmbedOptions = {
+  autoplay?: boolean;
+  muted?: boolean;
+  hideTitle?: boolean;
+};
+
+export const extractAparatHash = (input: string): string | null => {
+  if (!input) return null;
+  const trimmed = input.trim();
+  const scriptMatch = trimmed.match(APARAT_EMBED_SCRIPT_REGEX);
+  if (scriptMatch?.[1]) return scriptMatch[1];
+  const embedMatch = trimmed.match(APARAT_VIDEOHASH_REGEX);
+  if (embedMatch?.[1]) return embedMatch[1];
+  const pageMatch = trimmed.match(APARAT_PAGE_REGEX);
+  if (pageMatch?.[1]) return pageMatch[1];
+  return null;
+};
+
+export const buildAparatEmbedUrl = (
+  hash: string,
+  options: AparatEmbedOptions = {},
+): string => {
+  const params = new URLSearchParams();
+  params.set('data[responsive]', 'yes');
+  if (options.hideTitle !== false) {
+    params.set('titleShow', 'false');
+  }
+  if (options.autoplay) {
+    params.set('autoplay', 'true');
+  }
+  if (options.muted) {
+    params.set('muted', 'true');
+  }
+  return `https://${APARAT_EMBED_HOST}/video/video/embed/videohash/${hash}/vt/frame?${params.toString()}`;
+};
 
 export const isAparatEmbedUrl = (url: string): boolean => (
   APARAT_VIDEOHASH_REGEX.test(url) || APARAT_EMBED_SCRIPT_REGEX.test(url)
 );
 
 export const parseAparatEmbed = (input: string): string | null => {
-  const trimmed = input.trim();
-  if (!trimmed) return null;
-
-  const scriptMatch = trimmed.match(APARAT_EMBED_SCRIPT_REGEX);
-  if (scriptMatch?.[1]) return buildAparatEmbedUrl(scriptMatch[1]);
-
-  const embedMatch = trimmed.match(APARAT_VIDEOHASH_REGEX);
-  if (embedMatch?.[1]) return buildAparatEmbedUrl(embedMatch[1]);
-
-  const pageMatch = trimmed.match(APARAT_PAGE_REGEX);
-  if (pageMatch?.[1]) return buildAparatEmbedUrl(pageMatch[1]);
-
-  return null;
+  const hash = extractAparatHash(input);
+  if (!hash) return null;
+  return buildAparatEmbedUrl(hash);
 };
 
 export const isAparatVideoUrl = (url: string): boolean => {
@@ -85,6 +107,7 @@ export const normalizeVideoUrl = (url: string): string => {
 
 export default {
   buildAparatEmbedUrl,
+  extractAparatHash,
   isAparatEmbedUrl,
   isAparatVideoUrl,
   parseAparatEmbed,

@@ -114,8 +114,8 @@ const ListSection = styled.div`
   overflow: hidden;
 
   @media (max-width: 640px) {
-    min-height: 140px;
-    flex: 1 1 42%;
+    min-height: 240px;
+    flex: 1 1 58%;
   }
 `;
 
@@ -165,7 +165,7 @@ const ListCard = styled.div`
   flex: 1 1 auto;
 
   @media (max-width: 640px) {
-    min-height: 120px;
+    min-height: 220px;
     flex: 1 1 auto;
   }
 `;
@@ -201,15 +201,13 @@ const ListHeader = styled.div`
   text-transform: uppercase;
   flex-shrink: 0;
 
-  ${mobilePresentationRowLayout}
-
   @media (max-width: 640px) {
-    padding: 6px 10px;
-    font-size: 0.62rem;
-
-    [class*="ColStatus"] {
-      display: none;
-    }
+    grid-template-columns: 1.75rem minmax(0, 1fr) auto !important;
+    column-gap: 8px !important;
+    padding: 8px 12px;
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    text-transform: none;
   }
 `;
 
@@ -219,7 +217,7 @@ const ListHeaderCell = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
 
-  &:last-child {
+  ${({ $col }) => $col === 'actions' && `
     justify-self: end;
     text-align: end;
 
@@ -227,6 +225,22 @@ const ListHeaderCell = styled.span`
       justify-self: start;
       text-align: start;
     }
+  `}
+
+  @media (max-width: 640px) {
+    ${({ $col }) => ($col === 'badge' || $col === 'status') && `
+      display: none !important;
+    `}
+
+    ${({ $col }) => $col === 'name' && `
+      font-weight: 700;
+      color: ${skyroomText};
+    `}
+
+    ${({ $col }) => $col === 'actions' && `
+      font-weight: 700;
+      color: ${skyroomText};
+    `}
   }
 `;
 
@@ -245,7 +259,7 @@ const FileList = styled.div`
 
   @media (max-width: 640px) {
     max-height: none;
-    min-height: 80px;
+    min-height: 160px;
     flex: 1 1 auto;
   }
 
@@ -410,6 +424,7 @@ const ColStatus = styled.div`
     justify-content: flex-start;
     font-size: 0.68rem;
     line-height: 1.2;
+    margin-top: 2px;
   }
 `;
 
@@ -426,6 +441,19 @@ const FileStatusCell = styled.div`
 
   [dir="rtl"] & {
     text-align: start;
+  }
+
+  @media (max-width: 640px) {
+    display: inline-flex;
+    width: auto;
+    max-width: 100%;
+    text-align: start;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06) !important;
+    font-size: 0.66rem;
+    font-weight: 600;
+    line-height: 1.3;
   }
 `;
 
@@ -661,6 +689,12 @@ const PresentationItem = styled.div.attrs({
   ${mobilePresentationRowLayout}
 
   @media (max-width: 640px) {
+    padding: 10px 12px !important;
+    min-height: 56px !important;
+    column-gap: 8px !important;
+    row-gap: 4px !important;
+    align-items: start;
+
     [class*="ColRadio"] {
       grid-row: 1 / span 2;
       align-self: center;
@@ -668,11 +702,26 @@ const PresentationItem = styled.div.attrs({
 
     [class*="ColName"] {
       grid-row: 1;
+      align-self: end;
+    }
+
+    [class*="ColBadge"] {
+      display: none;
     }
 
     [class*="ColActions"] {
       grid-row: 1 / span 2;
       align-self: center;
+    }
+
+    [class*="FileNameCell"] > span {
+      font-size: 0.84rem !important;
+      font-weight: 600 !important;
+      line-height: 1.3 !important;
+      white-space: normal;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
     }
   }
   transition: background 0.15s ease;

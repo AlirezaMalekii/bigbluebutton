@@ -32,6 +32,8 @@ import { PIN_NOTES } from '../notes/mutations';
 import { PRESENTATIONS_SUBSCRIPTION } from '/imports/ui/components/whiteboard/queries';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
 import { restorePresentationMediaExternalVideo } from '../presentation/presentation-uploader/presentationMediaSync';
+import { ACTIONS } from '/imports/ui/components/layout/enums';
+import Session from '/imports/ui/services/storage/in-memory';
 
 const screenshareIntlMessages = defineMessages({
   // SCREENSHARE
@@ -190,11 +192,22 @@ const ScreenshareContainer = (props) => {
   useEffect(() => {
     const isBroadcasting = isScreenBroadcasting || isCameraAsContentBroadcasting;
 
-    if (wasBroadcastingRef.current && !isBroadcasting && isPresenter) {
-      restorePresentationMediaExternalVideo(
-        presentations,
-        { startExternalVideo, stopExternalVideo },
-      );
+    if (wasBroadcastingRef.current && !isBroadcasting) {
+      // Reopen stage for every client when screenshare ends. Viewers otherwise keep
+      // presentationIsOpen=false and the restored media video stays hidden until they
+      // manually toggle presentation visibility.
+      layoutContextDispatch({
+        type: ACTIONS.SET_PRESENTATION_IS_OPEN,
+        value: true,
+      });
+      Session.setItem('presentationLastState', true);
+
+      if (isPresenter) {
+        restorePresentationMediaExternalVideo(
+          presentations,
+          { startExternalVideo, stopExternalVideo },
+        );
+      }
     }
 
     wasBroadcastingRef.current = isBroadcasting;
@@ -205,6 +218,7 @@ const ScreenshareContainer = (props) => {
     presentations,
     startExternalVideo,
     stopExternalVideo,
+    layoutContextDispatch,
   ]);
 
   let pluginScreenshareHelperItems = [];

@@ -60,9 +60,12 @@ public class MimeTypeUtils {
             put(FileTypeConstants.SVG, Arrays.asList(SVG));
             put(FileTypeConstants.WEBP, Arrays.asList(WEBP));
             put(FileTypeConstants.MP4, Arrays.asList(
-                    MP4, QUICKTIME, "video/x-m4v", M4A, "audio/x-m4a", "audio/m4a"
+                    MP4, QUICKTIME, "video/x-m4v", "video/3gpp", "video/3gpp2",
+                    "application/mp4", M4A, "audio/x-m4a", "audio/m4a"
             ));
-            put(FileTypeConstants.MOV, Arrays.asList(QUICKTIME, MP4, "video/x-m4v"));
+            put(FileTypeConstants.MOV, Arrays.asList(
+                    QUICKTIME, MP4, "video/x-m4v", "video/3gpp", "video/3gpp2"
+            ));
             put(FileTypeConstants.WEBM, Arrays.asList(WEBM, AUDIO_WEBM));
             put(FileTypeConstants.MP3, Arrays.asList(
                     MPEG, "audio/mp3", "audio/x-mpeg-3", "audio/x-mpeg"
@@ -72,10 +75,12 @@ public class MimeTypeUtils {
                     WAV, "audio/x-wav", "audio/wave", "audio/vnd.wave"
             ));
             put(FileTypeConstants.M4A, Arrays.asList(
-                    M4A, "audio/x-m4a", "audio/m4a", MP4, QUICKTIME, "video/mp4"
+                    M4A, "audio/x-m4a", "audio/m4a", MP4, QUICKTIME, "video/mp4",
+                    "video/3gpp", "video/3gpp2", "application/mp4"
             ));
             put(FileTypeConstants.AAC, Arrays.asList(
-                    M4A, AUDIO_AAC, "audio/x-aac", MP4, QUICKTIME, "video/mp4"
+                    M4A, AUDIO_AAC, "audio/x-aac", MP4, QUICKTIME, "video/mp4",
+                    "video/3gpp", "video/3gpp2", "application/mp4"
             ));
         }
     };
@@ -107,7 +112,8 @@ public class MimeTypeUtils {
         List<String> validMimeTypes = Arrays.asList(XLS, XLSX,
                 DOC, DOCX, PPT, PPTX, ODT, RTF, TXT, ODS, ODP, ODG,
                 PDF, JPEG, PNG, TIKA_MSOFFICE, TIKA_MSOFFICE_X,
-                WEBP, SVG, MP4, QUICKTIME, "video/x-m4v", WEBM, AUDIO_WEBM,
+                WEBP, SVG, MP4, QUICKTIME, "video/x-m4v", "video/3gpp", "video/3gpp2",
+                "application/mp4", WEBM, AUDIO_WEBM,
                 MPEG, "audio/mp3", "audio/x-mpeg-3", "audio/x-mpeg",
                 OGG, "video/ogg", "application/ogg",
                 WAV, "audio/x-wav", "audio/wave", "audio/vnd.wave",

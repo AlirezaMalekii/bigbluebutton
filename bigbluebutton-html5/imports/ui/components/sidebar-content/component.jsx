@@ -12,7 +12,12 @@ import Styled from './styles';
 import ErrorBoundary from '/imports/ui/components/common/error-boundary/component';
 import FallbackView from '/imports/ui/components/common/fallback-errors/fallback-view/component';
 import GenericContentSidekickContainer from '/imports/ui/components/generic-content/generic-sidekick-content/container';
-import { isSkyroomColumnLayout, isSkyroomMobileViewport, openSkyroomMobileBox } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import {
+  isSkyroomColumnLayout,
+  isSkyroomMobileViewport,
+  openSkyroomMobileBox,
+  closeSkyroomBreakoutPanel,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 import { layoutDispatch } from '/imports/ui/components/layout/context';
 
 const propTypes = {
@@ -159,8 +164,8 @@ const SidebarContent = (props) => {
         <BreakoutRoomContainer
           presentation={isSkyroomColumnLayout() && isSkyroomMobileViewport() ? 'mobile' : 'sidebar'}
           onClose={
-            isSkyroomColumnLayout() && isSkyroomMobileViewport()
-              ? closeMobileContentPanel
+            isSkyroomColumnLayout()
+              ? () => closeSkyroomBreakoutPanel(layoutContextDispatch)
               : undefined
           }
         />

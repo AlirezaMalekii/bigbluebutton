@@ -25,7 +25,10 @@ const BreakoutRoomContainer = ({ breakoutRoom }) => {
   }));
 
   const hasBreakoutRoom = currentMeeting?.componentsFlags?.hasBreakoutRoom ?? false;
-  const hasInvitation = (currentUser?.breakoutRoomsSummary?.totalOfJoinURL > 0) ?? false;
+  const hasInvitation = (
+    (currentUser?.breakoutRoomsSummary?.totalOfJoinURL ?? 0) > 0
+    || (currentUser?.breakoutRoomsSummary?.totalOfShowInvitation ?? 0) > 0
+  );
 
   if (!hasBreakoutRoom && sidebarContentPanel === PANELS.BREAKOUT) {
     layoutContextDispatch({

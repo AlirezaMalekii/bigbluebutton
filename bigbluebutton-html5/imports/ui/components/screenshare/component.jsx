@@ -225,10 +225,14 @@ class ScreenshareComponent extends React.Component {
       });
     }
 
+    // Always reopen the stage after screenshare so restored presentation media /
+    // external video is visible for viewers without a manual presentation toggle.
+    // (presentationLastState can be false after skyroom minimize-during-share.)
     layoutContextDispatch({
       type: ACTIONS.SET_PRESENTATION_IS_OPEN,
-      value: Session.getItem('presentationLastState'),
+      value: true,
     });
+    Session.setItem('presentationLastState', true);
   }
 
   handleMouseMovement() {

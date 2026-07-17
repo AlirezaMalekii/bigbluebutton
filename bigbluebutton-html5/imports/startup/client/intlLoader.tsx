@@ -19,12 +19,16 @@ interface IntlLoaderProps extends IntlLoaderContainerProps {
   setCurrentLocale: (locale: string) => void;
 }
 
+// Bump when adding/changing locale strings so browsers refetch despite a stable html5ClientBuild.
+const LOCALES_REVISION = '20260717a';
+
 const buildFetchLocale = (locale: string) => {
   const clientVersion = window.meetingClientSettings.public.app.html5ClientBuild;
   const localesPath = 'locales';
+  const cacheKey = `${clientVersion}.${LOCALES_REVISION}`;
 
   return new Promise((resolve) => {
-    fetch(`${localesPath}/${locale !== 'index' ? `${locale}.json?v=${clientVersion}` : ''}`)
+    fetch(`${localesPath}/${locale !== 'index' ? `${locale}.json?v=${cacheKey}` : ''}`)
       .then((response) => {
         if (!response.ok) {
           return resolve(false);

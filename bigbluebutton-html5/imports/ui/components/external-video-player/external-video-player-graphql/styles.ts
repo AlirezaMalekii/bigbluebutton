@@ -86,10 +86,60 @@ export const ExternalVideoCloseButton = styled(Button)`
   }
 `;
 
+export const AparatViewerBlocker = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  cursor: default;
+  background: transparent;
+`;
+
+export const AparatPresenterControls = styled.div`
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(8, 14, 24, 0.88);
+  border: 1px solid rgba(34, 212, 199, 0.35);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+`;
+
+export const AparatPlayPauseButton = styled.button`
+  min-width: 120px;
+  height: 40px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 0 18px;
+  background: var(--skyroom-gradient-primary, linear-gradient(145deg, #22d4c7, #0a7a72));
+
+  &:hover {
+    filter: brightness(1.06);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(34, 212, 199, 0.85);
+    outline-offset: 2px;
+  }
+`;
+
 export default {
   VideoPlayerWrapper,
   AutoPlayWarning,
   VideoPlayer,
   Container,
   ExternalVideoCloseButton,
+  AparatViewerBlocker,
+  AparatPresenterControls,
+  AparatPlayPauseButton,
 };

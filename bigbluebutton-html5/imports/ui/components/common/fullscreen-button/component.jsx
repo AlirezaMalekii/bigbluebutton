@@ -3,6 +3,7 @@ import { defineMessages, injectIntl } from 'react-intl';
 import PropTypes from 'prop-types';
 import Styled from './styles';
 import { ACTIONS } from '/imports/ui/components/layout/enums';
+import { toggleWebcamFullscreen } from '/imports/ui/components/skyroom-layout/webcam-fullscreen/webcam-fullscreen';
 
 const intlMessages = defineMessages({
   fullscreenButton: {
@@ -75,6 +76,16 @@ const FullscreenButtonComponent = ({
       return;
     }
 
+    // Webcam fullscreen uses layout-only overlay; browser Fullscreen API breaks SafeMeet zones.
+    if (elementGroup === 'webcams') {
+      toggleWebcamFullscreen({
+        cameraId: elementId,
+        isFullscreenContext: elementId === currentElement && elementGroup === currentGroup,
+        layoutContextDispatch,
+      });
+      return;
+    }
+
     const newElement = (elementId === currentElement) ? '' : elementId;
     const newGroup = (elementGroup === currentGroup) ? '' : elementGroup;
 
@@ -86,10 +97,7 @@ const FullscreenButtonComponent = ({
       },
     });
 
-    // Webcam fullscreen uses layout-only overlay; browser Fullscreen API breaks SafeMeet zones.
-    if (elementGroup !== 'webcams') {
-      handleToggleFullScreen(fullscreenRef);
-    }
+    handleToggleFullScreen(fullscreenRef);
   };
 
   return (

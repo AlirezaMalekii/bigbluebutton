@@ -55,6 +55,10 @@ npm install ./ep_cursortrace-*.tgz
 npm install ep_disable_chat
 npm install --no-save --legacy-peer-deps ep_auth_session
 
+# SafeMeet: Persian/English bidirectional export for shared notes
+npm pack ./ep_safemeet_export_bidi
+npm install ./ep_safemeet_export_bidi-*.tgz
+
 mkdir -p staging/usr/share/etherpad-lite
 
 cp -r CHANGELOG.md CONTRIBUTING.md LICENSE README.md bin doc src tests var node_modules staging/usr/share/etherpad-lite

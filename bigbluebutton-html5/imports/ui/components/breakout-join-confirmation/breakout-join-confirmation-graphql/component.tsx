@@ -99,7 +99,7 @@ const BreakoutJoinConfirmation: React.FC<BreakoutJoinConfirmationProps> = ({
     isOpen: breakoutJoinConfirmationIsOpen,
   } = useModalRegistration({
     id: 'breakoutJoinConfirmationModal',
-    priority: 'medium',
+    priority: 'high',
   });
 
   const setIsOpen = useCallback((value: boolean) => {
@@ -262,7 +262,8 @@ const BreakoutJoinConfirmation: React.FC<BreakoutJoinConfirmationProps> = ({
       }}
       setIsOpen={setIsOpen}
       isOpen={breakoutJoinConfirmationIsOpen}
-      priority="medium"
+      priority="high"
+      data-test="breakoutJoinConfirmationModal"
     >
       {freeJoin ? select : (
         <Styled.ConfirmationBody data-test="breakoutJoinModalBody">

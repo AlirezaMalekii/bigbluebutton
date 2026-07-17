@@ -120,17 +120,42 @@ public final class SupportedFileTypes {
 		return sanitized.trim().toLowerCase();
 	}
 
+	private static String canonicalMimeForMediaExtension(String extension) {
+		if (extension == null) {
+			return "";
+		}
+
+		String ext = extension.toLowerCase();
+		if (MP4.equals(ext)) return "video/mp4";
+		if (MOV.equals(ext)) return "video/quicktime";
+		if (WEBM.equals(ext)) return "video/webm";
+		if (MP3.equals(ext)) return "audio/mpeg";
+		if (M4A.equals(ext) || AAC.equals(ext)) return "audio/mp4";
+		if (OGG.equals(ext)) return "audio/ogg";
+		if (WAV.equals(ext)) return "audio/wav";
+		return "";
+	}
+
 	private static String normalizeMimeTypeForExtension(String mimeType, String fileExtension) {
-		if (fileExtension == null || mimeType == null || mimeType.isEmpty()) {
+		if (fileExtension == null) {
 			return mimeType;
 		}
 
 		String extension = fileExtension.toLowerCase();
 		String normalizedMimeType = sanitizeMimeType(mimeType);
 
+		// ISO BMFF / QuickTime family is frequently mis-detected across containers.
+		// Prefer the declared extension for known media uploads.
 		if (MP4.equalsIgnoreCase(extension)) {
-			if ("video/quicktime".equals(normalizedMimeType)
-					|| "video/x-m4v".equals(normalizedMimeType)) {
+			if (normalizedMimeType.isEmpty()
+					|| "application/octet-stream".equals(normalizedMimeType)
+					|| "application/mp4".equals(normalizedMimeType)
+					|| "video/quicktime".equals(normalizedMimeType)
+					|| "video/x-m4v".equals(normalizedMimeType)
+					|| "video/3gpp".equals(normalizedMimeType)
+					|| "video/3gpp2".equals(normalizedMimeType)
+					|| "video/mp4".equals(normalizedMimeType)
+					|| normalizedMimeType.startsWith("video/")) {
 				return "video/mp4";
 			}
 			if (normalizedMimeType.startsWith("audio/")) {
@@ -140,12 +165,19 @@ public final class SupportedFileTypes {
 		}
 
 		if (M4A.equalsIgnoreCase(extension) || AAC.equalsIgnoreCase(extension)) {
-			if ("video/mp4".equals(normalizedMimeType)
+			if (normalizedMimeType.isEmpty()
+					|| "application/octet-stream".equals(normalizedMimeType)
+					|| "video/mp4".equals(normalizedMimeType)
 					|| "video/quicktime".equals(normalizedMimeType)
+					|| "video/3gpp".equals(normalizedMimeType)
+					|| "video/3gpp2".equals(normalizedMimeType)
 					|| "audio/x-m4a".equals(normalizedMimeType)
 					|| "audio/m4a".equals(normalizedMimeType)
 					|| "audio/aac".equals(normalizedMimeType)
-					|| "audio/x-aac".equals(normalizedMimeType)) {
+					|| "audio/x-aac".equals(normalizedMimeType)
+					|| "audio/mp4".equals(normalizedMimeType)
+					|| normalizedMimeType.startsWith("audio/")
+					|| normalizedMimeType.startsWith("video/")) {
 				return "audio/mp4";
 			}
 			return normalizedMimeType;
@@ -178,8 +210,14 @@ public final class SupportedFileTypes {
 		}
 
 		if (MOV.equalsIgnoreCase(extension)) {
-			if ("video/mp4".equals(normalizedMimeType)
-					|| "video/x-m4v".equals(normalizedMimeType)) {
+			if (normalizedMimeType.isEmpty()
+					|| "application/octet-stream".equals(normalizedMimeType)
+					|| "video/mp4".equals(normalizedMimeType)
+					|| "video/x-m4v".equals(normalizedMimeType)
+					|| "video/3gpp".equals(normalizedMimeType)
+					|| "video/3gpp2".equals(normalizedMimeType)
+					|| "video/quicktime".equals(normalizedMimeType)
+					|| normalizedMimeType.startsWith("video/")) {
 				return "video/quicktime";
 			}
 			return normalizedMimeType;
@@ -189,14 +227,30 @@ public final class SupportedFileTypes {
 	}
 
 	public static Boolean isPresentationMimeTypeValid(File pres, String fileExtension) {
-		String mimeType = normalizeMimeTypeForExtension(detectMimeType(pres), fileExtension);
+		String detectedMimeType = detectMimeType(pres);
+		String mimeType = normalizeMimeTypeForExtension(detectedMimeType, fileExtension);
 
-		if (mimeType.equals("")) {
-			log.error("Not able to detect mimeType.");
-			return false;
+		if (mimeType == null || mimeType.equals("")) {
+			if (isMediaFile(fileExtension)) {
+				mimeType = canonicalMimeForMediaExtension(fileExtension);
+				log.warn("Falling back to canonical mime [{}] for media extension [{}] (detected=[{}])",
+						mimeType, fileExtension, detectedMimeType);
+			} else {
+				log.error("Not able to detect mimeType.");
+				return false;
+			}
 		}
 
 		if (!mimeTypeUtils.getValidMimeTypes().contains(mimeType)) {
+			if (isMediaFile(fileExtension)) {
+				String canonical = canonicalMimeForMediaExtension(fileExtension);
+				if (!canonical.isEmpty() && mimeTypeUtils.getValidMimeTypes().contains(canonical)
+						&& mimeTypeUtils.extensionMatchMimeType(canonical, fileExtension)) {
+					log.warn("Accepting media upload via canonical mime [{}] for extension [{}] (normalized=[{}], detected=[{}])",
+							canonical, fileExtension, mimeType, detectedMimeType);
+					return true;
+				}
+			}
 			log.error("MimeType is not valid for this meeting, [{}]", mimeType);
 			return false;
 		}

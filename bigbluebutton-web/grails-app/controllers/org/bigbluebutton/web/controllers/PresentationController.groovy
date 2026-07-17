@@ -565,8 +565,7 @@ class PresentationController {
       def pres = resolvePresentationMediaFile(meetingId, presId, presFilename)
       if (pres != null && pres.exists()) {
         def responseName = filename ?: presFilename
-        def mimeType = grailsMimeUtility.getMimeTypeForURI(responseName)
-        def mimeName = mimeType != null ? mimeType.name : 'application/octet-stream'
+        def mimeName = resolvePresentationMediaMimeType(presFilename, responseName)
         def encoded = URLEncoder.encode(responseName, StandardCharsets.UTF_8).replace("+", "%20")
 
         response.contentType = mimeName
@@ -608,7 +607,22 @@ class PresentationController {
           response.addHeader("Content-Length", String.valueOf(contentLength))
 
           InputStream inputStream = new FileInputStream(pres)
-          inputStream.skip(start)
+          // FileInputStream.skip may skip fewer bytes than requested; loop until done.
+          long skipped = 0
+          while (skipped < start) {
+            long n = inputStream.skip(start - skipped)
+            if (n <= 0) break
+            skipped += n
+          }
+          if (skipped < start) {
+            // Fallback when skip stalls (some file systems)
+            byte[] discard = new byte[8192]
+            while (skipped < start) {
+              int read = inputStream.read(discard, 0, (int) Math.min(discard.length, start - skipped))
+              if (read == -1) break
+              skipped += read
+            }
+          }
           byte[] buffer = new byte[8192]
           long remaining = contentLength
           while (remaining > 0) {
@@ -654,6 +668,32 @@ class PresentationController {
     }
 
     return null
+  }
+
+  /**
+   * Prefer extension-based MIME for media playback. Grails often maps .m4a to video/mp4,
+   * which makes browsers decode voice files through the video pipeline and can sound wrong.
+   */
+  private String resolvePresentationMediaMimeType(String presFilename, String responseName) {
+    String ext = FilenameUtils.getExtension(
+      (presFilename != null && presFilename != "") ? presFilename : responseName
+    )?.toLowerCase()
+
+    switch (ext) {
+      case "mp3": return "audio/mpeg"
+      case "m4a":
+      case "aac": return "audio/mp4"
+      case "ogg":
+      case "oga": return "audio/ogg"
+      case "wav": return "audio/wav"
+      case "mp4":
+      case "m4v": return "video/mp4"
+      case "mov": return "video/quicktime"
+      case "webm": return "video/webm"
+      default:
+        def mimeType = grailsMimeUtility.getMimeTypeForURI(responseName ?: presFilename)
+        return mimeType != null ? mimeType.name : "application/octet-stream"
+    }
   }
 
   def thumbnail = {

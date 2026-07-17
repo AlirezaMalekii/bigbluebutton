@@ -76,11 +76,19 @@ export const isPresentationMediaUrl = (url) => {
 export const getPresentationMediaKindFromUrl = (url) => {
   try {
     const parsed = new URL(url, window.location.origin);
-    const name = parsed.searchParams.get('presFilename')
-      || parsed.searchParams.get('filename')
-      || '';
-    const ext = normalizeExtension(name);
-    if (AUDIO_EXTENSIONS.has(ext)) return 'audio';
+    // Prefer the original upload name; fall back to stored presFilename.
+    // Authenticated playback URLs put the extension in query params (not the path),
+    // so react-player cannot detect audio from the path alone.
+    const candidates = [
+      parsed.searchParams.get('filename'),
+      parsed.searchParams.get('presFilename'),
+    ].filter(Boolean);
+
+    for (let i = 0; i < candidates.length; i += 1) {
+      const ext = normalizeExtension(candidates[i]);
+      if (AUDIO_EXTENSIONS.has(ext)) return 'audio';
+      if (MEDIA_EXTENSIONS.has(ext)) return 'video';
+    }
     return 'video';
   } catch {
     return 'video';
@@ -150,12 +158,23 @@ const isKnownMediaMimeForExtension = (extensionKey, mimeType) => {
 
   const normalizedMime = mimeType.toLowerCase().split(';')[0].trim();
   const aliases = {
-    mp4: ['video/mp4', 'video/quicktime', 'video/x-m4v', 'audio/mp4'],
-    mov: ['video/quicktime', 'video/mp4', 'video/x-m4v'],
+    mp4: [
+      'video/mp4', 'video/quicktime', 'video/x-m4v', 'video/3gpp', 'video/3gpp2',
+      'application/mp4', 'audio/mp4',
+    ],
+    mov: [
+      'video/quicktime', 'video/mp4', 'video/x-m4v', 'video/3gpp', 'video/3gpp2',
+    ],
     webm: ['video/webm', 'audio/webm'],
     mp3: ['audio/mpeg', 'audio/mp3', 'audio/x-mpeg-3', 'audio/x-mpeg'],
-    m4a: ['audio/mp4', 'audio/x-m4a', 'audio/m4a', 'video/mp4', 'video/quicktime'],
-    aac: ['audio/mp4', 'audio/aac', 'audio/x-aac', 'video/mp4'],
+    m4a: [
+      'audio/mp4', 'audio/x-m4a', 'audio/m4a', 'video/mp4', 'video/quicktime',
+      'video/3gpp', 'video/3gpp2', 'application/mp4',
+    ],
+    aac: [
+      'audio/mp4', 'audio/aac', 'audio/x-aac', 'video/mp4',
+      'video/3gpp', 'video/3gpp2', 'application/mp4',
+    ],
     ogg: ['audio/ogg', 'video/ogg', 'application/ogg'],
     wav: ['audio/wav', 'audio/x-wav', 'audio/wave', 'audio/vnd.wave'],
   };
@@ -175,8 +194,12 @@ export const normalizeUploadFile = (file) => {
   if (extensionKey === 'mp4' && (
     !browserMime
     || browserMime === 'application/octet-stream'
+    || browserMime === 'application/mp4'
     || browserMime === 'video/quicktime'
     || browserMime === 'video/x-m4v'
+    || browserMime === 'video/3gpp'
+    || browserMime === 'video/3gpp2'
+    || browserMime.startsWith('video/')
     || browserMime.startsWith('audio/')
   )) {
     return new File([file], file.name, {
@@ -188,8 +211,12 @@ export const normalizeUploadFile = (file) => {
   if (extensionKey === 'mov' && (
     !browserMime
     || browserMime === 'application/octet-stream'
+    || browserMime === 'application/mp4'
     || browserMime === 'video/mp4'
     || browserMime === 'video/x-m4v'
+    || browserMime === 'video/3gpp'
+    || browserMime === 'video/3gpp2'
+    || browserMime.startsWith('video/')
   )) {
     return new File([file], file.name, {
       type: 'video/quicktime',

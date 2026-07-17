@@ -18,9 +18,17 @@ const Section = styled.section`
   padding: 10px 14px;
   flex-shrink: 0;
 
+  &[data-collapsed="true"] {
+    padding-bottom: 10px;
+  }
+
   @media (max-width: 640px) {
     padding: 8px 10px;
     border-radius: 10px;
+
+    &[data-collapsed="true"] {
+      padding-bottom: 8px;
+    }
   }
 `;
 
@@ -39,8 +47,12 @@ const SectionTitle = styled.h4`
 const ModeToggle = styled.div`
   display: flex;
   gap: 6px;
-  margin-bottom: 8px;
+  margin-bottom: 0;
   flex-wrap: wrap;
+
+  &:has(+ *) {
+    margin-bottom: 8px;
+  }
 `;
 
 const ModeButton = styled.button`

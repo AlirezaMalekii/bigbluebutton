@@ -462,6 +462,7 @@ export interface Poll {
   maxCustom: number
   maxTypedAnswerLength: number
   chatMessage: boolean
+  publishToWhiteboard: boolean
   quickPollConfirmationStep: boolean
   quiz: {
     enabled: boolean

@@ -1,6 +1,5 @@
 import styled, { css, keyframes } from 'styled-components';
 import {
-  mdPaddingX,
   borderSize,
   borderSizeSmall,
   borderRadius,
@@ -14,7 +13,6 @@ import {
   userListBg,
   colorWhite,
   colorGrayLighter,
-  colorGrayLightest,
   colorBlueLight,
   listItemBgHover,
   colorText,
@@ -48,18 +46,23 @@ const AlreadyConnected = styled.span`
 `;
 // @ts-ignore - as button comes from JS, we can't provide its props
 const JoinButton = styled(Button)`
-  flex: 0 1 48%;
+  flex: 0 0 auto;
   color: ${colorPrimary};
   margin: 0;
   font-weight: inherit;
-  padding: 0 .5rem 0 .5rem !important;
+  padding: 0 0.45rem !important;
+  min-height: 28px !important;
+  font-size: 0.72rem !important;
 `;
-// @ts-ignore - as button comes from JS, we can't provide its props
+// @ts-ignore - as button comes from JS
 const AudioButton = styled(Button)`
-  flex: 0 1 48%;
+  flex: 0 0 auto;
   color: ${colorPrimary};
   margin: 0;
   font-weight: inherit;
+  padding: 0 0.45rem !important;
+  min-height: 28px !important;
+  font-size: 0.72rem !important;
 `;
 
 const skyroomText = 'var(--skyroom-panel-text, #eef4fb)';
@@ -103,16 +106,16 @@ const UsersAssignedNumberLabel = styled.span`
 const ModeratorToolbar = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.65rem 0.75rem;
-  margin-bottom: 0.75rem;
-  border-radius: 12px;
+  gap: 0.35rem;
+  padding: 0.45rem 0.55rem;
+  margin-bottom: 0;
+  border-radius: 10px;
   background: ${skyroomAccentSoft};
   border: 1px solid ${skyroomBorder};
 `;
 
 const ModeratorToolbarTitle = styled.div`
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -122,15 +125,15 @@ const ModeratorToolbarTitle = styled.div`
 const ModeratorToolbarActions = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.3rem;
 `;
 
 // @ts-ignore - Button comes from JS
 const ToolbarButton = styled(Button)`
   flex: 1 1 auto;
   min-width: 0;
-  font-size: 0.72rem !important;
-  padding: 0.35rem 0.5rem !important;
+  font-size: 0.68rem !important;
+  padding: 0.28rem 0.4rem !important;
   border-radius: 8px !important;
   white-space: nowrap;
 `;
@@ -139,27 +142,27 @@ const SummaryBar = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.5rem 0.65rem;
-  margin-bottom: 0.65rem;
-  border-radius: 10px;
+  gap: 0.4rem;
+  padding: 0.3rem 0.5rem;
+  margin-bottom: 0;
+  border-radius: 8px;
   background: ${skyroomSurface};
   border: 1px solid ${skyroomBorder};
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   color: ${skyroomTextMuted};
 `;
 
 const UserGuideBanner = styled.div`
   display: flex;
   align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.65rem 0.75rem;
-  margin-bottom: 0.75rem;
-  border-radius: 10px;
+  gap: 0.4rem;
+  padding: 0.4rem 0.55rem;
+  margin-bottom: 0;
+  border-radius: 8px;
   background: ${skyroomAccentSoft};
   border: 1px solid ${skyroomBorder};
-  font-size: 0.8rem;
-  line-height: 1.45;
+  font-size: 0.72rem;
+  line-height: 1.35;
   color: ${skyroomText};
 `;
 
@@ -169,11 +172,13 @@ type RoomCardProps = {
 
 const RoomCard = styled.div<RoomCardProps>`
   display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  padding: 0.65rem 0.75rem;
-  margin-bottom: 0.55rem;
-  border-radius: 12px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  padding: 0.4rem 0.55rem;
+  margin-bottom: 0;
+  border-radius: 10px;
   background: ${skyroomSurface};
   border: 1px solid ${({ $highlighted }) => ($highlighted ? skyroomAccent : skyroomBorder)};
   box-shadow: ${({ $highlighted }) => ($highlighted ? `0 0 0 1px ${skyroomAccentSoft}` : 'none')};
@@ -182,27 +187,30 @@ const RoomCard = styled.div<RoomCardProps>`
 
 const RoomCardHeader = styled.div`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  flex: 1 1 auto;
+  min-width: 0;
 `;
 
 const RoomCardTitle = styled.div`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.88rem;
+  gap: 0.3rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: ${skyroomText};
+  min-width: 0;
 `;
 
 const YourRoomBadge = styled.span`
   display: inline-flex;
   align-items: center;
-  padding: 0.1rem 0.45rem;
+  padding: 0.05rem 0.35rem;
   border-radius: 999px;
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 600;
   background: ${skyroomAccentSoft};
   color: ${skyroomAccent};
@@ -211,7 +219,7 @@ const YourRoomBadge = styled.span`
 
 const ParticipantCount = styled.span`
   flex-shrink: 0;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 500;
   color: ${skyroomTextDim};
   white-space: nowrap;
@@ -220,32 +228,38 @@ const ParticipantCount = styled.span`
 const ParticipantList = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  gap: 0.2rem;
+  flex: 1 1 100%;
+  order: 3;
 `;
 
 const ParticipantChip = styled.span`
   display: inline-flex;
   align-items: center;
-  padding: 0.15rem 0.45rem;
-  border-radius: 6px;
-  font-size: 0.72rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 5px;
+  font-size: 0.65rem;
   background: rgba(255, 255, 255, 0.05);
   color: ${skyroomTextMuted};
   border: 1px solid rgba(255, 255, 255, 0.06);
 `;
 
 const NoParticipants = styled.span`
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   font-style: italic;
   color: ${skyroomTextDim};
+  flex: 1 1 100%;
+  order: 3;
 `;
 
 const RoomCardActions = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.35rem;
-  margin-top: 0.15rem;
+  gap: 0.3rem;
+  margin-top: 0;
+  flex: 0 0 auto;
+  order: 2;
 `;
 
 const GeneratingURL = styled.span`
@@ -304,7 +318,7 @@ const ConnectingAnimation = styled.span<ConnectingAnimationProps>`
 const BreakoutsList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.3rem;
 `;
 
 const JoinedUserNames = styled.div`
@@ -359,21 +373,25 @@ type DurationContainerProps = {
 };
 
 const DurationContainer = styled.div<DurationContainerProps>`
-  ${({ centeredText }) => centeredText && `
-    text-align: center;
-  `}
-
-  border-radius: 12px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+  border-radius: 10px;
   margin-bottom: 0;
-  padding: 0.65rem 0.75rem;
+  padding: 0.35rem 0.6rem;
   box-shadow: none;
-  background: ${({ $presentation }) => ($presentation === 'mobile' ? skyroomSurface : 'transparent')};
-  border: 1px solid ${({ $presentation }) => ($presentation === 'mobile' ? skyroomBorder : colorGrayLightest)};
-  color: ${({ $presentation }) => ($presentation === 'mobile' ? skyroomTextMuted : 'inherit')};
+  background: ${skyroomSurface};
+  border: 1px solid ${skyroomBorder};
+  color: ${skyroomTextMuted};
+  text-align: start;
 `;
 
 const SetTimeContainer = styled.div`
-  margin: .5rem 0 0 0;
+  margin: 0;
+  width: 100%;
 `;
 
 const SetDurationInput = styled.input`
@@ -409,7 +427,7 @@ const WithError = styled.span`
 `;
 // @ts-ignore - as button comes from JS, we can't provide its props
 const EndButton = styled(Button)`
-  padding: .5rem;
+  padding: .35rem .5rem;
   font-weight: ${headingsFontWeight} !important;
   border-radius: .2rem;
   font-size: ${fontSizeSmall};
@@ -432,7 +450,7 @@ const Panel = styled.div<PanelPresentationProps>`
   flex: 1;
   overflow: hidden;
   background-color: ${({ $presentation }) => ($presentation === 'mobile' ? 'transparent' : colorWhite)};
-  padding: ${({ $presentation }) => ($presentation === 'mobile' ? '0' : mdPaddingX)};
+  padding: ${({ $presentation }) => ($presentation === 'mobile' ? '0' : smPaddingX)};
   color: ${({ $presentation }) => ($presentation === 'mobile' ? skyroomText : colorText)};
 `;
 
@@ -440,7 +458,16 @@ const PanelHeader = styled.div`
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.35rem;
+`;
+
+const MobilePanelTitle = styled.h2`
+  margin: 0;
+  padding: 0.15rem 0.2rem 0.05rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: ${skyroomText};
 `;
 
 const ScrollableBody = styled.div`
@@ -454,10 +481,9 @@ const ScrollableBody = styled.div`
 const Separator = styled.div`
   position: relative;
   width: 100%;
-  height: 10px;
   height: ${borderSizeSmall};
   background-color: ${colorGrayLighter};
-  margin: 30px 0px;
+  margin: 0.15rem 0;
 `;
 
 const FlexRow = styled.div`
@@ -472,7 +498,7 @@ const Form = styled.form`
   width: 100%;
   position: relative;
   margin-bottom: calc(-1 * ${smPaddingX});
-  margin-top: .2rem;
+  margin-top: 0;
 `;
 
 const Wrapper = styled.div`
@@ -564,6 +590,7 @@ export default {
   Duration,
   Panel,
   PanelHeader,
+  MobilePanelTitle,
   ScrollableBody,
   Separator,
   FlexRow,

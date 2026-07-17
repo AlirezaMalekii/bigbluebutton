@@ -471,6 +471,7 @@ class ActionsDropdown extends PureComponent {
                 modalIsOpen={isOpen}
                 className="poll-creation-modal"
                 data-test="pollCreationModal"
+                headerPosition="top"
                 shouldCloseOnOverlayClick={false}
                 shouldCloseOnEsc={false}
                 onOutsideClick={this.handlePollModalOutsideClick}
@@ -519,6 +520,7 @@ class ActionsDropdown extends PureComponent {
                 modalIsOpen={isOpen}
                 className="timer-activation-modal"
                 data-test="timerActivationModal"
+                headerPosition="top"
                 onRequestClose={close}
                 title={intl.formatMessage(intlMessages.timerPaneTitle)}
               >

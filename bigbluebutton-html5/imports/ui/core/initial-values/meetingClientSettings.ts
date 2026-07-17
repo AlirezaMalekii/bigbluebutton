@@ -478,6 +478,7 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
       maxCustom: 5,
       maxTypedAnswerLength: 45,
       chatMessage: true,
+      publishToWhiteboard: false,
       quickPollConfirmationStep: false,
       quiz: {
         enabled: true,
@@ -833,6 +834,14 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
         },
         {
           extension: '.mp4',
+          mime: 'video/3gpp',
+        },
+        {
+          extension: '.mp4',
+          mime: 'application/mp4',
+        },
+        {
+          extension: '.mp4',
           mime: 'audio/mp4',
         },
         {
@@ -842,6 +851,10 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
         {
           extension: '.mov',
           mime: 'video/mp4',
+        },
+        {
+          extension: '.mov',
+          mime: 'video/3gpp',
         },
         {
           extension: '.webm',
@@ -900,6 +913,10 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
           mime: 'video/mp4',
         },
         {
+          extension: '.m4a',
+          mime: 'video/3gpp',
+        },
+        {
           extension: '.aac',
           mime: 'audio/mp4',
         },
@@ -910,6 +927,10 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
         {
           extension: '.aac',
           mime: 'audio/x-aac',
+        },
+        {
+          extension: '.aac',
+          mime: 'video/3gpp',
         },
       ],
     },

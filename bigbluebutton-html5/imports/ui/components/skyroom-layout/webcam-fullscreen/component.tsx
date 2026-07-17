@@ -4,7 +4,10 @@ import { defineMessages, useIntl } from 'react-intl';
 import Icon from '/imports/ui/components/common/icon/component';
 import { layoutDispatch, layoutSelect } from '/imports/ui/components/layout/context';
 import { Layout } from '/imports/ui/components/layout/layoutTypes';
-import { exitWebcamFullscreen } from './webcam-fullscreen';
+import {
+  exitWebcamFullscreen,
+  syncWebcamFullscreenAttribute,
+} from './webcam-fullscreen';
 
 const messages = defineMessages({
   close: {
@@ -23,18 +26,16 @@ const SkyroomWebcamFullscreenController: React.FC = () => {
     exitWebcamFullscreen(layoutContextDispatch);
   }, [layoutContextDispatch]);
 
+  // Keep attribute in sync as a safety net (enter/exit helpers also set it sync).
   useEffect(() => {
-    const layoutEl = document.getElementById('layout');
-    if (!layoutEl) return undefined;
-
     if (isActive) {
-      layoutEl.setAttribute('data-skyroom-webcam-fullscreen', fullscreen.element);
+      syncWebcamFullscreenAttribute(fullscreen.element);
     } else {
-      layoutEl.removeAttribute('data-skyroom-webcam-fullscreen');
+      syncWebcamFullscreenAttribute();
     }
 
     return () => {
-      layoutEl.removeAttribute('data-skyroom-webcam-fullscreen');
+      syncWebcamFullscreenAttribute();
     };
   }, [isActive, fullscreen.element]);
 
@@ -63,7 +64,17 @@ const SkyroomWebcamFullscreenController: React.FC = () => {
       data-test="skyroomWebcamFullscreenClose"
       aria-label={label}
       title={label}
-      onClick={handleExit}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        handleExit();
+      }}
+      onTouchEnd={(event) => {
+        // Mobile browsers can drop click after overlay unmount; treat touch as exit too.
+        event.preventDefault();
+        event.stopPropagation();
+        handleExit();
+      }}
     >
       <Icon iconName="close" />
     </button>,

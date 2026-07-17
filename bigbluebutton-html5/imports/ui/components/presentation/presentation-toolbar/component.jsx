@@ -225,6 +225,7 @@ class PresentationToolbar extends PureComponent {
         default:
       }
     }
+    return undefined;
   }
 
   change(value) {
@@ -343,9 +344,6 @@ class PresentationToolbar extends PureComponent {
       allowInfiniteWhiteboard,
       allowInfiniteWhiteboardInBreakouts,
       infiniteWhiteboardIcon,
-      resetSlide,
-      zoomChanger,
-      tldrawAPI,
       maxNumberOfActiveUsers,
       numberOfJoinedUsers,
     } = this.props;
@@ -527,6 +525,7 @@ class PresentationToolbar extends PureComponent {
           <Styled.FitToWidthButton
             role="button"
             data-test="fitToWidthButton"
+            aria-pressed={fitToWidth}
             aria-describedby={fitToWidth ? 'fitPageDesc' : 'fitWidthDesc'}
             aria-label={
               fitToWidth

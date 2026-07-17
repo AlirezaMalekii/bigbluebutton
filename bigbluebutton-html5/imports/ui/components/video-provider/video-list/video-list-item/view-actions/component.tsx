@@ -1,6 +1,6 @@
 import React, { MutableRefObject, useEffect } from 'react';
-import { ACTIONS } from '/imports/ui/components/layout/enums';
 import FullscreenButtonContainer from '/imports/ui/components/common/fullscreen-button/container';
+import { exitWebcamFullscreen } from '/imports/ui/components/skyroom-layout/webcam-fullscreen/webcam-fullscreen';
 import Styled from './styles';
 
 interface ViewActionsProps {
@@ -22,13 +22,7 @@ const ViewActions: React.FC<ViewActionsProps> = (props) => {
 
   useEffect(() => () => {
     if (isFullscreenContext) {
-      layoutContextDispatch({
-        type: ACTIONS.SET_FULLSCREEN_ELEMENT,
-        value: {
-          element: '',
-          group: '',
-        },
-      });
+      exitWebcamFullscreen(layoutContextDispatch);
     }
   }, []);
 

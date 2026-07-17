@@ -1,0 +1,10 @@
+{
+  "name": "ep_safemeet_export_bidi",
+  "version": "1.0.0",
+  "description": "SafeMeet bidirectional (RTL/LTR) export styling for shared notes",
+  "author": "SafeMeet",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

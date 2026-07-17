@@ -149,7 +149,8 @@ const SkyroomMobileZoneTabs: React.FC = () => {
   const showWebcams = hasCameras && hasStage;
 
   const hasBreakoutRoom = Boolean(meeting?.componentsFlags?.hasBreakoutRoom);
-  const hasBreakoutInvite = (currentUser?.breakoutRoomsSummary?.totalOfJoinURL ?? 0) > 0;
+  const hasBreakoutInvite = (currentUser?.breakoutRoomsSummary?.totalOfJoinURL ?? 0) > 0
+    || (currentUser?.breakoutRoomsSummary?.totalOfShowInvitation ?? 0) > 0;
   const showBreakout = hasBreakoutRoom && (Boolean(currentUser?.isModerator) || hasBreakoutInvite);
   const { usersPolicies } = meeting ?? {};
   const isAskModeratorPolicy = usersPolicies?.guestPolicy === 'ASK_MODERATOR';

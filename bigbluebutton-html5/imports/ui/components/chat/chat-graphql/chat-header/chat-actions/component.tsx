@@ -48,14 +48,17 @@ const intlMessages = defineMessages({
   clearHistoryConfirmationTitle: {
     id: 'app.chat.clearHistory.confirmationTitle',
     description: 'Clear public chat history confirmation title',
+    defaultMessage: 'Clear public chat history?',
   },
   clearHistoryConfirmationDescription: {
     id: 'app.chat.clearHistory.confirmationDescription',
     description: 'Clear public chat history confirmation description',
+    defaultMessage: 'This will permanently clear all public chat messages for every participant.',
   },
   clearHistoryCancelLabel: {
     id: 'app.chat.toolbar.delete.cancelLabel',
     description: 'Cancel clear public chat history',
+    defaultMessage: 'Cancel',
   },
 });
 

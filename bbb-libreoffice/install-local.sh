@@ -37,9 +37,13 @@ if [ "$FOLDER_CHECK" = "0" ]; then
 	install -Dm755 assets/convert-local.sh /usr/share/bbb-libreoffice-conversion/convert.sh
 	install -Dm755 assets/convert-cool.sh /usr/share/bbb-libreoffice-conversion/convert-cool.sh
 	install -Dm755 assets/etherpad-export.sh /usr/share/bbb-libreoffice-conversion/etherpad-export.sh
+	install -Dm755 assets/etherpad-bidi-prep.py /usr/share/bbb-libreoffice-conversion/etherpad-bidi-prep.py
 	chown -R root /usr/share/bbb-libreoffice-conversion/
 else
 	echo "Install folder already exists"
+	# Keep conversion helpers up to date on reinstall/local sync.
+	install -Dm755 assets/etherpad-export.sh /usr/share/bbb-libreoffice-conversion/etherpad-export.sh
+	install -Dm755 assets/etherpad-bidi-prep.py /usr/share/bbb-libreoffice-conversion/etherpad-bidi-prep.py
 fi;
 
 FILE_SUDOERS_CHECK=`[ -f /etc/sudoers.d/zzz-bbb-docker-libreoffice ] && echo 1 || echo 0`

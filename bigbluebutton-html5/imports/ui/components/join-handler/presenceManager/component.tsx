@@ -17,7 +17,6 @@ import GuestWaitContainer, { GUEST_STATUSES } from '../guest-wait/component';
 import PluginTopLevelManager from '/imports/ui/components/plugin-top-level-manager/component';
 import meetingStaticData from '/imports/ui/core/singletons/meetingStaticData';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
-import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const connectionTimeout = 60000;
@@ -229,10 +228,6 @@ const PresenceManagerContainer: React.FC<PresenceManagerContainerProps> = ({ chi
     skip: !!currentUserLoading || !!currentUserErrors || (!!currentUserData && currentUserData.guestStatus === 'ALLOW'),
   });
 
-  const { data: meetingInfo } = useMeeting((meeting) => ({
-    usersPolicies: meeting?.usersPolicies,
-  }));
-
   const meetingStaticStore = meetingStaticData.getMeetingData();
 
   const loadingContextInfo = useContext(LoadingContext);
@@ -256,7 +251,11 @@ const PresenceManagerContainer: React.FC<PresenceManagerContainerProps> = ({ chi
     name,
   } = currentUserData;
 
-  const guestStatusDetails = data?.user_current?.[0]?.guestStatusDetails;
+  const guestLobbyUser = data?.user_current?.[0];
+  const guestStatusDetails = guestLobbyUser?.guestStatusDetails;
+  // Waiting guests use bbb_client_not_in_meeting; fetch public message here instead of
+  // useMeeting/MeetingSubscription, which nests fields that role cannot select.
+  const publicGuestLobbyMessage = guestLobbyUser?.meeting?.usersPolicies?.guestLobbyMessage ?? null;
 
   const {
     logoutUrl,
@@ -290,7 +289,7 @@ const PresenceManagerContainer: React.FC<PresenceManagerContainerProps> = ({ chi
       customLogoUrl={customLogoUrl ?? ''}
       customDarkLogoUrl={customDarkLogoUrl ?? ''}
       guestLobbyMessage={guestStatusDetails?.guestLobbyMessage ?? null}
-      publicGuestLobbyMessage={meetingInfo?.usersPolicies?.guestLobbyMessage ?? null}
+      publicGuestLobbyMessage={publicGuestLobbyMessage}
       positionInWaitingQueue={guestStatusDetails?.positionInWaitingQueue ?? null}
       guestStatus={guestStatus ?? ''}
     >

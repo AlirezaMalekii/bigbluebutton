@@ -168,68 +168,44 @@ function getSizeWithUnit(size) {
 function renderPresentationItemStatus(item, intl) {
   if (!item) return null;
 
-  const hasLocalFile = !!item.file;
-  const uploadStarted = !!item.uploadStarted;
-  const uploadProgress = item.upload?.progress ?? item.progress ?? 0;
-  const uploadHasError = !!item.upload?.error;
+  const uploadProgress = Number(item.upload?.progress ?? item.progress ?? 0);
+  const uploadHasError = !!item.upload?.error || !!item.uploadErrorMsgKey;
+  const uploadCompleted = !!item.uploadCompleted;
+  const uploadDone = !!item.upload?.done || uploadCompleted || uploadProgress >= 100;
+  const isProcessing = !!item.uploadInProgress
+    || (item.totalPages > 0 && item.totalPagesUploaded < item.totalPages);
 
-  if (
-    hasLocalFile
-    && uploadStarted
-    && uploadProgress === 0
-    && !uploadHasError
-    && !item.uploadErrorMsgKey
-  ) {
-    return intl.formatMessage(intlMessages.uploadProcess, {
-      progress: '0',
-    });
-  }
-
-  if ((('progress' in item) && item.progress === 0) || (('upload' in item) && item.upload.progress === 0 && !item.upload.error)) {
-    return intl.formatMessage(intlMessages.fileToUpload);
-  }
-
-  if (('progress' in item) && item.progress < 100 && !('conversion' in item)) {
-    return intl.formatMessage(intlMessages.uploadProcess, {
-      progress: Math.floor(item.progress).toString(),
-    });
-  }
-
-  const constraint = {};
-
-  if (('upload' in item) && (item.upload.done && item.upload.error)) {
-    if (item.progress < 100) {
-      const errorMessage = intlMessages.badConnectionError;
-      return intl.formatMessage(errorMessage);
-    }
-
-    const errorMessage = intlMessages[item.upload.status] || intlMessages.genericError;
-    return intl.formatMessage(errorMessage, constraint);
-  }
-
-  if (('uploadErrorMsgKey' in item) && item.uploadErrorMsgKey) {
+  // Server / conversion errors must win over the local "0%" placeholder.
+  if (item.uploadErrorMsgKey) {
+    const constraint = {};
     const errorMessage = intlMessages[item.uploadErrorMsgKey]
       || intlMessages.genericConversionStatus;
 
     switch (item.uploadErrorMsgKey) {
       case 'CONVERSION_TIMEOUT':
-        constraint.slideNumber = item.uploadErrorDetailsJson.numberPageError;
-        constraint.maxAttempts = item.uploadErrorDetailsJson.maxNumberOfAttempts;
+        constraint.slideNumber = item.uploadErrorDetailsJson?.numberPageError;
+        constraint.maxAttempts = item.uploadErrorDetailsJson?.maxNumberOfAttempts;
         break;
       case 'FILE_TOO_LARGE': {
-        const { maxFileSize } = item.uploadErrorDetailsJson;
+        const { maxFileSize } = item.uploadErrorDetailsJson || {};
         constraint.maxFileSize = getSizeWithUnit(maxFileSize);
         break;
       }
       case 'PAGE_COUNT_EXCEEDED':
-        constraint.maxNumberOfPages = item.uploadErrorDetailsJson.maxNumberOfPages;
+        constraint.maxNumberOfPages = item.uploadErrorDetailsJson?.maxNumberOfPages;
         break;
       case 'PDF_HAS_BIG_PAGE':
-        constraint.maxPageSize = (item.uploadErrorDetailsJson.bigPageSize / 1000 / 1000).toFixed(2);
+        constraint.maxPageSize = (
+          (item.uploadErrorDetailsJson?.bigPageSize || 0) / 1000 / 1000
+        ).toFixed(2);
         break;
       case 'INVALID_MIME_TYPE':
-        constraint.extension = item.uploadErrorDetailsJson.fileExtension;
-        constraint.contentType = item.uploadErrorDetailsJson.fileMime;
+        constraint.extension = item.uploadErrorDetailsJson?.fileExtension
+          || item.name?.split('.').pop()
+          || '';
+        constraint.contentType = item.uploadErrorDetailsJson?.fileMime
+          || item.file?.type
+          || 'unknown';
         break;
       default:
         break;
@@ -238,22 +214,48 @@ function renderPresentationItemStatus(item, intl) {
     return intl.formatMessage(errorMessage, constraint);
   }
 
-  if ((('uploadInProgress' in item) && (item.uploadInProgress && !item.uploadErrorMsgKey)) || (('progress' in item) && item.progress === 100)) {
-    let conversionStatusMessage;
-    if ('totalPagesUploaded' in item) {
-      if (item.totalPagesUploaded < item.totalPages) {
-        return intl.formatMessage(intlMessages.conversionProcessingSlides, {
-          currentPage: item.totalPagesUploaded,
-          totalPages: item.totalPages,
-        });
-      }
-
-      conversionStatusMessage = intlMessages[item.conversion?.status]
-        || intlMessages.genericConversionStatus;
-    } else {
-      conversionStatusMessage = intlMessages.genericConversionStatus;
+  if (item.upload?.error) {
+    if (item.upload.status === 'INVALID_MIME_TYPE') {
+      return intl.formatMessage(intlMessages.INVALID_MIME_TYPE, {
+        extension: item.name?.split('.').pop() || '',
+        contentType: item.file?.type || 'unknown',
+      });
     }
-    return intl.formatMessage(conversionStatusMessage);
+    const errorMessage = intlMessages[item.upload.status] || intlMessages.genericError;
+    return intl.formatMessage(errorMessage);
+  }
+
+  // Completed uploads should never remain on "0%".
+  if (uploadCompleted && !uploadHasError && !isProcessing) {
+    return null;
+  }
+
+  if ((uploadDone || isProcessing) && !uploadHasError) {
+    if (item.totalPages > 0 && item.totalPagesUploaded < item.totalPages) {
+      return intl.formatMessage(intlMessages.conversionProcessingSlides, {
+        currentPage: item.totalPagesUploaded,
+        totalPages: item.totalPages,
+      });
+    }
+    return intl.formatMessage(
+      intlMessages[item.conversion?.status] || intlMessages.genericConversionStatus,
+    );
+  }
+
+  if (uploadProgress > 0 && uploadProgress < 100) {
+    return intl.formatMessage(intlMessages.uploadProcess, {
+      progress: Math.floor(uploadProgress).toString(),
+    });
+  }
+
+  if (item.file && item.uploadStarted && !uploadDone && !uploadHasError) {
+    return intl.formatMessage(intlMessages.uploadProcess, {
+      progress: '0',
+    });
+  }
+
+  if (item.file && !item.uploadStarted) {
+    return intl.formatMessage(intlMessages.fileToUpload);
   }
 
   return null;

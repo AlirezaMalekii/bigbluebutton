@@ -9,6 +9,8 @@ import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
   openSkyroomBreakout,
+  openSkyroomBreakoutPanel,
+  closeSkyroomBreakoutPanel,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const intlMessages = defineMessages({
@@ -30,10 +32,16 @@ const BreakoutRoomItem = ({
   isModerator,
 }) => {
   const toggleBreakoutPanel = () => {
-    // On a Skyroom phone the breakout panel must take over the single bottom box; the raw
-    // content dispatch alone leaves the active box on 'users' so the panel never showed.
-    if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
-      openSkyroomBreakout(layoutContextDispatch);
+    if (isSkyroomColumnLayout()) {
+      if (sidebarContentPanel === PANELS.BREAKOUT) {
+        closeSkyroomBreakoutPanel(layoutContextDispatch);
+        return;
+      }
+      if (isSkyroomMobileViewport()) {
+        openSkyroomBreakout(layoutContextDispatch);
+        return;
+      }
+      openSkyroomBreakoutPanel(layoutContextDispatch);
       return;
     }
     layoutContextDispatch({

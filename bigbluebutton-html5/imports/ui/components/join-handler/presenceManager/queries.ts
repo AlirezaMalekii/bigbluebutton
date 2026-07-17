@@ -7,6 +7,11 @@ export interface GetGuestLobbyInfo {
       positionInWaitingQueue: number;
       isAllowed: boolean;
     };
+    meeting: {
+      usersPolicies: {
+        guestLobbyMessage: string | null;
+      } | null;
+    } | null;
   }>;
 }
 
@@ -17,6 +22,11 @@ subscription getGuestLobbyInfo {
         guestLobbyMessage
         positionInWaitingQueue
         isAllowed
+      }
+      meeting {
+        usersPolicies {
+          guestLobbyMessage
+        }
       }
     }
   }

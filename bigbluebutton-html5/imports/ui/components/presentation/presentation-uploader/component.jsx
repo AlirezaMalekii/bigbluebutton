@@ -319,23 +319,49 @@ const applySelectionToPresentations = (list, selectedId) => {
   }));
 };
 
-const preserveLocalPresentationFields = (clonedPresentations, originalPresentations) => {
-  const originalById = new Map(
-    normalizePresentations(originalPresentations).map((presentation) => [
-      presentation.presentationId,
-      presentation,
-    ]),
+const mergeUploadState = (serverUpload = {}, localUpload = {}) => {
+  const progress = Math.max(
+    Number(serverUpload?.progress) || 0,
+    Number(localUpload?.progress) || 0,
   );
+  const done = !!(serverUpload?.done || localUpload?.done || progress >= 100);
+  const error = !!(localUpload?.error || serverUpload?.error);
+
+  return {
+    ...(serverUpload || {}),
+    ...(localUpload || {}),
+    progress: done && !error ? Math.max(progress, 100) : progress,
+    done,
+    error,
+    ...(error ? {
+      status: localUpload?.status || serverUpload?.status,
+    } : {}),
+  };
+};
+
+const preserveLocalPresentationFields = (clonedPresentations, originalPresentations) => {
+  const originalById = new Map();
+  normalizePresentations(originalPresentations).forEach((presentation) => {
+    if (presentation.presentationId) {
+      originalById.set(presentation.presentationId, presentation);
+    }
+    if (presentation.uploadTemporaryId) {
+      originalById.set(presentation.uploadTemporaryId, presentation);
+    }
+  });
 
   return normalizePresentations(clonedPresentations).map((presentation) => {
-    const original = originalById.get(presentation.presentationId);
+    const original = originalById.get(presentation.presentationId)
+      || originalById.get(presentation.uploadTemporaryId);
     if (!original) return presentation;
 
     return {
       ...presentation,
-      ...(original.file ? { file: original.file } : {}),
+      ...(original.file && !presentation.uploadCompleted ? { file: original.file } : {}),
       ...(original.uploadStarted ? { uploadStarted: original.uploadStarted } : {}),
-      ...(original.upload ? { upload: { ...presentation.upload, ...original.upload } } : {}),
+      ...(original.upload || presentation.upload
+        ? { upload: mergeUploadState(presentation.upload, original.upload) }
+        : {}),
       ...(original.conversion ? {
         conversion: { ...presentation.conversion, ...original.conversion },
       } : {}),
@@ -354,6 +380,7 @@ const mergeLocalUploadFields = (serverEntry, localPresentations) => {
   const localMatch = normalizePresentations(localPresentations).find(
     (presentation) => presentation.presentationId === serverEntry.uploadTemporaryId
       || presentation.uploadTemporaryId === serverEntry.uploadTemporaryId
+      || presentation.presentationId === serverEntry.presentationId
       || (
         presentation.name === serverEntry.name
         && (presentation.file || presentation.uploadStarted)
@@ -364,9 +391,13 @@ const mergeLocalUploadFields = (serverEntry, localPresentations) => {
 
   return {
     ...serverEntry,
-    ...(localMatch.file ? { file: localMatch.file } : {}),
+    uploadTemporaryId: serverEntry.uploadTemporaryId
+      || localMatch.uploadTemporaryId
+      || localMatch.presentationId,
+    ...(localMatch.file && !serverEntry.uploadCompleted ? { file: localMatch.file } : {}),
     ...(localMatch.uploadStarted ? { uploadStarted: localMatch.uploadStarted } : {}),
-    ...(localMatch.upload ? { upload: { ...serverEntry.upload, ...localMatch.upload } } : {}),
+    ...(localMatch.isMedia != null ? { isMedia: localMatch.isMedia } : {}),
+    upload: mergeUploadState(serverEntry.upload, localMatch.upload),
     ...(typeof localMatch.onProgress === 'function' ? { onProgress: localMatch.onProgress } : {}),
     ...(typeof localMatch.onConversion === 'function' ? { onConversion: localMatch.onConversion } : {}),
     ...(typeof localMatch.onUpload === 'function' ? { onUpload: localMatch.onUpload } : {}),
@@ -379,13 +410,17 @@ const mergeLocalUploadFields = (serverEntry, localPresentations) => {
 
 const isPresentationUploadPending = (presentation) => {
   if (!presentation) return false;
+  if (presentation.uploadCompleted) return false;
   if (presentation.uploadErrorMsgKey || presentation.uploadErrorDetailsJson) return false;
-  if (presentation.uploadInProgress) return true;
-  if (presentation.uploadStarted && !presentation.uploadCompleted) return true;
-  if (presentation.file && !presentation.uploadCompleted) return true;
-  if (!presentation.uploadCompleted && presentation.upload && !presentation.upload.done) {
-    return true;
+  if (presentation.upload?.error) return false;
+  if (presentation.upload?.done) {
+    // Local HTTP upload finished; keep confirm disabled only while server is still converting.
+    return !!presentation.uploadInProgress;
   }
+  if (presentation.uploadInProgress) return true;
+  if (presentation.uploadStarted) return true;
+  if (presentation.file) return true;
+  if (presentation.upload && !presentation.upload.done) return true;
   return false;
 };
 
@@ -1138,7 +1173,10 @@ class PresentationUploader extends Component {
   updateFileKey(id, key, value, operation = '$set') {
     this.setState(({ presentations: rawPresentations }) => {
       const presentations = normalizePresentations(rawPresentations);
-      const fileIndex = presentations.findIndex((f) => f?.presentationId === id);
+      const fileIndex = !id ? -1 : presentations.findIndex((f) => (
+        f?.presentationId === id
+        || f?.uploadTemporaryId === id
+      ));
 
       return fileIndex === -1 ? false : {
         presentations: update(presentations, {
@@ -1205,15 +1243,19 @@ class PresentationUploader extends Component {
       <Styled.ListCard>
         <Styled.PresentationList role="table" aria-label={intl.formatMessage(intlMessages.currentLabel)}>
           <Styled.ListHeader role="row">
-            <Styled.ListHeaderCell role="columnheader" aria-label={intl.formatMessage(intlMessages.setAsCurrentPresentation)} />
-            <Styled.ListHeaderCell role="columnheader">
+            <Styled.ListHeaderCell
+              role="columnheader"
+              $col="radio"
+              aria-label={intl.formatMessage(intlMessages.setAsCurrentPresentation)}
+            />
+            <Styled.ListHeaderCell role="columnheader" $col="name">
               {intl.formatMessage(intlMessages.filename)}
             </Styled.ListHeaderCell>
-            <Styled.ListHeaderCell role="columnheader" aria-hidden />
-            <Styled.ListHeaderCell role="columnheader">
+            <Styled.ListHeaderCell role="columnheader" $col="badge" aria-hidden />
+            <Styled.ListHeaderCell role="columnheader" $col="status">
               {intl.formatMessage(intlMessages.status)}
             </Styled.ListHeaderCell>
-            <Styled.ListHeaderCell role="columnheader">
+            <Styled.ListHeaderCell role="columnheader" $col="actions">
               {intl.formatMessage(intlMessages.actionsLabel)}
             </Styled.ListHeaderCell>
           </Styled.ListHeader>
@@ -1516,7 +1558,6 @@ class PresentationUploader extends Component {
           </Styled.HintBanner>
           <Styled.ListSection data-skyroom="presentation-upload-list">
             {this.renderPresentationList()}
-            {this.renderDownloadableWithAnnotationsHint()}
           </Styled.ListSection>
           <Styled.BottomPanels>
             {startExternalVideo ? (

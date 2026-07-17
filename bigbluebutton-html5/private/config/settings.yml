@@ -590,6 +590,8 @@ public:
     maxCustom: 5
     maxTypedAnswerLength: 45
     chatMessage: true
+    # SafeMeet: publish poll/quiz results to public chat only (not whiteboard)
+    publishToWhiteboard: false
     quickPollConfirmationStep: true
     quiz:
       enabled: true
@@ -1105,11 +1107,17 @@ public:
       - extension: .mp4
         mime: video/x-m4v
       - extension: .mp4
+        mime: video/3gpp
+      - extension: .mp4
+        mime: application/mp4
+      - extension: .mp4
         mime: audio/mp4
       - extension: .mov
         mime: video/quicktime
       - extension: .mov
         mime: video/mp4
+      - extension: .mov
+        mime: video/3gpp
       - extension: .webm
         mime: video/webm
       - extension: .webm
@@ -1138,12 +1146,16 @@ public:
         mime: audio/x-m4a
       - extension: .m4a
         mime: video/mp4
+      - extension: .m4a
+        mime: video/3gpp
       - extension: .aac
         mime: audio/mp4
       - extension: .aac
         mime: audio/aac
       - extension: .aac
         mime: audio/x-aac
+      - extension: .aac
+        mime: video/3gpp
   user:
     role_moderator: MODERATOR
     role_viewer: VIEWER

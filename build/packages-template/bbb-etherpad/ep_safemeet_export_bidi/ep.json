@@ -1,0 +1,11 @@
+{
+  "parts": [
+    {
+      "name": "safemeet_export_bidi",
+      "hooks": {
+        "stylesForExport": "ep_safemeet_export_bidi/index:stylesForExport",
+        "getLineHTMLForExport": "ep_safemeet_export_bidi/index:getLineHTMLForExport"
+      }
+    }
+  ]
+}
