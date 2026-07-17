@@ -91,6 +91,20 @@ deploy_web() {
   fi
   log "Deploying bigbluebutton-web ..."
   (cd "$BBB_ROOT/bigbluebutton-web" && bash ./deploy_to_usr_share.sh)
+
+  # WarLauncher can load a stale duplicate bbb-common-web-*.jar and ignore the
+  # freshly built 0.0.5-SNAPSHOT. Keep only the version Gradle packages.
+  local lib_dir="/usr/share/bbb-web/WEB-INF/lib"
+  if [[ -d "$lib_dir" ]]; then
+    local stale
+    stale="$(find "$lib_dir" -maxdepth 1 -type f -name 'bbb-common-web-*.jar' ! -name 'bbb-common-web-0.0.5-SNAPSHOT.jar' 2>/dev/null || true)"
+    if [[ -n "$stale" ]]; then
+      log "Removing stale bbb-common-web jars (keeping 0.0.5-SNAPSHOT):"
+      printf '%s\n' "$stale"
+      # shellcheck disable=SC2086
+      rm -f $stale
+    fi
+  fi
 }
 
 deploy_libs() {

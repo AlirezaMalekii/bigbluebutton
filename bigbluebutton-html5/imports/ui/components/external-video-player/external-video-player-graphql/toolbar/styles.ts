@@ -7,7 +7,7 @@ interface HoverToolbarProps {
 const HoverToolbar = Styled.div<HoverToolbarProps>`
   ${({ toolbarStyle }) => toolbarStyle === 'hoverToolbar' && `
     display: none;
-    z-index: 3;
+    z-index: 5;
     [data-test="videoPlayer"]:hover & {
       display: flex;
     }
@@ -19,7 +19,7 @@ const HoverToolbar = Styled.div<HoverToolbarProps>`
 
   ${({ toolbarStyle }) => toolbarStyle === 'showMobileHoverToolbar' && `
     display: flex;
-    z-index: 2;
+    z-index: 5;
   `}
 `;
 
@@ -30,7 +30,7 @@ const ButtonsWrapper = Styled.div`
   bottom: 0;
   top: 0;
   display: flex;
-  z-index: 3;
+  z-index: 5;
 
   [dir="rtl"] & {
     right: 0;
@@ -45,7 +45,7 @@ const MobileControlsOverlay = Styled.span`
   width: 100%;
   height: 100%;
   background-color: transparent;
-  z-index: 3;
+  z-index: 5;
 `;
 
 export default {

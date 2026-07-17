@@ -1396,18 +1396,18 @@
   display: flex !important;
   flex-direction: column !important;
   flex-shrink: 0 !important;
-  margin: 0 0 6px !important;
-  padding: 0 !important;
-  gap: 2px !important;
+  margin: 0 0 4px !important;
+  padding: 0 2px !important;
+  gap: 0 !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="skyroomBreakoutEntry"] [data-test="breakoutRoomsTitle"] {
-  margin: 0 4px 1px !important;
+  margin: 0 2px !important;
   padding: 0 !important;
-  font-size: 0.65rem !important;
+  font-size: 0.62rem !important;
   font-weight: 600 !important;
   letter-spacing: 0.01em !important;
-  line-height: 1.2 !important;
+  line-height: 1.1 !important;
   color: var(--skyroom-panel-text-muted, rgba(210, 224, 238, 0.72)) !important;
 }
 
@@ -1418,6 +1418,7 @@
   padding: 0 !important;
   overflow: visible !important;
   background: transparent !important;
+  min-height: 0 !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="breakoutRoomsItem"] {
@@ -1428,7 +1429,7 @@
   width: 100% !important;
   min-height: 0 !important;
   height: auto !important;
-  padding: 6px 10px !important;
+  padding: 8px 12px !important;
   margin: 0 !important;
   border-radius: 10px !important;
   background: rgba(32, 199, 187, 0.1) !important;
@@ -1498,8 +1499,7 @@
 }
 
 /* Breakout rooms panel — Skyroom dark theme */
-#layout[data-skyroom-column="true"] [data-test="breakoutRoomManagerHeader"],
-#layout[data-skyroom-column="true"] [data-test="breakoutRoomManagerHeader"] ~ * {
+#layout[data-skyroom-column="true"] [data-test="breakoutRoomManagerHeader"] {
   color: var(--skyroom-panel-text, #eef4fb);
 }
 

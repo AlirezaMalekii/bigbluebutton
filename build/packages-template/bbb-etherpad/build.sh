@@ -53,11 +53,18 @@ npm pack ./ep_cursortrace
 npm install ./ep_cursortrace-*.tgz
 
 npm install ep_disable_chat
-npm install --no-save --legacy-peer-deps ep_auth_session
+# Persist in package.json so later plugin installs / npm prune cannot drop /auth_session.
+npm install --legacy-peer-deps ep_auth_session@1.1.2
 
 # SafeMeet: Persian/English bidirectional export for shared notes
 npm pack ./ep_safemeet_export_bidi
 npm install ./ep_safemeet_export_bidi-*.tgz
+
+# Guard: shared-notes login depends on this route.
+test -d node_modules/ep_auth_session || {
+  echo "ERROR: ep_auth_session missing after plugin install" >&2
+  exit 1
+}
 
 mkdir -p staging/usr/share/etherpad-lite
 

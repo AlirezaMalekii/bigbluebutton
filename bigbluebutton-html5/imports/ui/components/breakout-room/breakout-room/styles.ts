@@ -11,7 +11,6 @@ import {
   colorGray,
   colorDanger,
   userListBg,
-  colorWhite,
   colorGrayLighter,
   colorBlueLight,
   listItemBgHover,
@@ -375,18 +374,22 @@ type DurationContainerProps = {
 const DurationContainer = styled.div<DurationContainerProps>`
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: ${({ centeredText }) => (centeredText ? 'nowrap' : 'wrap')};
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.35rem 0.75rem;
   border-radius: 10px;
-  margin-bottom: 0;
+  margin: 0;
   padding: 0.35rem 0.6rem;
   box-shadow: none;
   background: ${skyroomSurface};
   border: 1px solid ${skyroomBorder};
   color: ${skyroomTextMuted};
   text-align: start;
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 `;
 
 const SetTimeContainer = styled.div`
@@ -449,9 +452,9 @@ const Panel = styled.div<PanelPresentationProps>`
   min-height: 0;
   flex: 1;
   overflow: hidden;
-  background-color: ${({ $presentation }) => ($presentation === 'mobile' ? 'transparent' : colorWhite)};
-  padding: ${({ $presentation }) => ($presentation === 'mobile' ? '0' : smPaddingX)};
-  color: ${({ $presentation }) => ($presentation === 'mobile' ? skyroomText : colorText)};
+  background-color: var(--skyroom-panel-solid, #151c28);
+  padding: 0;
+  color: ${skyroomText};
 `;
 
 const PanelHeader = styled.div`
@@ -463,11 +466,21 @@ const PanelHeader = styled.div`
 
 const MobilePanelTitle = styled.h2`
   margin: 0;
-  padding: 0.15rem 0.2rem 0.05rem;
+  padding: 0.55rem 0.75rem;
+  min-height: 40px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
   font-size: 0.85rem;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.2;
   color: ${skyroomText};
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 `;
 
 const ScrollableBody = styled.div`
@@ -545,17 +558,28 @@ const Input = styled(TextareaAutosize)`
 `;
 // @ts-ignore - as button comes from JS, we can't provide its props
 const SendButton = styled(Button)`
-  margin:0 0 0 ${smPaddingX};
+  margin: 0 0 0 ${smPaddingX};
   align-self: center;
   font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
 
-  [dir="rtl"]  & {
+  [dir="rtl"] & {
     margin: 0 ${smPaddingX} 0 0;
-    -webkit-transform: scale(-1, 1);
-    -moz-transform: scale(-1, 1);
-    -ms-transform: scale(-1, 1);
-    -o-transform: scale(-1, 1);
-    transform: scale(-1, 1);
+    transform: scaleX(-1);
+    transform-origin: center center;
+  }
+
+  & > span,
+  & i,
+  & [class^="icon-bbb-"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    line-height: 1;
   }
 `;
 

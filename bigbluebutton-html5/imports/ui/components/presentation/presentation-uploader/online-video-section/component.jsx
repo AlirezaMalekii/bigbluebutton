@@ -152,7 +152,6 @@ const OnlineVideoSection = ({
             <Styled.TextInput
               id="online-video-url-input"
               type="url"
-              dir="ltr"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value.trim())}
               placeholder={formatMessage(intlMessages.urlInput)}
@@ -172,7 +171,6 @@ const OnlineVideoSection = ({
             {formatMessage(intlMessages.aparatInput)}
             <Styled.TextArea
               id="online-video-aparat-input"
-              dir="ltr"
               value={aparatEmbed}
               onChange={(e) => setAparatEmbed(e.target.value)}
               placeholder={formatMessage(intlMessages.aparatInput)}

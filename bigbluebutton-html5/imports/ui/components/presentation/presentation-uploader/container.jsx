@@ -29,6 +29,7 @@ import {
   EXTERNAL_VIDEO_START,
   EXTERNAL_VIDEO_STOP,
 } from '/imports/ui/components/external-video-player/mutations';
+import { isPresentationMedia } from './presentationMediaSync';
 
 const PresentationUploaderContainer = (props) => {
   const { data: currentUserData } = useCurrentUser((user) => ({
@@ -66,9 +67,15 @@ const PresentationUploaderContainer = (props) => {
     });
   };
 
-  const setPresentation = (presentationId) => (
-    presentationSetCurrent({ variables: { presentationId } })
-  );
+  const setPresentation = (presentationId) => {
+    const presentation = presentations.find((p) => p.presentationId === presentationId);
+    // Leave Aparat/online-video mode when switching to a non-media presentation
+    // (PDF/PPT/image). Uploaded media is started afterward by syncExternalVideoForSelection.
+    if (!isPresentationMedia(presentation)) {
+      stopExternalVideoMutation();
+    }
+    return presentationSetCurrent({ variables: { presentationId } });
+  };
 
   const removePresentation = (presentationId) => (
     presentationRemove({ variables: { presentationId } })

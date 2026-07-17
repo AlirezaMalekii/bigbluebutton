@@ -1,6 +1,7 @@
 import React, {
   useContext, useEffect, useMemo, useState,
 } from 'react';
+import PropTypes from 'prop-types';
 import { defineMessages, useIntl } from 'react-intl';
 import Auth from '/imports/ui/services/auth';
 import getFromUserSettings from '/imports/ui/services/users-settings';
@@ -72,7 +73,8 @@ const NavBarContainer = ({ children, ...props }) => {
     breakoutRoomsSummary: user.breakoutRoomsSummary,
   }));
   const amIModerator = currentUserData?.isModerator;
-  const hasBreakoutInvitation = (currentUserData?.breakoutRoomsSummary?.totalOfJoinURL ?? 0) > 0;
+  const hasBreakoutInvitation = (currentUserData?.breakoutRoomsSummary?.totalOfJoinURL ?? 0) > 0
+    || (currentUserData?.breakoutRoomsSummary?.totalOfShowInvitation ?? 0) > 0;
 
   const isExpanded = !!sidebarContentPanel || !!sidebarNavPanel;
 
@@ -185,6 +187,10 @@ const NavBarContainer = ({ children, ...props }) => {
       {children}
     </NavBar>
   );
+};
+
+NavBarContainer.propTypes = {
+  children: PropTypes.node,
 };
 
 export default NavBarContainer;

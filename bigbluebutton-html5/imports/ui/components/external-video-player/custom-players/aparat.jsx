@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import {
   buildAparatEmbedUrl,
   extractAparatHash,
@@ -16,6 +17,7 @@ export class AparatPlayer extends Component {
   constructor(props) {
     super(props);
 
+    // react-player expects the custom player instance on `this.player`.
     this.player = this;
     this.currentTime = 0;
     this.playbackRate = 1;
@@ -36,14 +38,28 @@ export class AparatPlayer extends Component {
     if (onMount) {
       onMount(this);
     }
-    // Notify react-player that the custom player is ready.
     this.load();
   }
 
   componentDidUpdate(prevProps) {
-    const { config } = this.props;
+    const {
+      config, url, onStart, onPlay,
+    } = this.props;
+    const prevUrl = prevProps.url;
     const prevPlaying = Boolean(prevProps.config?.aparat?.playing);
     const nextPlaying = Boolean(config?.aparat?.playing);
+
+    if (url && url !== prevUrl) {
+      this._playing = nextPlaying;
+      this.remountIframe(() => {
+        if (this._playing) {
+          onStart?.();
+          onPlay?.();
+        }
+      });
+      return;
+    }
+
     if (prevPlaying === nextPlaying) return;
 
     if (nextPlaying) {
@@ -63,18 +79,18 @@ export class AparatPlayer extends Component {
     const targetUrl = url || propUrl;
     const hash = extractAparatHash(targetUrl);
     if (!hash) {
-      if (isAparatEmbedUrl(targetUrl)) return targetUrl;
+      if (isAparatEmbedUrl(targetUrl)) {
+        // Ensure /vt/frame even when a raw embed/loader URL is stored.
+        const fallbackHash = extractAparatHash(targetUrl);
+        return fallbackHash ? buildAparatEmbedUrl(fallbackHash) : targetUrl;
+      }
       return parseAparatEmbed(targetUrl) || targetUrl;
     }
 
     const aparatConfig = this.getAparatConfig();
     return buildAparatEmbedUrl(hash, {
       autoplay: this._playing || Boolean(aparatConfig.playing),
-      // Prefer unmuted autoplay so viewers hear audio in meetings that already
-      // have an active media context (listen-only / mic). Browser may still
-      // require a prior gesture; presenter controls remain the sync source.
       muted: false,
-      hideTitle: true,
     });
   }
 
@@ -170,11 +186,19 @@ export class AparatPlayer extends Component {
     return this;
   }
 
+  // YouTube-style aliases used by some react-player call sites.
+  playVideo() {
+    return this.play();
+  }
+
+  pauseVideo() {
+    return this.pause();
+  }
+
   render() {
     const { url } = this.props;
-    const { isPresenter } = this.getAparatConfig();
-    // Always block iframe UI interaction — presenter uses SafeMeet sync controls.
-    // Viewers must never play/pause locally.
+    const aparatConfig = this.getAparatConfig();
+    const allowPresenterControls = Boolean(aparatConfig.isPresenter);
     const style = {
       width: '100%',
       height: '100%',
@@ -182,7 +206,9 @@ export class AparatPlayer extends Component {
       padding: 0,
       border: 0,
       overflow: 'hidden',
-      pointerEvents: 'none',
+      // Presenter may use Aparat's native play if autoplay is blocked.
+      // Viewers stay blocked so only presenter-driven sync controls playback.
+      pointerEvents: allowPresenterControls ? 'auto' : 'none',
     };
 
     return (
@@ -193,8 +219,6 @@ export class AparatPlayer extends Component {
         title="Aparat video player"
         allow="autoplay; fullscreen; encrypted-media"
         allowFullScreen
-        // Presenter/viewer both blocked; keep attribute for accessibility tooling.
-        tabIndex={isPresenter ? -1 : -1}
         ref={(container) => {
           this.container = container;
         }}
@@ -202,6 +226,21 @@ export class AparatPlayer extends Component {
     );
   }
 }
+
+AparatPlayer.propTypes = {
+  url: PropTypes.string,
+  onMount: PropTypes.func,
+  onReady: PropTypes.func,
+  onStart: PropTypes.func,
+  onPlay: PropTypes.func,
+  onPause: PropTypes.func,
+  config: PropTypes.shape({
+    aparat: PropTypes.shape({
+      playing: PropTypes.bool,
+      isPresenter: PropTypes.bool,
+    }),
+  }),
+};
 
 AparatPlayer.displayName = 'AparatPlayer';
 

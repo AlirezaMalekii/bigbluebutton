@@ -33,11 +33,11 @@ export const buildAparatEmbedUrl = (
   hash: string,
   options: AparatEmbedOptions = {},
 ): string => {
+  // Match Aparat's official iframe target from their embed loader:
+  // https://www.aparat.com/video/video/embed/videohash/{hash}/vt/frame
+  // Extra/unknown query keys can prevent the player from booting.
   const params = new URLSearchParams();
   params.set('data[responsive]', 'yes');
-  if (options.hideTitle !== false) {
-    params.set('titleShow', 'false');
-  }
   if (options.autoplay) {
     params.set('autoplay', 'true');
   }

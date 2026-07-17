@@ -6,6 +6,7 @@ This repository is the SafeMeet fork of BigBlueButton 3.x. Keep BBB as the realt
 
 - Security disclosure policy: `CLAUDE.md`
 - Core architecture guardrails: `.cursor/rules/BigBlueButton-3-x-Development.mdc`
+- BBB server delivery: `.cursor/rules/bbb-git-first-deploy.mdc` — push to git first; update the BBB server from the repository. Do not hot-patch live server paths.
 - Official BBB development documentation: https://docs.bigbluebutton.org/development/
 
 ## Meeting UI

@@ -105,6 +105,14 @@ const inputStyles = `
   color: ${skyroomText};
   font-size: 0.75rem;
   font-family: inherit;
+  /* Persian placeholders stay RTL/right; typed URL/embed switches to LTR. */
+  direction: rtl;
+  text-align: right;
+
+  &:not(:placeholder-shown) {
+    direction: ltr;
+    text-align: left;
+  }
 
   &:focus {
     outline: none;
@@ -115,6 +123,8 @@ const inputStyles = `
   &::placeholder {
     color: ${skyroomTextMuted};
     opacity: 0.85;
+    direction: rtl;
+    text-align: right;
   }
 `;
 

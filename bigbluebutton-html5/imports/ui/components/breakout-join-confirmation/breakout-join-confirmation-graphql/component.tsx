@@ -19,6 +19,11 @@ import logger from '/imports/startup/client/logger';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
 import Icon from '/imports/ui/components/common/icon/component';
+import { layoutDispatch } from '/imports/ui/components/layout/context';
+import {
+  isSkyroomColumnLayout,
+  openSkyroomBreakoutPanel,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const intlMessages = defineMessages({
   title: {
@@ -90,6 +95,7 @@ const BreakoutJoinConfirmation: React.FC<BreakoutJoinConfirmationProps> = ({
   const [callHandleInviteDismissedAt] = useMutation(handleInviteDismissedAt);
   const stopMediaOnMainRoom = useStopMediaOnMainRoom();
   const intl = useIntl();
+  const layoutContextDispatch = layoutDispatch();
   const [waiting, setWaiting] = React.useState(false);
   const [invitationDismissed, setInvitationDismissed] = React.useState(false);
 
@@ -233,8 +239,12 @@ const BreakoutJoinConfirmation: React.FC<BreakoutJoinConfirmationProps> = ({
   useEffect(() => {
     if (breakouts?.length > 0 && !currentUserJoined && !invitationDismissed) {
       setIsOpen(true);
+      // Open the Skyroom breakout content box / mobile tab alongside the invite modal.
+      if (isSkyroomColumnLayout()) {
+        openSkyroomBreakoutPanel(layoutContextDispatch);
+      }
     }
-  }, [breakouts, currentUserJoined, invitationDismissed, setIsOpen]);
+  }, [breakouts, currentUserJoined, invitationDismissed, setIsOpen, layoutContextDispatch]);
 
   useEffect(() => {
     if (freeJoin) {

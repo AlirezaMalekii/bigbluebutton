@@ -9,6 +9,11 @@ const usePrevious = (value) => {
 };
 
 const isValidShapeType = (shape) => {
+  // Presentation slide background is an image shape by design — never treat it
+  // as a forbidden annotation type (that used to undo and "vanish" the slide).
+  if (typeof shape?.id === 'string' && shape.id.startsWith('shape:BG-')) {
+    return true;
+  }
   const invalidTypes = ['image', 'embed'];
   return !invalidTypes.includes(shape?.type);
 };

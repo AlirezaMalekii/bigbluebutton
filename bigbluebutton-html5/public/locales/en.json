@@ -542,6 +542,7 @@
     "app.presentationMedia.pause": "Pause",
     "app.presentationMedia.mute": "Mute",
     "app.presentationMedia.unmute": "Unmute",
+    "app.externalVideo.seekLabel": "Seek video",
     "app.connectingMessage": "Connecting ...",
     "app.reconnectingMessage": "Lost connection. Please check your internet.",
     "app.muteWarning.label": "Click {unmuteIcon} to unmute yourself.",

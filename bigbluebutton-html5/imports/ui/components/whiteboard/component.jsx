@@ -54,6 +54,24 @@ const USER_CAMERA_INTERACTION_MS = (
 );
 
 const CENTER_OFFSET_PUBLISH_EPSILON = 0.5;
+const BG_SHAPE_ID_PREFIX = 'shape:BG-';
+
+const isBackgroundShapeId = (id) => typeof id === 'string' && id.startsWith(BG_SHAPE_ID_PREFIX);
+
+const isBackgroundShape = (shape) => isBackgroundShapeId(shape?.id);
+
+// Prefer the live tldraw viewport over layout props — on Skyroom mobile the
+// presentationArea* values can lag behind the real canvas, which mis-centers
+// newly uploaded images (half off-screen / stuck in a corner).
+const resolveCameraViewportSize = (editor, fallbackWidth, fallbackHeight) => {
+  const bounds = editor?.getViewportScreenBounds?.();
+  const width = bounds?.width > 0 ? bounds.width : fallbackWidth;
+  const height = bounds?.height > 0 ? bounds.height : fallbackHeight;
+  return {
+    areaWidth: Number.isFinite(width) ? width : 0,
+    areaHeight: Number.isFinite(height) ? height : 0,
+  };
+};
 
 // tldraw camera.x/y are page-space (page = screen/z + camera).
 // Letterbox/pillarbox centering therefore uses negative offsets when the slide
@@ -67,11 +85,17 @@ const calculateCenteredCameraOffsets = (
   fitToWidthMode,
 ) => {
   const zoom = Number.isFinite(baseZoom) && baseZoom > 0 ? baseZoom : 1;
-  const pageViewportWidth = areaWidth / zoom;
-  const pageViewportHeight = areaHeight / zoom;
+  const safeAreaWidth = Number.isFinite(areaWidth) && areaWidth > 0 ? areaWidth : 0;
+  const safeAreaHeight = Number.isFinite(areaHeight) && areaHeight > 0 ? areaHeight : 0;
+  const pageViewportWidth = safeAreaWidth / zoom;
+  const pageViewportHeight = safeAreaHeight / zoom;
 
   let xOffset = 0;
   let yOffset = 0;
+
+  if (!(pageViewportWidth > 0) || !(pageViewportHeight > 0)) {
+    return { xOffset, yOffset };
+  }
 
   if (fitToWidthMode) {
     // Width fills the area; only letterbox vertically when the slide is shorter.
@@ -559,6 +583,9 @@ const Whiteboard = React.memo((props) => {
 
   React.useEffect(() => {
     presentationIdRef.current = presentationId;
+    // New presentation (e.g. freshly uploaded image): drop settled-view cache so
+    // camera re-centers against the real viewport after layout settles.
+    lastForcedViewRef.current = null;
   }, [presentationId]);
 
   React.useEffect(() => {
@@ -1048,11 +1075,16 @@ const Whiteboard = React.memo((props) => {
   };
 
   const calculateZoomValue = (localWidth, localHeight) => {
+    const { areaWidth, areaHeight } = resolveCameraViewportSize(
+      tlEditorRef.current,
+      presentationAreaWidth,
+      presentationAreaHeight,
+    );
     const calcedZoom = fitToWidth
-      ? presentationAreaWidth / localWidth
+      ? areaWidth / localWidth
       : Math.min(
-        presentationAreaWidth / localWidth,
-        presentationAreaHeight / localHeight,
+        areaWidth / localWidth,
+        areaHeight / localHeight,
       );
 
     return calcedZoom === 0 || calcedZoom === Infinity || Number.isNaN(calcedZoom)
@@ -1109,12 +1141,17 @@ const Whiteboard = React.memo((props) => {
     localHeight,
     widthAdjustment = 0,
   ) => {
-    const presentationWidthLocal = Math.max(presentationAreaWidth - widthAdjustment, 0);
+    const { areaWidth, areaHeight } = resolveCameraViewportSize(
+      tlEditorRef.current,
+      presentationAreaWidth,
+      presentationAreaHeight,
+    );
+    const presentationWidthLocal = Math.max(areaWidth - widthAdjustment, 0);
     const calcedZoom = (fitToWidth
       ? presentationWidthLocal / localWidth
       : Math.min(
         presentationWidthLocal / localWidth,
-        presentationAreaHeight / localHeight,
+        areaHeight / localHeight,
       ));
     return calcedZoom === 0 || calcedZoom === Infinity || Number.isNaN(calcedZoom)
       ? calculateZoomValue(localWidth, localHeight) // Fallback to no gap base zoom
@@ -1243,6 +1280,15 @@ const Whiteboard = React.memo((props) => {
         let baseZoom = calculateZoomValueRef.current(scaledWidth, scaledHeight);
         throwIfInvalid(baseZoom, 'baseZoom');
 
+        const {
+          areaWidth: cameraAreaWidth,
+          areaHeight: cameraAreaHeight,
+        } = resolveCameraViewportSize(
+          tlEditorRef.current,
+          presentationAreaWidth,
+          presentationAreaHeight,
+        );
+
         if (isPresenterRef.current) {
           const { widthGap } = getContainerDimensions();
 
@@ -1256,8 +1302,8 @@ const Whiteboard = React.memo((props) => {
             scaledWidth,
             scaledHeight,
             baseZoom,
-            presentationAreaWidth,
-            presentationAreaHeight,
+            cameraAreaWidth,
+            cameraAreaHeight,
             fitToWidthRef.current,
           );
 
@@ -1297,24 +1343,25 @@ const Whiteboard = React.memo((props) => {
             });
           }
         } else if (includeViewerLogic) {
-          // Viewer logic
-          baseZoom = calculateZoomValueRef.current(scaledViewBoxWidth, scaledViewBoxHeight);
+          // Viewer: when backend still has default corner view, fit+center to the
+          // full slide — not the stale viewBox — so uploaded images land in the middle.
+          const shouldCenterViewer = (
+            shouldLocallyCenterCamera(xOffset, yOffset)
+            || hasLegacyScreenSpaceOffset(xOffset, yOffset)
+          );
+          const viewerFitWidth = shouldCenterViewer ? scaledWidth : scaledViewBoxWidth;
+          const viewerFitHeight = shouldCenterViewer ? scaledHeight : scaledViewBoxHeight;
+          baseZoom = calculateZoomValueRef.current(viewerFitWidth, viewerFitHeight);
           let viewerXOffset = xOffset;
           let viewerYOffset = yOffset;
-          const shouldCenterViewer = scaledViewBoxWidth > 0
-            && scaledViewBoxHeight > 0
-            && (
-              shouldLocallyCenterCamera(xOffset, yOffset)
-              || hasLegacyScreenSpaceOffset(xOffset, yOffset)
-            );
 
-          if (shouldCenterViewer) {
+          if (shouldCenterViewer && viewerFitWidth > 0 && viewerFitHeight > 0) {
             const centeredCamera = calculateCenteredCameraOffsets(
-              scaledViewBoxWidth,
-              scaledViewBoxHeight,
+              viewerFitWidth,
+              viewerFitHeight,
               baseZoom,
-              presentationAreaWidth,
-              presentationAreaHeight,
+              cameraAreaWidth,
+              cameraAreaHeight,
               fitToWidthRef.current,
             );
             viewerXOffset = centeredCamera.xOffset;
@@ -1523,6 +1570,8 @@ const Whiteboard = React.memo((props) => {
     }
 
     editor.sideEffects.registerBeforeDeleteHandler('shape', (shape, source) => {
+      // Presentation slide image must never be deleted (select+move/undo used to wipe it).
+      if (isBackgroundShape(shape)) return false;
       const { presenter, isModerator: userIsModerator, userId } = currentUserRef.current;
       const isOwn = userId && shape.meta?.createdBy === userId;
       const hasPermission = isOwn || presenter || userIsModerator;
@@ -1534,12 +1583,13 @@ const Whiteboard = React.memo((props) => {
         const { changes } = entry;
         const { added, updated, removed } = changes;
 
-        const addedCount = Object.keys(added).length;
+        const addedIds = Object.keys(added).filter((id) => !isBackgroundShapeId(id));
+        const addedCount = addedIds.length;
         const localShapes = editor.getCurrentPageShapes();
-        const filteredShapes = localShapes?.filter((item) => item?.index !== 'a0') || [];
+        const filteredShapes = localShapes?.filter((item) => item?.index !== 'a0' && !isBackgroundShape(item)) || [];
         const shapeNumberExceeded = filteredShapes
           .length + addedCount - 1 > maxNumberOfAnnotations;
-        const invalidShapeType = Object.keys(added).find((id) => !isValidShapeType(added[id]));
+        const invalidShapeType = addedIds.find((id) => !isValidShapeType(added[id]));
 
         if (addedCount > 0 && (shapeNumberExceeded || invalidShapeType)) {
           // notify and undo last command without persisting
@@ -1557,8 +1607,9 @@ const Whiteboard = React.memo((props) => {
             editor.setCurrentTool(tool);
           });
         } else {
-          // Add new shapes to the batch
-          Object.values(added).forEach((record) => {
+          // Add new shapes to the batch (never persist the presentation BG image)
+          addedIds.forEach((id) => {
+            const record = added[id];
             const updatedRecord = {
               ...record,
               meta: {
@@ -1573,6 +1624,8 @@ const Whiteboard = React.memo((props) => {
 
         // Update existing shapes and add them to the batch
         Object.values(updated).forEach(([, record]) => {
+          if (isBackgroundShape(record)) return;
+
           const formattedLookup = createLookup(editor.getCurrentPageShapes());
           const createdBy = formattedLookup[record?.id]?.meta?.createdBy || currentUser?.userId;
           const updatedRecord = {
@@ -1594,8 +1647,8 @@ const Whiteboard = React.memo((props) => {
           }
         });
 
-        // Handle removed shapes immediately (not batched)
-        const idsToRemove = Object.keys(removed);
+        // Handle removed shapes immediately (not batched). Never sync-remove the slide BG.
+        const idsToRemove = Object.keys(removed).filter((id) => !isBackgroundShapeId(id));
         if (idsToRemove.length > 0) {
           removeShapes(idsToRemove);
         }
@@ -1823,20 +1876,34 @@ const Whiteboard = React.memo((props) => {
 
         const newNext = next;
         if (next?.typeName === 'instance_page_state') {
-          if (isPresenterRef.current || isModeratorRef.current) return next;
+          // Never leave the slide image selected — transform/move handles make it
+          // jump or vanish when users try to pan with the select tool on mobile.
+          if (Array.isArray(next.selectedShapeIds) && next.selectedShapeIds.length > 0) {
+            const withoutBg = next.selectedShapeIds.filter((id) => !isBackgroundShapeId(id));
+            if (withoutBg.length !== next.selectedShapeIds.length) {
+              newNext.selectedShapeIds = withoutBg;
+            }
+          }
+
+          if (isBackgroundShapeId(next.hoveredShapeId)) {
+            newNext.hoveredShapeId = null;
+          }
+
+          if (isPresenterRef.current || isModeratorRef.current) return newNext;
+
           const formattedLookup = createLookup(editor.getCurrentPageShapes());
 
           // Filter selectedShapeIds based on shape owner
-          if (next.selectedShapeIds.length > 0) {
-            newNext.selectedShapeIds = next.selectedShapeIds.filter((shapeId) => {
+          if (newNext.selectedShapeIds?.length > 0) {
+            newNext.selectedShapeIds = newNext.selectedShapeIds.filter((shapeId) => {
               const shapeOwner = formattedLookup[shapeId]?.meta?.createdBy;
               return !shapeOwner || shapeOwner === currentUser?.userId;
             });
           }
 
-          if (!isEqual(prev.hoveredShapeId, next.hoveredShapeId)) {
-            const hoveredShapeOwner = formattedLookup[next.hoveredShapeId]?.meta?.createdBy;
-            if (hoveredShapeOwner !== currentUser?.userId || next.hoveredShapeId?.includes('shape:BG-')) {
+          if (!isEqual(prev.hoveredShapeId, newNext.hoveredShapeId)) {
+            const hoveredShapeOwner = formattedLookup[newNext.hoveredShapeId]?.meta?.createdBy;
+            if (hoveredShapeOwner !== currentUser?.userId || isBackgroundShapeId(newNext.hoveredShapeId)) {
               newNext.hoveredShapeId = null;
             }
           }
@@ -1845,6 +1912,28 @@ const Whiteboard = React.memo((props) => {
         }
 
         if (next && next?.typeName === 'shape') {
+          // Pin the presentation BG image against select-tool translate/unlock.
+          // Still allow remote asset/size sync via ...next props.
+          if (isBackgroundShape(next) && prev && isBackgroundShape(prev)) {
+            const moved = prev.x !== next.x
+              || prev.y !== next.y
+              || (prev.rotation ?? 0) !== (next.rotation ?? 0);
+            const unlocked = next.isLocked === false;
+            if (moved || unlocked) {
+              return {
+                ...next,
+                x: prev.x,
+                y: prev.y,
+                rotation: prev.rotation ?? 0,
+                isLocked: true,
+                meta: {
+                  ...next?.meta,
+                  version: next.meta?.version ? next.meta.version + 1 : 1,
+                },
+              };
+            }
+          }
+
           const newVersion = next.meta?.version ? next.meta?.version + 1 : 1;
           return {
             ...next,
@@ -1892,11 +1981,10 @@ const Whiteboard = React.memo((props) => {
 
       // eslint-disable-next-line no-param-reassign
       editor.store.onAfterChange = (prev, next) => {
-        if (next.selectedShapeIds && next.selectedShapeIds?.some((id) => id.includes('shape:BG'))) {
-          bgSelectedRef.current = true;
-        } else if ((next.selectedShapeIds && !next.selectedShapeIds?.some((id) => id.includes('shape:BG')))) {
-          bgSelectedRef.current = false;
-        }
+        if (next?.typeName !== 'instance_page_state') return;
+        // onBeforeChange strips BG from selection; keep this flag for toolbar CSS only.
+        bgSelectedRef.current = (next.selectedShapeIds || [])
+          .some((id) => isBackgroundShapeId(id));
       };
 
       if (!isPresenterRef.current && !hasWBAccessRef.current) {
@@ -1992,13 +2080,21 @@ const Whiteboard = React.memo((props) => {
     let newCamera;
 
     const page = currentPresentationPageRef.current;
+    const {
+      areaWidth: cameraAreaWidth,
+      areaHeight: cameraAreaHeight,
+    } = resolveCameraViewportSize(
+      tlEditorRef.current,
+      presentationAreaWidth,
+      presentationAreaHeight,
+    );
     const getCenteredCamera = (zoomLevel) => {
       const { xOffset, yOffset } = calculateCenteredCameraOffsets(
         page.scaledWidth,
         page.scaledHeight,
         zoomLevel,
-        presentationAreaWidth,
-        presentationAreaHeight,
+        cameraAreaWidth,
+        cameraAreaHeight,
         fitToWidthRef.current,
       );
       return { x: xOffset, y: yOffset, z: zoomLevel };
@@ -2105,19 +2201,31 @@ const Whiteboard = React.memo((props) => {
       const newZ = adjustedZoom;
       const backendX = xOffset ?? 0;
       const backendY = yOffset ?? 0;
-      // Force absolute center when the view is still stuck at default corner offsets.
-      // Otherwise keep the presenter's pan relative to the centered fit position on resize.
+      const {
+        areaWidth: cameraAreaWidth,
+        areaHeight: cameraAreaHeight,
+      } = resolveCameraViewportSize(
+        tlEditorRef.current,
+        presentationAreaWidth,
+        presentationAreaHeight,
+      );
+      // Force absolute center when backend/local view is still at default corner
+      // offsets (or legacy screen-pixel margins). Do not treat a legitimate
+      // fit-to-slide camera at ~0,0 (slide fills the viewport) as "needs center".
       const forceAbsoluteCenter = fitToWidthRef.current
         || shouldLocallyCenterCamera(backendX, backendY)
-        || shouldLocallyCenterCamera(camera.x, camera.y)
         || hasLegacyScreenSpaceOffset(backendX, backendY)
-        || hasLegacyScreenSpaceOffset(camera.x, camera.y);
+        || hasLegacyScreenSpaceOffset(camera.x, camera.y)
+        || (
+          shouldLocallyCenterCamera(camera.x, camera.y)
+          && shouldLocallyCenterCamera(backendX, backendY)
+        );
       const nextCentered = calculateCenteredCameraOffsets(
         scaledWidth,
         scaledHeight,
         newZ,
-        presentationAreaWidth,
-        presentationAreaHeight,
+        cameraAreaWidth,
+        cameraAreaHeight,
         fitToWidthRef.current,
       );
       let nextX = nextCentered.xOffset;
@@ -2128,8 +2236,8 @@ const Whiteboard = React.memo((props) => {
           scaledWidth,
           scaledHeight,
           camera.z,
-          presentationAreaWidth,
-          presentationAreaHeight,
+          cameraAreaWidth,
+          cameraAreaHeight,
           fitToWidthRef.current,
         );
         nextX = nextCentered.xOffset + (camera.x - prevCentered.xOffset);
@@ -2198,24 +2306,29 @@ const Whiteboard = React.memo((props) => {
         });
       }
     } else {
-      const newZoom = calculateZoomValue(
-        scaledViewBoxWidth,
-        scaledViewBoxHeight,
+      const shouldCenterViewer = (
+        shouldLocallyCenterCamera(xOffset, yOffset)
+        || hasLegacyScreenSpaceOffset(xOffset, yOffset)
       );
+      const viewerFitWidth = shouldCenterViewer ? scaledWidth : scaledViewBoxWidth;
+      const viewerFitHeight = shouldCenterViewer ? scaledHeight : scaledViewBoxHeight;
+      const newZoom = calculateZoomValue(viewerFitWidth, viewerFitHeight);
       const camera = tlEditorRef.current.getCamera();
-      const shouldCenterViewer = scaledViewBoxWidth > 0
-        && scaledViewBoxHeight > 0
-        && (
-          shouldLocallyCenterCamera(xOffset, yOffset)
-          || hasLegacyScreenSpaceOffset(xOffset, yOffset)
-        );
-      const centeredCamera = shouldCenterViewer
+      const {
+        areaWidth: cameraAreaWidth,
+        areaHeight: cameraAreaHeight,
+      } = resolveCameraViewportSize(
+        tlEditorRef.current,
+        presentationAreaWidth,
+        presentationAreaHeight,
+      );
+      const centeredCamera = shouldCenterViewer && viewerFitWidth > 0 && viewerFitHeight > 0
         ? calculateCenteredCameraOffsets(
-          scaledViewBoxWidth,
-          scaledViewBoxHeight,
+          viewerFitWidth,
+          viewerFitHeight,
           newZoom,
-          presentationAreaWidth,
-          presentationAreaHeight,
+          cameraAreaWidth,
+          cameraAreaHeight,
           fitToWidthRef.current,
         )
         : null;
@@ -2230,6 +2343,36 @@ const Whiteboard = React.memo((props) => {
       tlEditorRef.current.store.put([updatedCurrentCam]);
     }
   };
+
+  // Image uploads often resolve svgUrl / scaled size after tldraw mounts. Without
+  // this sync the BG asset stays empty or half-sized and the camera centers on
+  // stale slide bounds (common on Skyroom mobile after picking a photo).
+  React.useEffect(() => {
+    if (!tlEditorRef.current || !assets?.length || !bgShape?.length) return undefined;
+
+    tlEditorRef.current.store.mergeRemoteChanges(() => {
+      tlEditorRef.current.store.put(assets);
+      tlEditorRef.current.store.put(bgShape);
+    });
+
+    if (isWheelZoomRef.current || isUserPanningRef.current) return undefined;
+
+    const frameId = requestAnimationFrame(() => {
+      pollInnerWrapperDimensionsUntilStable(() => {
+        syncCameraWithPresentationArea();
+      }, {
+        maxTries: 60,
+        stabilityFrames: 12,
+      });
+    });
+    return () => cancelAnimationFrame(frameId);
+  }, [
+    currentPresentationPage?.svgUrl,
+    currentPresentationPage?.scaledWidth,
+    currentPresentationPage?.scaledHeight,
+    curPageId,
+    presentationId,
+  ]);
 
   useMouseEvents(
     {
@@ -2433,24 +2576,36 @@ const Whiteboard = React.memo((props) => {
       let adjustedXPos = currentPresentationPage.xOffset;
       let adjustedYPos = currentPresentationPage.yOffset;
       const {
+        scaledWidth,
+        scaledHeight,
         scaledViewBoxWidth,
         scaledViewBoxHeight,
       } = currentPresentationPage;
+      const shouldCenterViewer = (
+        shouldLocallyCenterCamera(adjustedXPos, adjustedYPos)
+        || hasLegacyScreenSpaceOffset(adjustedXPos, adjustedYPos)
+      );
+      const viewerFitWidth = shouldCenterViewer ? scaledWidth : scaledViewBoxWidth;
+      const viewerFitHeight = shouldCenterViewer ? scaledHeight : scaledViewBoxHeight;
+      const fitZoom = shouldCenterViewer
+        ? calculateZoomValue(viewerFitWidth, viewerFitHeight)
+        : newZoom;
 
-      if (
-        scaledViewBoxWidth > 0
-        && scaledViewBoxHeight > 0
-        && (
-          shouldLocallyCenterCamera(adjustedXPos, adjustedYPos)
-          || hasLegacyScreenSpaceOffset(adjustedXPos, adjustedYPos)
-        )
-      ) {
-        const centeredCamera = calculateCenteredCameraOffsets(
-          scaledViewBoxWidth,
-          scaledViewBoxHeight,
-          newZoom,
+      if (shouldCenterViewer && viewerFitWidth > 0 && viewerFitHeight > 0) {
+        const {
+          areaWidth: cameraAreaWidth,
+          areaHeight: cameraAreaHeight,
+        } = resolveCameraViewportSize(
+          tlEditorRef.current,
           presentationAreaWidth,
           presentationAreaHeight,
+        );
+        const centeredCamera = calculateCenteredCameraOffsets(
+          viewerFitWidth,
+          viewerFitHeight,
+          fitZoom,
+          cameraAreaWidth,
+          cameraAreaHeight,
           fitToWidth,
         );
         adjustedXPos = centeredCamera.xOffset;
@@ -2458,7 +2613,7 @@ const Whiteboard = React.memo((props) => {
       }
 
       setCamera(
-        newZoom,
+        fitZoom,
         adjustedXPos,
         adjustedYPos,
       );

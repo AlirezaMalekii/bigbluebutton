@@ -99,23 +99,7 @@ log() {
   printf '[deploy] %s\n' "$*"
 }
 
-_ssh_common_args() {
-  local -n _out=$1
-  _out=(
-    -p "$DEPLOY_PORT"
-    -o BatchMode=yes
-    -o ConnectTimeout=15
-    -o StrictHostKeyChecking=accept-new
-    -o UserKnownHostsFile="$KNOWN_HOSTS_FILE"
-    -o ServerAliveInterval=30
-    -o ServerAliveCountMax=120
-    -o TCPKeepAlive=yes
-  )
-  if [[ -n "$SSH_IDENTITY" ]]; then
-    _out+=(-i "$SSH_IDENTITY" -o IdentitiesOnly=yes)
-  fi
-}
-
+# Avoid bash 4 `nameref` — macOS ships bash 3.2 by default.
 _ssh_rsh_opts() {
   printf '%s' "-p ${DEPLOY_PORT} -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=${KNOWN_HOSTS_FILE} -o ServerAliveInterval=30 -o ServerAliveCountMax=120 -o TCPKeepAlive=yes"
   if [[ -n "$SSH_IDENTITY" ]]; then
@@ -128,9 +112,29 @@ ssh_rsh() {
 }
 
 ssh_cmd() {
-  local ssh_args=()
-  _ssh_common_args ssh_args
-  ssh "${ssh_args[@]}" "${DEPLOY_USER}@${DEPLOY_HOST}" "$@"
+  if [[ -n "$SSH_IDENTITY" ]]; then
+    ssh -p "$DEPLOY_PORT" \
+      -o BatchMode=yes \
+      -o ConnectTimeout=15 \
+      -o StrictHostKeyChecking=accept-new \
+      -o UserKnownHostsFile="$KNOWN_HOSTS_FILE" \
+      -o ServerAliveInterval=30 \
+      -o ServerAliveCountMax=120 \
+      -o TCPKeepAlive=yes \
+      -i "$SSH_IDENTITY" \
+      -o IdentitiesOnly=yes \
+      "${DEPLOY_USER}@${DEPLOY_HOST}" "$@"
+  else
+    ssh -p "$DEPLOY_PORT" \
+      -o BatchMode=yes \
+      -o ConnectTimeout=15 \
+      -o StrictHostKeyChecking=accept-new \
+      -o UserKnownHostsFile="$KNOWN_HOSTS_FILE" \
+      -o ServerAliveInterval=30 \
+      -o ServerAliveCountMax=120 \
+      -o TCPKeepAlive=yes \
+      "${DEPLOY_USER}@${DEPLOY_HOST}" "$@"
+  fi
 }
 
 read_deploy_state() {

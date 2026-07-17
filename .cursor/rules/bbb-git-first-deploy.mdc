@@ -1,0 +1,28 @@
+---
+description: Never patch BBB production directly — git first, then update the server from the repository
+alwaysApply: true
+---
+
+# BBB Server Change Discipline (Git First)
+
+Do **not** put code, jars, configs, or test media directly onto the BBB server as a fix path.
+
+## Required order
+
+1. Change code in this git repo locally.
+2. Commit (only when the user asks) and **push** so the remote repository is updated.
+3. On the BBB server, update from that repository with the project’s approved commands (pull/checkout + install/restart as documented) — not ad-hoc `scp`/`rsync` of random files into `/usr/share/...`.
+
+## Forbidden without explicit user request
+
+- `scp` / `rsync` of source, jars, or patches straight into live BBB paths to “hot-fix” production
+- Editing files under `/usr/share/bbb-web`, `/usr/share/bigbluebutton`, etc. by hand as the delivery method
+- Dropping one-off jars (e.g. alternate `bbb-common-web-*.jar`) beside the packaged version
+
+## Allowed
+
+- **Read-only** SSH inspection (logs, `journalctl`, package versions, file listing) when diagnosing
+- Running the **documented** deploy/update flow the user asks for (e.g. after push: server pull + package/deploy scripts)
+- Local/staging workflows described in `DEPLOY-FA.md` / `.cursor/rules/bbb-deploy-pipeline.mdc` only when the user requests them — and still prefer git-backed delivery over one-off file drops
+
+If a fix was applied out-of-band on the server, surface it and reconcile via git before considering the work done.

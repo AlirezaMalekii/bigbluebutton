@@ -573,6 +573,7 @@
   "app.presentationMedia.pause": "توقف",
   "app.presentationMedia.mute": "بی‌صدا",
   "app.presentationMedia.unmute": "باصدا",
+  "app.externalVideo.seekLabel": "جابه‌جایی در ویدیو",
   "app.connectingMessage": "در حال اتصال...",
   "app.waitingMessage": "اتصال قطع شد. تلاش مجدد تا {0} ثانیه دیگر...",
   "app.reconnectingMessage": "ارتباط قطع شد. لطفاً وضعیت اینترنت خود را بررسی کنید.",

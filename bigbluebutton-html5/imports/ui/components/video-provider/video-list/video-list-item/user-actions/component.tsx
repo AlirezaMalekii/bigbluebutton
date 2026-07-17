@@ -111,7 +111,7 @@ interface UserActionProps {
 const UserActions: React.FC<UserActionProps> = (props) => {
   const {
     name, cameraId, numOfStreams, onHandleVideoFocus, stream, focused, onHandleMirror,
-    isVideoSqueezed = false, videoContainer, menuTriggerRef,
+    isVideoSqueezed = false, menuTriggerRef,
     isRTL, isStream, isSelfViewDisabled, isMirrored,
     amIModerator, isFullscreenContext, layoutContextDispatch,
   } = props;
@@ -138,35 +138,28 @@ const UserActions: React.FC<UserActionProps> = (props) => {
   const getMenuOpts = () => {
     const anchorHorizontal = isRTL ? 'right' : 'left';
 
-    if (useSkyroomMobileMenu) {
-      return {
-        id: `webcam-${stream.userId}-dropdown-menu`,
-        className: 'skyroom-webcam-actions-menu',
-        keepMounted: true,
-        transitionDuration: 0,
-        elevation: 8,
-        getcontentanchorel: null,
-        fullwidth: 'true',
-        disableScrollLock: true,
-        BackdropProps: {
-          invisible: true,
-        },
-        anchorOrigin: { vertical: 'top', horizontal: anchorHorizontal },
-        transformOrigin: { vertical: 'bottom', horizontal: anchorHorizontal },
-        container: isFullscreenContext ? videoContainer?.current : document.body,
-      };
-    }
-
+    // Always portal to body and unmount on close. Switching container to the
+    // tile (or keepMounted + hiding chrome) leaves a MUI backdrop/aria-hidden
+    // that blocks all clicks after exiting webcam fullscreen from this menu.
     return {
       id: `webcam-${stream.userId}-dropdown-menu`,
-      keepMounted: true,
+      className: 'skyroom-webcam-actions-menu',
+      keepMounted: false,
       transitionDuration: 0,
-      elevation: 3,
+      elevation: useSkyroomMobileMenu ? 8 : 3,
       getcontentanchorel: null,
       fullwidth: 'true',
-      anchorOrigin: { vertical: 'bottom', horizontal: anchorHorizontal },
-      transformOrigin: { vertical: 'top', horizontal: anchorHorizontal },
-      container: isFullscreenContext ? videoContainer?.current : document.body,
+      disableScrollLock: true,
+      BackdropProps: {
+        invisible: true,
+      },
+      anchorOrigin: useSkyroomMobileMenu
+        ? { vertical: 'top', horizontal: anchorHorizontal }
+        : { vertical: 'bottom', horizontal: anchorHorizontal },
+      transformOrigin: useSkyroomMobileMenu
+        ? { vertical: 'bottom', horizontal: anchorHorizontal }
+        : { vertical: 'top', horizontal: anchorHorizontal },
+      container: document.body,
     };
   };
 
@@ -272,11 +265,15 @@ const UserActions: React.FC<UserActionProps> = (props) => {
             : intl.formatMessage(intlMessages.fullscreenLabel),
           dataTest: 'webcamsFullscreenButton',
           onClick: () => {
-            toggleWebcamFullscreen({
-              cameraId,
-              isFullscreenContext,
-              layoutContextDispatch,
-            });
+            // Defer until after BBBMenu handleClose runs. Sync chrome-hide during
+            // the same click leaves the MUI modal stuck (invisible full-screen blocker).
+            window.setTimeout(() => {
+              toggleWebcamFullscreen({
+                cameraId,
+                isFullscreenContext,
+                layoutContextDispatch,
+              });
+            }, 0);
           },
         },
       );

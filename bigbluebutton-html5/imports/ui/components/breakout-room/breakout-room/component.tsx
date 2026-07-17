@@ -255,11 +255,13 @@ const BreakoutRoom: React.FC<BreakoutRoomProps> = ({
     >
       {isMobilePresentation ? (
         <>
-          <Styled.MobilePanelTitle data-test="breakoutRoomManagerHeader">
+          <Styled.MobilePanelTitle data-test="breakoutMobilePanelTitle">
             {intl.formatMessage(intlMessages.breakoutTitle)}
           </Styled.MobilePanelTitle>
-          <Styled.ScrollableBody data-test="breakoutRoomScrollBody">
+          <Styled.PanelHeader data-test="breakoutRoomPanelHeader">
             {durationBlock}
+          </Styled.PanelHeader>
+          <Styled.ScrollableBody data-test="breakoutRoomScrollBody">
             {managerChrome}
             {roomsList}
           </Styled.ScrollableBody>

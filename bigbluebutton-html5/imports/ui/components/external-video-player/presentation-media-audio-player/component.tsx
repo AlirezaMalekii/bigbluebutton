@@ -55,6 +55,8 @@ interface PresentationMediaAudioPlayerProps {
   duration: number;
   volume: number;
   muted: boolean;
+  /** Presenter sync controls; viewers follow GraphQL playing/time. */
+  controlsEnabled?: boolean;
   onPlayPause: () => void;
   onSeek: (fraction: number) => void;
   onVolumeChange: (volume: number) => void;
@@ -69,6 +71,7 @@ const PresentationMediaAudioPlayer: React.FC<PresentationMediaAudioPlayerProps> 
   duration,
   volume,
   muted,
+  controlsEnabled = false,
   onPlayPause,
   onSeek,
   onVolumeChange,
@@ -78,24 +81,25 @@ const PresentationMediaAudioPlayer: React.FC<PresentationMediaAudioPlayerProps> 
   const progressRef = useRef<HTMLDivElement>(null);
 
   const currentSeconds = played * duration;
-  const safeLoaded = loaded > 0 ? loaded : 1;
-  const playedPercent = Math.min(100, (played / safeLoaded) * 100);
-  const loadedPercent = Math.min(100, loaded * 100);
+  const playedPercent = Math.min(100, Math.max(0, played * 100));
+  const loadedPercent = Math.min(100, Math.max(0, (loaded || 0) * 100));
 
   const handleProgressClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (!controlsEnabled) return;
     const bar = progressRef.current;
-    if (!bar || !loaded) return;
+    if (!bar) return;
     const rect = bar.getBoundingClientRect();
     const ratio = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
-    onSeek(ratio * loaded);
-  }, [loaded, onSeek]);
+    onSeek(ratio);
+  }, [controlsEnabled, onSeek]);
 
   const handleProgressKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!controlsEnabled) return;
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
     event.preventDefault();
     const step = event.key === 'ArrowRight' ? 0.05 : -0.05;
-    onSeek(Math.min(loaded, Math.max(0, played + step)));
-  }, [loaded, onSeek, played]);
+    onSeek(Math.min(1, Math.max(0, played + step)));
+  }, [controlsEnabled, onSeek, played]);
 
   const volumeIcon = muted || volume <= 0 ? 'volume_off' : 'volume_up';
 
@@ -130,29 +134,44 @@ const PresentationMediaAudioPlayer: React.FC<PresentationMediaAudioPlayerProps> 
           <Styled.ProgressTrack
             ref={progressRef}
             role="slider"
-            tabIndex={0}
+            tabIndex={controlsEnabled ? 0 : -1}
+            aria-disabled={!controlsEnabled}
             aria-valuemin={0}
             aria-valuemax={Math.floor(duration)}
             aria-valuenow={Math.floor(currentSeconds)}
             aria-label={title}
             onClick={handleProgressClick}
             onKeyDown={handleProgressKeyDown}
+            style={{ cursor: controlsEnabled ? 'pointer' : 'default' }}
           >
             <Styled.ProgressLoaded style={{ width: `${loadedPercent}%` }} />
             <Styled.ProgressPlayed style={{ width: `${playedPercent}%` }} />
-            <Styled.ProgressThumb style={{ left: `${playedPercent}%` }} />
+            {controlsEnabled ? (
+              <Styled.ProgressThumb style={{ left: `${playedPercent}%` }} />
+            ) : null}
           </Styled.ProgressTrack>
           <Styled.Time>{formatTime(duration)}</Styled.Time>
         </Styled.ProgressRow>
 
         <Styled.Controls>
-          <Styled.PlayButton
-            type="button"
-            onClick={onPlayPause}
-            aria-label={intl.formatMessage(playing ? intlMessages.pause : intlMessages.play)}
-          >
-            <PlayPauseGlyph playing={playing} />
-          </Styled.PlayButton>
+          {controlsEnabled ? (
+            <Styled.PlayButton
+              type="button"
+              onClick={onPlayPause}
+              aria-label={intl.formatMessage(playing ? intlMessages.pause : intlMessages.play)}
+            >
+              <PlayPauseGlyph playing={playing} />
+            </Styled.PlayButton>
+          ) : (
+            <Styled.PlayButton
+              type="button"
+              disabled
+              aria-hidden="true"
+              tabIndex={-1}
+            >
+              <PlayPauseGlyph playing={playing} />
+            </Styled.PlayButton>
+          )}
 
           <Styled.VolumeGroup>
             <Styled.IconButton
