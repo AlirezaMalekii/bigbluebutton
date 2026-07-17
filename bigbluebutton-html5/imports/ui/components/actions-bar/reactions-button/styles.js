@@ -17,6 +17,24 @@ ${({ ghost }) => ghost && `
     border-color: ${colorWhite} !important;
   }
    `}
+
+  & > span {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+`;
+
+const ReactionEmoji = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
 `;
 
 const ReactionsDropdown = styled.div`
@@ -101,6 +119,7 @@ const ToggleButtonWrapper = styled(ButtonWrapper)`
 
 export default {
   ReactionsButton,
+  ReactionEmoji,
   ReactionsDropdown,
   ButtonWrapper,
   ReactionsButtonWrapper,

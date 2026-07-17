@@ -4,13 +4,13 @@ import {
   colorGrayDark,
   colorPrimary,
 } from '/imports/ui/stylesheets/styled-components/palette';
-import Button from '/imports/ui/components/common/button/component';
 import { smPadding } from '/imports/ui/stylesheets/styled-components/general';
 
 const WelcomeMessage = styled.div`
   font-size: 1.0rem;
   margin-bottom: 1rem;
   text-align: start;
+  user-select: text;
 
   [dir='rtl'] & {
     text-align: right;
@@ -85,6 +85,11 @@ const JoinTitle = styled.h2`
   color: ${colorGrayDark};
   font-weight: 600;
   text-align: start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  user-select: text;
 
   [dir='rtl'] & {
     text-align: right;
@@ -99,6 +104,7 @@ const LtrValue = styled.span`
   max-width: 100%;
   overflow-wrap: anywhere;
   word-break: break-all;
+  user-select: text;
 `;
 
 const LtrRow = styled.p`
@@ -108,22 +114,51 @@ const LtrRow = styled.p`
   align-items: center;
   justify-content: flex-start;
   gap: 0.25rem;
+  user-select: text;
 
   [dir='rtl'] & {
     justify-content: flex-end;
   }
 `;
 
-// @ts-ignore - as button comes from JS, we can't provide its props
-export const CopyButton = styled(Button)`
-  color: ${colorPrimary};
-  
-  [dir='ltr'] & {
-    margin-left: ${smPadding};
+/**
+ * Native copy control — avoids BBB Button Tippy/hideLabel, which could trap
+ * clicks over the whole session-details modal after copy on desktop.
+ */
+export const CopyButton = styled.button<{ $copied?: boolean }>`
+  flex: 0 0 auto;
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: ${({ $copied }) => ($copied ? '#2ecc71' : colorPrimary)};
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  margin-inline-start: ${smPadding};
+
+  i {
+    font-size: 0.95rem;
+    line-height: 1;
+    pointer-events: none;
   }
 
-  [dir='rtl'] & {
-    margin-right: ${smPadding};
+  &:hover {
+    filter: brightness(1.15);
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${colorPrimary};
+    outline-offset: 2px;
   }
 `;
 

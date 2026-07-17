@@ -579,19 +579,10 @@ class Presentation extends PureComponent {
       return { width: 0, height: 0 };
     }
 
-    if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
-      const baseWidth = userIsPresenter ? originalWidth : viewBoxWidth;
-      const baseHeight = userIsPresenter ? originalHeight : viewBoxHeight;
-      const containScale = Math.min(
-        presentationWidth / baseWidth,
-        presentationHeight / baseHeight,
-      );
-      return {
-        width: baseWidth * containScale,
-        height: baseHeight * containScale,
-      };
-    }
-
+    // Keep upstream BBB calculateSize() — do not replace with a second contain-
+    // scale path. Skyroom only shrinks the available presentationHeight above
+    // (toolbar reserve); svgWidth/svgHeight must stay the fitted slide box that
+    // presentationInnerWrapper and camera.z are built from.
     return {
       width: svgWidth,
       height: svgHeight,
@@ -820,19 +811,11 @@ class Presentation extends PureComponent {
 
     const toolbarHeight = getToolbarHeight();
     const isSkyroomMobileStage = isSkyroomColumnLayout() && isSkyroomMobileViewport();
-    const slideToolbarH = toolbarHeight || 14;
-    const wbToolbarReserve = isSkyroomMobileStage ? getSkyroomMobileWbToolbarReserve() : 0;
-    const mobileChromeH = slideToolbarH + wbToolbarReserve;
+    // Match upstream BBB: mount when fitted svg size is known. On Skyroom phone the
+    // stage bounds arrive first — allow that as a bootstrap signal only.
     const stageReady = isSkyroomMobileStage
-      ? presentationBounds.width > 0 && presentationBounds.height > 0
+      ? (presentationWidth > 0 || (presentationBounds.width > 0 && presentationBounds.height > 0))
       : presentationWidth > 0;
-    const wbPresentationWidth = isSkyroomMobileStage ? presentationBounds.width : svgWidth;
-    const wbPresentationHeight = isSkyroomMobileStage
-      ? Math.max(80, presentationBounds.height - mobileChromeH)
-      : svgHeight;
-    const wbPresentationAreaHeight = isSkyroomMobileStage
-      ? Math.max(80, presentationBounds.height - mobileChromeH)
-      : presentationBounds.height - toolbarHeight;
 
     const { presentationToolbarMinWidth } = DEFAULT_VALUES;
 
@@ -843,8 +826,10 @@ class Presentation extends PureComponent {
         && !fullscreenContext
       );
 
+    // Upstream BBB sizes the slide-nav toolbar to the fitted slide width. On
+    // Skyroom phone keep it full-stage so zoom/slide controls stay usable.
     let containerWidth;
-    if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
+    if (isSkyroomMobileStage) {
       containerWidth = presentationBounds.width;
     } else if (isLargePresentation) {
       containerWidth = svgWidth;
@@ -906,19 +891,16 @@ class Presentation extends PureComponent {
             <Styled.SvgContainer
               data-test="presentationSvgContainer"
               style={{
-                height: isSkyroomMobileStage ? '100%' : svgHeight + toolbarHeight,
-                width: isSkyroomMobileStage ? '100%' : undefined,
+                // Upstream BBB: SvgContainer hugs the fitted slide + slide-nav bar.
+                // Stretching this to 100% on phone broke camera.z = svgWidth/scaledWidth.
+                height: svgHeight + toolbarHeight,
               }}
             >
               <div
                 style={{
                   position: 'absolute',
-                  width: isSkyroomMobileStage
-                    ? '100%'
-                    : Math.max(0, svgDimensions.width),
-                  height: isSkyroomMobileStage
-                    ? `calc(100% - ${slideToolbarH}px)`
-                    : Math.max(0, svgDimensions.height),
+                  width: Math.max(0, svgDimensions.width),
+                  height: Math.max(0, svgDimensions.height),
                   textAlign: 'center',
                   display: !presentationIsOpen ? 'none' : 'block',
                   zIndex: 1,
@@ -966,9 +948,9 @@ class Presentation extends PureComponent {
                     curPageId={currentSlide?.num.toString() || '0'}
                     svgUri={currentSlide?.svgUri}
                     intl={intl}
-                    presentationWidth={wbPresentationWidth}
-                    presentationHeight={wbPresentationHeight}
-                    presentationAreaHeight={wbPresentationAreaHeight}
+                    presentationWidth={svgWidth}
+                    presentationHeight={svgHeight}
+                    presentationAreaHeight={presentationBounds.height - toolbarHeight}
                     presentationAreaWidth={presentationBounds.width}
                     isPanning={isPanning}
                     zoomChanger={this.zoomChanger}

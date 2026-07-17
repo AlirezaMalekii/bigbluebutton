@@ -1,5 +1,18 @@
 /* SafeMeet presentation media player (audio/video files shared via Manage Presentations) */
 
+/* Aparat embed: full-stage iframe with Aparat's own controls (no SafeMeet toolbar). */
+#layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"][data-aparat-player="true"] {
+  background: #000 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"][data-aparat-player="true"] .react-player,
+#layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"][data-aparat-player="true"] .react-player > div,
+#layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"][data-aparat-player="true"] iframe {
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: auto !important;
+}
+
 #layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"][data-presentation-media="audio"] {
   background: #060b12 !important;
 }

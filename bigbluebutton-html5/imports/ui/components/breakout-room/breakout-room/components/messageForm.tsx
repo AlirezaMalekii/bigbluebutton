@@ -118,8 +118,9 @@ const BreakoutMessageForm: React.FC = () => {
   return (
     <Styled.Form
       onSubmit={handleSubmit}
+      data-test="breakoutMessageForm"
     >
-      <Styled.Wrapper>
+      <Styled.Wrapper data-test="breakoutMessageComposer">
         <Styled.Input
           id="message-input"
           innerRef={(ref) => { textAreaRef.current = ref; }}
@@ -139,7 +140,6 @@ const BreakoutMessageForm: React.FC = () => {
         />
         <Styled.SendButton
           hideLabel
-          circle
           aria-label={intl.formatMessage(intlMessages.submitLabel)}
           type="submit"
           disabled={hasErrors || !message}
@@ -150,7 +150,11 @@ const BreakoutMessageForm: React.FC = () => {
           data-test="sendMessageButton"
         />
       </Styled.Wrapper>
-      { hasErrors ? <Styled.ErrorMessage>{error}</Styled.ErrorMessage> : null }
+      {hasErrors ? (
+        <Styled.ErrorMessage data-test="breakoutMessageError">
+          {error}
+        </Styled.ErrorMessage>
+      ) : null}
     </Styled.Form>
   );
 };

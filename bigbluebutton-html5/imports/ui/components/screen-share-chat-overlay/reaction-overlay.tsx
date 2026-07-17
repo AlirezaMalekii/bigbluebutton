@@ -1,4 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+  useEffect, useMemo, useRef, useState,
+} from 'react';
 import { useReactiveVar } from '@apollo/client';
 import {
   isFreshReaction,
@@ -27,28 +29,91 @@ interface FloatingReaction {
   delay: number;
 }
 
+const getReactionKey = (reaction: {
+  eventId?: string;
+  userId?: string;
+  reaction: string;
+  creationDate: Date;
+}) => {
+  const createdAt = reaction.creationDate?.getTime?.() || 0;
+  return reaction.eventId
+    || `${reaction.userId || 'unknown'}-${reaction.reaction}-${createdAt}`;
+};
+
 const ScreenShareChatReactionOverlay: React.FC = () => {
   const reactions = useReactiveVar(reactionStreamVar);
   const visibility = useReactiveVar(overlayVisibilityVar);
   const [floatingReactions, setFloatingReactions] = useState<FloatingReaction[]>([]);
   const seenReactionsRef = useRef<Set<string>>(new Set());
   const recentReactionRef = useRef<Map<string, number>>(new Map());
+  const expireTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const reactionsRef = useRef(reactions);
+  reactionsRef.current = reactions;
+
+  const overlayVisible = visibility !== 'hidden';
+
+  const reactionSignature = useMemo(
+    () => reactions.map(getReactionKey).join('|'),
+    [reactions],
+  );
+
+  const clearExpireTimers = () => {
+    expireTimersRef.current.forEach((timer) => clearTimeout(timer));
+    expireTimersRef.current.clear();
+  };
+
+  const scheduleExpire = (id: string) => {
+    if (expireTimersRef.current.has(id)) return;
+
+    const timer = setTimeout(() => {
+      setFloatingReactions((current) => current.filter((reaction) => reaction.id !== id));
+      expireTimersRef.current.delete(id);
+    }, REACTION_TTL_MS);
+
+    expireTimersRef.current.set(id, timer);
+  };
 
   useEffect(() => {
-    if (visibility === 'hidden') return undefined;
+    if (overlayVisible) return undefined;
+
+    clearExpireTimers();
+    setFloatingReactions([]);
+    return undefined;
+  }, [overlayVisible]);
+
+  useEffect(() => () => {
+    clearExpireTimers();
+  }, []);
+
+  useEffect(() => {
+    const currentReactions = reactionsRef.current;
+
+    if (!overlayVisible) {
+      const now = Date.now();
+      currentReactions.forEach((reaction) => {
+        if (!reaction.reaction || reaction.reaction === 'none') return;
+        if (!isFreshReaction(reaction.creationDate, now)) return;
+
+        const createdAt = reaction.creationDate.getTime();
+        const key = getReactionKey(reaction);
+        const duplicateKey = `${reaction.userId || 'unknown'}-${reaction.reaction}`;
+        seenReactionsRef.current.add(key);
+        recentReactionRef.current.set(duplicateKey, createdAt);
+      });
+      return;
+    }
 
     const now = Date.now();
-    const reactionsToShow = reactions.filter(({ reaction, creationDate }) => {
+    const reactionsToShow = currentReactions.filter(({ reaction, creationDate }) => {
       if (!reaction || reaction === 'none') return false;
       return isFreshReaction(creationDate, now);
     });
 
-    if (reactionsToShow.length === 0) return undefined;
+    if (reactionsToShow.length === 0) return;
 
     const nextReactions = reactionsToShow.reduce<FloatingReaction[]>((acc, reaction) => {
       const createdAt = reaction.creationDate.getTime();
-      const key = reaction.eventId
-        || `${reaction.userId || 'unknown'}-${reaction.reaction}-${createdAt}`;
+      const key = getReactionKey(reaction);
       const duplicateKey = `${reaction.userId || 'unknown'}-${reaction.reaction}`;
       const lastSeenAt = recentReactionRef.current.get(duplicateKey) || 0;
 
@@ -71,21 +136,17 @@ const ScreenShareChatReactionOverlay: React.FC = () => {
       return acc;
     }, []);
 
-    if (nextReactions.length === 0) return undefined;
+    if (nextReactions.length === 0) return;
 
     setFloatingReactions((current) => [
       ...current,
       ...nextReactions,
     ].slice(-MAX_VISIBLE_REACTIONS));
 
-    const timers = nextReactions.map(({ id }) => setTimeout(() => {
-      setFloatingReactions((current) => current.filter((reaction) => reaction.id !== id));
-    }, REACTION_TTL_MS));
+    nextReactions.forEach(({ id }) => scheduleExpire(id));
+  }, [overlayVisible, reactionSignature]);
 
-    return () => timers.forEach(clearTimeout);
-  }, [reactions, visibility]);
-
-  if (visibility === 'hidden') return null;
+  if (!overlayVisible) return null;
 
   return (
     <OverlayReactionLayer data-test="screenShareChatReactionOverlay">

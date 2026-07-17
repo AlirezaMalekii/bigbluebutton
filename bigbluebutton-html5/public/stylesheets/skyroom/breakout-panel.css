@@ -234,19 +234,65 @@
   line-height: 1.25 !important;
 }
 
+/* Message composer — single integrated pill (input + send) */
+#layout[data-skyroom-column="true"] [data-test="breakoutMessageForm"] {
+  margin: 0 !important;
+  width: 100% !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="breakoutMessageComposer"] {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 0.3rem !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 0.2rem 0.25rem 0.2rem 0.4rem !important;
+  border-radius: 12px !important;
+  background: var(--skyroom-panel-input, rgba(5, 10, 18, 0.72)) !important;
+  border: 1px solid rgba(32, 199, 187, 0.28) !important;
+}
+
+[dir="rtl"] #layout[data-skyroom-column="true"] [data-test="breakoutMessageComposer"] {
+  padding: 0.2rem 0.4rem 0.2rem 0.25rem !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="breakoutRoomPanel"] textarea#message-input {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--skyroom-panel-text) !important;
+  border-radius: 0 !important;
+  min-height: 30px !important;
+  padding: 0.35rem 0.2rem !important;
+  font-size: 0.78rem !important;
+  line-height: 1.35 !important;
+}
+
 #layout[data-skyroom-column="true"] [data-test="breakoutRoomPanel"] [data-test="sendMessageButton"] {
   color: #fff !important;
+  background: var(--skyroom-panel-accent, #20c7bb) !important;
+  border: none !important;
+  box-shadow: none !important;
   min-width: 34px !important;
   width: 34px !important;
   height: 34px !important;
   min-height: 34px !important;
   padding: 0 !important;
   margin: 0 !important;
-  border-radius: 50% !important;
+  border-radius: 10px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   line-height: 0 !important;
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="breakoutRoomPanel"] [data-test="sendMessageButton"]:disabled {
+  opacity: 0.45 !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="breakoutRoomPanel"] [data-test="sendMessageButton"] > span,
@@ -260,6 +306,7 @@
   margin: 0 !important;
   padding: 0 !important;
   line-height: 0 !important;
+  transform: none !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="breakoutRoomPanel"] [data-test="sendMessageButton"] i,
@@ -269,43 +316,34 @@
   justify-content: center !important;
   margin: 0 !important;
   padding: 0 !important;
-  font-size: 0.95rem !important;
+  font-size: 0.9rem !important;
   line-height: 1 !important;
-  /* Optical center for the paper-plane glyph (esp. after RTL flip) */
-  transform: translateX(-1.5px) !important;
+  transform: none !important;
 }
 
 [dir="rtl"] #layout[data-skyroom-column="true"] [data-test="breakoutRoomPanel"] [data-test="sendMessageButton"] i,
 [dir="rtl"] #layout[data-skyroom-column="true"] [data-test="breakoutRoomPanel"] [data-test="sendMessageButton"] [class^="icon-bbb-"] {
-  /* Button itself is flipped; nudge plane toward visual center */
-  transform: translateX(1.5px) !important;
+  transform: scaleX(-1) !important;
 }
 
-#layout[data-skyroom-column="true"] [data-test="breakoutRoomPanel"] textarea#message-input {
-  background: var(--skyroom-panel-input, rgba(5, 10, 18, 0.72)) !important;
-  border: 1px solid var(--skyroom-panel-border) !important;
-  color: var(--skyroom-panel-text) !important;
-  border-radius: 10px !important;
-  min-height: 32px !important;
-  padding: 0.35rem 0.55rem !important;
-  font-size: 0.78rem !important;
-  line-height: 1.3 !important;
+#layout[data-skyroom-column="true"] [data-test="breakoutMessageError"] {
+  color: #ff6b7a !important;
+  text-align: start !important;
+  direction: inherit !important;
+  width: 100% !important;
+  margin: 0.2rem 0 0 !important;
+  padding: 0 0.15rem !important;
+  font-size: 0.72rem !important;
+  font-weight: 500 !important;
+  line-height: 1.35 !important;
+  height: auto !important;
+  max-height: none !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="breakoutRoomPanel"] [class*="Separator"] {
   background: var(--skyroom-panel-divider) !important;
   margin: 0.15rem 0 !important;
   height: 1px !important;
-}
-
-#layout[data-skyroom-column="true"] [data-test="breakoutRoomPanel"] form,
-#layout[data-skyroom-column="true"] [data-test="breakoutRoomPanel"] [class*="Form"] {
-  margin: 0 !important;
-}
-
-#layout[data-skyroom-column="true"] [data-test="breakoutRoomPanel"] form [class*="Wrapper"] {
-  gap: 0.35rem !important;
-  align-items: center !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test^="breakoutRoomCard-"] button {

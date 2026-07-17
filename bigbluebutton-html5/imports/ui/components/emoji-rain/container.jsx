@@ -1,11 +1,19 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+  useEffect, useMemo, useRef, useState,
+} from 'react';
 import EmojiRain from './component';
 import StageReactionOverlay from './stage-reaction-overlay';
 import { getEmojisToRain, getUserReactionsForStage } from './queries';
-import { normalizeReactionStream, reactionStreamVar } from './reaction-stream';
+import {
+  isFreshReaction,
+  normalizeReactionStream,
+  reactionStreamVar,
+} from './reaction-stream';
 import useDeduplicatedSubscription from '../../core/hooks/useDeduplicatedSubscription';
 
 const DUPLICATE_WINDOW_MS = 1500;
+const MAX_FALLBACK_REACTIONS = 20;
+const EMPTY_STREAM = [];
 
 const getReactionDedupKey = (reaction) => {
   if (reaction.eventId) return reaction.eventId;
@@ -40,7 +48,7 @@ const EmojiRainContainer = () => {
       initialCursor: nowDate.current,
     },
   });
-  const emojisArray = emojisToRainData?.user_reaction_stream || [];
+  const emojisArray = emojisToRainData?.user_reaction_stream ?? EMPTY_STREAM;
 
   const {
     data: usersReactionData,
@@ -80,17 +88,27 @@ const EmojiRainContainer = () => {
     previousUserReactionsRef.current = next;
 
     if (nextFallbackReactions.length > 0) {
-      setFallbackReactions((current) => dedupeReactions([
-        ...current,
-        ...nextFallbackReactions,
-      ]).slice(-20));
+      setFallbackReactions((current) => {
+        const now = Date.now();
+        return dedupeReactions([
+          ...current.filter((reaction) => isFreshReaction(reaction.creationDate, now)),
+          ...nextFallbackReactions,
+        ]).slice(-MAX_FALLBACK_REACTIONS);
+      });
     }
   }, [usersReactionData]);
 
-  const reactions = dedupeReactions([
-    ...normalizeReactionStream(emojisArray),
-    ...fallbackReactions,
-  ]);
+  const reactions = useMemo(() => {
+    const now = Date.now();
+    return dedupeReactions([
+      ...normalizeReactionStream(emojisArray),
+      ...fallbackReactions,
+    ]).filter((reaction) => (
+      reaction.reaction
+      && reaction.reaction !== 'none'
+      && isFreshReaction(reaction.creationDate, now)
+    ));
+  }, [emojisArray, fallbackReactions]);
 
   useEffect(() => {
     reactionStreamVar(reactions);

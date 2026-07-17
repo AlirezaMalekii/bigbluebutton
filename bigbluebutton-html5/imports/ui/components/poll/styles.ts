@@ -278,9 +278,11 @@ const CustomInputRow = styled.div`
   flex-grow: 0;
   justify-content: flex-start;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
   width: fit-content;
   max-width: 100%;
+  margin-bottom: 0.85rem;
+  overflow: visible;
 
   label {
     margin-left: 0;
@@ -425,22 +427,24 @@ const ResponseArea = styled.div`
 `;
 
 const CustomInputHeading = styled(SectionHeading)`
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  overflow: visible;
+  white-space: normal;
   margin: 0;
   padding: 0;
+  line-height: 1.35;
 `;
 
 const CustomInputHeadingCol = styled(Col)`
-  overflow: hidden;
+  overflow: visible;
   flex-grow: 0;
   flex-shrink: 1;
+  min-width: 0;
 `;
 
 const CustomInputToggleCol = styled(Col)`
   flex-shrink: 0;
   flex-grow: 0;
+  overflow: visible;
 
   &:last-child {
     padding-right: 0;

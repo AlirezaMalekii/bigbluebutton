@@ -3,6 +3,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import ModalSimple from '/imports/ui/components/common/modal/simple/component';
+import Icon from '/imports/ui/components/common/icon/icon-ts/component';
 import { useQuery } from '@apollo/client';
 import { GET_WELCOME_MESSAGE, WelcomeMsgsResponse } from './queries';
 import Styled from './styles';
@@ -83,11 +84,23 @@ const SessionDetails: React.FC<SessionDetailsProps> = (props) => {
 
   const formattedPin = formattedTelVoice.replace(/(?=(\d{3})+(?!\d))/g, ' ');
 
-  const copyData = async (content: string, type: string) => {
+  const copyData = async (
+    content: string,
+    type: 'join-url' | 'dial-in',
+    event?: React.MouseEvent<HTMLButtonElement>,
+  ) => {
     if (type === 'join-url') setCopyingJoinUrl(true);
     if (type === 'dial-in') setCopyingDialIn(true);
 
-    await navigator.clipboard.writeText(content);
+    try {
+      await navigator.clipboard.writeText(content);
+    } finally {
+      // Blur so focus does not keep a tooltip/hit-target stuck over the modal.
+      event?.currentTarget?.blur();
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    }
 
     setTimeout(() => {
       if (type === 'join-url') setCopyingJoinUrl(false);
@@ -134,18 +147,19 @@ const SessionDetails: React.FC<SessionDetailsProps> = (props) => {
               <Styled.LtrRow>
                 <Styled.LtrValue dir="ltr">{loginUrl}</Styled.LtrValue>
                 <Styled.CopyButton
-                  key="copy-join-url"
-                  onClick={() => copyData(loginUrl, 'join-url')}
-                  hideLabel
-                  color="light"
-                  icon={copyingJoinUrl ? 'check' : 'copy'}
-                  size="sm"
-                  circle
-                  ghost
-                  label={copyingJoinUrl
+                  type="button"
+                  data-test="sessionDetailsCopyUrl"
+                  $copied={copyingJoinUrl}
+                  onClick={(event) => copyData(loginUrl, 'join-url', event)}
+                  title={copyingJoinUrl
                     ? intl.formatMessage(intlMessages.copied)
                     : intl.formatMessage(intlMessages.copyUrlTooltip)}
-                />
+                  aria-label={copyingJoinUrl
+                    ? intl.formatMessage(intlMessages.copied)
+                    : intl.formatMessage(intlMessages.copyUrlTooltip)}
+                >
+                  <Icon iconName={copyingJoinUrl ? 'check' : 'copy'} />
+                </Styled.CopyButton>
               </Styled.LtrRow>
             </>
           )}
@@ -154,18 +168,19 @@ const SessionDetails: React.FC<SessionDetailsProps> = (props) => {
               <Styled.JoinTitle>
                 {intl.formatMessage(intlMessages.joinByPhoneLabel)}
                 <Styled.CopyButton
-                  key="copy-dial-in"
-                  onClick={() => copyData(formattedDialNum, 'dial-in')}
-                  hideLabel
-                  color="light"
-                  icon={copyingDialIn ? 'check' : 'copy'}
-                  size="sm"
-                  circle
-                  ghost
-                  label={copyingDialIn
+                  type="button"
+                  data-test="sessionDetailsCopyDialIn"
+                  $copied={copyingDialIn}
+                  onClick={(event) => copyData(formattedDialNum, 'dial-in', event)}
+                  title={copyingDialIn
                     ? intl.formatMessage(intlMessages.copied)
                     : intl.formatMessage(intlMessages.copyPhoneTooltip)}
-                />
+                  aria-label={copyingDialIn
+                    ? intl.formatMessage(intlMessages.copied)
+                    : intl.formatMessage(intlMessages.copyPhoneTooltip)}
+                >
+                  <Icon iconName={copyingDialIn ? 'check' : 'copy'} />
+                </Styled.CopyButton>
               </Styled.JoinTitle>
               <Styled.LtrRow>
                 <Styled.LtrValue dir="ltr">{formattedDialNum}</Styled.LtrValue>

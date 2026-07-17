@@ -9,6 +9,10 @@ import {
 
 const APARAT_MATCH_URL = /aparat\.com/i;
 
+/**
+ * Aparat has no reliable iframe playback API — `autoplay` query params are ignored
+ * (embedAutoplay stays false). Users must use Aparat's own player UI.
+ */
 export class AparatPlayer extends Component {
   static canPlay(url) {
     return APARAT_MATCH_URL.test(url) && (isAparatEmbedUrl(url) || !!parseAparatEmbed(url));
@@ -21,7 +25,6 @@ export class AparatPlayer extends Component {
     this.player = this;
     this.currentTime = 0;
     this.playbackRate = 1;
-    this.iframeKey = 0;
     this._playing = false;
     this.container = null;
 
@@ -30,11 +33,7 @@ export class AparatPlayer extends Component {
   }
 
   componentDidMount() {
-    const { onMount, config } = this.props;
-    const shouldAutoplay = Boolean(config?.aparat?.playing);
-    if (shouldAutoplay) {
-      this._playing = true;
-    }
+    const { onMount } = this.props;
     if (onMount) {
       onMount(this);
     }
@@ -42,36 +41,10 @@ export class AparatPlayer extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const {
-      config, url, onStart, onPlay,
-    } = this.props;
-    const prevUrl = prevProps.url;
-    const prevPlaying = Boolean(prevProps.config?.aparat?.playing);
-    const nextPlaying = Boolean(config?.aparat?.playing);
-
-    if (url && url !== prevUrl) {
-      this._playing = nextPlaying;
-      this.remountIframe(() => {
-        if (this._playing) {
-          onStart?.();
-          onPlay?.();
-        }
-      });
-      return;
+    const { url } = this.props;
+    if (url && url !== prevProps.url) {
+      this._playing = false;
     }
-
-    if (prevPlaying === nextPlaying) return;
-
-    if (nextPlaying) {
-      this.play();
-    } else {
-      this.pause();
-    }
-  }
-
-  getAparatConfig() {
-    const { config } = this.props;
-    return config?.aparat || {};
   }
 
   getEmbedUrl(url) {
@@ -79,19 +52,10 @@ export class AparatPlayer extends Component {
     const targetUrl = url || propUrl;
     const hash = extractAparatHash(targetUrl);
     if (!hash) {
-      if (isAparatEmbedUrl(targetUrl)) {
-        // Ensure /vt/frame even when a raw embed/loader URL is stored.
-        const fallbackHash = extractAparatHash(targetUrl);
-        return fallbackHash ? buildAparatEmbedUrl(fallbackHash) : targetUrl;
-      }
       return parseAparatEmbed(targetUrl) || targetUrl;
     }
-
-    const aparatConfig = this.getAparatConfig();
-    return buildAparatEmbedUrl(hash, {
-      autoplay: this._playing || Boolean(aparatConfig.playing),
-      muted: false,
-    });
+    // Stable official frame URL — no autoplay remounts (Aparat ignores them).
+    return buildAparatEmbedUrl(hash);
   }
 
   getCurrentTime() {
@@ -126,47 +90,27 @@ export class AparatPlayer extends Component {
     return this;
   }
 
-  remountIframe(callback) {
-    this.iframeKey += 1;
-    this.forceUpdate(callback);
-  }
-
   load() {
     Promise.resolve().then(() => {
-      const { onReady, onStart, onPlay } = this.props;
+      const { onReady } = this.props;
       onReady?.();
-      if (this._playing) {
-        onStart?.();
-        onPlay?.();
-      }
     });
     return this;
   }
 
+  // No-op: Aparat playback is only controllable via its native iframe UI.
   play() {
     const { onPlay, onStart } = this.props;
-    if (this._playing) {
-      onPlay?.();
-      return this;
-    }
     this._playing = true;
-    this.remountIframe(() => {
-      onStart?.();
-      onPlay?.();
-    });
+    onStart?.();
+    onPlay?.();
     return this;
   }
 
   pause() {
     const { onPause } = this.props;
-    if (!this._playing) {
-      onPause?.();
-      return this;
-    }
     this._playing = false;
-    this.remountIframe(() => {
-      onPause?.();
-    });
+    onPause?.();
     return this;
   }
 
@@ -186,7 +130,6 @@ export class AparatPlayer extends Component {
     return this;
   }
 
-  // YouTube-style aliases used by some react-player call sites.
   playVideo() {
     return this.play();
   }
@@ -197,8 +140,6 @@ export class AparatPlayer extends Component {
 
   render() {
     const { url } = this.props;
-    const aparatConfig = this.getAparatConfig();
-    const allowPresenterControls = Boolean(aparatConfig.isPresenter);
     const style = {
       width: '100%',
       height: '100%',
@@ -206,19 +147,19 @@ export class AparatPlayer extends Component {
       padding: 0,
       border: 0,
       overflow: 'hidden',
-      // Presenter may use Aparat's native play if autoplay is blocked.
-      // Viewers stay blocked so only presenter-driven sync controls playback.
-      pointerEvents: allowPresenterControls ? 'auto' : 'none',
+      // Aparat's own controls must receive clicks (play, seek, volume, fullscreen).
+      pointerEvents: 'auto',
     };
 
     return (
       <iframe
-        key={`${url}-${this.iframeKey}-${this._playing ? 'play' : 'pause'}`}
+        key={url}
         style={style}
         src={this.getEmbedUrl(url)}
         title="Aparat video player"
-        allow="autoplay; fullscreen; encrypted-media"
+        allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
         allowFullScreen
+        referrerPolicy="strict-origin-when-cross-origin"
         ref={(container) => {
           this.container = container;
         }}
@@ -237,7 +178,6 @@ AparatPlayer.propTypes = {
   config: PropTypes.shape({
     aparat: PropTypes.shape({
       playing: PropTypes.bool,
-      isPresenter: PropTypes.bool,
     }),
   }),
 };

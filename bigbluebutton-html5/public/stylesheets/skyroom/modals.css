@@ -1610,15 +1610,31 @@ html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"]
 }
 
 .poll-creation-modal [class*="CustomInputRow"] {
-  gap: 0.35rem !important;
+  gap: 0.5rem !important;
   justify-content: flex-start !important;
+  align-items: center !important;
   width: fit-content !important;
   max-width: 100% !important;
+  margin-bottom: 0.85rem !important;
+  overflow: visible !important;
 }
 
 .poll-creation-modal [class*="CustomInputRow"] label {
   margin-inline-start: 0 !important;
   margin-inline-end: 0 !important;
+}
+
+.poll-creation-modal [class*="CustomInputHeading"],
+.poll-creation-modal [class*="CustomInputHeadingCol"] {
+  overflow: visible !important;
+  white-space: normal !important;
+  text-overflow: unset !important;
+  line-height: 1.35 !important;
+}
+
+.poll-creation-modal [class*="CustomInputToggleCol"] {
+  overflow: visible !important;
+  flex-shrink: 0 !important;
 }
 
 .poll-creation-modal [class*="QuizCorrectAnswerControl"] {
@@ -1674,5 +1690,23 @@ html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"]
 
   .poll-creation-modal [data-test="pollLiveResultChart"] .recharts-wrapper {
     min-width: 0 !important;
+  }
+
+  /* Custom question/options switch — full label + gap above question box */
+  .poll-creation-modal [class*="CustomInputRow"] {
+    width: 100% !important;
+    justify-content: space-between !important;
+    gap: 0.65rem !important;
+    margin-bottom: 1rem !important;
+    padding-block: 0.15rem !important;
+  }
+
+  .poll-creation-modal [class*="CustomInputHeadingCol"] {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .poll-creation-modal [class*="CustomInputHeading"] {
+    font-size: 0.95rem !important;
   }
 }

@@ -501,11 +501,26 @@
 }
 
 /* -----------------------------------------------------------------------
-   Reactions button — wrapper alignment fix
+   Reactions button — wrapper alignment fix + centered active emoji
    ----------------------------------------------------------------------- */
 #layout[data-skyroom-column="true"] #ActionsBar [class*="ReactionsButton"] > span:first-child {
   background-color: rgba(255, 255, 255, 0.055) !important;
   border-color: rgba(218, 230, 245, 0.11) !important;
+}
+
+#layout[data-skyroom-column="true"] #ActionsBar [data-test="reactionsButton"] > span:first-child {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#layout[data-skyroom-column="true"] #ActionsBar [data-test="reactionsButton"] > span:first-child > span {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
 }
 
 /* -----------------------------------------------------------------------

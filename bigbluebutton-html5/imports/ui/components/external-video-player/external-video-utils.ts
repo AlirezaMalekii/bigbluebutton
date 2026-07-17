@@ -12,9 +12,7 @@ const APARAT_PAGE_REGEX = /aparat\.com\/v\/([^/"'\s?&]+)/i;
 export const APARAT_EMBED_HOST = 'www.aparat.com';
 
 export type AparatEmbedOptions = {
-  autoplay?: boolean;
   muted?: boolean;
-  hideTitle?: boolean;
 };
 
 export const extractAparatHash = (input: string): string | null => {
@@ -35,12 +33,9 @@ export const buildAparatEmbedUrl = (
 ): string => {
   // Match Aparat's official iframe target from their embed loader:
   // https://www.aparat.com/video/video/embed/videohash/{hash}/vt/frame
-  // Extra/unknown query keys can prevent the player from booting.
+  // Keep query params minimal — Aparat ignores autoplay (embedAutoplay stays false).
   const params = new URLSearchParams();
   params.set('data[responsive]', 'yes');
-  if (options.autoplay) {
-    params.set('autoplay', 'true');
-  }
   if (options.muted) {
     params.set('muted', 'true');
   }

@@ -3,8 +3,6 @@ import {
   borderSize,
   borderSizeSmall,
   borderRadius,
-  smPaddingX,
-  smPaddingY,
 } from '/imports/ui/stylesheets/styled-components/general';
 import {
   colorPrimary,
@@ -507,70 +505,83 @@ const FlexRow = styled.div`
 const Form = styled.form`
   flex-grow: 0;
   flex-shrink: 0;
-  align-self: flex-end;
+  align-self: stretch;
   width: 100%;
   position: relative;
-  margin-bottom: calc(-1 * ${smPaddingX});
-  margin-top: 0;
+  margin: 0;
 `;
 
 const Wrapper = styled.div`
   display: flex;
   flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.25rem 0.3rem 0.25rem 0.45rem;
+  border-radius: 12px;
+  background: var(--skyroom-panel-input, rgba(5, 10, 18, 0.72));
+  border: 1px solid var(--skyroom-panel-border, rgba(32, 199, 187, 0.22));
+
+  [dir="rtl"] & {
+    padding: 0.25rem 0.45rem 0.25rem 0.3rem;
+  }
 `;
 
 const Input = styled(TextareaAutosize)`
-  flex: 1;
-  background: #fff;
+  flex: 1 1 auto;
+  min-width: 0;
+  background: transparent;
   background-clip: padding-box;
   margin: 0;
-  color: ${colorText};
+  color: var(--skyroom-panel-text, ${colorText});
   -webkit-appearance: none;
-  padding: calc(${smPaddingY} * 2.5) calc(${smPaddingX} * 1.25);
+  padding: 0.4rem 0.25rem;
   resize: none;
   transition: none;
-  border-radius: ${borderRadius};
-  font-size: ${fontSizeBase};
-  line-height: 1;
-  min-height: 2.5rem;
-  max-height: 10rem;
-  border: 1px solid ${colorGrayLighter};
+  border-radius: 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  min-height: 2rem;
+  max-height: 6rem;
+  border: none;
+  box-shadow: none;
+
+  &::placeholder {
+    color: var(--skyroom-panel-text-muted, rgba(210, 224, 238, 0.55));
+  }
 
   &:disabled,
   &[disabled] {
     cursor: not-allowed;
     opacity: .75;
-    background-color: rgba(167,179,189,0.25);
   }
 
-  &:focus {
-    border-radius: ${borderSize};
-    box-shadow: 0 0 0 ${borderSize} ${colorBlueLight}, inset 0 0 0 1px ${colorPrimary};
-  }
-
+  &:focus,
   &:hover,
-  &:active,
-  &:focus {
-    outline: transparent;
-    outline-style: dotted;
-    outline-width: ${borderSize};
+  &:active {
+    outline: none;
+    border: none;
+    box-shadow: none;
   }
 `;
 // @ts-ignore - as button comes from JS, we can't provide its props
 const SendButton = styled(Button)`
-  margin: 0 0 0 ${smPaddingX};
+  flex: 0 0 auto;
   align-self: center;
+  margin: 0 !important;
+  width: 34px !important;
+  min-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 0 !important;
+  border-radius: 10px !important;
   font-size: 0.9rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 0;
-
-  [dir="rtl"] & {
-    margin: 0 ${smPaddingX} 0 0;
-    transform: scaleX(-1);
-    transform-origin: center center;
-  }
+  transform: none !important;
 
   & > span,
   & i,
@@ -580,17 +591,27 @@ const SendButton = styled(Button)`
     justify-content: center;
     margin: 0;
     line-height: 1;
+    transform: none !important;
+  }
+
+  [dir="rtl"] & i,
+  [dir="rtl"] & [class^="icon-bbb-"] {
+    /* Point paper-plane toward send direction in RTL */
+    transform: scaleX(-1) !important;
   }
 `;
 
 const ErrorMessage = styled.div`
   color: ${colorDanger};
   font-size: calc(${fontSizeBase} * .75);
-  text-align: left;
-  padding: ${borderSize} 0;
+  text-align: start;
+  padding: 0.25rem 0.1rem 0;
   position: relative;
-  height: .93rem;
-  max-height: .93rem;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+  line-height: 1.35;
+  width: 100%;
 `;
 
 export default {

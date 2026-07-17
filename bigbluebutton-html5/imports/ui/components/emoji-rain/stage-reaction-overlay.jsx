@@ -28,12 +28,21 @@ const buildBoundsStyle = (bounds) => ({
   height: `${bounds.height || 0}px`,
 });
 
+const getReactionKey = (reaction) => {
+  const createdAt = reaction.creationDate?.getTime?.() || 0;
+  return reaction.eventId
+    || `${reaction.userId || 'unknown'}-${reaction.reaction}-${createdAt}`;
+};
+
 const StageReactionOverlay = ({ reactions }) => {
   const Settings = getSettingsSingletonInstance();
   const { animations } = Settings.application;
   const [floatingReactions, setFloatingReactions] = useState([]);
   const seenReactionsRef = useRef(new Set());
   const recentReactionRef = useRef(new Map());
+  const expireTimersRef = useRef(new Map());
+  const reactionsRef = useRef(reactions);
+  reactionsRef.current = reactions;
 
   const screenShare = layoutSelectOutput((i) => i.screenShare);
   const externalVideo = layoutSelectOutput((i) => i.externalVideo);
@@ -59,23 +68,76 @@ const StageReactionOverlay = ({ reactions }) => {
     presentation,
   ]);
 
+  const boundsVisible = hasVisibleBounds(activeBounds);
+
+  // Stable identity so layout object churn does not re-run reaction intake.
+  const reactionSignature = useMemo(
+    () => reactions.map(getReactionKey).join('|'),
+    [reactions],
+  );
+
+  const clearExpireTimers = () => {
+    expireTimersRef.current.forEach((timer) => clearTimeout(timer));
+    expireTimersRef.current.clear();
+  };
+
+  const scheduleExpire = (id) => {
+    if (expireTimersRef.current.has(id)) return;
+
+    const timer = setTimeout(() => {
+      setFloatingReactions((current) => current.filter((reaction) => reaction.id !== id));
+      expireTimersRef.current.delete(id);
+      // Keep key in seen set so late re-deliveries of the same stream row
+      // do not replay the bubble after it finished animating.
+    }, REACTION_TTL_MS);
+
+    expireTimersRef.current.set(id, timer);
+  };
+
+  // Drop in-flight bubbles when the stage is hidden so remount does not
+  // restart CSS animations for reactions that were already playing.
+  useEffect(() => {
+    if (boundsVisible) return undefined;
+
+    clearExpireTimers();
+    setFloatingReactions([]);
+    return undefined;
+  }, [boundsVisible]);
+
+  useEffect(() => () => {
+    clearExpireTimers();
+  }, []);
+
   useEffect(() => {
     // Do not gate on document.hidden: presenter may be on another display while
     // viewers still need bubbles; stream delivery already handles freshness.
-    if (!animations || !hasVisibleBounds(activeBounds)) return undefined;
+    if (!animations) return;
 
+    const currentReactions = reactionsRef.current;
     const now = Date.now();
-    const reactionsToShow = reactions.filter(({ reaction, creationDate }) => {
+    const reactionsToShow = currentReactions.filter(({ reaction, creationDate }) => {
       if (!reaction || reaction === 'none') return false;
       return isFreshReaction(creationDate, now);
     });
 
-    if (reactionsToShow.length === 0) return undefined;
+    if (reactionsToShow.length === 0) return;
+
+    // While the stage is hidden, consume fresh events without animating so a
+    // later show/file-change does not dump a backlog of "new" bubbles.
+    if (!boundsVisible) {
+      reactionsToShow.forEach((reaction) => {
+        const createdAt = reaction.creationDate.getTime();
+        const key = getReactionKey(reaction);
+        const duplicateKey = `${reaction.userId || 'unknown'}-${reaction.reaction}`;
+        seenReactionsRef.current.add(key);
+        recentReactionRef.current.set(duplicateKey, createdAt);
+      });
+      return;
+    }
 
     const nextReactions = reactionsToShow.reduce((acc, reaction) => {
       const createdAt = reaction.creationDate.getTime();
-      const key = reaction.eventId
-        || `${reaction.userId || 'unknown'}-${reaction.reaction}-${createdAt}`;
+      const key = getReactionKey(reaction);
       const duplicateKey = `${reaction.userId || 'unknown'}-${reaction.reaction}`;
       const lastSeenAt = recentReactionRef.current.get(duplicateKey) || 0;
 
@@ -102,23 +164,17 @@ const StageReactionOverlay = ({ reactions }) => {
       return acc;
     }, []);
 
-    if (nextReactions.length === 0) return undefined;
+    if (nextReactions.length === 0) return;
 
     setFloatingReactions((current) => [
       ...current,
       ...nextReactions,
     ].slice(-MAX_VISIBLE_REACTIONS));
 
-    const timers = nextReactions.map(({ id }) => setTimeout(() => {
-      setFloatingReactions((current) => current.filter((reaction) => reaction.id !== id));
-      // Keep key in seen set so late re-deliveries of the same stream row
-      // do not replay the bubble after it finished animating.
-    }, REACTION_TTL_MS));
+    nextReactions.forEach(({ id }) => scheduleExpire(id));
+  }, [animations, boundsVisible, reactionSignature]);
 
-    return () => timers.forEach(clearTimeout);
-  }, [activeBounds, animations, reactions]);
-
-  if (!animations || !hasVisibleBounds(activeBounds)) return null;
+  if (!animations || !boundsVisible) return null;
 
   const travel = Math.max(Number(activeBounds.height) - 24, 120);
   const zIndex = Math.max(Number(activeBounds.zIndex || 0) + 4, 8);

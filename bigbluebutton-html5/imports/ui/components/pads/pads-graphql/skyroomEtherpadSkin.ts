@@ -26,6 +26,20 @@ const injectStylesheet = (targetDoc: Document, href: string): void => {
   targetDoc.head?.appendChild(link);
 };
 
+/**
+ * Wait until ACE has finished bootstrapping its inner frame.
+ * Touching ace_inner too early (while require-kernel is still loading modules)
+ * can surface noisy `require is not defined` races in the console.
+ */
+const isAceInnerReady = (innerDoc: Document): boolean => {
+  const body = innerDoc.getElementById('innerdocbody');
+  if (!body) return false;
+  // contentEditable is set after require modules finish initializing.
+  return body.getAttribute('contenteditable') === 'true'
+    || body.isContentEditable
+    || Boolean((innerDoc.defaultView as Window & { require?: unknown } | null)?.require);
+};
+
 const injectIntoAceFrames = (padDoc: Document, href: string): boolean => {
   const outer = padDoc.querySelector('iframe[name="ace_outer"]') as HTMLIFrameElement | null;
   const outerDoc = outer?.contentDocument;
@@ -36,6 +50,7 @@ const injectIntoAceFrames = (padDoc: Document, href: string): boolean => {
   const inner = outerDoc.querySelector('iframe[name="ace_inner"]') as HTMLIFrameElement | null;
   const innerDoc = inner?.contentDocument;
   if (!innerDoc?.head) return false;
+  if (!isAceInnerReady(innerDoc)) return false;
 
   injectStylesheet(innerDoc, href);
   return true;
@@ -223,6 +238,9 @@ const installTimesliderLinkGuard = (doc: Document): void => {
 };
 
 const applySkyroomEtherpadSkin = (padDoc: Document): void => {
+  if (padDoc.documentElement.getAttribute(SKIN_FLAG) === '1') return;
+  padDoc.documentElement.setAttribute(SKIN_FLAG, '1');
+
   const href = resolveEtherpadStylesheetHref();
   if (!href) return;
 
@@ -234,31 +252,27 @@ const applySkyroomEtherpadSkin = (padDoc: Document): void => {
   patchExportLinks(padDoc);
 
   let tries = 0;
-  const maxTries = 40;
+  const maxTries = 60;
+  let done = false;
+
   const sync = () => {
+    if (done) return;
     tries += 1;
     revealToolbarItems(padDoc);
     patchExportLinks(padDoc);
     const aceReady = injectIntoAceFrames(padDoc, href);
-    if (!aceReady && tries < maxTries) {
-      window.setTimeout(sync, tries < 8 ? 200 : 500);
+    if (aceReady) {
+      done = true;
+      return;
+    }
+    if (tries < maxTries) {
+      // Give ACE more time up front so we do not poke ace_inner mid-bootstrap.
+      window.setTimeout(sync, tries < 10 ? 400 : 700);
     }
   };
 
-  sync();
-  window.setTimeout(sync, 250);
-  window.setTimeout(sync, 1000);
-
-  // ACE frames are created asynchronously after pad load.
-  const observer = new MutationObserver(() => {
-    injectIntoAceFrames(padDoc, href);
-    patchExportLinks(padDoc);
-  });
-  observer.observe(padDoc.body || padDoc.documentElement, {
-    childList: true,
-    subtree: true,
-  });
-  window.setTimeout(() => observer.disconnect(), 15000);
+  // Defer first ACE touch; toolbar/skin on the outer pad doc is enough initially.
+  window.setTimeout(sync, 800);
 };
 
 export default applySkyroomEtherpadSkin;

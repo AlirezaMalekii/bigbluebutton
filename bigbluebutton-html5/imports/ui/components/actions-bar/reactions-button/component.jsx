@@ -112,7 +112,9 @@ const ReactionsButton = (props) => {
     paddingBottom: isMobile ? '0' : '0.5rem',
   };
 
-  const emojiProps = {
+  // Picker items keep a little padding for touch targets; the dock trigger
+  // must stay optically centered inside the circle (no em-emoji padding).
+  const pickerEmojiProps = {
     size: convertRemToPixels(1.5),
     padding: '4px',
   };
@@ -124,7 +126,7 @@ const ReactionsButton = (props) => {
     actions.push({
       label: (
         <Styled.ButtonWrapper active={currentUserReaction === native}>
-          <em-emoji key={native} native={native} {...emojiProps} />
+          <em-emoji key={native} native={native} {...pickerEmojiProps} />
         </Styled.ButtonWrapper>
       ),
       key: id,
@@ -164,13 +166,12 @@ const ReactionsButton = (props) => {
   let customIcon = null;
 
   if (!svgIcon) {
+    // Native span avoids emoji-mart async re-layout that shifts the glyph
+    // inside the circular dock control a few seconds after send.
     customIcon = (
-      <em-emoji
-        key={currentUserReactionEmoji?.id}
-        native={currentUserReactionEmoji?.native}
-        emoji={{ id: currentUserReactionEmoji?.id }}
-        {...emojiProps}
-      />
+      <Styled.ReactionEmoji aria-hidden="true">
+        {currentUserReactionEmoji?.native || currentUserReaction}
+      </Styled.ReactionEmoji>
     );
   }
 
@@ -223,13 +224,22 @@ const propTypes = {
   intl: PropTypes.shape({
     formatMessage: PropTypes.func.isRequired,
   }).isRequired,
-  userId: PropTypes.string.isRequired,
-  sidebarContentPanel: PropTypes.string.isRequired,
-  layoutContextDispatch: PropTypes.func.isRequired,
+  actionsBarRef: PropTypes.shape({
+    current: typeof Element === 'undefined'
+      ? PropTypes.oneOf([null])
+      : PropTypes.instanceOf(Element),
+  }),
+  isMobile: PropTypes.bool,
+  currentUserReaction: PropTypes.string,
+  autoCloseReactionsBar: PropTypes.bool,
   isModerator: PropTypes.bool,
 };
 
 ReactionsButton.defaultProps = {
+  actionsBarRef: null,
+  isMobile: false,
+  currentUserReaction: 'none',
+  autoCloseReactionsBar: false,
   isModerator: false,
 };
 

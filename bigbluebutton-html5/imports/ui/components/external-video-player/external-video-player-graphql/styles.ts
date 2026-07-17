@@ -5,6 +5,7 @@ import Button from '/imports/ui/components/common/button/component';
 
 type VideoPlayerWrapperProps = {
   fullscreen: boolean;
+  $dockedToolbar?: boolean;
   ref : React.MutableRefObject<HTMLDivElement | null>;
 };
 
@@ -31,6 +32,9 @@ export const VideoPlayerWrapper = styled.div<VideoPlayerWrapperProps>`
   position: relative;
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 
   ${({ fullscreen }) => fullscreen && `
     position: fixed;
@@ -40,6 +44,14 @@ export const VideoPlayerWrapper = styled.div<VideoPlayerWrapperProps>`
     height: 100vh;
     z-index: 99;
   `}
+`;
+
+export const VideoStage = styled.div`
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
 `;
 
 export const AutoPlayWarning = styled.p`
@@ -135,6 +147,7 @@ export const AparatPlayPauseButton = styled.button`
 
 export default {
   VideoPlayerWrapper,
+  VideoStage,
   AutoPlayWarning,
   VideoPlayer,
   Container,

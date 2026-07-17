@@ -4,7 +4,7 @@ import { useMutation } from '@apollo/client';
 import Session from '/imports/ui/services/storage/in-memory';
 import { UserCameraDropdownInterface, UserCameraDropdownOption } from 'bigbluebutton-html-plugin-sdk';
 import browserInfo from '/imports/utils/browserInfo';
-import { toggleWebcamFullscreen, exitWebcamFullscreen } from '/imports/ui/components/skyroom-layout/webcam-fullscreen/webcam-fullscreen';
+import { exitWebcamFullscreen } from '/imports/ui/components/skyroom-layout/webcam-fullscreen/webcam-fullscreen';
 import BBBMenu from '/imports/ui/components/common/menu/component';
 import { UserCameraDropdownItemType } from 'bigbluebutton-html-plugin-sdk/dist/cjs/extensible-areas/user-camera-dropdown-item/enums';
 import Styled from './styles';
@@ -63,14 +63,6 @@ const intlMessages = defineMessages({
   disableMirrorDesc: {
     id: 'app.videoDock.webcamDisableMirrorDesc',
   },
-  fullscreenLabel: {
-    id: 'app.videoDock.webcamFullscreenLabel',
-    description: 'Make fullscreen option label',
-  },
-  exitFullscreenLabel: {
-    id: 'app.videoDock.webcamExitFullscreenLabel',
-    description: 'Make exit fullscreen option label',
-  },
   squeezedLabel: {
     id: 'app.videoDock.webcamSqueezedButtonLabel',
     description: 'User selected webcam squeezed options',
@@ -128,7 +120,6 @@ const UserActions: React.FC<UserActionProps> = (props) => {
   const intl = useIntl();
   const enableVideoMenu = window.meetingClientSettings.public.kurento.enableVideoMenu || false;
   const { isFirefox } = browserInfo;
-  const isIphone = !!(navigator.userAgent.match(/iPhone/i));
 
   const [setCameraPinned] = useMutation(SET_CAMERA_PINNED);
   const pinEnabledForCurrentUser = useIsVideoPinEnabledForCurrentUser(amIModerator);
@@ -183,7 +174,6 @@ const UserActions: React.FC<UserActionProps> = (props) => {
     const disabledCams = (Session.getItem('disabledCams') || []) as string[];
     const isCameraDisabled = Array.isArray(disabledCams) && disabledCams?.includes(cameraId);
     const enableSelfCamIntlKey = !isCameraDisabled ? 'disable' : 'enable';
-    const ALLOW_FULLSCREEN = !isIphone ? window.meetingClientSettings.public.app.allowFullscreen : false;
 
     const menuItems = [];
 
@@ -251,32 +241,6 @@ const UserActions: React.FC<UserActionProps> = (props) => {
         },
         dataTest: 'pinWebcamBtn',
       });
-    }
-
-    if (isStream && ALLOW_FULLSCREEN) {
-      menuItems.push(
-        {
-          key: `${cameraId}-fullscreen`,
-          label: isFullscreenContext
-            ? intl.formatMessage(intlMessages.exitFullscreenLabel)
-            : intl.formatMessage(intlMessages.fullscreenLabel),
-          description: isFullscreenContext
-            ? intl.formatMessage(intlMessages.exitFullscreenLabel)
-            : intl.formatMessage(intlMessages.fullscreenLabel),
-          dataTest: 'webcamsFullscreenButton',
-          onClick: () => {
-            // Defer until after BBBMenu handleClose runs. Sync chrome-hide during
-            // the same click leaves the MUI modal stuck (invisible full-screen blocker).
-            window.setTimeout(() => {
-              toggleWebcamFullscreen({
-                cameraId,
-                isFullscreenContext,
-                layoutContextDispatch,
-              });
-            }, 0);
-          },
-        },
-      );
     }
 
     userCameraDropdownItems.filter(
