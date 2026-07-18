@@ -444,7 +444,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
 
     const gridGutter = parseInt(window.getComputedStyle(this.grid)
       .getPropertyValue('grid-row-gap'), 10);
-    let optimalGrid = VideoList.computeOptimalGrid(
+    let optimalGrid: VideoListState['optimalGrid'] | null = VideoList.computeOptimalGrid(
       visibleStreams,
       cameraDock?.width,
       cameraDock?.height,
@@ -468,18 +468,25 @@ class VideoList extends Component<VideoListProps, VideoListState> {
           filledArea: cameraDock.width * cameraDock.height,
         };
       } else {
+        // Fixed 2-col tile size from dock width so extra rows overflow and the dock scrolls.
+        // Do not use findOptimalGrid here — it shrinks cells to fit all rows in dock height.
+        const gutter = Number.isFinite(gridGutter) ? gridGutter : 0;
         const mobileColumns = Math.min(2, visibleStreams.length);
-        const mobileGrid = findOptimalGrid(
-          cameraDock.width,
-          cameraDock.height,
-          gridGutter,
-          ASPECT_RATIO,
-          visibleStreams.length,
-          mobileColumns,
+        const rows = Math.ceil(visibleStreams.length / mobileColumns);
+        const cellWidth = Math.max(
+          1,
+          Math.floor((cameraDock.width - ((mobileColumns - 1) * gutter)) / mobileColumns),
         );
-        if (mobileGrid.filledArea > 0) {
-          optimalGrid = mobileGrid;
-        }
+        const cellHeight = Math.max(1, Math.ceil(cellWidth / ASPECT_RATIO));
+        optimalGrid = {
+          columns: mobileColumns,
+          rows,
+          width: cameraDock.width,
+          height: (cellHeight * rows) + ((rows - 1) * gutter),
+          cellWidth,
+          cellHeight,
+          filledArea: cellWidth * cellHeight * visibleStreams.length,
+        };
       }
     }
 
@@ -885,6 +892,21 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     const { optimalGrid, autoplayBlocked } = this.state;
     const { position } = cameraDock;
     const fillMobileDock = isSkyroomColumnLayout() && isSkyroomMobileViewport();
+    const mobileScrollGrid = fillMobileDock
+      && streams.length > 1
+      && Boolean(optimalGrid.cellHeight);
+
+    let listWidth = `${optimalGrid.width}px`;
+    let listHeight = `${optimalGrid.height}px`;
+    let listGridRows = `repeat(${optimalGrid.rows}, 1fr)`;
+    if (mobileScrollGrid) {
+      listWidth = '100%';
+      listHeight = `${optimalGrid.height}px`;
+      listGridRows = `repeat(${optimalGrid.rows}, ${optimalGrid.cellHeight}px)`;
+    } else if (fillMobileDock) {
+      listWidth = '100%';
+      listHeight = '100%';
+    }
 
     return (
       <Styled.VideoCanvas
@@ -896,6 +918,9 @@ class VideoList extends Component<VideoListProps, VideoListState> {
           minHeight: fillMobileDock ? 0 : undefined,
           alignItems: fillMobileDock ? 'stretch' : undefined,
           justifyContent: fillMobileDock ? 'stretch' : undefined,
+          // Let the dock scroll when many cams; canvas must not clip content height.
+          height: mobileScrollGrid ? 'max-content' : undefined,
+          maxHeight: mobileScrollGrid ? 'none' : undefined,
         }}
       >
         {this.renderPreviousPageButton()}
@@ -906,10 +931,10 @@ class VideoList extends Component<VideoListProps, VideoListState> {
               this.grid = ref;
             }}
             style={{
-              width: fillMobileDock ? '100%' : `${optimalGrid.width}px`,
-              height: fillMobileDock ? '100%' : `${optimalGrid.height}px`,
+              width: listWidth,
+              height: listHeight,
               gridTemplateColumns: `repeat(${optimalGrid.columns}, 1fr)`,
-              gridTemplateRows: `repeat(${optimalGrid.rows}, 1fr)`,
+              gridTemplateRows: listGridRows,
             }}
             className="video-provider_list"
           >

@@ -811,11 +811,24 @@ class Presentation extends PureComponent {
 
     const toolbarHeight = getToolbarHeight();
     const isSkyroomMobileStage = isSkyroomColumnLayout() && isSkyroomMobileViewport();
+    const slideToolbarH = toolbarHeight || 14;
+    const wbToolbarReserve = isSkyroomMobileStage ? getSkyroomMobileWbToolbarReserve() : 0;
+    const mobileChromeH = slideToolbarH + wbToolbarReserve;
     // Match upstream BBB: mount when fitted svg size is known. On Skyroom phone the
     // stage bounds arrive first — allow that as a bootstrap signal only.
     const stageReady = isSkyroomMobileStage
       ? (presentationWidth > 0 || (presentationBounds.width > 0 && presentationBounds.height > 0))
       : presentationWidth > 0;
+    // Phone: full-stage wrapper so presenter chrome (top actions + pen toolbar)
+    // can use the available width; slide is letterbox-centered by the camera.
+    // Desktop: keep upstream svgWidth×svgHeight fitted box.
+    const wbPresentationWidth = isSkyroomMobileStage ? presentationBounds.width : svgWidth;
+    const wbPresentationHeight = isSkyroomMobileStage
+      ? Math.max(80, presentationBounds.height - mobileChromeH)
+      : svgHeight;
+    const wbPresentationAreaHeight = isSkyroomMobileStage
+      ? Math.max(80, presentationBounds.height - mobileChromeH)
+      : presentationBounds.height - toolbarHeight;
 
     const { presentationToolbarMinWidth } = DEFAULT_VALUES;
 
@@ -891,16 +904,19 @@ class Presentation extends PureComponent {
             <Styled.SvgContainer
               data-test="presentationSvgContainer"
               style={{
-                // Upstream BBB: SvgContainer hugs the fitted slide + slide-nav bar.
-                // Stretching this to 100% on phone broke camera.z = svgWidth/scaledWidth.
-                height: svgHeight + toolbarHeight,
+                height: isSkyroomMobileStage ? '100%' : svgHeight + toolbarHeight,
+                width: isSkyroomMobileStage ? '100%' : undefined,
               }}
             >
               <div
                 style={{
                   position: 'absolute',
-                  width: Math.max(0, svgDimensions.width),
-                  height: Math.max(0, svgDimensions.height),
+                  width: isSkyroomMobileStage
+                    ? '100%'
+                    : Math.max(0, svgDimensions.width),
+                  height: isSkyroomMobileStage
+                    ? `calc(100% - ${slideToolbarH}px)`
+                    : Math.max(0, svgDimensions.height),
                   textAlign: 'center',
                   display: !presentationIsOpen ? 'none' : 'block',
                   zIndex: 1,
@@ -948,9 +964,9 @@ class Presentation extends PureComponent {
                     curPageId={currentSlide?.num.toString() || '0'}
                     svgUri={currentSlide?.svgUri}
                     intl={intl}
-                    presentationWidth={svgWidth}
-                    presentationHeight={svgHeight}
-                    presentationAreaHeight={presentationBounds.height - toolbarHeight}
+                    presentationWidth={wbPresentationWidth}
+                    presentationHeight={wbPresentationHeight}
+                    presentationAreaHeight={wbPresentationAreaHeight}
                     presentationAreaWidth={presentationBounds.width}
                     isPanning={isPanning}
                     zoomChanger={this.zoomChanger}

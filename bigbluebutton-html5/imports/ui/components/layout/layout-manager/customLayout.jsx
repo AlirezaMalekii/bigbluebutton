@@ -33,6 +33,7 @@ import {
   getSkyroomNotesOpen,
   subscribeSkyroomNotesOpen,
 } from '/imports/ui/components/skyroom-layout/notes-panel-state';
+import { subscribeSkyroomMobileBottom } from '/imports/ui/components/skyroom-layout/mobile-bottom-state';
 import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const windowWidth = () => window.document.documentElement.clientWidth;
@@ -109,6 +110,11 @@ const CustomLayout = (props) => {
       window.requestAnimationFrame(() => calculatesLayoutRef.current());
     };
 
+    // Mobile bottom box (webcams/chat/…) lives outside layout context. After an
+    // explicit close (activeBox=null) BBB sidebar flags are already false, so
+    // reopening webcams must recalculate here — resize/SET_BROWSER_SIZE no-ops.
+    const unsubscribeMobileBottom = subscribeSkyroomMobileBottom(refreshSkyroomLayout);
+
     window.addEventListener(SKYROOM_WEBCAM_LAYOUT_EVENT, refreshSkyroomLayout);
     window.addEventListener(SKYROOM_MOBILE_ZONE_FS_EVENT, refreshSkyroomLayout);
     window.addEventListener(SKYROOM_MOBILE_STATUS_RAIL_EVENT, refreshSkyroomLayout);
@@ -130,6 +136,7 @@ const CustomLayout = (props) => {
     }
 
     return () => {
+      unsubscribeMobileBottom();
       window.removeEventListener(SKYROOM_WEBCAM_LAYOUT_EVENT, refreshSkyroomLayout);
       window.removeEventListener(SKYROOM_MOBILE_ZONE_FS_EVENT, refreshSkyroomLayout);
       window.removeEventListener(SKYROOM_MOBILE_STATUS_RAIL_EVENT, refreshSkyroomLayout);
@@ -1294,6 +1301,9 @@ const CustomLayout = (props) => {
     layoutContextDispatch({
       type: ACTIONS.SET_SCREEN_SHARE_OUTPUT,
       value: {
+        // Required so stage overlays (reactions) can detect active screenshare.
+        // Previously display was never set and stayed false from initState.
+        display: Boolean(hasActiveScreenShare),
         width: layoutMediaBounds.width,
         height: layoutMediaBounds.height,
         top: layoutMediaBounds.top,

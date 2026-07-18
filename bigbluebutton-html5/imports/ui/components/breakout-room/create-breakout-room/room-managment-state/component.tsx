@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, {
+  useEffect, useMemo, useRef, useState,
+} from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import { useQuery } from '@apollo/client';
 import {
@@ -75,6 +77,11 @@ const RoomManagmentState: React.FC<RoomManagmentStateProps> = ({
     [key: number]: string;
   }>({});
 
+  // Apply meeting-groups / last-breakout hydration at most once per modal open.
+  const groupsHydratedRef = useRef(false);
+  const lastBreakoutHydratedRef = useRef(false);
+  const runningRoomsHydratedRef = useRef(false);
+
   const recordUserMovement = (userId: string, fromRoom: number, toRoom: number) => {
     // Use the actual running room as fromRoomId source of truth.
     // If the user was dragged through the unassigned box (fromRoom=0),
@@ -98,13 +105,10 @@ const RoomManagmentState: React.FC<RoomManagmentStateProps> = ({
 
   const moveUser = (userId: string, from: number, to: number) => {
     if (from === to) return;
-    const current = new Set(userAssignedRooms[userId] ?? []);
-    current.delete(from); // no-op if not present
-    current.add(to);
-
+    // One room per user: unassign clears; assign replaces previous room.
     setUserAssignedRooms((prev) => ({
       ...prev,
-      [userId]: Array.from(current),
+      [userId]: to === 0 ? [] : [to],
     }));
 
     recordUserMovement(userId, from, to);
@@ -195,23 +199,36 @@ const RoomManagmentState: React.FC<RoomManagmentStateProps> = ({
   });
 
   useEffect(() => {
-    if (users.length > 0 && Object.keys(userAssignedRooms).length === 0) {
-      setUserAssignedRooms(
-        users.reduce((acc: { [key: string]: number[] }, user) => {
-          const { userId } = user;
-          acc[userId] = [];
+    if (users.length === 0) return;
+    setUserAssignedRooms((prev) => {
+      // First open: seed everyone as unassigned.
+      if (Object.keys(prev).length === 0) {
+        return users.reduce((acc: { [key: string]: number[] }, user) => {
+          acc[user.userId] = [];
           return acc;
-        }, {}),
-      );
-    }
+        }, {});
+      }
+      // Later joins while modal is open: append missing users as unassigned.
+      let changed = false;
+      const next = { ...prev };
+      users.forEach((user) => {
+        if (next[user.userId] === undefined) {
+          next[user.userId] = [];
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
   }, [users]);
 
-  // Manage a running room
+  // Manage a running room (update mode only — hydrate once per open).
   useEffect(() => {
+    if (runningRoomsHydratedRef.current) return;
     if (
       runningRooms
       && runningRooms.length > 0
       && Object.keys(userAssignedRooms).length > 0) {
+      runningRoomsHydratedRef.current = true;
       const assignUsers = runningRooms
         .reduce((
           acc: { [key: string]: number[] },
@@ -219,17 +236,13 @@ const RoomManagmentState: React.FC<RoomManagmentStateProps> = ({
         ) => {
           room.participants.forEach((user) => {
             const { userId } = user.user;
-            if (!acc[userId]) {
-              acc[userId] = [room.sequence];
-            } else {
-              acc[userId].push(room.sequence);
-            }
+            acc[userId] = [room.sequence];
           });
 
           return acc;
         }, {});
 
-      const roomNames = runningRooms.reduce((acc: { [key: number]: string }, room) => {
+      const nextRoomNames = runningRooms.reduce((acc: { [key: number]: string }, room) => {
         acc[room.sequence] = room.name;
         return acc;
       }, {});
@@ -242,7 +255,7 @@ const RoomManagmentState: React.FC<RoomManagmentStateProps> = ({
 
       setRoomNames((prev) => ({
         ...prev,
-        ...roomNames,
+        ...nextRoomNames,
       }));
     }
   }, [runningRooms, Object.keys(userAssignedRooms).length]);
@@ -255,50 +268,48 @@ const RoomManagmentState: React.FC<RoomManagmentStateProps> = ({
     }
   }, [userAssignedRooms]);
 
+  // SafeMeet: after end-all, opening Create must start with everyone unassigned.
+  // Upstream restores lastBreakoutRoom into columns; that looks like a bug for recreate.
+  // Keep room count/names as a soft convenience only when explicitly updating is not the case —
+  // never re-apply previous user → room assignments on a fresh create.
   useEffect(() => {
+    if (lastBreakoutHydratedRef.current) return;
+    if (isUpdate) return;
     if (
-      (lastBreakoutData
-        && lastBreakoutData.breakoutRoom_createdLatest.length > 0)
-      && (runningRooms
-        && runningRooms.length === 0)
+      lastBreakoutData
+      && lastBreakoutData.breakoutRoom_createdLatest.length > 0
+      && runningRooms
+      && runningRooms.length === 0
     ) {
-      const assignUsers = lastBreakoutData.user.reduce((acc: { [key: string]: number[] }, user) => {
-        //  means user wasn't either not assigned or not joined a breakout room
-        if (!user.lastBreakoutRoom) return acc;
-        const { userId, sequence } = user.lastBreakoutRoom;
-        if (!acc[userId]) {
-          acc[userId] = [sequence];
-        } else {
-          acc[userId].push(sequence);
-        }
-        return acc;
-      }, {});
-      const roomNames = lastBreakoutData.breakoutRoom_createdLatest.reduce((acc: {[key: number]: string}, room) => {
-        acc[room.sequence] = room.shortName;
-        return acc;
-      }, {});
+      lastBreakoutHydratedRef.current = true;
+      const nextRoomNames = lastBreakoutData.breakoutRoom_createdLatest.reduce(
+        (acc: { [key: number]: string }, room) => {
+          acc[room.sequence] = room.shortName;
+          return acc;
+        },
+        {},
+      );
 
       setNumberOfRooms(lastBreakoutData.breakoutRoom_createdLatest.length);
-      setUserAssignedRooms((prev) => ({
-        ...prev,
-        ...assignUsers,
-      }));
       setRoomNames((prev) => ({
         ...prev,
-        ...roomNames,
+        ...nextRoomNames,
       }));
+      // Intentionally do NOT merge lastBreakout user assignments — leave users in "not assigned".
     }
-  }, [lastBreakoutData]);
+  }, [lastBreakoutData, runningRooms, isUpdate]);
 
   useEffect(() => {
+    if (groupsHydratedRef.current) return;
     if (
       groups.length
       && Object.keys(userAssignedRooms).length > 0
       && lastBreakoutData
       && !(lastBreakoutData.breakoutRoom_createdLatest.length > 0)
     ) {
+      groupsHydratedRef.current = true;
       const updatedUserAssignedRooms = { ...userAssignedRooms };
-      const roomNames: {
+      const nextRoomNames: {
         [key: number]: string;
       } = {};
       Array.from(groups).forEach((group, index) => {
@@ -308,22 +319,20 @@ const RoomManagmentState: React.FC<RoomManagmentStateProps> = ({
           .filter((user) => user !== undefined)
           .map((user) => user.userId);
         userIds.forEach((userId) => {
-          if (!updatedUserAssignedRooms[userId]) {
-            updatedUserAssignedRooms[userId] = [idx];
-          } else {
-            updatedUserAssignedRooms[userId].push(idx);
-          }
+          updatedUserAssignedRooms[userId] = [idx];
         });
 
-        roomNames[idx] = group.name;
+        nextRoomNames[idx] = group.name;
       });
 
       setUserAssignedRooms(updatedUserAssignedRooms);
-      setRoomNames(roomNames);
+      setRoomNames(nextRoomNames);
     }
   }, [
     lastBreakoutData,
-    userAssignedRooms,
+    groups,
+    users,
+    Object.keys(userAssignedRooms).length,
   ]);
 
   const rooms = useMemo(() => {

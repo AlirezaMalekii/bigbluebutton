@@ -89,15 +89,19 @@
 /* ---------------------------------------------------------------------
    Activate only when BBB locale is Persian.
    BBB tags <body class="lang-fa"> automatically (see main.html).
-   The wide `*` selector with !important is intentional: we need to
+   The wide selector with !important is intentional: we need to
    override BBB's countless inline `font-family` declarations made
    through styled-components, while still letting `bbb-icons` /
    `Material Icons` keep their own font-family thanks to the explicit
-   `:not([class*="icon"])` guards below.
+   icon guards below.
+
+   Whiteboard/tldraw canvas text nodes are excluded (:not(.tl-text…)):
+   those faces are loaded as tldraw_* (Persian IRANYekan cuts when
+   lang=fa — see whiteboard/service.js) so Aa / size / measure work.
    --------------------------------------------------------------------- */
 body.lang-fa,
 body.lang-fa input,
-body.lang-fa textarea,
+body.lang-fa textarea:not(.tl-text-input),
 body.lang-fa select,
 body.lang-fa button,
 body.lang-fa h1,
@@ -107,8 +111,8 @@ body.lang-fa h4,
 body.lang-fa h5,
 body.lang-fa h6,
 body.lang-fa p,
-body.lang-fa span,
-body.lang-fa div,
+body.lang-fa span:not(.tl-text),
+body.lang-fa div:not(.tl-text):not(.tl-text-content):not(.tl-text-measure):not(.tl-text-shape__wrapper):not(.tl-text-label):not(.tl-text-label__inner):not(.tl-arrow-label),
 body.lang-fa li,
 body.lang-fa label,
 body.lang-fa a {

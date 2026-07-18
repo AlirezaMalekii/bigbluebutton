@@ -224,8 +224,9 @@ export const useSkyroomColumnLayout = () => {
 
     if (notesOpen) {
       if (explicit === 'notes') return;
-      if (explicit === 'chat' || explicit === 'users' || explicit === 'webcams'
-        || explicit === 'breakout' || explicit === 'waiting') return;
+      // Another box selected, or user explicitly closed (null) — do not yank back to notes.
+      // Only auto-select when selection is still unset (undefined).
+      if (explicit !== undefined) return;
 
       layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_NAVIGATION_IS_OPEN, value: false });
       layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_NAVIGATION_PANEL, value: PANELS.NONE });

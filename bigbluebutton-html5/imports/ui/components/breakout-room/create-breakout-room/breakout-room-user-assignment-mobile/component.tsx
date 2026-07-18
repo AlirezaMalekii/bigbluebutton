@@ -94,16 +94,18 @@ const BreakoutRoomUserAssignmentMobile: React.FC<ChildComponentProps> = ({
     return null;
   }, [layer, numberOfRooms, rooms]);
 
-  const layerThree = useMemo(() => {
-    return (
-      <RoomUserList
-        confirm={() => setLayer(2)}
-        selectedRoom={selectedRoom}
-        rooms={rooms}
-        moveUser={moveUser}
-      />
-    );
-  }, [selectedRoom, rooms]);
+  const closeUserPicker = () => setLayer(2);
+
+  const layerThree = layer === 3 ? (
+    <RoomUserList
+      confirm={closeUserPicker}
+      onBack={closeUserPicker}
+      selectedRoom={selectedRoom}
+      rooms={rooms}
+      moveUser={moveUser}
+    />
+  ) : null;
+
   const layers = {
     1: null,
     2: layerTwo,
@@ -112,7 +114,8 @@ const BreakoutRoomUserAssignmentMobile: React.FC<ChildComponentProps> = ({
   return (
     <>
       {layers[layer]}
-      {levelingButton}
+      {/* Layer 3 has its own Back/Confirm chrome; hide the wizard next/back. */}
+      {layer !== 3 ? levelingButton : null}
     </>
   );
 };

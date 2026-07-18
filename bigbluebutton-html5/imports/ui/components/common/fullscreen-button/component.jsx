@@ -57,7 +57,10 @@ const FullscreenButtonComponent = ({
   dataTest = 'webcamFullscreenButton',
   customToggle,
 }) => {
-  if (isIphone) return null;
+  // Webcam fullscreen is layout-only (no browser Fullscreen API) — allow on iPhone.
+  // Presentation/app fullscreen still uses the browser API and stays blocked on iPhone.
+  const isWebcamLayoutFullscreen = elementGroup === 'webcams';
+  if (isIphone && !isWebcamLayoutFullscreen) return null;
 
   const formattedLabel = (fullscreen) => (fullscreen
     ? intl.formatMessage(
@@ -77,7 +80,7 @@ const FullscreenButtonComponent = ({
     }
 
     // Webcam fullscreen uses layout-only overlay; browser Fullscreen API breaks SafeMeet zones.
-    if (elementGroup === 'webcams') {
+    if (isWebcamLayoutFullscreen) {
       toggleWebcamFullscreen({
         cameraId: elementId,
         isFullscreenContext: elementId === currentElement && elementGroup === currentGroup,

@@ -263,8 +263,10 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
   const [questionAndOptions, setQuestionAndOptions] = useState<string[] | string>('');
   const [optList, setOptList] = useState<Array<{key: string, val: string}>>([]);
   const [error, setError] = useState<string | null>(null);
-  const [multipleResponse, setMultipleResponse] = useState(false);
+  const [pollMultipleResponse, setPollMultipleResponse] = useState(false);
+  const [quizMultipleResponse, setQuizMultipleResponse] = useState(false);
   const [secretPoll, setSecretPoll] = useState(false);
+  const multipleResponse = isQuiz ? quizMultipleResponse : pollMultipleResponse;
   const [warning, setWarning] = useState<string | null>('');
   const [isPasting, setIsPasting] = useState(false);
   const [type, setType] = useState<string | null>('');
@@ -310,7 +312,11 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
       setError(null);
       setWarning(null);
       setCustomInput(isCustom);
-      setMultipleResponse(multipleResponse);
+      if (isQuiz) {
+        setQuizMultipleResponse(!!multipleResponse);
+      } else {
+        setPollMultipleResponse(!!multipleResponse);
+      }
       setQuestionAndOptions(questionAndOptionsList);
       setQuestion(question);
       setSecretPoll(secretPoll);
@@ -421,7 +427,10 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
       questionAndOptions,
       optList,
       error,
-      multipleResponse,
+      pollMultipleResponse,
+      quizMultipleResponse,
+      // Legacy single field kept for older session restores.
+      multipleResponse: isQuiz ? quizMultipleResponse : pollMultipleResponse,
       secretPoll,
       warning,
       type,
@@ -430,7 +439,7 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
     };
   }, [
     customInput, question, questionAndOptions, optList,
-    multipleResponse, secretPoll, warning, type, error, isQuiz, correctAnswer,
+    pollMultipleResponse, quizMultipleResponse, secretPoll, warning, type, error, isQuiz, correctAnswer,
   ]);
 
   useEffect(() => () => {
@@ -444,7 +453,9 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
       questionAndOptions: string[] | string;
       optList: { key: string, val: string }[];
       error: string;
-      multipleResponse: boolean;
+      multipleResponse?: boolean;
+      pollMultipleResponse?: boolean;
+      quizMultipleResponse?: boolean;
       secretPoll: boolean;
       warning: string;
       type: string;
@@ -458,7 +469,9 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
     if (pollSavedState) {
       const {
         customInput,
-        multipleResponse,
+        multipleResponse = false,
+        pollMultipleResponse: savedPollMultiple,
+        quizMultipleResponse: savedQuizMultiple,
         optList,
         error,
         question,
@@ -471,7 +484,16 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
       } = pollSavedState;
 
       setCustomInput(customInput);
-      setMultipleResponse(multipleResponse);
+      setPollMultipleResponse(
+        typeof savedPollMultiple === 'boolean'
+          ? savedPollMultiple
+          : (!isQuiz && multipleResponse),
+      );
+      setQuizMultipleResponse(
+        typeof savedQuizMultiple === 'boolean'
+          ? savedQuizMultiple
+          : (isQuiz && multipleResponse),
+      );
       setOptList(optList || []);
       setError(error || null);
       setQuestion(question || '');
@@ -621,7 +643,11 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
   };
 
   const toggleMultipleResponse = () => {
-    setMultipleResponse((prev) => !prev);
+    if (isQuiz) {
+      setQuizMultipleResponse((prev) => !prev);
+      return;
+    }
+    setPollMultipleResponse((prev) => !prev);
   };
 
   useEffect(() => {
@@ -657,11 +683,10 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
           isQuizEnabled && (
             <QuizAndPollTabSelector
               isQuiz={isQuiz}
-              onTabChange={(isQuiz: boolean) => {
-                setIsQuiz(isQuiz);
-                onPaneTitleChange?.(isQuiz);
-                if (isQuiz) {
-                  setMultipleResponse(false);
+              onTabChange={(nextIsQuiz: boolean) => {
+                setIsQuiz(nextIsQuiz);
+                onPaneTitleChange?.(nextIsQuiz);
+                if (nextIsQuiz) {
                   setSecretPoll(false);
                   if (type === pollTypes.Response) {
                     setType(pollTypes.TrueFalse);
@@ -766,7 +791,8 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
             setIsQuiz(false);
             setCustomInput(false);
             setSecretPoll(false);
-            setMultipleResponse(false);
+            setPollMultipleResponse(false);
+            setQuizMultipleResponse(false);
           }}
           handleToggle={handleToggle}
           error={error}

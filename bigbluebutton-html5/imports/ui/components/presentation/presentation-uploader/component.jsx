@@ -1567,6 +1567,10 @@ class PresentationUploader extends Component {
             {this.renderPresentationList()}
           </Styled.ListSection>
           <Styled.BottomPanels>
+            <Styled.DropzoneSection>
+              {this.renderDropzone()}
+            </Styled.DropzoneSection>
+            {this.renderExternalUpload()}
             {startExternalVideo ? (
               <OnlineVideoSection
                 allowExternalVideo={allowExternalVideo}
@@ -1575,10 +1579,6 @@ class PresentationUploader extends Component {
                 stopExternalVideo={stopExternalVideo}
               />
             ) : null}
-            <Styled.DropzoneSection>
-              {this.renderDropzone()}
-            </Styled.DropzoneSection>
-            {this.renderExternalUpload()}
           </Styled.BottomPanels>
         </Styled.ModalBody>
       </ModalFullscreen>

@@ -60,9 +60,9 @@ const isBackgroundShapeId = (id) => typeof id === 'string' && id.startsWith(BG_S
 
 const isBackgroundShape = (shape) => isBackgroundShapeId(shape?.id);
 
-// Prefer the live tldraw viewport over layout props — on Skyroom mobile the
-// presentationArea* values can lag behind the real canvas, which mis-centers
-// newly uploaded images (half off-screen / stuck in a corner).
+// Live tldraw viewport — used only for letterbox centering when the canvas is
+// larger than the fitted slide (Skyroom phone full-stage chrome). Do NOT feed
+// this into widthGap zoom math; upstream uses presentationArea* for that.
 const resolveCameraViewportSize = (editor, fallbackWidth, fallbackHeight) => {
   const bounds = editor?.getViewportScreenBounds?.();
   const width = bounds?.width > 0 ? bounds.width : fallbackWidth;
@@ -71,6 +71,46 @@ const resolveCameraViewportSize = (editor, fallbackWidth, fallbackHeight) => {
     areaWidth: Number.isFinite(width) ? width : 0,
     areaHeight: Number.isFinite(height) ? height : 0,
   };
+};
+
+// tldraw camera.x/y are page-space (page = screen/z + camera).
+// Letterbox/pillarbox centering uses negative offsets when the slide is smaller
+// than the viewport.
+const calculateCenteredCameraOffsets = (
+  scaledWidth,
+  scaledHeight,
+  baseZoom,
+  areaWidth,
+  areaHeight,
+  fitToWidthMode,
+) => {
+  const zoom = Number.isFinite(baseZoom) && baseZoom > 0 ? baseZoom : 1;
+  const safeAreaWidth = Number.isFinite(areaWidth) && areaWidth > 0 ? areaWidth : 0;
+  const safeAreaHeight = Number.isFinite(areaHeight) && areaHeight > 0 ? areaHeight : 0;
+  const pageViewportWidth = safeAreaWidth / zoom;
+  const pageViewportHeight = safeAreaHeight / zoom;
+
+  let xOffset = 0;
+  let yOffset = 0;
+
+  if (!(pageViewportWidth > 0) || !(pageViewportHeight > 0)) {
+    return { xOffset, yOffset };
+  }
+
+  if (fitToWidthMode) {
+    if (scaledHeight < pageViewportHeight) {
+      yOffset = (scaledHeight - pageViewportHeight) / 2;
+    }
+  } else {
+    if (scaledWidth < pageViewportWidth) {
+      xOffset = (scaledWidth - pageViewportWidth) / 2;
+    }
+    if (scaledHeight < pageViewportHeight) {
+      yOffset = (scaledHeight - pageViewportHeight) / 2;
+    }
+  }
+
+  return { xOffset, yOffset };
 };
 
 // Pan bounds in page-space. When the slide is smaller than the viewport, lock to
@@ -1060,16 +1100,14 @@ const Whiteboard = React.memo((props) => {
   };
 
   const calculateZoomValue = (localWidth, localHeight) => {
-    const { areaWidth, areaHeight } = resolveCameraViewportSize(
-      tlEditorRef.current,
-      presentationAreaWidth,
-      presentationAreaHeight,
-    );
+    // Upstream BBB: always use presentationArea* props here. Mixing in the live
+    // tldraw viewport breaks presenter widthGap (area already equals svgWidth,
+    // then subtracting container−svgWidth shrinks zoom and letterboxes the slide).
     const calcedZoom = fitToWidth
-      ? areaWidth / localWidth
+      ? presentationAreaWidth / localWidth
       : Math.min(
-        areaWidth / localWidth,
-        areaHeight / localHeight,
+        presentationAreaWidth / localWidth,
+        presentationAreaHeight / localHeight,
       );
 
     return calcedZoom === 0 || calcedZoom === Infinity || Number.isNaN(calcedZoom)
@@ -1126,17 +1164,13 @@ const Whiteboard = React.memo((props) => {
     localHeight,
     widthAdjustment = 0,
   ) => {
-    const { areaWidth, areaHeight } = resolveCameraViewportSize(
-      tlEditorRef.current,
-      presentationAreaWidth,
-      presentationAreaHeight,
-    );
-    const presentationWidthLocal = Math.max(areaWidth - widthAdjustment, 0);
+    // Upstream BBB: presentationAreaWidth − widthGap ≈ svgWidth.
+    const presentationWidthLocal = Math.max(presentationAreaWidth - widthAdjustment, 0);
     const calcedZoom = (fitToWidth
       ? presentationWidthLocal / localWidth
       : Math.min(
         presentationWidthLocal / localWidth,
-        areaHeight / localHeight,
+        presentationAreaHeight / localHeight,
       ));
     return calcedZoom === 0 || calcedZoom === Infinity || Number.isNaN(calcedZoom)
       ? calculateZoomValue(localWidth, localHeight) // Fallback to no gap base zoom
@@ -1266,8 +1300,8 @@ const Whiteboard = React.memo((props) => {
         throwIfInvalid(baseZoom, 'baseZoom');
 
         if (isPresenterRef.current) {
-          // Upstream BBB presenter mount: fit zoom (with widthGap) + backend offsets.
-          // Do not republish viewport-specific letterbox x/y — that breaks phone viewers.
+          // Upstream BBB presenter mount: fit zoom (with widthGap). Full-slide uses
+          // local letterbox offsets from the live canvas — never publish them.
           const { widthGap } = getContainerDimensions();
 
           if (widthGap > 0) {
@@ -1280,17 +1314,39 @@ const Whiteboard = React.memo((props) => {
           const backendX = xOffset ?? 0;
           const backendY = yOffset ?? 0;
           const useFullSlideOrigin = shouldUseLocalFullSlideCamera(page, backendX, backendY);
+          let nextX = useFullSlideOrigin ? 0 : backendX;
+          let nextY = useFullSlideOrigin ? 0 : backendY;
+
+          if (useFullSlideOrigin) {
+            const {
+              areaWidth: cameraAreaWidth,
+              areaHeight: cameraAreaHeight,
+            } = resolveCameraViewportSize(
+              tlEditorRef.current,
+              presentationAreaWidth,
+              presentationAreaHeight,
+            );
+            const centered = calculateCenteredCameraOffsets(
+              scaledWidth,
+              scaledHeight,
+              baseZoom,
+              cameraAreaWidth,
+              cameraAreaHeight,
+              fitToWidthRef.current,
+            );
+            nextX = centered.xOffset;
+            nextY = centered.yOffset;
+          }
 
           coreCameraLogic({
             baseZoom,
-            xOffset: useFullSlideOrigin ? 0 : backendX,
-            yOffset: useFullSlideOrigin ? 0 : backendY,
+            xOffset: nextX,
+            yOffset: nextY,
             description: '(presenter)',
           });
         } else if (includeViewerLogic) {
-          // Upstream viewer: zoom to viewBox + backend offsets. When the meeting is
-          // still on the full slide (or legacy corner/screen-space offsets), fit the
-          // whole slide locally with camera at 0,0 so phone matches desktop.
+          // Upstream viewer: zoom to viewBox + backend offsets. Full-slide / legacy
+          // offsets → fit the whole slide locally and letterbox-center in THIS canvas.
           const page = currentPresentationPageRef.current;
           const useFullSlideOrigin = shouldUseLocalFullSlideCamera(
             page,
@@ -1300,11 +1356,34 @@ const Whiteboard = React.memo((props) => {
           const viewerFitWidth = useFullSlideOrigin ? scaledWidth : scaledViewBoxWidth;
           const viewerFitHeight = useFullSlideOrigin ? scaledHeight : scaledViewBoxHeight;
           baseZoom = calculateZoomValueRef.current(viewerFitWidth, viewerFitHeight);
+          let nextX = useFullSlideOrigin ? 0 : xOffset;
+          let nextY = useFullSlideOrigin ? 0 : yOffset;
+
+          if (useFullSlideOrigin) {
+            const {
+              areaWidth: cameraAreaWidth,
+              areaHeight: cameraAreaHeight,
+            } = resolveCameraViewportSize(
+              tlEditorRef.current,
+              presentationAreaWidth,
+              presentationAreaHeight,
+            );
+            const centered = calculateCenteredCameraOffsets(
+              viewerFitWidth,
+              viewerFitHeight,
+              baseZoom,
+              cameraAreaWidth,
+              cameraAreaHeight,
+              fitToWidthRef.current,
+            );
+            nextX = centered.xOffset;
+            nextY = centered.yOffset;
+          }
 
           coreCameraLogic({
             baseZoom,
-            xOffset: useFullSlideOrigin ? 0 : xOffset,
-            yOffset: useFullSlideOrigin ? 0 : yOffset,
+            xOffset: nextX,
+            yOffset: nextY,
             description: '(viewer)',
           });
         }
@@ -2119,12 +2198,36 @@ const Whiteboard = React.memo((props) => {
       const backendX = xOffset ?? 0;
       const backendY = yOffset ?? 0;
       const useFullSlideOrigin = shouldUseLocalFullSlideCamera(page, backendX, backendY);
+      let nextX = camera.x;
+      let nextY = camera.y;
 
-      // Upstream BBB updates zoom on area resize and keeps pan; for a full-slide
-      // view reset x/y to 0 so the fitted wrapper is filled (not letterboxed).
+      if (useFullSlideOrigin) {
+        const {
+          areaWidth: cameraAreaWidth,
+          areaHeight: cameraAreaHeight,
+        } = resolveCameraViewportSize(
+          tlEditorRef.current,
+          presentationAreaWidth,
+          presentationAreaHeight,
+        );
+        const centered = calculateCenteredCameraOffsets(
+          scaledWidth,
+          scaledHeight,
+          newZ,
+          cameraAreaWidth,
+          cameraAreaHeight,
+          fitToWidthRef.current,
+        );
+        nextX = centered.xOffset;
+        nextY = centered.yOffset;
+      }
+
+      // Upstream BBB updates zoom on area resize; full-slide recenters locally
+      // without publishing viewport-specific letterbox offsets.
       const updatedCurrentCam = {
         ...camera,
-        ...(useFullSlideOrigin ? { x: 0, y: 0 } : null),
+        x: nextX,
+        y: nextY,
         z: newZ,
       };
       tlEditorRef.current.store.mergeRemoteChanges(() => {
@@ -2186,11 +2289,34 @@ const Whiteboard = React.memo((props) => {
       const viewerFitHeight = useFullSlideOrigin ? scaledHeight : scaledViewBoxHeight;
       const newZoom = calculateZoomValue(viewerFitWidth, viewerFitHeight);
       const camera = tlEditorRef.current.getCamera();
+      let nextX = useFullSlideOrigin ? 0 : xOffset;
+      let nextY = useFullSlideOrigin ? 0 : yOffset;
+
+      if (useFullSlideOrigin) {
+        const {
+          areaWidth: cameraAreaWidth,
+          areaHeight: cameraAreaHeight,
+        } = resolveCameraViewportSize(
+          tlEditorRef.current,
+          presentationAreaWidth,
+          presentationAreaHeight,
+        );
+        const centered = calculateCenteredCameraOffsets(
+          viewerFitWidth,
+          viewerFitHeight,
+          newZoom,
+          cameraAreaWidth,
+          cameraAreaHeight,
+          fitToWidthRef.current,
+        );
+        nextX = centered.xOffset;
+        nextY = centered.yOffset;
+      }
+
       const updatedCurrentCam = {
         ...camera,
-        ...(useFullSlideOrigin
-          ? { x: 0, y: 0 }
-          : { x: xOffset, y: yOffset }),
+        x: nextX,
+        y: nextY,
         z: newZoom,
       };
       tlEditorRef.current.store.put([updatedCurrentCam]);
@@ -2437,14 +2563,33 @@ const Whiteboard = React.memo((props) => {
       const viewerFitWidth = useFullSlideOrigin ? scaledWidth : scaledViewBoxWidth;
       const viewerFitHeight = useFullSlideOrigin ? scaledHeight : scaledViewBoxHeight;
       const fitZoom = calculateZoomValue(viewerFitWidth, viewerFitHeight);
+      let nextX = useFullSlideOrigin ? 0 : pageXOffset;
+      let nextY = useFullSlideOrigin ? 0 : pageYOffset;
 
-      // Full-slide: camera 0,0 fills the fitted BBB wrapper. Otherwise follow
+      if (useFullSlideOrigin) {
+        const {
+          areaWidth: cameraAreaWidth,
+          areaHeight: cameraAreaHeight,
+        } = resolveCameraViewportSize(
+          tlEditorRef.current,
+          presentationAreaWidth,
+          presentationAreaHeight,
+        );
+        const centered = calculateCenteredCameraOffsets(
+          viewerFitWidth,
+          viewerFitHeight,
+          fitZoom,
+          cameraAreaWidth,
+          cameraAreaHeight,
+          fitToWidth,
+        );
+        nextX = centered.xOffset;
+        nextY = centered.yOffset;
+      }
+
+      // Full-slide: letterbox-center in this client's canvas. Otherwise follow
       // the presenter's published page-space viewBox offsets (upstream sync).
-      setCamera(
-        fitZoom,
-        useFullSlideOrigin ? 0 : pageXOffset,
-        useFullSlideOrigin ? 0 : pageYOffset,
-      );
+      setCamera(fitZoom, nextX, nextY);
     }
   }, [currentPresentationPage, isPresenter, viewerCanPan, presentationAreaWidth, presentationAreaHeight, fitToWidth]);
 

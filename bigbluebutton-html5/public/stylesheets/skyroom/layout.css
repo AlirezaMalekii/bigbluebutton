@@ -97,6 +97,12 @@
   z-index: 6 !important;
 }
 
+/* Floating reactions must paint above stage/whiteboard/webcam strip */
+#layout[data-skyroom-column="true"] [data-test="stageReactionOverlay"] {
+  z-index: 15 !important;
+  pointer-events: none !important;
+}
+
 /* Narrow sidebar column */
 #layout[data-skyroom-column="true"] .resizeSidebarNavWrapper,
 #layout[data-skyroom-column="true"] .resizeSidebarContentWrapper {
@@ -574,9 +580,9 @@
 }
 
 /*
- * Center the fitted BBB slide box (presentationInnerWrapper = svgWidth×svgHeight)
- * inside the Skyroom stage. Upstream relies on flex static-position of the
- * absolute wrapper; Skyroom stage CSS can leave it top-left — pin it explicitly.
+ * Desktop: center the fitted BBB slide box (svgWidth×svgHeight) in the stage.
+ * Prefer flex on SvgContainer; avoid transform on the wrapper so absolute chrome
+ * (ExtraTools / options) keeps a predictable containing block.
  */
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [class*="SvgContainer"] {
   align-items: center !important;
@@ -584,9 +590,10 @@
 }
 
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #presentationInnerWrapper {
-  left: 50% !important;
-  right: auto !important;
-  transform: translateX(-50%) !important;
+  left: 0 !important;
+  right: 0 !important;
+  margin-inline: auto !important;
+  transform: none !important;
 }
 
 /* ---------------------------------------------------------------------

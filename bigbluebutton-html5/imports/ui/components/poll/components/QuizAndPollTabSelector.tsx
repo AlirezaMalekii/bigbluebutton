@@ -32,6 +32,7 @@ const QuizAndPollTabSelector: React.FC<QuizAndPollTabSelectorProps> = ({ isQuiz,
       >
         <Styled.SegmentedButton
           id="poll"
+          type="button"
           role="tab"
           aria-selected={!isQuiz}
           active={!isQuiz}
@@ -42,6 +43,7 @@ const QuizAndPollTabSelector: React.FC<QuizAndPollTabSelectorProps> = ({ isQuiz,
         </Styled.SegmentedButton>
         <Styled.SegmentedButton
           id="quiz"
+          type="button"
           role="tab"
           aria-selected={isQuiz}
           active={isQuiz}

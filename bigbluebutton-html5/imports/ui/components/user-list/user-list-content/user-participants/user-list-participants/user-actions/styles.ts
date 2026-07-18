@@ -59,10 +59,14 @@ const UserRow = styled.div`
   min-width: 0;
 `;
 
-const UserRowMain = styled.div`
+const UserRowMain = styled.div<{ $clickable?: boolean }>`
   flex: 1 1 auto;
   min-width: 0;
   overflow: visible;
+
+  ${({ $clickable }) => $clickable && `
+    cursor: pointer;
+  `}
 `;
 
 const ActionMenuWrap = styled.div`

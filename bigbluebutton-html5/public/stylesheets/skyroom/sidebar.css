@@ -290,17 +290,17 @@
 
 /* Compact rows — full text visible (no ellipsis clip) */
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] {
-  --skyroom-user-row-h: 36px;
+  --skyroom-user-row-h: 40px;
 }
 
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="moderatorAvatar"],
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="viewerAvatar"] {
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  max-width: 32px !important;
-  max-height: 32px !important;
-  font-size: 0.55rem !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  font-size: 0.6rem !important;
   border-radius: 50% !important;
   border: none !important;
   background-color: transparent !important;
@@ -316,20 +316,20 @@
 }
 
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-skyroom-avatar="true"] svg {
-  width: 72% !important;
-  height: 72% !important;
+  width: 74% !important;
+  height: 74% !important;
 }
 
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::after,
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::after,
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::before,
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::before {
-  width: 13px !important;
-  height: 13px !important;
-  min-width: 13px !important;
-  max-width: 13px !important;
-  max-height: 13px !important;
-  font-size: 8px !important;
+  width: 15px !important;
+  height: 15px !important;
+  min-width: 15px !important;
+  max-width: 15px !important;
+  max-height: 15px !important;
+  font-size: 9px !important;
   letter-spacing: 0 !important;
   padding: 0 !important;
   line-height: 1 !important;
@@ -1391,27 +1391,22 @@
   box-shadow: 0 0 0 2px var(--skyroom-panel-accent, #20c7bb) !important;
 }
 
-/* Breakout rooms entry in user list — full-width status card */
+/* Breakout rooms entry in user list — compact status card (no section heading) */
 #layout[data-skyroom-column="true"] [data-test="skyroomBreakoutEntry"] {
   display: flex !important;
   flex-direction: column !important;
   flex-shrink: 0 !important;
   width: 100% !important;
   max-width: 100% !important;
+  max-height: none !important;
   box-sizing: border-box !important;
-  margin: 0 0 8px !important;
+  margin: 4px 0 6px !important;
   padding: 0 12px !important;
-  gap: 0.35rem !important;
+  gap: 0 !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="skyroomBreakoutEntry"] [data-test="breakoutRoomsTitle"] {
-  margin: 0 !important;
-  padding: 0 2px !important;
-  font-size: 0.8rem !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.01em !important;
-  line-height: 1.25 !important;
-  color: var(--skyroom-panel-text, #eef4fb) !important;
+  display: none !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="skyroomBreakoutEntry"] [class*="ScrollableList"],
@@ -1422,6 +1417,7 @@
   overflow: visible !important;
   background: transparent !important;
   min-height: 0 !important;
+  max-height: none !important;
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
@@ -1430,13 +1426,14 @@
 #layout[data-skyroom-column="true"] [data-test="breakoutRoomsItem"] {
   display: flex !important;
   align-items: center !important;
-  gap: 10px !important;
+  gap: 8px !important;
   box-sizing: border-box !important;
   width: 100% !important;
   max-width: 100% !important;
   min-height: 0 !important;
   height: auto !important;
-  padding: 12px 14px !important;
+  /* Keep a little breathing room inside the card without wasting list height */
+  padding: 8px 12px !important;
   margin: 0 !important;
   border-radius: 12px !important;
   background: rgba(32, 199, 187, 0.1) !important;
@@ -1474,23 +1471,23 @@
   min-width: 0 !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 2px !important;
-  line-height: 1.25 !important;
+  gap: 1px !important;
+  line-height: 1.2 !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="breakoutRoomsItem"] [class*="BreakoutTitle"],
 #layout[data-skyroom-column="true"] [data-test="breakoutRoomsItem"] > div > div:first-child {
-  font-size: 0.84rem !important;
+  font-size: 0.8rem !important;
   font-weight: 650 !important;
-  line-height: 1.25 !important;
+  line-height: 1.2 !important;
   color: var(--skyroom-panel-text, #eef4fb) !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="breakoutModeratorHint"] {
   margin: 0 !important;
-  font-size: 0.7rem !important;
+  font-size: 0.68rem !important;
   font-weight: 500 !important;
-  line-height: 1.2 !important;
+  line-height: 1.15 !important;
   color: var(--skyroom-panel-accent, #20c7bb) !important;
 }
 
@@ -1498,10 +1495,10 @@
 #layout[data-skyroom-column="true"] [data-test="breakoutRoomsItem"] [class*="BreakoutDuration"] * {
   margin: 0 !important;
   padding: 0 !important;
-  font-size: 0.72rem !important;
+  font-size: 0.7rem !important;
   font-style: normal !important;
   font-weight: 500 !important;
-  line-height: 1.2 !important;
+  line-height: 1.15 !important;
   color: var(--skyroom-panel-text-muted, rgba(210, 224, 238, 0.82)) !important;
 }
 

@@ -1,10 +1,14 @@
 import React, { useCallback, useRef } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import Icon from '/imports/ui/components/common/icon/component';
+import { layoutDispatch } from '/imports/ui/components/layout/context';
+import { ACTIONS } from '/imports/ui/components/layout/enums';
+import FullscreenService from '/imports/ui/components/common/fullscreen-button/service';
 import Styled from './styles';
 
 const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 const SKIP_SECONDS = 5;
+const FULLSCREEN_ELEMENT_ID = 'ExternalVideo';
 
 const intlMessages = defineMessages({
   play: {
@@ -38,6 +42,14 @@ const intlMessages = defineMessages({
   playbackRate: {
     id: 'app.externalVideo.playbackRate',
     description: 'Playback speed control',
+  },
+  fullscreen: {
+    id: 'app.fullscreenButton.label',
+    description: 'Enter fullscreen',
+  },
+  exitFullscreen: {
+    id: 'app.fullscreenUndoButton.label',
+    description: 'Exit fullscreen',
   },
 });
 
@@ -91,6 +103,10 @@ export interface PresenterSyncToolbarProps {
   seekEnabled?: boolean;
   volumeEnabled?: boolean;
   rateEnabled?: boolean;
+  fullscreenEnabled?: boolean;
+  isFullscreen?: boolean;
+  fullscreenRef?: HTMLElement | null;
+  elementName?: string;
   onPlayPause: () => void;
   onSeek: (fraction: number) => void;
   onSkipSeconds: (deltaSeconds: number) => void;
@@ -110,6 +126,10 @@ const PresenterSyncToolbar: React.FC<PresenterSyncToolbarProps> = ({
   seekEnabled = true,
   volumeEnabled = true,
   rateEnabled = true,
+  fullscreenEnabled = true,
+  isFullscreen = false,
+  fullscreenRef = null,
+  elementName = '',
   onPlayPause,
   onSeek,
   onSkipSeconds,
@@ -119,6 +139,8 @@ const PresenterSyncToolbar: React.FC<PresenterSyncToolbarProps> = ({
 }) => {
   const intl = useIntl();
   const progressRef = useRef<HTMLDivElement>(null);
+  const layoutContextDispatch = layoutDispatch();
+  const isIphone = !!(navigator.userAgent.match(/iPhone/i));
 
   const currentSeconds = played * (duration || 0);
   const playedPercent = Math.min(100, Math.max(0, played * 100));
@@ -144,7 +166,24 @@ const PresenterSyncToolbar: React.FC<PresenterSyncToolbarProps> = ({
     onSeek(Math.min(1, Math.max(0, played + step)));
   }, [onSeek, played, seekEnabled]);
 
+  const handleToggleFullscreen = useCallback(() => {
+    layoutContextDispatch({
+      type: ACTIONS.SET_FULLSCREEN_ELEMENT,
+      value: {
+        element: isFullscreen ? '' : FULLSCREEN_ELEMENT_ID,
+        group: '',
+      },
+    });
+    FullscreenService.toggleFullScreen(
+      (fullscreenRef ?? null) as Parameters<typeof FullscreenService.toggleFullScreen>[0],
+    );
+  }, [fullscreenRef, isFullscreen, layoutContextDispatch]);
+
   const volumeIcon = muted || volume <= 0 ? 'volume_off' : 'volume_up';
+  const fullscreenLabel = intl.formatMessage(
+    isFullscreen ? intlMessages.exitFullscreen : intlMessages.fullscreen,
+    { elementName: elementName || '' },
+  );
 
   return (
     <Styled.Bar data-presenter-sync-toolbar="true">
@@ -245,6 +284,18 @@ const PresenterSyncToolbar: React.FC<PresenterSyncToolbarProps> = ({
               aria-label={intl.formatMessage(intlMessages.unmute)}
             />
           </Styled.VolumeGroup>
+        ) : null}
+
+        {fullscreenEnabled && !isIphone ? (
+          <Styled.IconButton
+            type="button"
+            onClick={handleToggleFullscreen}
+            aria-label={fullscreenLabel}
+            title={fullscreenLabel}
+            data-test="presenterMediaFullscreen"
+          >
+            <Icon iconName={isFullscreen ? 'exit_fullscreen' : 'fullscreen'} />
+          </Styled.IconButton>
         ) : null}
       </Styled.RightCluster>
     </Styled.Bar>

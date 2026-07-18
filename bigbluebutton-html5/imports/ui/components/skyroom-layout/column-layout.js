@@ -16,10 +16,10 @@ import { getSkyroomWebcamDragPreview } from './webcam-zone-store';
 
 export const SKYROOM_COLUMN_ATTR = 'data-skyroom-column';
 
-/** Match tokens.css --space-page (header/footer/panel rhythm) */
-export const SKYROOM_BLOCK_GAP = 22;
-/** Match tokens.css --space-column-stack (users ↔ chat vertical gap) */
-export const SKYROOM_COLUMN_STACK_GAP = 18;
+/** Match tokens.css --space-page (edge + stage↔sidebar gutters) */
+export const SKYROOM_BLOCK_GAP = 12;
+/** Match tokens.css --space-column-stack (users ↔ chat / stacked sidebar gap) */
+export const SKYROOM_COLUMN_STACK_GAP = 8;
 const GAP = SKYROOM_COLUMN_STACK_GAP;
 const STAGE_GAP = SKYROOM_BLOCK_GAP;
 /** Match layout.css --skyroom-footer-h */

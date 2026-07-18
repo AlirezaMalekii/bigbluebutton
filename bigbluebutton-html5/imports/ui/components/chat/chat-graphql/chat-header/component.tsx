@@ -60,6 +60,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         'aria-label': intl.formatMessage(intlMessages.hideChatLabel, { chatName: title }),
         'data-test': isPublicChat ? 'hidePublicChat' : 'hidePrivateChat',
         label: title,
+        // Skyroom private chat: keep back/title text, drop the left_arrow icon.
+        ...(isSkyroomColumnLayout() && !isPublicChat ? { icon: '' } : {}),
         onClick: () => {
           if (isSkyroomColumnLayout()) {
             if (isPublicChat) {

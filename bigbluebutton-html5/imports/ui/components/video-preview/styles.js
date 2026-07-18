@@ -55,7 +55,7 @@ const Col = styled.div`
   }
 
   @media ${smallOnly} {
-    gap: 8px;
+    gap: 4px;
   }
 `;
 
@@ -131,8 +131,8 @@ const Label = styled.label`
   color: rgba(170, 182, 199, 0.95);
 
   @media ${smallOnly} {
-    font-size: 0.7rem;
-    margin: 0 0 3px;
+    font-size: 0.65rem;
+    margin: 0 0 2px;
   }
 `;
 
@@ -152,8 +152,10 @@ const Select = styled.select`
   }
 
   @media ${smallOnly} {
-    min-height: 34px;
-    padding: 5px 8px;
+    min-height: 32px;
+    height: 32px;
+    padding: 4px 8px;
+    font-size: 0.8rem;
   }
 `;
 
@@ -169,12 +171,12 @@ const Content = styled.div`
   @media ${smallOnly} {
     flex-direction: column;
     margin: 0;
-    gap: 8px;
+    gap: 6px;
     padding: 0;
     flex: 1 1 auto;
     min-height: 0;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    /* Camera tab should fit without initial scroll; VBG tab scrolls its own grid. */
+    overflow-y: hidden;
   }
 `;
 
@@ -193,7 +195,7 @@ const Footer = styled.div`
 
   @media ${smallOnly} {
     flex-shrink: 0;
-    padding-top: 6px;
+    padding-top: 4px;
   }
 `;
 
@@ -259,10 +261,10 @@ const VideoPreviewModal = styled(ModalSimple)`
   @media ${smallOnly} {
     height: auto;
     min-height: 0;
-    max-height: min(88dvh, 520px);
+    max-height: min(92dvh, 640px);
     width: 100% !important;
     max-width: 100% !important;
-    padding: 0.65rem 0.85rem 0.75rem;
+    padding: 0.5rem 0.75rem 0.6rem;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -270,7 +272,7 @@ const VideoPreviewModal = styled(ModalSimple)`
 
   ${({ $cameraAsContent }) => $cameraAsContent && `
     @media ${smallOnly} {
-      max-height: min(86dvh, 480px);
+      max-height: min(90dvh, 560px);
     }
   `}
 
@@ -356,7 +358,7 @@ const VideoPreviewFrame = styled.div`
     max-width: none;
     width: 100%;
     aspect-ratio: 16 / 10;
-    max-height: min(30dvh, 200px);
+    max-height: min(22dvh, 160px);
     margin: 0;
     border-radius: 12px;
   }
@@ -376,12 +378,20 @@ const MarkerWrapper = styled.div`
   display: flex;
   justify-content: space-between;
   user-select: none;
+
+  @media ${smallOnly} {
+    font-size: 0.6rem;
+  }
 `;
 
 const MarkerDynamicWrapper = styled.div`
   position: relative;
   height: 1rem;
   user-select: none;
+
+  @media ${smallOnly} {
+    height: 0.55rem;
+  }
 `;
 
 const Container = styled.div`
@@ -404,7 +414,7 @@ const Header = styled.div`
   line-height: ${titlePositionLeft};
 
   @media ${smallOnly} {
-    margin: 0 0 0.5rem;
+    margin: 0 0 0.35rem;
     flex-shrink: 0;
   }
 `;

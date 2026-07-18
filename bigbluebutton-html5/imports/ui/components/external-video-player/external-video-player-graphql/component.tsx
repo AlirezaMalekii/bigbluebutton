@@ -215,8 +215,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
         isPresenter: false,
       },
       aparat: {
-        // SafeMeet toolbar drives play/pause via remount; iframe clicks stay blocked.
-        isPresenter: false,
+        // Aparat has no sync API — native iframe controls own playback for everyone.
         playing,
       },
       twitch: {
@@ -509,10 +508,10 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
     if (!isPresenter) return false;
     if (layoutTransitionRef.current) return false;
     if (isAparatSource) {
-      // Aparat has no seek/rate API — only play/stop/start are published.
-      return event === 'play' || event === 'stop' || event === 'start';
+      // Aparat has no reliable iframe events/API — do not publish fake play/stop sync.
+      return false;
     }
-    return true;
+    return Boolean(event);
   };
 
   const publishPresenterPlayback = async (
@@ -586,7 +585,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   const handleOnReady = () => {
     if (mediaLoadFailedRef.current || !playerRef.current) return;
     if (isAparatSource) {
-      if (playing) playVideo(playerRef.current);
+      // Playback starts only via Aparat's native play button inside the iframe.
       return;
     }
     // Presentation media: ReactPlayer `playing` already drives playback. Extra play()
@@ -872,9 +871,10 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
     window.open(presentationMediaDownloadUri);
   };
 
-  // Presenter always gets SafeMeet dock (incl. Aparat — native iframe chrome is blocked).
+  // Aparat uses its own player chrome — hide SafeMeet sync toolbar completely.
   const showPresenterDock = isPresenter
     && !isPresentationAudio
+    && !isAparatSource
     && !!playerUrl;
 
   return (
@@ -967,7 +967,8 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
             ) : null
           }
           {
-            !isPresenter && !isPresentationAudio ? (
+            // Block viewer clicks for synced external videos; Aparat keeps native controls.
+            !isPresenter && !isPresentationAudio && !isAparatSource ? (
               <Styled.AparatViewerBlocker
                 data-test="externalVideoViewerBlocker"
                 aria-hidden="true"
@@ -1022,9 +1023,9 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
               volume={volume}
               muted={mute || isEchoTest}
               playbackRate={playerPlaybackRate || 1}
-              seekEnabled={!isAparatSource}
-              volumeEnabled={!isAparatSource}
-              rateEnabled={!isAparatSource}
+              isFullscreen={fullscreenContext}
+              fullscreenRef={playerParentRef.current}
+              elementName={intl.formatMessage(intlMessages.fullscreenLabel)}
               onPlayPause={handlePresenterPlayPause}
               onSeek={handlePresentationMediaSeek}
               onSkipSeconds={handlePresenterSkipSeconds}

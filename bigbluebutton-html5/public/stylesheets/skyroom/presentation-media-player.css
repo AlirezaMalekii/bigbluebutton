@@ -1,6 +1,6 @@
 /* SafeMeet presentation media player (audio/video files shared via Manage Presentations) */
 
-/* Aparat embed: stage fills remaining height above SafeMeet presenter toolbar. */
+/* Aparat embed: full-stage iframe with Aparat's own controls (no SafeMeet toolbar). */
 #layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"][data-aparat-player="true"] {
   background: #000 !important;
 }
@@ -10,7 +10,8 @@
 #layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"][data-aparat-player="true"] iframe {
   width: 100% !important;
   height: 100% !important;
-  pointer-events: none !important;
+  /* Must stay clickable — Aparat ignores autoplay and needs its own play button. */
+  pointer-events: auto !important;
 }
 
 #layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"][data-presentation-media="audio"] {

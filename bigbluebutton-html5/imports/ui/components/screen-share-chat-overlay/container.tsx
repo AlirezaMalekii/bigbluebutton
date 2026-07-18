@@ -4,7 +4,9 @@ import { useIntl } from 'react-intl';
 import { layoutSelect } from '/imports/ui/components/layout/context';
 import { Layout } from '/imports/ui/components/layout/layoutTypes';
 import {
+  CONTENT_TYPE_CAMERA,
   CONTENT_TYPE_SCREENSHARE,
+  useCameraAsContentDeviceIdType,
   useIsSharing,
   useSharingContentType,
 } from '/imports/ui/components/screenshare/service';
@@ -31,6 +33,12 @@ const ensureRendererRegistered = (): void => {
 const useIsLocalScreenShareActive = (): boolean => {
   const isSharing = useIsSharing();
   const sharingContentType = useSharingContentType();
+  const cameraAsContentDeviceId = useCameraAsContentDeviceIdType();
+
+  // Never treat camera-as-content as screen share (floating chat is screenshare-only).
+  if (cameraAsContentDeviceId || String(sharingContentType) === CONTENT_TYPE_CAMERA) {
+    return false;
+  }
 
   return isSharing && String(sharingContentType) === CONTENT_TYPE_SCREENSHARE;
 };

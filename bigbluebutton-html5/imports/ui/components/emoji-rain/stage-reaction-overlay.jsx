@@ -1,5 +1,6 @@
 import React, {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -7,25 +8,21 @@ import React, {
 import PropTypes from 'prop-types';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import { isFreshReaction } from './reaction-stream';
+import { hasUsableStageBounds, resolveStageDomBounds } from './resolve-stage-bounds';
 import { layoutSelectOutput } from '../layout/context';
 import Styled from './stage-reaction-overlay-styles';
 
 const MAX_VISIBLE_REACTIONS = 10;
 const REACTION_TTL_MS = 7600;
 const DUPLICATE_WINDOW_MS = 1500;
+/** Above skyroom stage (6) and stage webcam strip (8); below actions bar (20). */
+const STAGE_REACTION_Z_INDEX = 15;
 
-const hasVisibleBounds = (bounds) => (
-  bounds
-  && bounds.display !== false
-  && Number(bounds.width) > 0
-  && Number(bounds.height) > 0
-);
-
-const buildBoundsStyle = (bounds) => ({
-  top: `${bounds.top || 0}px`,
-  left: `${bounds.left || 0}px`,
-  width: `${bounds.width || 0}px`,
-  height: `${bounds.height || 0}px`,
+const buildFixedStyle = (bounds) => ({
+  top: `${bounds.top}px`,
+  left: `${bounds.left}px`,
+  width: `${bounds.width}px`,
+  height: `${bounds.height}px`,
 });
 
 const getReactionKey = (reaction) => {
@@ -38,29 +35,42 @@ const StageReactionOverlay = ({ reactions }) => {
   const Settings = getSettingsSingletonInstance();
   const { animations } = Settings.application;
   const [floatingReactions, setFloatingReactions] = useState([]);
+  const [stageBounds, setStageBounds] = useState(null);
   const seenReactionsRef = useRef(new Set());
   const recentReactionRef = useRef(new Map());
   const expireTimersRef = useRef(new Map());
   const reactionsRef = useRef(reactions);
   reactionsRef.current = reactions;
 
+  // Layout output changes are a signal to re-measure the painted stage DOM.
   const screenShare = layoutSelectOutput((i) => i.screenShare);
   const externalVideo = layoutSelectOutput((i) => i.externalVideo);
   const genericMainContent = layoutSelectOutput((i) => i.genericMainContent);
   const sharedNotes = layoutSelectOutput((i) => i.sharedNotes);
   const presentation = layoutSelectOutput((i) => i.presentation);
 
-  const activeBounds = useMemo(() => {
-    const boundsPriority = [
-      screenShare,
-      externalVideo,
-      genericMainContent,
-      sharedNotes,
-      presentation,
-    ];
-
-    return boundsPriority.find(hasVisibleBounds);
-  }, [
+  const layoutSignal = useMemo(() => ([
+    screenShare?.display,
+    screenShare?.width,
+    screenShare?.height,
+    screenShare?.top,
+    screenShare?.left,
+    externalVideo?.display,
+    externalVideo?.width,
+    externalVideo?.height,
+    externalVideo?.top,
+    externalVideo?.left,
+    genericMainContent?.width,
+    genericMainContent?.height,
+    sharedNotes?.width,
+    sharedNotes?.height,
+    presentation?.display,
+    presentation?.width,
+    presentation?.height,
+    presentation?.top,
+    presentation?.left,
+    presentation?.right,
+  ].join('|')), [
     screenShare,
     externalVideo,
     genericMainContent,
@@ -68,9 +78,74 @@ const StageReactionOverlay = ({ reactions }) => {
     presentation,
   ]);
 
-  const boundsVisible = hasVisibleBounds(activeBounds);
+  useLayoutEffect(() => {
+    let frameId = null;
+    let resizeObserver = null;
+    let observedElement = null;
 
-  // Stable identity so layout object churn does not re-run reaction intake.
+    const measure = () => {
+      const resolved = resolveStageDomBounds();
+      const next = resolved?.bounds || null;
+      setStageBounds((current) => {
+        if (!next && !current) return current;
+        if (!next) return null;
+        if (
+          current
+          && current.top === next.top
+          && current.left === next.left
+          && current.width === next.width
+          && current.height === next.height
+        ) {
+          return current;
+        }
+        return next;
+      });
+
+      if (resolved?.element && resolved.element !== observedElement) {
+        if (resizeObserver && observedElement) {
+          resizeObserver.unobserve(observedElement);
+        }
+        observedElement = resolved.element;
+        if (resizeObserver) {
+          resizeObserver.observe(observedElement);
+        }
+      }
+    };
+
+    const scheduleMeasure = () => {
+      if (frameId != null) return;
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null;
+        measure();
+      });
+    };
+
+    measure();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(scheduleMeasure);
+      if (observedElement) {
+        resizeObserver.observe(observedElement);
+      }
+    }
+
+    // Whiteboard/tldraw can mount slightly after layout output updates.
+    const retryTimers = [100, 350, 800].map((ms) => window.setTimeout(scheduleMeasure, ms));
+
+    window.addEventListener('resize', scheduleMeasure);
+    window.addEventListener('orientationchange', scheduleMeasure);
+
+    return () => {
+      if (frameId != null) window.cancelAnimationFrame(frameId);
+      retryTimers.forEach((timer) => window.clearTimeout(timer));
+      window.removeEventListener('resize', scheduleMeasure);
+      window.removeEventListener('orientationchange', scheduleMeasure);
+      if (resizeObserver) resizeObserver.disconnect();
+    };
+  }, [layoutSignal]);
+
+  const boundsVisible = hasUsableStageBounds(stageBounds);
+
   const reactionSignature = useMemo(
     () => reactions.map(getReactionKey).join('|'),
     [reactions],
@@ -87,17 +162,13 @@ const StageReactionOverlay = ({ reactions }) => {
     const timer = setTimeout(() => {
       setFloatingReactions((current) => current.filter((reaction) => reaction.id !== id));
       expireTimersRef.current.delete(id);
-      // Keep key in seen set so late re-deliveries of the same stream row
-      // do not replay the bubble after it finished animating.
     }, REACTION_TTL_MS);
 
     expireTimersRef.current.set(id, timer);
   };
 
-  // Drop in-flight bubbles when the stage is hidden so remount does not
-  // restart CSS animations for reactions that were already playing.
-  // Do NOT mark stream events as seen here — that would drop live reactions
-  // for viewers whose bounds are briefly unavailable.
+  // Clear in-flight bubbles when the stage disappears so remount cannot
+  // restart CSS animations. Do not mark events as seen while hidden.
   useEffect(() => {
     if (boundsVisible) return undefined;
 
@@ -111,10 +182,6 @@ const StageReactionOverlay = ({ reactions }) => {
   }, []);
 
   useEffect(() => {
-    // Do not gate on document.hidden: presenter may be on another display while
-    // viewers still need bubbles; stream delivery already handles freshness.
-    // When bounds are hidden, skip intake without consuming — fresh events can
-    // still animate once the stage is visible again.
     if (!animations || !boundsVisible) return;
 
     const currentReactions = reactionsRef.current;
@@ -130,10 +197,15 @@ const StageReactionOverlay = ({ reactions }) => {
       const createdAt = reaction.creationDate.getTime();
       const key = getReactionKey(reaction);
       const duplicateKey = `${reaction.userId || 'unknown'}-${reaction.reaction}`;
-      const lastSeenAt = recentReactionRef.current.get(duplicateKey) || 0;
+      const lastSeenAt = recentReactionRef.current.get(duplicateKey);
 
       if (seenReactionsRef.current.has(key)) return acc;
-      if (createdAt - lastSeenAt >= 0 && createdAt - lastSeenAt < DUPLICATE_WINDOW_MS) return acc;
+      if (
+        lastSeenAt != null
+        && Math.abs(createdAt - lastSeenAt) < DUPLICATE_WINDOW_MS
+      ) {
+        return acc;
+      }
 
       seenReactionsRef.current.add(key);
       recentReactionRef.current.set(duplicateKey, createdAt);
@@ -167,13 +239,14 @@ const StageReactionOverlay = ({ reactions }) => {
 
   if (!animations || !boundsVisible) return null;
 
-  const travel = Math.max(Number(activeBounds.height) - 24, 120);
-  const zIndex = Math.max(Number(activeBounds.zIndex || 0) + 4, 8);
+  // Keep rise distance proportional to the painted stage so video/pdf/whiteboard
+  // share the same perceived speed (fixed duration × relative travel).
+  const travel = Math.max(Math.round(Number(stageBounds.height) * 0.72), 160);
 
   return (
     <Styled.Stage
-      style={buildBoundsStyle(activeBounds)}
-      $zIndex={zIndex}
+      style={buildFixedStyle(stageBounds)}
+      $zIndex={STAGE_REACTION_Z_INDEX}
       data-test="stageReactionOverlay"
     >
       {floatingReactions.map((reaction) => (

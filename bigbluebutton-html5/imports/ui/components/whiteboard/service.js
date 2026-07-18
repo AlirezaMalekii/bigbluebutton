@@ -249,9 +249,32 @@ const formatAnnotations = (annotations, intl, curPageId, currentPresentationPage
   return result;
 };
 
+const isPersianWhiteboardLocale = () => {
+  if (typeof document === 'undefined') return false;
+  const htmlLang = document.documentElement?.getAttribute?.('lang') || '';
+  if (htmlLang.toLowerCase().startsWith('fa')) return true;
+  return Boolean(document.body?.classList?.contains('lang-fa'));
+};
+
 const getCustomEditorAssetUrls = () => {
   const BASENAME = window.meetingClientSettings.public.app.basename;
   const TL_TEXT_PATHS = `${BASENAME}/fonts/tldraw`;
+
+  // Stock tldraw faces (Shantell / IBM Plex) have no Arabic-Persian glyphs, so the
+  // Aa font picker and measure/layout path look identical / broken for فارسی.
+  // Register distinct IRANYekan cuts under the same tldraw_* family ids so style
+  // changes, measurement, and rendering stay in sync for Persian locale.
+  if (isPersianWhiteboardLocale()) {
+    const IRANYEKAN_PATHS = `${BASENAME}/fonts/iranyekan/woff`;
+    return {
+      fonts: {
+        draw: `${IRANYEKAN_PATHS}/iranyekanwebmediumfanum.woff`,
+        sansSerif: `${IRANYEKAN_PATHS}/iranyekanwebregularfanum.woff`,
+        serif: `${IRANYEKAN_PATHS}/iranyekanweblightfanum.woff`,
+        monospace: `${IRANYEKAN_PATHS}/iranyekanwebblackfanum.woff`,
+      },
+    };
+  }
 
   return {
     fonts: {

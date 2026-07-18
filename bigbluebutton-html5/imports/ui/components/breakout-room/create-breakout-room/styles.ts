@@ -328,6 +328,8 @@ const RoomUserItem = styled.p`
   text-overflow: ellipsis;
   white-space: nowrap;
   cursor: grab;
+  user-select: none;
+  -webkit-user-drag: element;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -343,6 +345,13 @@ const RoomUserItem = styled.p`
     padding: 0.4rem 0.55rem;
   }
 
+  > span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+  }
+
   span.close {
     display: inline-flex;
     flex-shrink: 0;
@@ -353,6 +362,9 @@ const RoomUserItem = styled.p`
     margin: 0;
     border-radius: 6px;
     font-size: ${fontSizeSmaller};
+    cursor: pointer;
+    -webkit-user-drag: none;
+    user-select: none;
     color: ${breakoutTextMuted};
     background: rgba(255, 255, 255, 0.06);
   }

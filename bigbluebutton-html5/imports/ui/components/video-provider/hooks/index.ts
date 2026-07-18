@@ -70,6 +70,12 @@ import {
   limitSkyroomMobileStageRemoteWebcams,
   useSkyroomMobileWebcamsVisible,
 } from '/imports/ui/components/skyroom-layout/mobile-webcam-visibility';
+import {
+  isSkyroomColumnLayout,
+  isSkyroomMobileViewport,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
+
+const SKYROOM_MOBILE_SORTING = 'LOCAL_MODERATOR_ALPHABETICAL';
 
 const useVideoStreamsSubscription = createUseSubscription(
   VIDEO_STREAMS_SUBSCRIPTION,
@@ -627,9 +633,14 @@ export const useVideoStreams = () => {
       || !senderIdsInGroups.has(vs.userId));
   }
 
+  // SafeMeet mobile: self → moderators → others (desktop keeps meeting defaultSorting).
+  const effectiveDefaultSorting = (
+    isSkyroomColumnLayout() && isSkyroomMobileViewport()
+  ) ? SKYROOM_MOBILE_SORTING : DEFAULT_SORTING;
+
   if (isPaginationEnabled) {
     const chunkIndex = currentVideoPageIndex * myPageSize;
-    const sortingMethod = (numberOfPages > 1) ? PAGINATION_SORTING : DEFAULT_SORTING;
+    const sortingMethod = (numberOfPages > 1) ? PAGINATION_SORTING : effectiveDefaultSorting;
     const sortingConfig = getSortingMethod(sortingMethod);
 
     // Check if this sorting method uses custom pagination logic
@@ -713,7 +724,7 @@ export const useVideoStreams = () => {
       }
     }
   } else {
-    streams = sortVideoStreams(streams, DEFAULT_SORTING);
+    streams = sortVideoStreams(streams, effectiveDefaultSorting);
 
     // Add up to maxAudioOnlyUsers when pagination is disabled
     if (showAudioOnlyOnFirstPage && audioOnlyUsers.length > 0) {

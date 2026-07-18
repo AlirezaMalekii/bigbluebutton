@@ -17,7 +17,8 @@ const ViewActions: React.FC<ViewActionsProps> = (props) => {
     name, cameraId, videoContainer, isFullscreenContext, layoutContextDispatch, isStream,
   } = props;
 
-  const isIphone = !!(navigator.userAgent.match(/iPhone/i));
+  // Webcam fullscreen is a layout CSS overlay (not browser Fullscreen API), so iPhone
+  // is allowed — the legacy isIphone guard only applied when requestFullscreen was used.
   const allowFullscreen = window.meetingClientSettings?.public?.app?.allowFullscreen;
 
   useEffect(() => () => {
@@ -26,7 +27,7 @@ const ViewActions: React.FC<ViewActionsProps> = (props) => {
     }
   }, []);
 
-  if (!allowFullscreen || !isStream || isIphone) return null;
+  if (!allowFullscreen || !isStream) return null;
 
   return (
     <Styled.FullscreenWrapper className="skyroom-webcam-fullscreen-btn">

@@ -380,6 +380,20 @@
   --color-text-shadow: transparent;
 }
 
+/* Persian whiteboard text — tldraw hardcodes dir="ltr"; restore RTL so
+   alignment, caret, and mixed content behave correctly for فارسی.
+   Font faces for Aa slots are loaded via getCustomEditorAssetUrls (IRANYekan). */
+body.lang-fa #whiteboard-element .tl-text-shape__wrapper .tl-text,
+body.lang-fa #whiteboard-element .tl-text-shape__wrapper .tl-text-input,
+body.lang-fa #whiteboard-element .tl-text-label .tl-text,
+body.lang-fa #whiteboard-element .tl-text-label .tl-text-input,
+body.lang-fa #whiteboard-element .tl-arrow-label .tl-text,
+body.lang-fa #whiteboard-element .tl-arrow-label .tl-text-input,
+body.lang-fa #whiteboard-element .tl-text-measure {
+  direction: rtl;
+  unicode-bidi: plaintext;
+}
+
 #layout[data-skyroom-column="true"] #whiteboard-element .tlui-context-menu__content .tlui-button,
 #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu[data-state="open"]:not(:has(.tlui-buttons__grid)) .tlui-button__menu,
 #layout[data-skyroom-column="true"] #whiteboard-element .tlui-menu.scrollable .tlui-button__menu {

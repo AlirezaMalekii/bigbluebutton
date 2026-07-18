@@ -80,6 +80,23 @@ export const sortLocalAlphabetical = (s1: StreamItem, s2: StreamItem) => mandato
     || sortByLocal(s1, s2)
     || UserListService.sortUsersByName(s1, s2);
 
+// moderator before viewer (connecting streams have no role tier)
+export const sortModerator = (s1: StreamItem, s2: StreamItem) => {
+  if (s1.type === VIDEO_TYPES.CONNECTING || s2.type === VIDEO_TYPES.CONNECTING) {
+    return 0;
+  }
+  const m1 = Boolean(s1.user?.isModerator);
+  const m2 = Boolean(s2.user?.isModerator);
+  if (m1 && !m2) return -1;
+  if (!m1 && m2) return 1;
+  return 0;
+};
+
+// Skyroom mobile: self → moderators → others (no pin-first so cell 1 is always self)
+export const sortLocalModeratorAlphabetical = (s1: StreamItem, s2: StreamItem) => sortByLocal(s1, s2)
+  || sortModerator(s1, s2)
+  || UserListService.sortUsersByName(s1, s2);
+
 export const sortPresenter = (s1: StreamItem, s2: StreamItem) => {
   if (s1.type === VIDEO_TYPES.STREAM && s1.user.presenter) {
     return -1;
@@ -131,6 +148,11 @@ const SORTING_METHODS = Object.freeze({
   // Default
   LOCAL_ALPHABETICAL: {
     sortingMethod: sortLocalAlphabetical,
+    localFirst: true,
+  },
+  // SafeMeet mobile webcam grid: self → moderators → alphabetical
+  LOCAL_MODERATOR_ALPHABETICAL: {
+    sortingMethod: sortLocalModeratorAlphabetical,
     localFirst: true,
   },
   VOICE_ACTIVITY_LOCAL: {

@@ -85,19 +85,17 @@ const ResponseArea: React.FC<ResponseAreaProps> = ({
     return (
       <Styled.ResponseArea>
         {defaultPoll && (
-          <div>
-            <Styled.PollCheckbox data-test="allowMultiple">
-              <Checkbox
-                onChange={toggleMultipleResponse}
-                checked={multipleResponse}
-                ariaLabelledBy="multipleResponseCheckboxLabel"
-                label={intl.formatMessage(intlMessages.enableMultipleResponseLabel)}
-              />
-            </Styled.PollCheckbox>
-            <div id="multipleResponseCheckboxLabel" hidden>
-              {intl.formatMessage(intlMessages.enableMultipleResponseLabel)}
-            </div>
-          </div>
+          <Styled.PollCheckbox
+            data-test="allowMultiple"
+            onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
+          >
+            <Checkbox
+              onChange={toggleMultipleResponse}
+              checked={multipleResponse}
+              ariaLabel={intl.formatMessage(intlMessages.enableMultipleResponseLabel)}
+              label={intl.formatMessage(intlMessages.enableMultipleResponseLabel)}
+            />
+          </Styled.PollCheckbox>
         )}
         {defaultPoll && (
           <PollInputs

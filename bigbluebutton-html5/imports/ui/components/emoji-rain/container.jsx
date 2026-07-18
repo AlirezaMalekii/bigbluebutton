@@ -22,6 +22,10 @@ const getReactionDedupKey = (reaction) => {
   return `${reaction.userId || 'unknown'}-${reaction.reaction}-${bucket}`;
 };
 
+const getUserEmojiKey = (reaction) => (
+  `${reaction.userId || 'unknown'}-${reaction.reaction || 'none'}`
+);
+
 const dedupeReactions = (reactions) => {
   const seen = new Set();
   const result = [];
@@ -34,6 +38,42 @@ const dedupeReactions = (reactions) => {
   });
 
   return result;
+};
+
+/**
+ * Stream rows and user-state fallback use different eventIds for the same
+ * send. Collapse same user+emoji within a short window, preferring stream.
+ */
+const mergeStreamAndFallback = (streamReactions, fallbackReactions) => {
+  const merged = [];
+  const recentByUserEmoji = new Map();
+
+  const pushUnique = (reaction) => {
+    if (!reaction?.reaction || reaction.reaction === 'none') return;
+
+    const userEmojiKey = getUserEmojiKey(reaction);
+    const createdAt = reaction.creationDate?.getTime?.() || 0;
+    const lastSeenAt = recentByUserEmoji.get(userEmojiKey);
+
+    if (
+      lastSeenAt != null
+      && Math.abs(createdAt - lastSeenAt) < DUPLICATE_WINDOW_MS
+    ) {
+      return;
+    }
+
+    const eventKey = getReactionDedupKey(reaction);
+    if (merged.some((item) => getReactionDedupKey(item) === eventKey)) return;
+
+    recentByUserEmoji.set(userEmojiKey, createdAt);
+    merged.push(reaction);
+  };
+
+  // Prefer canonical stream events first, then fill gaps via fallback.
+  dedupeReactions(streamReactions).forEach(pushUnique);
+  dedupeReactions(fallbackReactions).forEach(pushUnique);
+
+  return merged;
 };
 
 const EmojiRainContainer = () => {
@@ -98,13 +138,10 @@ const EmojiRainContainer = () => {
     }
   }, [usersReactionData]);
 
-  // Keep stream + fallback items; overlays apply freshness when animating.
-  // Avoid filtering here so slight server/client clock skew cannot drop live
-  // reactions before remote viewers receive them.
-  const reactions = useMemo(() => dedupeReactions([
-    ...normalizeReactionStream(emojisArray),
-    ...fallbackReactions,
-  ]), [emojisArray, fallbackReactions]);
+  const reactions = useMemo(() => mergeStreamAndFallback(
+    normalizeReactionStream(emojisArray),
+    fallbackReactions,
+  ), [emojisArray, fallbackReactions]);
 
   useEffect(() => {
     reactionStreamVar(reactions);

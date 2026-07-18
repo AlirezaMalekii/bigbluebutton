@@ -749,6 +749,30 @@ html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"]
   }
 }
 
+/* Mobile breakout — add-participant picker (fullscreen layer) */
+[data-test="breakoutMobileUserPicker"] {
+  background: var(--skyroom-panel-solid, #0d1828) !important;
+  color: var(--skyroom-modal-text, #eef4fb) !important;
+  direction: inherit !important;
+}
+
+[data-test="breakoutMobileUserPicker"] [data-test="breakoutMobileUserRow"] {
+  direction: inherit !important;
+  text-align: start !important;
+}
+
+[data-test="breakoutMobileUserPicker"] [data-test="breakoutMobileUserPickerBack"] {
+  color: var(--skyroom-modal-text, #eef4fb) !important;
+  border: 1px solid rgba(32, 199, 187, 0.28) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+[data-test="breakoutMobileUserPicker"] [data-test="breakoutMobileUserPickerConfirm"] {
+  background: var(--skyroom-panel-accent, #20c7bb) !important;
+  border-color: rgba(32, 199, 187, 0.55) !important;
+  color: #041018 !important;
+}
+
 [role="dialog"] [data-test="roomGrid"] {
   width: 100%;
 }
@@ -1668,6 +1692,15 @@ html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"]
   min-height: 2.75rem;
   display: flex;
   align-items: center;
+  scroll-margin-block: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Keep MUI checkbox focus from scrolling the modal body to an offscreen input */
+.poll-creation-modal [data-test="allowMultiple"] .MuiCheckbox-root,
+.poll-creation-modal [data-test="allowMultiple"] .MuiCheckbox-root input {
+  scroll-margin: 0;
 }
 
 .poll-creation-modal [class*="AnonymousRow"] {

@@ -30,6 +30,29 @@ const TimerActivationWrapper = styled.div`
     radial-gradient(circle at 8% -12%, rgba(34, 212, 199, 0.22), transparent 42%),
     radial-gradient(circle at 95% 122%, rgba(79, 70, 229, 0.2), transparent 44%),
     linear-gradient(160deg, rgba(8, 15, 29, 0.9) 0%, rgba(7, 19, 38, 0.9) 100%);
+
+  @media ${smallOnly} {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    max-height: 100%;
+    padding: 0.35rem 0.1rem 0;
+    border-radius: 0;
+    background: transparent;
+    overflow: hidden;
+  }
+`;
+
+const ScrollBody = styled.div`
+  @media ${smallOnly} {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.5rem;
+  }
 `;
 
 const Intro = styled.p`
@@ -216,8 +239,14 @@ const Actions = styled.div`
   padding-bottom: 0.2rem;
 
   @media ${smallOnly} {
+    flex-shrink: 0;
     justify-content: stretch;
-    padding-bottom: 0;
+    align-items: stretch;
+    gap: 10px;
+    width: 100%;
+    margin-top: auto;
+    padding: 12px 0 calc(14px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(180deg, rgba(12, 18, 30, 0) 0%, #0c121e 18%, #0c121e 100%);
   }
 `;
 
@@ -246,6 +275,7 @@ const ActionButton = styled(Button)`
 
 export default {
   TimerActivationWrapper,
+  ScrollBody,
   Intro,
   Panel,
   SectionTitle,

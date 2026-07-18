@@ -14,8 +14,10 @@
   --space-5: 20px;
   --space-6: 24px;
   --space-7: 32px;
-  --space-page: 22px;
-  --space-column-stack: 18px;
+  /* Page/edge gutters + stage↔sidebar gap (sync column-layout.js SKYROOM_BLOCK_GAP) */
+  --space-page: 12px;
+  /* Vertical gap between stacked sidebar panels (sync SKYROOM_COLUMN_STACK_GAP) */
+  --space-column-stack: 8px;
   --space-list-gap: var(--space-1);
   --space-gutter-column-stage: var(--space-page);
 

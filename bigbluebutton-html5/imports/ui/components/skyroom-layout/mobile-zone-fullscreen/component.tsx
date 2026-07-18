@@ -38,7 +38,7 @@ const messages = defineMessages({
   },
 });
 
-const bottomHeaderSlot = (activeBox: SkyroomMobileBox): HTMLElement | null => {
+const bottomHeaderSlot = (activeBox: SkyroomMobileBox | undefined): HTMLElement | null => {
   if (activeBox === 'chat') {
     return document.querySelector('[data-test="skyroom-chat-header-options"]');
   }

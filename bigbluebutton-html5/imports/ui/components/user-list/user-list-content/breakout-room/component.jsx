@@ -57,13 +57,16 @@ const BreakoutRoomItem = ({
   };
 
   if (hasBreakoutRoom) {
+    const skyroomColumn = isSkyroomColumnLayout();
     return (
       <Styled.Messages data-test="skyroomBreakoutEntry">
-        <Styled.Container>
-          <Styled.SmallTitle data-test="breakoutRoomsTitle">
-            {intl.formatMessage(intlMessages.breakoutTitle)}
-          </Styled.SmallTitle>
-        </Styled.Container>
+        {!skyroomColumn && (
+          <Styled.Container>
+            <Styled.SmallTitle data-test="breakoutRoomsTitle">
+              {intl.formatMessage(intlMessages.breakoutTitle)}
+            </Styled.SmallTitle>
+          </Styled.Container>
+        )}
         <Styled.ScrollableList>
           <Styled.List>
             <Styled.ListItem
@@ -110,6 +113,8 @@ BreakoutRoomItem.propTypes = {
     formatMessage: PropTypes.func.isRequired,
   }).isRequired,
   hasBreakoutRoom: PropTypes.bool.isRequired,
+  sidebarContentPanel: PropTypes.string.isRequired,
+  layoutContextDispatch: PropTypes.func.isRequired,
   isModerator: PropTypes.bool,
 };
 

@@ -25,10 +25,11 @@ const rise = keyframes`
 `;
 
 const Stage = styled.div`
-  position: absolute;
+  /* Fixed + DOM-measured box tracks skyroom CSS geometry (incl. RTL). */
+  position: fixed;
   overflow: hidden;
   pointer-events: none;
-  z-index: ${({ $zIndex }) => $zIndex};
+  z-index: ${({ $zIndex }) => $zIndex} !important;
   contain: layout paint style;
   border-radius: clamp(0.75rem, 1.2vw, 1.35rem);
 `;

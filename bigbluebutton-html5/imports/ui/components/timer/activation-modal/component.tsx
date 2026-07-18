@@ -150,129 +150,131 @@ const TimerActivationModal: React.FC<TimerActivationModalProps> = ({
 
   return (
     <Styled.TimerActivationWrapper>
-      <Styled.Intro>
-        {intl.formatMessage(intlMessages.intro)}
-      </Styled.Intro>
+      <Styled.ScrollBody>
+        <Styled.Intro>
+          {intl.formatMessage(intlMessages.intro)}
+        </Styled.Intro>
 
-      <Styled.Panel>
-        <Styled.SectionTitle>{intl.formatMessage(intlMessages.modeTitle)}</Styled.SectionTitle>
-        <Styled.ModeGrid>
-          <Styled.ModeButton
-            type="button"
-            selected={mode === 'timer'}
-            onClick={() => setMode('timer')}
-          >
-            {intl.formatMessage(intlMessages.timerMode)}
-          </Styled.ModeButton>
-          <Styled.ModeButton
-            type="button"
-            selected={mode === 'stopwatch'}
-            onClick={() => setMode('stopwatch')}
-          >
-            {intl.formatMessage(intlMessages.stopwatchMode)}
-          </Styled.ModeButton>
-        </Styled.ModeGrid>
-      </Styled.Panel>
-
-      {mode === 'timer' && (
         <Styled.Panel>
-          <Styled.SectionTitle>{intl.formatMessage(intlMessages.durationTitle)}</Styled.SectionTitle>
-          <Styled.TimeInputs>
-            <Styled.TimeField>
-              <Styled.TimeLabel htmlFor="timer-modal-hours">
-                {intl.formatMessage(intlMessages.hours)}
-              </Styled.TimeLabel>
-              <Styled.TimeInput
-                id="timer-modal-hours"
-                type="number"
-                min={0}
-                max={MAX_HOURS}
-                value={hours}
-                onChange={(e) => {
-                  const parsed = parseInt(e.target.value || '0', 10);
-                  setHours(clamp(Number.isNaN(parsed) ? 0 : parsed, 0, MAX_HOURS));
-                }}
-              />
-            </Styled.TimeField>
-            <Styled.TimeField>
-              <Styled.TimeLabel htmlFor="timer-modal-minutes">
-                {intl.formatMessage(intlMessages.minutes)}
-              </Styled.TimeLabel>
-              <Styled.TimeInput
-                id="timer-modal-minutes"
-                type="number"
-                min={0}
-                max={MAX_MINUTES}
-                value={minutes}
-                onChange={(e) => {
-                  const parsed = parseInt(e.target.value || '0', 10);
-                  setMinutes(clamp(Number.isNaN(parsed) ? 0 : parsed, 0, MAX_MINUTES));
-                }}
-              />
-            </Styled.TimeField>
-            <Styled.TimeField>
-              <Styled.TimeLabel htmlFor="timer-modal-seconds">
-                {intl.formatMessage(intlMessages.seconds)}
-              </Styled.TimeLabel>
-              <Styled.TimeInput
-                id="timer-modal-seconds"
-                type="number"
-                min={0}
-                max={MAX_SECONDS}
-                value={seconds}
-                onChange={(e) => {
-                  const parsed = parseInt(e.target.value || '0', 10);
-                  setSeconds(clamp(Number.isNaN(parsed) ? 0 : parsed, 0, MAX_SECONDS));
-                }}
-              />
-            </Styled.TimeField>
-          </Styled.TimeInputs>
+          <Styled.SectionTitle>{intl.formatMessage(intlMessages.modeTitle)}</Styled.SectionTitle>
+          <Styled.ModeGrid>
+            <Styled.ModeButton
+              type="button"
+              selected={mode === 'timer'}
+              onClick={() => setMode('timer')}
+            >
+              {intl.formatMessage(intlMessages.timerMode)}
+            </Styled.ModeButton>
+            <Styled.ModeButton
+              type="button"
+              selected={mode === 'stopwatch'}
+              onClick={() => setMode('stopwatch')}
+            >
+              {intl.formatMessage(intlMessages.stopwatchMode)}
+            </Styled.ModeButton>
+          </Styled.ModeGrid>
         </Styled.Panel>
-      )}
 
-      <Styled.Panel>
-        <Styled.SectionTitle>{intl.formatMessage(intlMessages.behaviorTitle)}</Styled.SectionTitle>
-        <Styled.SettingsGrid>
-          <Styled.CheckboxRow htmlFor="timer-modal-auto-start">
-            <input
-              id="timer-modal-auto-start"
-              type="checkbox"
-              checked={running}
-              onChange={(e) => setRunning(e.target.checked)}
-            />
-            {intl.formatMessage(intlMessages.autoStart)}
-          </Styled.CheckboxRow>
-          {timerSettings.music?.enabled && (
-            <div>
-              <Styled.TimeLabel htmlFor="timer-modal-track">
-                {intl.formatMessage(intlMessages.selectTrack)}
-              </Styled.TimeLabel>
-              <Styled.SelectField
-                id="timer-modal-track"
-                value={songTrack}
-                onChange={(e) => setSongTrack(e.target.value as TrackType)}
-              >
-                {TRACKS.map((track) => (
-                  <option value={track} key={track}>
-                    {intl.formatMessage(intlMessages[track])}
-                  </option>
-                ))}
-              </Styled.SelectField>
-              <Styled.ValidationText>
-                <Styled.SuccessText>{intl.formatMessage(intlMessages.enabledMusicHint)}</Styled.SuccessText>
-              </Styled.ValidationText>
-            </div>
-          )}
-        </Styled.SettingsGrid>
-      </Styled.Panel>
-
-      <Styled.Preview>
-        <Styled.PreviewTitle>{intl.formatMessage(intlMessages.previewTitle)}</Styled.PreviewTitle>
-        <Styled.PreviewValue>{previewValue}</Styled.PreviewValue>
-        {!canActivate && (
-          <Styled.ValidationText>{intl.formatMessage(intlMessages.warningDuration)}</Styled.ValidationText>
+        {mode === 'timer' && (
+          <Styled.Panel>
+            <Styled.SectionTitle>{intl.formatMessage(intlMessages.durationTitle)}</Styled.SectionTitle>
+            <Styled.TimeInputs>
+              <Styled.TimeField>
+                <Styled.TimeLabel htmlFor="timer-modal-hours">
+                  {intl.formatMessage(intlMessages.hours)}
+                </Styled.TimeLabel>
+                <Styled.TimeInput
+                  id="timer-modal-hours"
+                  type="number"
+                  min={0}
+                  max={MAX_HOURS}
+                  value={hours}
+                  onChange={(e) => {
+                    const parsed = parseInt(e.target.value || '0', 10);
+                    setHours(clamp(Number.isNaN(parsed) ? 0 : parsed, 0, MAX_HOURS));
+                  }}
+                />
+              </Styled.TimeField>
+              <Styled.TimeField>
+                <Styled.TimeLabel htmlFor="timer-modal-minutes">
+                  {intl.formatMessage(intlMessages.minutes)}
+                </Styled.TimeLabel>
+                <Styled.TimeInput
+                  id="timer-modal-minutes"
+                  type="number"
+                  min={0}
+                  max={MAX_MINUTES}
+                  value={minutes}
+                  onChange={(e) => {
+                    const parsed = parseInt(e.target.value || '0', 10);
+                    setMinutes(clamp(Number.isNaN(parsed) ? 0 : parsed, 0, MAX_MINUTES));
+                  }}
+                />
+              </Styled.TimeField>
+              <Styled.TimeField>
+                <Styled.TimeLabel htmlFor="timer-modal-seconds">
+                  {intl.formatMessage(intlMessages.seconds)}
+                </Styled.TimeLabel>
+                <Styled.TimeInput
+                  id="timer-modal-seconds"
+                  type="number"
+                  min={0}
+                  max={MAX_SECONDS}
+                  value={seconds}
+                  onChange={(e) => {
+                    const parsed = parseInt(e.target.value || '0', 10);
+                    setSeconds(clamp(Number.isNaN(parsed) ? 0 : parsed, 0, MAX_SECONDS));
+                  }}
+                />
+              </Styled.TimeField>
+            </Styled.TimeInputs>
+          </Styled.Panel>
         )}
-      </Styled.Preview>
+
+        <Styled.Panel>
+          <Styled.SectionTitle>{intl.formatMessage(intlMessages.behaviorTitle)}</Styled.SectionTitle>
+          <Styled.SettingsGrid>
+            <Styled.CheckboxRow htmlFor="timer-modal-auto-start">
+              <input
+                id="timer-modal-auto-start"
+                type="checkbox"
+                checked={running}
+                onChange={(e) => setRunning(e.target.checked)}
+              />
+              {intl.formatMessage(intlMessages.autoStart)}
+            </Styled.CheckboxRow>
+            {timerSettings.music?.enabled && (
+              <div>
+                <Styled.TimeLabel htmlFor="timer-modal-track">
+                  {intl.formatMessage(intlMessages.selectTrack)}
+                </Styled.TimeLabel>
+                <Styled.SelectField
+                  id="timer-modal-track"
+                  value={songTrack}
+                  onChange={(e) => setSongTrack(e.target.value as TrackType)}
+                >
+                  {TRACKS.map((track) => (
+                    <option value={track} key={track}>
+                      {intl.formatMessage(intlMessages[track])}
+                    </option>
+                  ))}
+                </Styled.SelectField>
+                <Styled.ValidationText>
+                  <Styled.SuccessText>{intl.formatMessage(intlMessages.enabledMusicHint)}</Styled.SuccessText>
+                </Styled.ValidationText>
+              </div>
+            )}
+          </Styled.SettingsGrid>
+        </Styled.Panel>
+
+        <Styled.Preview>
+          <Styled.PreviewTitle>{intl.formatMessage(intlMessages.previewTitle)}</Styled.PreviewTitle>
+          <Styled.PreviewValue>{previewValue}</Styled.PreviewValue>
+          {!canActivate && (
+            <Styled.ValidationText>{intl.formatMessage(intlMessages.warningDuration)}</Styled.ValidationText>
+          )}
+        </Styled.Preview>
+      </Styled.ScrollBody>
 
       <Styled.Actions>
         <Styled.ActionButton

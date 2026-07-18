@@ -225,10 +225,42 @@ const BreakoutRoomUserAssignment: React.FC<ChildComponentProps> = ({
     updateSortedRooms();
   }, [rooms]);
 
+  const parseDragPayload = (raw: string) => {
+    // Payload format: `${userId}|${fromRoom}` — userId may contain dashes.
+    if (!raw) return null;
+    const sep = raw.lastIndexOf('|');
+    if (sep <= 0) {
+      // Backward-compatible fallback for legacy `${userId}-${room}` ids.
+      const dash = raw.lastIndexOf('-');
+      if (dash <= 0) return null;
+      const userId = raw.slice(0, dash);
+      const from = Number(raw.slice(dash + 1));
+      if (!userId || Number.isNaN(from)) return null;
+      return { userId, from };
+    }
+    const userId = raw.slice(0, sep);
+    const from = Number(raw.slice(sep + 1));
+    if (!userId || Number.isNaN(from)) return null;
+    return { userId, from };
+  };
+
   const dragStart = (ev: React.DragEvent<HTMLParagraphElement>) => {
-    const paragraphElement = ev.target as HTMLParagraphElement;
-    ev.dataTransfer.setData('text', paragraphElement.id);
-    setSelectedId(paragraphElement.id);
+    // Always use the draggable row (currentTarget). Inner spans/icons as target
+    // previously sent an empty id and made drops silently no-op.
+    const row = ev.currentTarget;
+    const userId = row.dataset.userId ?? '';
+    const fromRoom = row.dataset.fromRoom ?? '0';
+    if (!userId) {
+      ev.preventDefault();
+      return;
+    }
+    const payload = `${userId}|${fromRoom}`;
+    const transfer = ev.dataTransfer;
+    Object.assign(transfer, { effectAllowed: 'move' });
+    transfer.setData('text/plain', payload);
+    // Some browsers still read the legacy 'text' type on drop.
+    transfer.setData('text', payload);
+    setSelectedId(payload);
   };
 
   const dragEnd = () => {
@@ -237,18 +269,24 @@ const BreakoutRoomUserAssignment: React.FC<ChildComponentProps> = ({
 
   const allowDrop = (ev: React.DragEvent) => {
     ev.preventDefault();
+    Object.assign(ev.dataTransfer, { dropEffect: 'move' });
   };
 
   const drop = (roomNumber: number) => (ev: React.DragEvent) => {
-    if (ev.preventDefault) {
-      ev.preventDefault();
+    ev.preventDefault();
+    ev.stopPropagation();
+
+    const raw = ev.dataTransfer.getData('text/plain')
+      || ev.dataTransfer.getData('text')
+      || '';
+    const parsed = parseDragPayload(raw);
+    if (!parsed) {
+      setSelectedId('');
+      return;
     }
 
-    const data = ev.dataTransfer.getData('text');
-    const [userId, from] = data.split('-');
-    moveUser(userId, Number(from), roomNumber);
+    moveUser(parsed.userId, parsed.from, roomNumber);
     setSelectedId('');
-    updateSortedRooms();
   };
 
   const hasNameDuplicated = (room: number) => {
@@ -275,9 +313,11 @@ const BreakoutRoomUserAssignment: React.FC<ChildComponentProps> = ({
         return (
           <Styled.RoomUserItem
             tabIndex={-1}
-            id={`${user.userId}-${room}`}
-            key={user.userId}
+            id={`breakout-user-${user.userId}-room-${room}`}
+            key={`${user.userId}-${room}`}
             data-test="roomUserItem"
+            data-user-id={user.userId}
+            data-from-room={String(room)}
             draggable
             onDragStart={dragStart}
             onDragEnd={dragEnd}
@@ -289,18 +329,30 @@ const BreakoutRoomUserAssignment: React.FC<ChildComponentProps> = ({
             {room !== 0
               ? (
                 <span
-                  key={`${user.userId}-${room}`}
                   tabIndex={0}
                   className="close"
                   role="button"
+                  draggable={false}
                   aria-label={intl.formatMessage(intlMessages.resetUserRoom)}
-                  onKeyDown={() => {
-                    moveUser(user.userId, room, 0);
-                    updateSortedRooms();
+                  onMouseDown={(e) => {
+                    // Keep close-clicks from starting a drag on the parent row.
+                    e.stopPropagation();
                   }}
-                  onClick={() => {
+                  onDragStart={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      moveUser(user.userId, room, 0);
+                    }
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     moveUser(user.userId, room, 0);
-                    updateSortedRooms();
                   }}
                 >
                   <Icon iconName="close" />
@@ -314,38 +366,46 @@ const BreakoutRoomUserAssignment: React.FC<ChildComponentProps> = ({
   };
 
   const rover = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
     const element = e.target as HTMLElement;
     if (element.id.includes('breakoutBox')) {
       if (e.key === 'Enter' || e.key === 'ArrowDown') {
-        (element.firstChild as HTMLElement).focus();
+        e.preventDefault();
+        e.stopPropagation();
+        (element.firstChild as HTMLElement)?.focus?.();
       }
+      return;
     }
 
     if (element?.dataset?.test?.includes('roomUserItem')) {
-      const splitted = element.id.split('-');
-      const [userId, StringFrom] = splitted;
-      const from = Number(StringFrom);
+      const userId = element.dataset.userId ?? '';
+      const from = Number(element.dataset.fromRoom ?? '0');
+      if (!userId || Number.isNaN(from)) return;
+
       const maxRooms = numberOfRooms;
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        e.stopPropagation();
         const nextElement = e.key === 'ArrowDown' ? element.nextSibling : element.previousSibling;
         if (nextElement) (nextElement as HTMLElement).focus();
+        return;
       }
 
       if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        e.stopPropagation();
         const nextRoom = from + 1;
         if (nextRoom <= maxRooms) {
-          moveUser(userId, from, from + 1);
-          updateSortedRooms();
+          moveUser(userId, from, nextRoom);
         }
+        return;
       }
 
       if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        e.stopPropagation();
         const prevRoom = from - 1;
         if (prevRoom >= 0) {
-          moveUser(userId, from, from - 1 < 0 ? 0 : from - 1);
-          updateSortedRooms();
+          moveUser(userId, from, prevRoom);
         }
       }
     }

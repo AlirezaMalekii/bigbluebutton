@@ -62,8 +62,8 @@ The base rhythm is 4/8px:
 - `--space-5`: 20px
 - `--space-6`: 24px
 - `--space-7`: 32px
-- `--space-page`: 22px
-- `--space-column-stack`: 18px
+- `--space-page`: 12px (edge/stage gutters; sync `SKYROOM_BLOCK_GAP` in `column-layout.js`)
+- `--space-column-stack`: 8px (stacked sidebar panels; sync `SKYROOM_COLUMN_STACK_GAP`)
 
 Use 8–12px for compact control groups, 12–16px for panel interiors, and the existing page/column tokens for layout geometry.
 

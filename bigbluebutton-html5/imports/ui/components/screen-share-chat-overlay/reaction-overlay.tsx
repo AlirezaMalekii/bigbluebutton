@@ -105,7 +105,7 @@ const ScreenShareChatReactionOverlay: React.FC = () => {
       const lastSeenAt = recentReactionRef.current.get(duplicateKey) || 0;
 
       if (seenReactionsRef.current.has(key)) return acc;
-      if (createdAt - lastSeenAt >= 0 && createdAt - lastSeenAt < DUPLICATE_WINDOW_MS) return acc;
+      if (lastSeenAt > 0 && Math.abs(createdAt - lastSeenAt) < DUPLICATE_WINDOW_MS) return acc;
 
       seenReactionsRef.current.add(key);
       recentReactionRef.current.set(duplicateKey, createdAt);

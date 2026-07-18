@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { useMutation } from '@apollo/client';
 import Service from './service';
 import VideoPreview from '/imports/ui/components/video-preview/component';
@@ -23,6 +24,11 @@ const VideoPreviewContainer = (props) => {
   const {
     callbackToClose,
     setIsOpen,
+    isVisualEffects,
+    forceOpen,
+    priority,
+    isOpen,
+    ...rest
   } = props;
   const cameraAsContentDeviceId = ScreenShareService.useCameraAsContentDeviceIdType();
   const [stopExternalVideoShare] = useMutation(EXTERNAL_VIDEO_STOP);
@@ -72,12 +78,28 @@ const VideoPreviewContainer = (props) => {
 
       ScreenShareService.screenshareHasEnded();
     };
+
+    // Prefer public mediaStream getter; never fall through to getDisplayMedia
+    // (that path marks content as screenshare and auto-opens floating chat).
+    const storedStream = Service.getStream(deviceId);
+    const mediaStream = storedStream?.mediaStream || storedStream?._mediaStream || null;
+    if (!mediaStream) {
+      handleFailure({
+        errorCode: SCREENSHARING_ERRORS.UNKNOWN_ERROR.errorCode,
+        message: 'Camera as content stream is not available',
+      });
+      return;
+    }
+
+    // Mark before shareScreen so floating-chat auto-open can exclude this path.
+    ScreenShareService.setCameraAsContentDeviceId(deviceId);
     ScreenShareService.shareScreen(
       isCameraAsContentBroadcasting,
       stopExternalVideoShare,
-      true, handleFailure, { stream: Service.getStream(deviceId)._mediaStream },
+      true,
+      handleFailure,
+      { stream: mediaStream },
     );
-    ScreenShareService.setCameraAsContentDeviceId(deviceId);
   };
 
   const startSharing = (deviceId) => {
@@ -116,10 +138,30 @@ const VideoPreviewContainer = (props) => {
         setAway,
         isAway: currentUser?.away ?? false,
         hideNotificationToasts: hideNotifications,
-        ...props,
+        isVisualEffects,
+        forceOpen,
+        priority,
+        isOpen,
+        ...rest,
       }}
     />
   );
+};
+
+VideoPreviewContainer.propTypes = {
+  callbackToClose: PropTypes.func.isRequired,
+  setIsOpen: PropTypes.func.isRequired,
+  isVisualEffects: PropTypes.bool,
+  forceOpen: PropTypes.bool,
+  priority: PropTypes.string,
+  isOpen: PropTypes.bool,
+};
+
+VideoPreviewContainer.defaultProps = {
+  isVisualEffects: false,
+  forceOpen: false,
+  priority: 'low',
+  isOpen: false,
 };
 
 export default VideoPreviewContainer;

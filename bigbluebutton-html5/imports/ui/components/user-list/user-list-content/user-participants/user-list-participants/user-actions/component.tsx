@@ -687,10 +687,26 @@ const UserActions: React.FC<UserActionsProps> = ({
 
   const isRTL = document.documentElement.getAttribute('dir') === 'rtl';
   const useSkyroomActionsMenu = isSkyroomColumnLayout();
+  const existingPrivateChat = chats?.find(
+    (chat) => chat.participant?.userId === user.userId,
+  );
+  const canOpenPrivateChatOnRowClick = useSkyroomActionsMenu
+    && Boolean(existingPrivateChat?.chatId);
+
+  const openExistingPrivateChatFromRow = () => {
+    if (!existingPrivateChat?.chatId) return;
+    setOpenUserAction(null);
+    reopenPrivateChatFromClosed(existingPrivateChat.chatId);
+    openPrivateChatConversation(layoutContextDispatch, existingPrivateChat.chatId);
+  };
 
   return (
     <Styled.UserRow>
-      <Styled.UserRowMain>
+      <Styled.UserRowMain
+        $clickable={canOpenPrivateChatOnRowClick}
+        data-test={canOpenPrivateChatOnRowClick ? 'openPrivateChatFromUserRow' : undefined}
+        onClick={canOpenPrivateChatOnRowClick ? openExistingPrivateChatFromRow : undefined}
+      >
         {children}
       </Styled.UserRowMain>
       {useSkyroomActionsMenu ? (

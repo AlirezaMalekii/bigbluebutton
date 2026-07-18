@@ -69,10 +69,7 @@ export const buildAparatEmbedUrl = (
   if (options.muted) {
     params.set('muted', 'true');
   }
-  // Aparat often ignores this, but remount + autoplay helps after presenter play.
-  if (options.autoplay) {
-    params.set('autoplay', 'true');
-  }
+  // Do not set autoplay — Aparat leaves embedAutoplay=false and remounts break UX.
   return `https://${APARAT_EMBED_HOST}/video/video/embed/videohash/${hash}/vt/frame?${params.toString()}`;
 };
 
