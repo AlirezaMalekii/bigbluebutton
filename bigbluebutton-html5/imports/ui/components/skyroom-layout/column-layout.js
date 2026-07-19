@@ -89,7 +89,9 @@ const buildStageCameraDockBounds = ({
 export const SKYROOM_MOBILE_EDGE = 8;
 const SKYROOM_MOBILE_GAP = 8;
 /** Gap between the floating footer chrome and the physical screen bottom (px). */
-export const SKYROOM_MOBILE_FOOTER_LIFT = 8;
+export const SKYROOM_MOBILE_FOOTER_LIFT = 3;
+/** Vertical gap between the mobile tab bar and the floating footer (px). */
+export const SKYROOM_MOBILE_TAB_FOOTER_GAP = 4;
 export const SKYROOM_MOBILE_TAB_H = 36;
 /* The phone navbar is a single compact row (~48px), shorter than the desktop
    two-row navbar (SKYROOM_NAVBAR_H=60). Use this for both the reserved top space
@@ -155,9 +157,11 @@ const buildSkyroomMobileLayout = ({
   const edge = SKYROOM_MOBILE_EDGE;
   const gap = SKYROOM_MOBILE_GAP;
   const lift = SKYROOM_MOBILE_FOOTER_LIFT;
+  const tabFooterGap = SKYROOM_MOBILE_TAB_FOOTER_GAP;
   const tabBarH = SKYROOM_MOBILE_TAB_H;
   const areaTop = SKYROOM_MOBILE_NAVBAR_H + banner + edge;
-  const areaBottom = viewportH - SKYROOM_FOOTER_H - edge - lift;
+  // areaBottom = bottom edge of the tab bar (contentH later subtracts tabBarH + gap).
+  const areaBottom = viewportH - SKYROOM_FOOTER_H - lift - tabFooterGap;
   const availH = Math.max(120, areaBottom - areaTop);
 
   const talkingOffset = getSkyroomMobileTalkingRailOffset();
@@ -263,11 +267,20 @@ const buildSkyroomMobileLayout = ({
   if (camerasInTop) camRect = topRect;
   else if (camerasInBottom) camRect = bottomRect;
 
+  // Prefer physical left so the dock pins inside the tab panel in RTL too.
+  let camLeft = edge;
+  if (camRect) {
+    if (camRect.left != null) {
+      camLeft = camRect.left;
+    } else {
+      camLeft = Math.max(0, viewportW - (camRect.right || 0) - camRect.width);
+    }
+  }
   const cameraDockOut = camRect ? {
     ...cameraDockBounds,
     top: camRect.top,
-    left: camRect.left,
-    right: camRect.right,
+    left: camLeft,
+    right: null,
     minWidth: camRect.width,
     width: camRect.width,
     maxWidth: camRect.width,
@@ -278,8 +291,8 @@ const buildSkyroomMobileLayout = ({
   } : {
     ...cameraDockBounds,
     top: areaTop,
-    left: zoneLeft,
-    right: zoneRight,
+    left: edge,
+    right: null,
     minWidth: 0,
     width: 0,
     maxWidth: 0,

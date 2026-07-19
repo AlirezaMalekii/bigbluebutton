@@ -45,6 +45,45 @@ const BreakoutModeratorHint = styled.p`
   white-space: nowrap;
 `;
 
+/** Skyroom compact entry — icon tile */
+const EntryIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+`;
+
+/** Skyroom compact entry — text column */
+const EntryBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+`;
+
+/** Skyroom compact entry — trailing meta (timer + chevron) */
+const EntryMeta = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 0.35rem;
+`;
+
+const EntryChevron = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  opacity: 0.65;
+  font-size: 0.7rem;
+  line-height: 1;
+
+  [dir="rtl"] & {
+    transform: scaleX(-1);
+  }
+`;
+
 export default {
   Messages,
   Container,
@@ -55,4 +94,8 @@ export default {
   BreakoutTitle,
   BreakoutDuration,
   BreakoutModeratorHint,
+  EntryIcon,
+  EntryBody,
+  EntryMeta,
+  EntryChevron,
 };

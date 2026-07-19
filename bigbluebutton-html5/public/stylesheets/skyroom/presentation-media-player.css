@@ -1,6 +1,6 @@
 /* SafeMeet presentation media player (audio/video files shared via Manage Presentations) */
 
-/* Aparat embed: full-stage iframe with Aparat's own controls (no SafeMeet toolbar). */
+/* Aparat embed: iframe stays clickable for Aparat chrome; SafeMeet dock sits below. */
 #layout[data-skyroom-column="true"] [data-skyroom-stage-media="true"][data-aparat-player="true"] {
   background: #000 !important;
 }

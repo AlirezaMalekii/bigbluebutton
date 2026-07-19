@@ -61,6 +61,17 @@ export function getSumOfTime(eventsArr) {
   }, 0);
 }
 
+export function isUserCurrentlyOnline(user) {
+  const intIds = Object.values(user?.intIds || {});
+  if (intIds.length === 0) return false;
+  const lastSession = intIds[intIds.length - 1]?.sessions?.slice(-1)[0];
+  return lastSession?.leftOn === 0;
+}
+
+export function hasUserAttended(user) {
+  return getSumOfTime(Object.values(user?.intIds || {})) > 0;
+}
+
 export function getJoinTime(eventsArr) {
   return eventsArr.reduce((prevVal, elem) => {
     if (prevVal === 0 || elem.sessions[0].registeredOn < prevVal) {

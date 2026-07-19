@@ -611,7 +611,8 @@
 }
 
 #layout[data-skyroom-column="true"]:has(#ActionsBar [data-test="skyroomFooterLogoSlot"][data-mobile-footer="true"]) #ActionsBar > div {
-  padding-inline: calc(12px + 36px + 6px) !important;
+  /* Symmetric end padding keeps the control cluster centered under the tab bar. */
+  padding-inline: calc(10px + 36px + 6px) !important;
 }
 
 /* Legacy mobile icon rules (header portal path) */
@@ -638,16 +639,14 @@
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.28)) !important;
 }
 
-/* Reserve space so controls never sit under the logo (legacy portal path) */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar > div {
-    padding-inline: calc(12px + 36px + 6px) !important;
-  }
-
-  [dir="rtl"] #layout[data-skyroom-column="true"] #ActionsBar [data-test="skyroomFooterLogoSlot"][data-mobile-footer="true"],
-  [dir="rtl"] #layout[data-skyroom-column="true"] #ActionsBar [data-test="skyroomFooterLogoSlot"][data-in-actions-bar="true"] {
-    left: auto !important;
-    right: 12px !important;
-  }
+/* Logo uses logical inline-start; do not force physical left (that skewed the footer). */
+[dir="rtl"] #layout[data-skyroom-column="true"] #ActionsBar [data-test="skyroomFooterLogoSlot"][data-mobile-footer="true"],
+[dir="rtl"] #layout[data-skyroom-column="true"] #ActionsBar [data-test="skyroomFooterLogoSlot"][data-in-actions-bar="true"] {
+  inset-inline-start: 10px !important;
+  inset-inline-end: auto !important;
+  left: auto !important;
+  right: auto !important;
+}
 
   #layout[data-skyroom-column="true"] #ActionsBar [data-test="restorePresentation"] > span:first-child,
   #layout[data-skyroom-column="true"] #ActionsBar [data-test="minimizePresentation"] > span:first-child {

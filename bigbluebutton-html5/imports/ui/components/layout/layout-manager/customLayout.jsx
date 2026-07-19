@@ -826,16 +826,16 @@ const CustomLayout = (props) => {
         layoutEl.style.setProperty('--skyroom-mobile-footer-lift', `${SKYROOM_MOBILE_FOOTER_LIFT}px`);
         const bottomRect = skyroomLayout.mobileBottomRect;
         if (bottomRect) {
+          // Always pin with physical left + width so the dock stays inside the
+          // bottom tab panel in both LTR and RTL (right-only vars caused overflow).
+          const bottomLeft = bottomRect.left != null
+            ? bottomRect.left
+            : Math.max(0, windowWidth() - (bottomRect.right || 0) - bottomRect.width);
           layoutEl.style.setProperty('--skyroom-mobile-bottom-top', `${bottomRect.top}px`);
           layoutEl.style.setProperty('--skyroom-mobile-bottom-height', `${bottomRect.height}px`);
           layoutEl.style.setProperty('--skyroom-mobile-bottom-width', `${bottomRect.width}px`);
-          if (bottomRect.left != null) {
-            layoutEl.style.setProperty('--skyroom-mobile-bottom-left', `${bottomRect.left}px`);
-            layoutEl.style.removeProperty('--skyroom-mobile-bottom-right');
-          } else if (bottomRect.right != null) {
-            layoutEl.style.setProperty('--skyroom-mobile-bottom-right', `${bottomRect.right}px`);
-            layoutEl.style.removeProperty('--skyroom-mobile-bottom-left');
-          }
+          layoutEl.style.setProperty('--skyroom-mobile-bottom-left', `${bottomLeft}px`);
+          layoutEl.style.removeProperty('--skyroom-mobile-bottom-right');
         } else {
           layoutEl.style.removeProperty('--skyroom-mobile-bottom-top');
           layoutEl.style.removeProperty('--skyroom-mobile-bottom-height');
@@ -852,16 +852,14 @@ const CustomLayout = (props) => {
           layoutEl?.setAttribute('data-skyroom-mobile-top-webcams', 'true');
           const topRect = skyroomLayout.mobileTopRect;
           if (topRect) {
+            const topLeft = topRect.left != null
+              ? topRect.left
+              : Math.max(0, windowWidth() - (topRect.right || 0) - topRect.width);
             layoutEl.style.setProperty('--skyroom-mobile-top-top', `${topRect.top}px`);
             layoutEl.style.setProperty('--skyroom-mobile-top-height', `${topRect.height}px`);
             layoutEl.style.setProperty('--skyroom-mobile-top-width', `${topRect.width}px`);
-            if (topRect.left != null) {
-              layoutEl.style.setProperty('--skyroom-mobile-top-left', `${topRect.left}px`);
-              layoutEl.style.removeProperty('--skyroom-mobile-top-right');
-            } else if (topRect.right != null) {
-              layoutEl.style.setProperty('--skyroom-mobile-top-right', `${topRect.right}px`);
-              layoutEl.style.removeProperty('--skyroom-mobile-top-left');
-            }
+            layoutEl.style.setProperty('--skyroom-mobile-top-left', `${topLeft}px`);
+            layoutEl.style.removeProperty('--skyroom-mobile-top-right');
           }
         } else {
           layoutEl?.removeAttribute('data-skyroom-mobile-top-webcams');

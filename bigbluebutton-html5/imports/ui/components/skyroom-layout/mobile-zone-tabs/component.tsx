@@ -25,6 +25,7 @@ import {
   SKYROOM_FOOTER_H,
   SKYROOM_MOBILE_EDGE,
   SKYROOM_MOBILE_FOOTER_LIFT,
+  SKYROOM_MOBILE_TAB_FOOTER_GAP,
   SKYROOM_MOBILE_TAB_H,
 } from '../column-layout';
 import {
@@ -83,6 +84,7 @@ const SkyroomMobileZoneTabs: React.FC = () => {
   const layoutWebcamCount = useLayoutWebcamCount();
   const presentation = layoutSelectInput((i: Input) => i.presentation);
   const screenShare = layoutSelectInput((i: Input) => i.screenShare);
+  const cameraDock = layoutSelectInput((i: Input) => i.cameraDock);
   const notesEnabled = useIsSharedNotesEnabled();
   const { data: meeting } = useMeeting((m: {
     componentsFlags?: { hasBreakoutRoom?: boolean };
@@ -145,8 +147,10 @@ const SkyroomMobileZoneTabs: React.FC = () => {
   });
 
   const hasStage = Boolean(presentation.isOpen || screenShare.hasScreenShare);
-  const hasCameras = layoutWebcamCount > 0;
-  const showWebcams = hasCameras && hasStage;
+  const hasCameras = layoutWebcamCount > 0 || (cameraDock?.numCameras ?? 0) > 0;
+  // Keep the Webcams tab visible while that box is active (local join can briefly
+  // report 0 cameras) so tiles stay in the tab panel above this bar — not orphaned.
+  const showWebcams = hasStage && (hasCameras || activeBox === 'webcams');
 
   const hasBreakoutRoom = Boolean(meeting?.componentsFlags?.hasBreakoutRoom);
   const hasBreakoutInvite = (currentUser?.breakoutRoomsSummary?.totalOfJoinURL ?? 0) > 0
@@ -181,7 +185,7 @@ const SkyroomMobileZoneTabs: React.FC = () => {
         position: 'fixed',
         left: SKYROOM_MOBILE_EDGE,
         right: SKYROOM_MOBILE_EDGE,
-        bottom: SKYROOM_FOOTER_H + SKYROOM_MOBILE_EDGE + SKYROOM_MOBILE_FOOTER_LIFT,
+        bottom: SKYROOM_FOOTER_H + SKYROOM_MOBILE_TAB_FOOTER_GAP + SKYROOM_MOBILE_FOOTER_LIFT,
         height: SKYROOM_MOBILE_TAB_H,
         zIndex: 11,
       }}

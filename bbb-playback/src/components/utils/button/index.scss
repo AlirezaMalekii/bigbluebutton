@@ -18,7 +18,7 @@ $button-size: 2.15rem;
 .button-wrapper {
   display: flex;
   height: $button-size;
-  margin: 0 $margin 0 $margin;
+  margin-inline: $margin;
   width: $button-size;
 
   .button {

@@ -33,12 +33,18 @@ const Section = ({
 
   if (!layout.control || !config.section) return null;
 
+  // Mirror chevrons in RTL so the control still points toward the side section.
+  const isRTL = typeof document !== 'undefined' && document.dir === 'rtl';
+  const icon = section
+    ? (isRTL ? 'right' : 'left')
+    : (isRTL ? 'left' : 'right');
+
   return (
     <Button
       aria={intl.formatMessage(intlMessages.section)}
       circle
       handleOnClick={toggleSection}
-      icon={section ? 'left' : 'right'}
+      icon={icon}
     />
   );
 };

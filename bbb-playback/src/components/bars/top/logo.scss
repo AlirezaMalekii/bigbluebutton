@@ -6,9 +6,16 @@
   display: inline-flex;
   flex-shrink: 0;
   height: 38px;
-  margin-inline-end: 8px;
-  padding: 0 10px;
+  margin-inline-end: .5rem;
+  padding: 0 .65rem;
   text-decoration: none;
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+
+  &:hover {
+    background: rgba(20, 169, 158, .12);
+    border-color: rgba(63, 194, 184, .28);
+    transform: translateY(-1px);
+  }
 }
 
 .platform-logo-image {

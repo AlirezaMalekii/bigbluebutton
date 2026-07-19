@@ -17,14 +17,21 @@
   grid-area: application;
   height: 100%;
   min-height: 0;
+  overflow: hidden;
   width: 100%;
+
+  > :not(.application-control) {
+    flex: 1;
+    min-height: 0;
+  }
 
   .application-control {
     align-items: center;
     background-color: var(--application-control-background-color);
+    border-bottom: 1px solid rgba(255, 255, 255, .06);
     box-sizing: border-box;
     display: flex;
-    flex-direction: row-reverse;
+    flex-direction: row;
     flex-shrink: 0;
     gap: $margin-small;
     justify-content: flex-start;
@@ -38,24 +45,24 @@
       box-sizing: border-box;
       color: var(--application-control-color);
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       flex-shrink: 0;
-      font-size: large;
+      font-size: 1rem;
       font-weight: var(--font-weight-semi-bold);
       height: 2.1rem;
       justify-content: center;
-      opacity: 1;
+      line-height: 1;
       outline: none;
-      overflow: visible;
+      overflow: hidden;
+      padding: 0;
       transition: background .18s ease, color .18s ease, opacity .18s ease, transform .18s ease;
       width: 2.1rem;
 
-      [dir="ltr"] & {
-        padding-left: 0;
-      }
-
-      [dir="rtl"] & {
-        padding-right: 0;
+      [class^="icon-"],
+      [class*=" icon-"] {
+        height: auto;
+        line-height: 1;
+        width: auto;
       }
     }
 
@@ -74,8 +81,9 @@
 
     .application-icon:not(.inactive) {
       background: var(--skyroom-brand-gradient);
-      color: var(--white);
       box-shadow: 0 12px 28px rgba(20, 169, 158, .24);
+      color: var(--white);
+      opacity: 1;
     }
   }
 }

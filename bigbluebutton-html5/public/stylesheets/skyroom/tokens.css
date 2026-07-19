@@ -113,6 +113,8 @@
   --skyroom-chrome-h: var(--skyroom-footer-height);
   --skyroom-nav-offset: var(--skyroom-header-height);
   /* Mobile floating footer lift (sync column-layout.js SKYROOM_MOBILE_FOOTER_LIFT) */
-  --skyroom-mobile-footer-lift: 8px;
+  --skyroom-mobile-footer-lift: 3px;
   --skyroom-mobile-edge: 8px;
+  /* Gap between tab bar and footer (sync column-layout.js SKYROOM_MOBILE_TAB_FOOTER_GAP) */
+  --skyroom-mobile-tab-footer-gap: 4px;
 }

@@ -13,7 +13,6 @@
     var(--top-bar-background-color);
   color: var(--top-bar-color);
   box-sizing: border-box;
-  direction: ltr;
   display: flex;
   grid-area: top-bar;
   overflow: hidden;
@@ -92,11 +91,12 @@
     align-items: center;
     display: grid;
     gap: $margin;
+    /* Column 2 reserves space above the side section so controls sit next to it.
+       Inherits document direction so RTL keeps gutter + controls beside the left sidebar. */
     grid-template-columns: minmax(0, 1fr) $section-width;
     padding-inline: $padding-small;
 
     .left,
-    .center,
     .right {
       grid-column: 1;
       grid-row: 1;
@@ -110,8 +110,13 @@
     }
 
     .center {
+      grid-column: 1 / -1;
+      grid-row: 1;
       justify-self: center;
+      max-width: min(100%, 36rem);
+      padding: $padding-small;
       pointer-events: none;
+      width: auto;
       z-index: 0;
 
       .title,

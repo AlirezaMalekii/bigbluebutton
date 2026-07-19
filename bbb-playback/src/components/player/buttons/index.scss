@@ -19,16 +19,13 @@
 }
 
 .fullscreen-button {
-  margin-top: $margin;
-  position: fixed;
+  position: absolute;
+  top: $margin;
   z-index: 2;
+  inset-inline-end: $margin;
 
-  [dir="ltr"] & {
-    right: 0;
-  }
-
-  [dir="rtl"] & {
-    left: 0;
+  .button-wrapper {
+    margin: 0;
   }
 }
 

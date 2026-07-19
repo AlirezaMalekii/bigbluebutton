@@ -91,6 +91,7 @@ interface ExternalVideoPlayerProps {
   isEchoTest: boolean;
   isGridLayout: boolean;
   isPresenter: boolean;
+  isModerator: boolean;
   videoUrl: string;
   isResizing: boolean;
   fullscreenContext: boolean;
@@ -131,6 +132,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   fullscreenContext,
   videoUrl,
   isPresenter,
+  isModerator,
   playing,
   playerPlaybackRate,
   isEchoTest,
@@ -250,6 +252,8 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   const layoutTransitionRef = useRef(false);
   const presentationMediaAnchoredRef = useRef(false);
   const isAparatSource = isAparatVideoUrl(videoUrl);
+  // Presenter or moderator may drive sync; viewers only follow.
+  const canControlExternalVideo = isPresenter || isModerator;
 
   let currentTime = getServerCurrentTime();
 
@@ -505,10 +509,10 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   }, [videoUrl, playerKey]);
 
   const shouldPublishSync = (event: string) => {
-    if (!isPresenter) return false;
+    if (!canControlExternalVideo) return false;
     if (layoutTransitionRef.current) return false;
     if (isAparatSource) {
-      // Aparat has no reliable iframe events/API — do not publish fake play/stop sync.
+      // Raw Aparat iframe has no API — sync only works after server resolves to MP4.
       return false;
     }
     return Boolean(event);
@@ -518,7 +522,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
     nextPlaying: boolean,
     seekSeconds?: number,
   ) => {
-    if (!isPresenter) return;
+    if (!canControlExternalVideo) return;
     if (isAparatSource && !shouldPublishSync(nextPlaying ? 'play' : 'stop')) return;
     let time = 0;
     if (!isAparatSource) {
@@ -537,7 +541,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   };
 
   const publishPresenterSeek = async (fraction: number) => {
-    if (!isPresenter || !playerRef.current || isAparatSource) return;
+    if (!canControlExternalVideo || !playerRef.current || isAparatSource) return;
     const safeFraction = Math.min(1, Math.max(0, fraction));
     const mediaDuration = duration > 0
       ? duration
@@ -554,7 +558,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   };
 
   const publishPresenterSkipSeconds = async (deltaSeconds: number) => {
-    if (!isPresenter || !playerRef.current || isAparatSource) return;
+    if (!canControlExternalVideo || !playerRef.current || isAparatSource) return;
     const mediaDuration = duration > 0
       ? duration
       : playerRef.current.getDuration?.() || 0;
@@ -565,7 +569,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   };
 
   const publishPresenterPlaybackRate = async (rate: number) => {
-    if (!isPresenter || !playerRef.current || isAparatSource) return;
+    if (!canControlExternalVideo || !playerRef.current || isAparatSource) return;
     const safeRate = Number.isFinite(rate) && rate > 0 ? rate : 1;
     const internalPlayer = getInternalMediaPlayer(playerRef.current as ReactPlayer);
     if (internalPlayer instanceof HTMLVideoElement
@@ -593,7 +597,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
     // sound like overlapping tracks. Only re-anchor the share clock once media is ready.
     if (isPresentationMedia) {
       if (
-        isPresenter
+        canControlExternalVideo
         && playing
         && !presentationMediaAnchoredRef.current
         && shouldPublishSync('play')
@@ -609,7 +613,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
       }
       return;
     }
-    if (!isPresenter || !playing) return;
+    if (!canControlExternalVideo || !playing) return;
     playVideo(playerRef.current);
   };
 
@@ -628,7 +632,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
     const internalPlayer = playerRef.current?.getInternalPlayer();
     const currentTime = getServerCurrentTime();
     const playerCurrentTime = await getPlayerCurrentTime(playerRef.current as ReactPlayer);
-    if (isPresenter && !playing && shouldPublishSync('start')) {
+    if (canControlExternalVideo && !playing && shouldPublishSync('start')) {
       const rate = (internalPlayer instanceof HTMLVideoElement || internalPlayer instanceof HTMLAudioElement)
         ? internalPlayer.playbackRate
         : await internalPlayer?.getPlaybackRate?.() ?? 1;
@@ -644,7 +648,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
     // Seeking on start overlaps buffers and sounds like doubled/garbled audio.
     if (isPresentationMedia) {
       const drift = Math.abs(currentTime - playerCurrentTime);
-      if (!isPresenter && drift > 1.25) {
+      if (!canControlExternalVideo && drift > 1.25) {
         playerRef?.current?.seekTo(truncateTime(currentTime), 'seconds');
       }
       return;
@@ -665,7 +669,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
     } catch (e) {
       isTwitch = false;
     }
-    if (isPresenter && !playing && shouldPublishSync('play')) {
+    if (canControlExternalVideo && !playing && shouldPublishSync('play')) {
       const rate = (internalPlayer instanceof HTMLVideoElement || internalPlayer instanceof HTMLAudioElement)
         ? internalPlayer.playbackRate
         : await internalPlayer?.getPlaybackRate?.() ?? 1;
@@ -686,7 +690,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
         state: 'playing',
       });
     }
-    if (!playing && !isPresenter) {
+    if (!playing && !canControlExternalVideo) {
       stopVideo(playerRef.current as ReactPlayer);
     }
 
@@ -697,7 +701,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
 
   const handleOnStop = async () => {
     setReactPlayerPlaying(false);
-    if (isPresenter && playing && shouldPublishSync('stop')) {
+    if (canControlExternalVideo && playing && shouldPublishSync('stop')) {
       const internalPlayer = playerRef.current?.getInternalPlayer();
       let rate = (internalPlayer instanceof HTMLVideoElement || internalPlayer instanceof HTMLAudioElement)
         ? internalPlayer.playbackRate
@@ -714,7 +718,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
       });
     }
 
-    if (!isPresenter && playing) {
+    if (!canControlExternalVideo && playing) {
       playVideo(playerRef.current as ReactPlayer);
     }
   };
@@ -722,11 +726,11 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   const handleProgress = async (state: OnProgressProps) => {
     setPlayed(state.played);
     setLoaded(state.loaded);
-    if (playing && isPresenter && shouldPublishSync('seek')) {
+    if (playing && canControlExternalVideo && shouldPublishSync('seek')) {
       currentTime = getServerCurrentTime();
     }
     const interPlayerPlaybackRate = await getPlaybackRate(playerRef.current as ReactPlayer);
-    if (isPresenter && interPlayerPlaybackRate !== playerPlaybackRate && shouldPublishSync('seek')) {
+    if (canControlExternalVideo && interPlayerPlaybackRate !== playerPlaybackRate && shouldPublishSync('seek')) {
       sendMessage('seek', {
         rate: interPlayerPlaybackRate,
         time: currentTime,
@@ -744,7 +748,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   };
 
   const handleOnSeek = async (cursor: { position: number } | number) => {
-    if (isPresenter && shouldPublishSync('seek')) {
+    if (canControlExternalVideo && shouldPublishSync('seek')) {
       const internalPlayer = playerRef.current?.getInternalPlayer();
       let rate = (internalPlayer instanceof HTMLVideoElement || internalPlayer instanceof HTMLAudioElement)
         ? internalPlayer.playbackRate
@@ -769,7 +773,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   };
 
   const handlePlaybackRateChange = async () => {
-    if (isPresenter && shouldPublishSync('playbackRateChange')) {
+    if (canControlExternalVideo && shouldPublishSync('playbackRateChange')) {
       const internalPlayer = playerRef.current?.getInternalPlayer();
       let rate = (internalPlayer instanceof HTMLVideoElement || internalPlayer instanceof HTMLAudioElement)
         ? internalPlayer.playbackRate
@@ -829,15 +833,15 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
     toolbarStyle = 'showMobileHoverToolbar';
   }
 
-  // Viewer-only chrome (volume/fullscreen). Presenter uses PresenterSyncToolbar.
-  const shouldShowViewerTools = !isPresenter
+  // Viewer-only chrome (volume/fullscreen). Controllers use PresenterSyncToolbar.
+  const shouldShowViewerTools = !canControlExternalVideo
     && !!videoUrl
     && !isPresentationAudio
     && !isAparatSource
     && !(isGridLayout && !isSidebarContentOpen);
 
   const handlePresenterPlayPause = async () => {
-    if (!isPresenter || !playerRef.current) return;
+    if (!canControlExternalVideo || !playerRef.current) return;
     const nextPlaying = !(playing || reactPlayerPlaying);
     const time = isAparatSource
       ? 0
@@ -871,10 +875,9 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
     window.open(presentationMediaDownloadUri);
   };
 
-  // Aparat uses its own player chrome — hide SafeMeet sync toolbar completely.
-  const showPresenterDock = isPresenter
+  // Controllers (presenter/moderator) get the sync dock for shared media.
+  const showPresenterDock = canControlExternalVideo
     && !isPresentationAudio
-    && !isAparatSource
     && !!playerUrl;
 
   return (
@@ -935,7 +938,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
                 onDuration={(mediaDuration: number) => setDuration(mediaDuration)}
                 muted={mute || isEchoTest}
                 controls={false}
-                previewTabIndex={isPresenter ? 0 : -1}
+                previewTabIndex={canControlExternalVideo ? 0 : -1}
                 onPlaybackRateChange={handlePlaybackRateChange}
               />
             ) : null
@@ -950,7 +953,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
                 duration={duration}
                 volume={volume}
                 muted={mute || isEchoTest}
-                controlsEnabled={isPresenter}
+                controlsEnabled={canControlExternalVideo}
                 onPlayPause={handlePresentationMediaPlayPause}
                 onSeek={handlePresentationMediaSeek}
                 onVolumeChange={changeVolume}
@@ -967,8 +970,8 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
             ) : null
           }
           {
-            // Block viewer clicks for synced external videos; Aparat keeps native controls.
-            !isPresenter && !isPresentationAudio && !isAparatSource ? (
+            // Block non-controller clicks so only presenter/moderator drive sync.
+            !canControlExternalVideo && !isPresentationAudio ? (
               <Styled.AparatViewerBlocker
                 data-test="externalVideoViewerBlocker"
                 aria-hidden="true"
@@ -1046,6 +1049,7 @@ const ExternalVideoPlayerContainer: React.FC = () => {
   const isEchoTest = useReactiveVar(audioManager._isEchoTest.value) as boolean;
   const { data: currentUser } = useCurrentUser((user) => ({
     presenter: user.presenter,
+    isModerator: user.isModerator,
   }));
   const { data: currentMeeting } = useMeeting((m) => ({
     externalVideo: m.externalVideo,
@@ -1221,6 +1225,7 @@ const ExternalVideoPlayerContainer: React.FC = () => {
   if (!currentUser || !currentMeeting?.externalVideo || !externalVideo?.display) return null;
   if (!hasExternalVideoOnLayout) return null;
   const isPresenter = currentUser.presenter ?? false;
+  const isModerator = currentUser.isModerator ?? false;
   const isGridLayout = currentMeeting.layout?.currentLayoutType === 'VIDEO_FOCUS';
   const {
     updatedAt = new Date().toISOString(),
@@ -1238,6 +1243,7 @@ const ExternalVideoPlayerContainer: React.FC = () => {
       isMuted={isMuted}
       isEchoTest={isEchoTest}
       isPresenter={isPresenter ?? false}
+      isModerator={isModerator}
       videoUrl={videoUrl}
       playing={playing}
       playerPlaybackRate={playerPlaybackRate}

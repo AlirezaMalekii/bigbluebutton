@@ -3,7 +3,13 @@ import {
   FormattedMessage, FormattedDate, FormattedNumber, injectIntl,
 } from 'react-intl';
 import { getUserReactionsSummary } from '../services/ReactionService';
-import { getActivityScore, getSumOfTime, tsToHHmmss } from '../services/UserService';
+import {
+  getActivityScore,
+  getSumOfTime,
+  hasUserAttended,
+  isUserCurrentlyOnline,
+  tsToHHmmss,
+} from '../services/UserService';
 import UserAvatar from './UserAvatar';
 import { UserDetailsContext } from './UserDetails/context';
 
@@ -305,6 +311,20 @@ class UsersTable extends React.Component {
               .sort(tab === 'overview' ? this.sortingFunctions[lastFieldClicked] : this.sortingFunctions.activityScoreOrder)
               .map((user) => {
                 const opacity = user.leftOn > 0 ? 'opacity-75' : '';
+                const { endedOn = 0 } = this.props;
+                // After the meeting ends every session has leftOn set, so connection
+                // Online/Offline is meaningless. Use attendance instead (Present/Absent).
+                const isPresent = endedOn > 0
+                  ? hasUserAttended(user)
+                  : isUserCurrentlyOnline(user);
+                const statusPositiveId = endedOn > 0
+                  ? 'app.learningDashboard.usersTable.userStatusPresent'
+                  : 'app.learningDashboard.usersTable.userStatusOnline';
+                const statusNegativeId = endedOn > 0
+                  ? 'app.learningDashboard.usersTable.userStatusAbsent'
+                  : 'app.learningDashboard.usersTable.userStatusOffline';
+                const statusPositiveDefault = endedOn > 0 ? 'Present' : 'Online';
+                const statusNegativeDefault = endedOn > 0 ? 'Absent' : 'Offline';
                 return (
                   <tr key={user} className="text-gray-700">
                     <td className={`flex items-center px-4 py-3 col-text-left text-sm ${opacity}`} data-test="userLabelDashboard">
@@ -564,18 +584,21 @@ class UsersTable extends React.Component {
                     }
                     <td className="px-3.5 2xl:px-4 py-3 text-xs text-center" data-test="userStatusDashboard">
                       {
-                        Object.values(user.intIds)[Object.values(user.intIds).length - 1]
-                          .sessions.slice(-1)[0].leftOn > 0
-                          ? (
-                            <span className="px-2 py-1 font-semibold leading-tight text-red-300 bg-red-500/20 rounded-full">
-                              <FormattedMessage id="app.learningDashboard.usersTable.userStatusOffline" defaultMessage="Offline" />
-                            </span>
-                          )
-                          : (
-                            <span className="px-2 py-1 font-semibold leading-tight text-green-300 bg-green-500/20 rounded-full">
-                              <FormattedMessage id="app.learningDashboard.usersTable.userStatusOnline" defaultMessage="Online" />
-                            </span>
-                          )
+                        isPresent ? (
+                          <span className="px-2 py-1 font-semibold leading-tight text-green-300 bg-green-500/20 rounded-full">
+                            <FormattedMessage
+                              id={statusPositiveId}
+                              defaultMessage={statusPositiveDefault}
+                            />
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 font-semibold leading-tight text-red-300 bg-red-500/20 rounded-full">
+                            <FormattedMessage
+                              id={statusNegativeId}
+                              defaultMessage={statusNegativeDefault}
+                            />
+                          </span>
+                        )
                       }
                     </td>
                   </tr>

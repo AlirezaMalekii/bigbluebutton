@@ -63,14 +63,14 @@
 
 [data-test="connectionStatusModal"] > div > div > header:first-of-type button,
 [data-test="connectionStatusModal"] > div > div > header:first-of-type [data-test="closeModal"] {
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  min-height: 32px !important;
-  border-radius: 10px !important;
-  border: 1px solid rgba(218, 230, 245, 0.14) !important;
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
+  border-radius: 50% !important;
+  border: 1px solid rgba(218, 230, 245, 0.12) !important;
   background: rgba(255, 255, 255, 0.07) !important;
-  color: var(--skyroom-modal-text-muted, #aab6c7) !important;
+  color: var(--skyroom-modal-text, #eef4fb) !important;
   transition: background 140ms ease, border-color 140ms ease, color 140ms ease !important;
 }
 
@@ -171,11 +171,11 @@
 
   [data-test="connectionStatusModal"] > div > div > header:first-of-type button,
   [data-test="connectionStatusModal"] > div > div > header:first-of-type [data-test="closeModal"] {
-    width: 28px !important;
-    height: 28px !important;
-    min-width: 28px !important;
-    min-height: 28px !important;
-    border-radius: 8px !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    border-radius: 50% !important;
   }
 
   .skyroom-conn-modal__topbar {

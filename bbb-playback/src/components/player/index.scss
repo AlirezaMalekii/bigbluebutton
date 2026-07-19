@@ -58,6 +58,7 @@ $player-wrapper-padding: $control-bar-height;
 
 @media (min-width: $media-min-width) {
   .player-wrapper {
+    align-items: stretch;
     grid-template-areas:
       "top-bar top-bar"
       "content media"
@@ -85,7 +86,8 @@ $player-wrapper-padding: $control-bar-height;
       "content application"
       "content application"
       "bottom-bar application";
-    grid-template-rows: $top-bar-height minmax(0, 1fr) auto auto 0;
+    /* Keep content + application on the same stretch row so bottoms stay flush */
+    grid-template-rows: $top-bar-height minmax(0, 1fr) 0 0 0;
   }
 
   .hidden-section {

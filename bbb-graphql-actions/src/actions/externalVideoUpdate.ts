@@ -1,28 +1,33 @@
 import { RedisMessage } from '../types';
-import {throwErrorIfInvalidInput, throwErrorIfNotPresenter} from "../imports/validation";
+import {
+  throwErrorIfInvalidInput,
+  throwErrorIfNotPresenterNorModerator,
+} from '../imports/validation';
 
-export default function buildRedisMessage(sessionVariables: Record<string, unknown>, input: Record<string, unknown>): RedisMessage {
-  throwErrorIfNotPresenter(sessionVariables);
-  throwErrorIfInvalidInput(input,
-      [
-        {name: 'status', type: 'string', required: true},
-        {name: 'rate', type: 'number', required: true},
-        {name: 'time', type: 'number', required: true},
-        {name: 'state', type: 'number', required: true},
-      ]
-  )
+export default function buildRedisMessage(
+  sessionVariables: Record<string, unknown>,
+  input: Record<string, unknown>,
+): RedisMessage {
+  // Presenter or moderator may drive synchronized playback (incl. Aparat-as-MP4).
+  throwErrorIfNotPresenterNorModerator(sessionVariables);
+  throwErrorIfInvalidInput(input, [
+    { name: 'status', type: 'string', required: true },
+    { name: 'rate', type: 'number', required: true },
+    { name: 'time', type: 'number', required: true },
+    { name: 'state', type: 'number', required: true },
+  ]);
 
-  const eventName = `UpdateExternalVideoPubMsg`;
+  const eventName = 'UpdateExternalVideoPubMsg';
 
   const routing = {
     meetingId: sessionVariables['x-hasura-meetingid'] as String,
-    userId: sessionVariables['x-hasura-userid'] as String
+    userId: sessionVariables['x-hasura-userid'] as String,
   };
 
-  const header = { 
+  const header = {
     name: eventName,
     meetingId: routing.meetingId,
-    userId: routing.userId
+    userId: routing.userId,
   };
 
   const body = {

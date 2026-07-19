@@ -206,20 +206,23 @@ const TldrawV2GlobalStyle = createGlobalStyle`
       position: absolute !important;
       top: auto !important;
       bottom: var(--skyroom-wb-toolbar-gap, 8px) !important;
-      left: 50% !important;
-      right: auto !important;
-      transform: translateX(-50%) !important;
+      /* Mobile: full stage width + no translate (left:50% + translateX fights responsive.css and clips the bar). */
+      left: ${isSkyroomMobile ? '0' : '50%'} !important;
+      right: ${isSkyroomMobile ? '0' : 'auto'} !important;
+      transform: ${isSkyroomMobile ? 'none' : 'translateX(-50%)'} !important;
       z-index: 12 !important;
-      width: max-content !important;
+      width: ${isSkyroomMobile ? '100%' : 'max-content'} !important;
+      max-width: ${isSkyroomMobile ? '100%' : 'none'} !important;
       height: auto !important;
       margin: 0 !important;
       pointer-events: auto !important;
       touch-action: manipulation !important;
+      ${isSkyroomMobile ? 'display: flex !important; justify-content: center !important;' : ''}
     }
 
     .tlui-button__tool {
-      width: ${isSkyroomMobile ? '30px' : '36px'} !important;
-      height: ${isSkyroomMobile ? '30px' : '36px'} !important;
+      width: ${isSkyroomMobile ? '24px' : '36px'} !important;
+      height: ${isSkyroomMobile ? '24px' : '36px'} !important;
       border-radius: 10px !important;
       color: #e8edf4 !important;
     }

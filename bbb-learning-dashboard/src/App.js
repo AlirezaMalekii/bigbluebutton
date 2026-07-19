@@ -668,6 +668,7 @@ class App extends React.Component {
               <div className="ld-panel-body">
                 <UsersTable
                   allUsers={activitiesJson.users}
+                  endedOn={activitiesJson.endedOn}
                   totalOfActivityTime={this.totalOfActivity()}
                   totalOfPolls={Object.values(activitiesJson.polls || {}).length}
                   tab="overview"
@@ -685,6 +686,7 @@ class App extends React.Component {
               <div className="ld-panel-body">
                 <UsersTable
                   allUsers={activitiesJson.users}
+                  endedOn={activitiesJson.endedOn}
                   totalOfActivityTime={this.totalOfActivity()}
                   totalOfPolls={Object.values(activitiesJson.polls || {}).length}
                   tab="overview_activityscore"

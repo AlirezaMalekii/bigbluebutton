@@ -20,9 +20,22 @@ trait UpdateExternalVideoPubMsgHdlr extends RightsManagementTrait {
       bus.outGW.send(msgEvent)
     }
 
-    if (permissionFailed(PermissionCheck.GUEST_LEVEL, PermissionCheck.PRESENTER_LEVEL, liveMeeting.users2x, msg.header.userId)) {
+    // Presenter OR moderator may drive sync (SafeMeet: Aparat/online video control).
+    val isPresenter = !permissionFailed(
+      PermissionCheck.GUEST_LEVEL,
+      PermissionCheck.PRESENTER_LEVEL,
+      liveMeeting.users2x,
+      msg.header.userId
+    )
+    val isModerator = PermissionCheck.isAllowed(
+      PermissionCheck.MOD_LEVEL,
+      PermissionCheck.VIEWER_LEVEL,
+      liveMeeting.users2x,
+      msg.header.userId
+    )
+    if (!isPresenter && !isModerator) {
       val meetingId = liveMeeting.props.meetingProp.intId
-      val reason = "You need to be the presenter to update external video"
+      val reason = "You need to be the presenter or a moderator to update external video"
       PermissionCheck.ejectUserForFailedPermission(meetingId, msg.header.userId, reason, bus.outGW, liveMeeting)
     } else {
       ExternalVideoDAO.update(liveMeeting.props.meetingProp.intId, msg.body.status, msg.body.rate, msg.body.time, msg.body.state)

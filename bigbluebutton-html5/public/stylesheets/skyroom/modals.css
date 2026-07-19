@@ -376,17 +376,24 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: var(--skyroom-modal-text-muted) !important;
-  border: 1px solid rgba(218, 230, 245, 0.14) !important;
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  min-height: 36px !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: var(--skyroom-modal-text) !important;
+  border: 1px solid rgba(218, 230, 245, 0.12) !important;
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
   padding: 0 !important;
   margin: 0 !important;
-  border-radius: 10px !important;
+  border-radius: 50% !important;
   box-sizing: border-box !important;
+  transition: background 0.15s ease, border-color 0.15s ease !important;
+}
+
+[role="dialog"] [data-test="closeModal"]:hover > span:first-child,
+[role="dialog"] [data-test="closeModal"]:focus-visible > span:first-child {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(32, 199, 187, 0.32) !important;
 }
 
 [role="dialog"] [data-test="closeModal"] > span {
@@ -398,7 +405,7 @@
 [role="dialog"] [data-test="closeModal"] i,
 [role="dialog"] [data-test="closeModal"] i::before {
   line-height: 1 !important;
-  color: var(--skyroom-modal-text-muted) !important;
+  color: var(--skyroom-modal-text) !important;
 }
 
 /* ---------------------------------------------------------------------
