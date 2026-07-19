@@ -69,8 +69,8 @@ export const getSkyroomMobileWbToolbarReserve = () => {
   const styles = getComputedStyle(layoutEl);
   const scale = parseFloat(styles.getPropertyValue('--skyroom-wb-scale')) || 1;
   const gap = parseFloat(styles.getPropertyValue('--skyroom-wb-toolbar-gap')) || 1;
-  // Balanced 28px tools + padding + gap above slide-nav.
-  return Math.ceil(34 * scale) + Math.max(0, Math.round(gap));
+  // Compact 24px tools + padding + gap above slide-nav.
+  return Math.ceil(30 * scale) + Math.max(0, Math.round(gap));
 };
 
 /** True during bootstrap before #layout mounts (see main.html data-skyroom). */

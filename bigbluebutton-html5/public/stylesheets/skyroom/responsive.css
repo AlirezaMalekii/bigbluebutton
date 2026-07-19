@@ -700,8 +700,8 @@
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] {
-    --skyroom-presentation-toolbar-h: 28px;
-    --skyroom-wb-toolbar-gap: 4px;
+    --skyroom-presentation-toolbar-h: 22px;
+    --skyroom-wb-toolbar-gap: 3px;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbar"] {
@@ -737,9 +737,9 @@
   }
 
   /*
-   * Phone slide-nav: one centered control group (not a 3-col grid).
-   * Empty poll column previously collapsed the grid and shoved slides to the
-   * right — flex + justify-content:center keeps zoom + slides as one unit.
+   * Phone slide-nav: keep the natural document direction (RTL in FA) so
+   * fit-to-width stays on the physical left and prev/next keep their RTL order.
+   * Center the whole control group; never force direction:ltr.
    */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] {
@@ -748,15 +748,15 @@
     flex-wrap: nowrap !important;
     justify-content: center !important;
     align-items: center !important;
-    direction: ltr !important;
+    direction: inherit !important;
     grid-template-columns: none !important;
-    gap: 6px !important;
-    min-height: var(--skyroom-presentation-toolbar-h, 28px) !important;
-    height: var(--skyroom-presentation-toolbar-h, 28px) !important;
-    max-height: var(--skyroom-presentation-toolbar-h, 28px) !important;
+    gap: 4px !important;
+    min-height: var(--skyroom-presentation-toolbar-h, 22px) !important;
+    height: var(--skyroom-presentation-toolbar-h, 22px) !important;
+    max-height: var(--skyroom-presentation-toolbar-h, 22px) !important;
     padding-block: 0 !important;
-    padding-inline: max(10px, env(safe-area-inset-left, 0px) + 6px)
-      max(10px, env(safe-area-inset-right, 0px) + 6px) !important;
+    padding-inline: max(8px, env(safe-area-inset-left, 0px) + 4px)
+      max(8px, env(safe-area-inset-right, 0px) + 4px) !important;
     overflow: visible !important;
     box-sizing: border-box !important;
   }
@@ -787,7 +787,7 @@
     gap: 2px !important;
     padding: 0 !important;
     margin: 0 !important;
-    direction: ltr !important;
+    direction: inherit !important;
   }
 
   /* Drop empty poll/plugin + multi-user placeholder from the centered group. */
@@ -808,7 +808,7 @@
     gap: 0 !important;
   }
 
-  /* Slide/zoom control buttons — readable on phone, not microscopic. */
+  /* Compact slide/zoom controls on phone. */
   #layout[data-skyroom-column="true"] #presentationToolbarWrapper button > span:first-child,
   #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] button > span:first-child {
     min-width: 14px !important;
@@ -820,10 +820,10 @@
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button > span:first-child,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button > span:first-child {
-    min-width: 18px !important;
-    min-height: 18px !important;
-    width: 18px !important;
-    height: 18px !important;
+    min-width: 16px !important;
+    min-height: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
     border-radius: 5px !important;
   }
 
@@ -832,6 +832,79 @@
     padding: 0 !important;
     margin: 0 !important;
     min-height: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /*
+   * Kill BBB Button color="light" flash on phone — hover/focus/active must stay
+   * dark-glass + teal, never a washed-out light pill that hides the icon.
+   */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button:hover,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button:focus,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button:focus-visible,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button:active,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button:hover,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button:focus,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button:focus-visible,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button:active {
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border-color: transparent !important;
+    outline: none !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button > span:first-child,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button > span:first-child {
+    background-color: rgba(20, 32, 52, 0.92) !important;
+    border: 1px solid rgba(32, 199, 187, 0.26) !important;
+    color: #e8edf4 !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28) !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button:hover > span:first-child,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button:focus > span:first-child,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button:focus-visible > span:first-child,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button:hover > span:first-child,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button:focus > span:first-child,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button:focus-visible > span:first-child {
+    background-color: rgba(32, 199, 187, 0.18) !important;
+    border-color: rgba(32, 199, 187, 0.48) !important;
+    color: #3fc2b8 !important;
+    box-shadow: 0 0 0 1px rgba(32, 199, 187, 0.16) !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button:active > span:first-child,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button[aria-pressed="true"] > span:first-child,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button[aria-pressed="true"]:hover > span:first-child,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button[aria-pressed="true"]:focus > span:first-child,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button[aria-pressed="true"]:active > span:first-child,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button:active > span:first-child,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button[aria-pressed="true"] > span:first-child {
+    background-color: rgba(13, 136, 126, 0.42) !important;
+    border-color: #20c7bb !important;
+    color: #e8fffc !important;
+    box-shadow:
+      0 0 0 1px rgba(32, 199, 187, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button:hover i,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button:focus i,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button:active i,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button[aria-pressed="true"] i,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button:hover [class^="icon-bbb-"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button:active [class^="icon-bbb-"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button[aria-pressed="true"] [class^="icon-bbb-"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button:hover svg,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button:active svg,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button[aria-pressed="true"] svg {
+    color: inherit !important;
+    fill: currentColor !important;
+    opacity: 1 !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper i,
@@ -840,9 +913,9 @@
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] i,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] [class^="icon-bbb-"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] svg {
-    font-size: 0.7rem !important;
-    width: 12px !important;
-    height: 12px !important;
+    font-size: 0.62rem !important;
+    width: 11px !important;
+    height: 11px !important;
   }
 
   #layout[data-skyroom-column="true"] #presentationToolbarWrapper select,
@@ -858,14 +931,28 @@
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper select,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] select,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="SkipSlideSelect"] {
-    min-height: 18px !important;
-    height: 18px !important;
-    max-height: 18px !important;
-    font-size: 0.62rem !important;
+    min-height: 16px !important;
+    height: 16px !important;
+    max-height: 16px !important;
+    font-size: 0.56rem !important;
     line-height: 1.1 !important;
-    padding-inline: 4px !important;
+    padding-inline: 3px !important;
     padding-block: 0 !important;
     margin: 0 !important;
+    color: #e8edf4 !important;
+    background: rgba(20, 32, 52, 0.92) !important;
+    border: 1px solid rgba(32, 199, 187, 0.26) !important;
+    border-radius: 5px !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper select:hover,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper select:focus,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="SkipSlideSelect"]:hover,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="SkipSlideSelect"]:focus {
+    color: #3fc2b8 !important;
+    border-color: rgba(32, 199, 187, 0.48) !important;
+    background: rgba(32, 199, 187, 0.14) !important;
+    outline: none !important;
   }
 
   #layout[data-skyroom-column="true"] [data-test="fitToWidthButton"] {
@@ -886,9 +973,9 @@
     max-width: 100% !important;
     margin-inline: 0 !important;
     overflow: visible !important;
-    height: var(--skyroom-presentation-toolbar-h, 28px) !important;
-    min-height: var(--skyroom-presentation-toolbar-h, 28px) !important;
-    max-height: var(--skyroom-presentation-toolbar-h, 28px) !important;
+    height: var(--skyroom-presentation-toolbar-h, 22px) !important;
+    min-height: var(--skyroom-presentation-toolbar-h, 22px) !important;
+    max-height: var(--skyroom-presentation-toolbar-h, 22px) !important;
   }
 
   #layout[data-skyroom-column="true"] #presentationToolbarWrapper [class*="PresentationSlideControls"],
@@ -942,25 +1029,36 @@
     touch-action: manipulation !important;
   }
 
-  /* Skyroom mobile — balanced dark-glass pen bar (touchable, not bulky). */
+  /* Skyroom mobile — compact dark-glass pen bar; never clip tool icons. */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element button[data-testid="mobile.styles"] {
     background: rgba(10, 16, 28, 0.95) !important;
     border: 1px solid rgba(32, 199, 187, 0.28) !important;
     box-shadow:
-      0 4px 14px rgba(0, 0, 0, 0.38),
+      0 3px 12px rgba(0, 0, 0, 0.36),
       inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
     backdrop-filter: blur(10px) !important;
     -webkit-backdrop-filter: blur(10px) !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools {
-    border-radius: 12px !important;
+    border-radius: 10px !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool .tlui-icon {
     color: #e8edf4 !important;
+    opacity: 1 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool[data-state="selected"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool[aria-pressed="true"] {
+    color: #fff !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool[data-state="selected"] .tlui-icon,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool[aria-pressed="true"] .tlui-icon {
+    color: #fff !important;
     opacity: 1 !important;
   }
 
@@ -2470,28 +2568,29 @@
      Pen toolbar uses stage width — not the portrait slide width.
      =================================================================== */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] {
-    --skyroom-wb-btn-size: 28px;
-    --skyroom-wb-tool-size: 28px;
+    --skyroom-wb-btn-size: 24px;
+    --skyroom-wb-tool-size: 24px;
     --skyroom-wb-scale: 1;
-    --skyroom-wb-popover-scale: 0.88;
+    --skyroom-wb-popover-scale: 0.85;
     /* Sit just above slide-nav; pen bar floats over the canvas. */
-    --skyroom-wb-toolbar-gap: 4px;
+    --skyroom-wb-toolbar-gap: 3px;
   }
 
-  /* Bottom pen toolbar — full stage width, centered, complete and touchable. */
+  /* Bottom pen toolbar — compact, centered, icons fully visible (no top clip). */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__bottom {
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    bottom: var(--skyroom-wb-toolbar-gap, 4px) !important;
-    padding-inline: 8px !important;
+    bottom: var(--skyroom-wb-toolbar-gap, 3px) !important;
+    padding-inline: 6px !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
     transform: none !important;
     pointer-events: none !important;
     box-sizing: border-box !important;
+    overflow: visible !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__bottom .tlui-toolbar {
@@ -2499,10 +2598,10 @@
     max-width: 100% !important;
     width: auto !important;
     transform: none !important;
+    overflow: visible !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__inner {
-    /* Keep tools then styles (no row-reverse) so nothing looks half-missing. */
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     justify-content: center !important;
@@ -2511,46 +2610,79 @@
     max-width: 100% !important;
     width: auto !important;
     margin-bottom: 0 !important;
-    gap: 4px !important;
+    gap: 3px !important;
+    overflow: visible !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools.tlui-toolbar__tools__mobile {
     flex-wrap: nowrap !important;
     flex-direction: row !important;
-    gap: 2px !important;
-    padding: 3px 6px !important;
-    max-width: min(100%, calc(100vw - 48px)) !important;
+    align-items: center !important;
+    gap: 1px !important;
+    padding: 4px 5px !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-width: min(100%, calc(100vw - 40px)) !important;
     overflow-x: auto !important;
-    overflow-y: hidden !important;
+    overflow-y: visible !important;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     box-sizing: border-box !important;
-    border-radius: 12px !important;
+    border-radius: 10px !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools::-webkit-scrollbar {
     display: none;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool .tlui-icon {
-    width: var(--skyroom-wb-tool-size, 28px) !important;
-    height: var(--skyroom-wb-tool-size, 28px) !important;
-    min-width: var(--skyroom-wb-tool-size, 28px) !important;
+  /* Override upstream mobile 20×30 tool size that clips icons. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__mobile .tlui-button__tool,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool {
+    width: var(--skyroom-wb-tool-size, 24px) !important;
+    height: var(--skyroom-wb-tool-size, 24px) !important;
+    min-width: var(--skyroom-wb-tool-size, 24px) !important;
+    min-height: var(--skyroom-wb-tool-size, 24px) !important;
+    max-width: var(--skyroom-wb-tool-size, 24px) !important;
+    max-height: var(--skyroom-wb-tool-size, 24px) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+    border-radius: 7px !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool .tlui-icon,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__mobile .tlui-button__tool > .tlui-icon,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool svg {
-    width: 16px !important;
-    height: 16px !important;
+    width: 14px !important;
+    height: 14px !important;
+    min-width: 14px !important;
+    min-height: 14px !important;
+    display: block !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool[data-state="selected"]:not(:disabled)::after,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool[aria-pressed="true"]:not(:disabled)::after {
+    border-radius: 7px !important;
+    inset: 1px !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element button[data-testid="mobile.styles"] {
-    width: var(--skyroom-wb-tool-size, 28px) !important;
-    height: var(--skyroom-wb-tool-size, 28px) !important;
-    min-width: var(--skyroom-wb-tool-size, 28px) !important;
-    border-radius: 10px !important;
+    width: var(--skyroom-wb-tool-size, 24px) !important;
+    height: var(--skyroom-wb-tool-size, 24px) !important;
+    min-width: var(--skyroom-wb-tool-size, 24px) !important;
+    min-height: var(--skyroom-wb-tool-size, 24px) !important;
+    border-radius: 8px !important;
     flex: 0 0 auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: visible !important;
+    padding: 0 !important;
   }
 
   /* Top-left: undo/redo — physical left in RTL too. */

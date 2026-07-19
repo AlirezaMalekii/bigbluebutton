@@ -169,10 +169,13 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     width: auto !important;
   }
 
+  /* Upstream mobile tool aspect (20×30) clips Skyroom icons — only keep for non-Skyroom. */
+  ${({ isSkyroom }) => (isSkyroom ? '' : `
   .tlui-layout__mobile .tlui-button__tool {
     height: 30px !important;
     width: 20px !important;
   }
+  `)}
 
   ${({ isSkyroom, isSkyroomMobile }) => (isSkyroom ? `
     .tlui-toolbar__inner {
@@ -184,12 +187,13 @@ const TldrawV2GlobalStyle = createGlobalStyle`
       flex-direction: row !important;
       align-items: center !important;
       gap: 2px !important;
-      padding: ${isSkyroomMobile ? '3px 6px' : '4px 6px'} !important;
-      border-radius: ${isSkyroomMobile ? '12px' : '14px'} !important;
+      padding: ${isSkyroomMobile ? '4px 5px' : '4px 6px'} !important;
+      border-radius: ${isSkyroomMobile ? '10px' : '14px'} !important;
       background: rgba(12, 20, 34, 0.92) !important;
       border: 1px solid rgba(20, 169, 158, 0.22) !important;
       backdrop-filter: blur(12px) !important;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+      ${isSkyroomMobile ? 'overflow: visible !important; height: auto !important;' : ''}
     }
 
     .tlui-toolbar {
@@ -222,10 +226,13 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     }
 
     .tlui-button__tool {
-      width: ${isSkyroomMobile ? '28px' : '36px'} !important;
-      height: ${isSkyroomMobile ? '28px' : '36px'} !important;
-      border-radius: ${isSkyroomMobile ? '8px' : '10px'} !important;
+      width: ${isSkyroomMobile ? '24px' : '36px'} !important;
+      height: ${isSkyroomMobile ? '24px' : '36px'} !important;
+      min-width: ${isSkyroomMobile ? '24px' : '36px'} !important;
+      min-height: ${isSkyroomMobile ? '24px' : '36px'} !important;
+      border-radius: ${isSkyroomMobile ? '7px' : '10px'} !important;
       color: #e8edf4 !important;
+      ${isSkyroomMobile ? 'display: inline-flex !important; align-items: center !important; justify-content: center !important; overflow: visible !important;' : ''}
     }
 
     .tlui-button__tool .tlui-icon {
