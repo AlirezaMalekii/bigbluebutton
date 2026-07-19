@@ -642,13 +642,17 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
     }
   };
 
-  const toggleMultipleResponse = () => {
-    if (isQuiz) {
+  // Keep tab mode in a ref so toggle stays correct even if a child caches onChange.
+  const isQuizRef = useRef(isQuiz);
+  isQuizRef.current = isQuiz;
+
+  const toggleMultipleResponse = useCallback(() => {
+    if (isQuizRef.current) {
       setQuizMultipleResponse((prev) => !prev);
       return;
     }
     setPollMultipleResponse((prev) => !prev);
-  };
+  }, []);
 
   useEffect(() => {
     const cps = Session.getItem('customPollShortcut');

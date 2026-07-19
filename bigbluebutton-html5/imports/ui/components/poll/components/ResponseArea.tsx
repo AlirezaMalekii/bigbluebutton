@@ -90,6 +90,8 @@ const ResponseArea: React.FC<ResponseAreaProps> = ({
             onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
           >
             <Checkbox
+              // Remount per mode so MUI checkbox internal state cannot leak across tabs.
+              key={isQuiz ? 'quiz-multiple-response' : 'poll-multiple-response'}
               onChange={toggleMultipleResponse}
               checked={multipleResponse}
               ariaLabel={intl.formatMessage(intlMessages.enableMultipleResponseLabel)}

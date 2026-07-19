@@ -20,6 +20,8 @@ interface RemainingTimeProps {
   alertLabel?: intlMsg;
   /** SafeMeet scheduled ends_at (ms) from join userdata — overrides createdTime + duration. */
   scheduledEndTimeMs?: number;
+  /** Show only humanized clock (no i18n sentence) — for dense chips. */
+  compact?: boolean;
 }
 
 let lastAlertTime: number | null = null;
@@ -34,6 +36,7 @@ const RemainingTime: React.FC<RemainingTimeProps> = (props) => {
     isBreakout,
     boldText,
     scheduledEndTimeMs = 0,
+    compact = false,
   } = props;
 
   const intl = useIntl();
@@ -92,7 +95,10 @@ const RemainingTime: React.FC<RemainingTimeProps> = (props) => {
         notify(alertMessage, 'info', 'rooms');
       }
 
-      meetingTimeMessage.current = intl.formatMessage(durationLabel, { remainingTime: humanizeSeconds(remainingTime) });
+      const clock = humanizeSeconds(remainingTime);
+      meetingTimeMessage.current = compact
+        ? clock
+        : intl.formatMessage(durationLabel, { remainingTime: clock });
       if (isBreakout) {
         return (
           <span data-test="timeRemaining">
@@ -103,10 +109,11 @@ const RemainingTime: React.FC<RemainingTimeProps> = (props) => {
     } else {
       clearInterval(timeRemainingInterval.current);
       if (endingLabel) meetingTimeMessage.current = intl.formatMessage(endingLabel);
+      else if (compact) meetingTimeMessage.current = '00:00';
     }
   }
 
-  if (boldText) {
+  if (boldText && !compact) {
     const words = meetingTimeMessage.current.split(' ');
     const time = words.pop();
     const text = words.join(' ');

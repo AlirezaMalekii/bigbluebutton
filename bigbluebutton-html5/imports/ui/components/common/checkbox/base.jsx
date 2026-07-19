@@ -1,30 +1,25 @@
-import React, { createRef, PureComponent } from 'react';
+import { createRef, PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
 const propTypes = {
   disabled: PropTypes.bool,
-  checked: PropTypes.bool,
   onChange: PropTypes.func.isRequired,
-  ariaLabelledBy: PropTypes.string,
-  ariaLabel: PropTypes.string,
-  ariaDescribedBy: PropTypes.string,
-  ariaDesc: PropTypes.string,
+  keyValue: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.number,
+    PropTypes.bool,
+  ]),
 };
 
 const defaultProps = {
   disabled: false,
-  checked: false,
-  ariaLabelledBy: null,
-  ariaLabel: null,
-  ariaDescribedBy: null,
-  ariaDesc: null,
+  keyValue: undefined,
 };
 
 export default class Base extends PureComponent {
   constructor(props) {
     super(props);
 
-    this.onChange = props.onChange;
     this.handleChange = this.handleChange.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
 
@@ -51,9 +46,11 @@ export default class Base extends PureComponent {
   }
 
   handleChange() {
-    const { disabled, keyValue } = this.props;
+    const { disabled, keyValue, onChange } = this.props;
     if (disabled) return;
-    this.onChange(keyValue);
+    // Always read onChange from props — caching it in the constructor leaves a
+    // stale closure (e.g. poll vs quiz multiple-response toggles after tab switch).
+    onChange(keyValue);
   }
 
   render() {

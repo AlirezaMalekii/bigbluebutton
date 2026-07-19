@@ -221,9 +221,9 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     }
 
     .tlui-button__tool {
-      width: ${isSkyroomMobile ? '24px' : '36px'} !important;
-      height: ${isSkyroomMobile ? '24px' : '36px'} !important;
-      border-radius: 10px !important;
+      width: ${isSkyroomMobile ? '26px' : '36px'} !important;
+      height: ${isSkyroomMobile ? '26px' : '36px'} !important;
+      border-radius: ${isSkyroomMobile ? '8px' : '10px'} !important;
       color: #e8edf4 !important;
     }
 
@@ -294,8 +294,9 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     font-family: 'Arial', sans-serif !important;
   }
 
-  ${({ isSkyroom, isSkyroomMobile }) => {
-    if (isSkyroom && !isSkyroomMobile) return '';
+  /* Stock BBB mobile dialog offset — never apply under Skyroom (breaks style popover). */
+  ${({ isSkyroom }) => {
+    if (isSkyroom) return '';
     return `
   [data-side="bottom"][data-align="end"][data-state="open"][role="dialog"] {
     right: 3.5rem !important;

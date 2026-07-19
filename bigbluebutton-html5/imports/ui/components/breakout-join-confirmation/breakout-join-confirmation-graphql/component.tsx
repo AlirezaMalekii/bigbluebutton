@@ -240,8 +240,11 @@ const BreakoutJoinConfirmation: React.FC<BreakoutJoinConfirmationProps> = ({
     if (breakouts?.length > 0 && !currentUserJoined && !invitationDismissed) {
       setIsOpen(true);
       // Open the Skyroom breakout content box / mobile tab alongside the invite modal.
+      // Defer one tick so mobile activeBox isn't raced against stale breakoutOpen=false.
       if (isSkyroomColumnLayout()) {
-        openSkyroomBreakoutPanel(layoutContextDispatch);
+        window.setTimeout(() => {
+          openSkyroomBreakoutPanel(layoutContextDispatch);
+        }, 0);
       }
     }
   }, [breakouts, currentUserJoined, invitationDismissed, setIsOpen, layoutContextDispatch]);

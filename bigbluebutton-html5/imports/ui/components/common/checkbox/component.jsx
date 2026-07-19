@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import Base from './base';
 import Styled from './styles';
 
@@ -36,3 +37,23 @@ export default class Checkbox extends Base {
     );
   }
 }
+
+Checkbox.propTypes = {
+  ...Base.propTypes,
+  checked: PropTypes.bool,
+  ariaLabelledBy: PropTypes.string,
+  ariaLabel: PropTypes.string,
+  ariaDescribedBy: PropTypes.string,
+  ariaDesc: PropTypes.string,
+  label: PropTypes.node,
+};
+
+Checkbox.defaultProps = {
+  ...Base.defaultProps,
+  checked: false,
+  ariaLabelledBy: null,
+  ariaLabel: null,
+  ariaDescribedBy: null,
+  ariaDesc: null,
+  label: null,
+};

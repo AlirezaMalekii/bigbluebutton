@@ -51,7 +51,8 @@
 
 #layout[data-skyroom-column="true"] #ActionsBar [data-test="skyroomFooterLogoSlot"] {
   position: absolute !important;
-  left: 12px !important;
+  left: 10px !important;
+  right: auto !important;
   top: 50% !important;
   bottom: auto !important;
   transform: translateY(-50%) !important;
@@ -557,13 +558,16 @@
     display: flex !important;
   }
 
+  #layout[data-skyroom-column="true"] #ActionsBar > div {
+    gap: 8px !important;
+  }
+
   #layout[data-skyroom-column="true"] #ActionsBar > div > div:not(:last-child) {
-    margin-inline-end: 8px !important;
+    margin-inline-end: 0 !important;
   }
 
   #layout[data-skyroom-column="true"] #ActionsBar > div > div:not(:last-child)::after {
-    height: 22px !important;
-    inset-inline-end: -8px !important;
+    display: none !important;
   }
 }
 
@@ -575,7 +579,8 @@
 #layout[data-skyroom-column="true"] #ActionsBar [data-test="skyroomFooterLogoSlot"][data-mobile-footer="true"],
 #layout[data-skyroom-column="true"] #ActionsBar [data-test="skyroomFooterLogoSlot"][data-in-actions-bar="true"] {
   position: absolute !important;
-  left: 12px !important;
+  left: 10px !important;
+  right: auto !important;
   top: 50% !important;
   bottom: auto !important;
   transform: translateY(-50%) !important;
@@ -611,8 +616,10 @@
 }
 
 #layout[data-skyroom-column="true"]:has(#ActionsBar [data-test="skyroomFooterLogoSlot"][data-mobile-footer="true"]) #ActionsBar > div {
-  /* Symmetric end padding keeps the control cluster centered under the tab bar. */
-  padding-inline: calc(10px + 36px + 6px) !important;
+  /* Physical symmetric padding — logo is pinned physical-left; keep clusters centered. */
+  padding-left: calc(10px + 36px + 6px) !important;
+  padding-right: calc(10px + 36px + 6px) !important;
+  padding-inline: unset !important;
 }
 
 /* Legacy mobile icon rules (header portal path) */
@@ -639,13 +646,13 @@
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.28)) !important;
 }
 
-/* Logo uses logical inline-start; do not force physical left (that skewed the footer). */
+/* Mobile logo stays physical-left in RTL too (matches reserved left padding). */
 [dir="rtl"] #layout[data-skyroom-column="true"] #ActionsBar [data-test="skyroomFooterLogoSlot"][data-mobile-footer="true"],
 [dir="rtl"] #layout[data-skyroom-column="true"] #ActionsBar [data-test="skyroomFooterLogoSlot"][data-in-actions-bar="true"] {
-  inset-inline-start: 10px !important;
-  inset-inline-end: auto !important;
-  left: auto !important;
+  left: 10px !important;
   right: auto !important;
+  inset-inline-start: auto !important;
+  inset-inline-end: auto !important;
 }
 
   #layout[data-skyroom-column="true"] #ActionsBar [data-test="restorePresentation"] > span:first-child,

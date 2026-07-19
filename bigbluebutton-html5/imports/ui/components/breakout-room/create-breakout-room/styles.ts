@@ -433,8 +433,11 @@ const RoomItem = styled.div`
 
 const ItemTitle = styled.h2`
   margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 0.95rem;
   font-weight: 600;
+  line-height: 1.35;
   color: var(--skyroom-text-primary, ${colorBlueLight});
 `;
 

@@ -12,15 +12,11 @@ const intlMessages = defineMessages({
     id: 'app.createBreakoutRoom.duration',
     description: 'breakout duration time',
   },
-  breakoutDurationCompact: {
-    id: 'app.breakout.manager.sidebarTime',
-    description: 'Compact breakout remaining time for sidebar chip',
-  },
 });
 
 interface BreakoutRemainingTimeContainerProps {
   boldText?: boolean;
-  /** Short timer label for dense UI (e.g. users-list entry chip). */
+  /** Short timer (clock only) for dense UI chips — no i18n sentence. */
   compact?: boolean;
 }
 
@@ -32,7 +28,7 @@ const BreakoutRemainingTimeContainer: React.FC<BreakoutRemainingTimeContainerPro
   const loadingRemainingTime = () => {
     return (
       <span>
-        {intl.formatMessage(intlMessages.calculatingBreakoutTimeRemaining)}
+        {compact ? '…' : intl.formatMessage(intlMessages.calculatingBreakoutTimeRemaining)}
       </span>
     );
   };
@@ -51,17 +47,14 @@ const BreakoutRemainingTimeContainer: React.FC<BreakoutRemainingTimeContainerPro
   const breakoutStartedAt: Date = new Date(currentMeeting?.breakoutRoomsCommonProperties?.startedAt ?? '');
   const breakoutStartedTime = breakoutStartedAt.getTime();
 
-  const durationLabel = compact
-    ? intlMessages.breakoutDurationCompact
-    : intlMessages.breakoutDuration;
-
   return (
     <RemainingTime
       referenceStartedTime={breakoutStartedTime}
       durationInSeconds={breakoutDuration}
-      durationLabel={durationLabel}
+      durationLabel={intlMessages.breakoutDuration}
       boldText={boldText}
       isBreakout={false}
+      compact={compact}
     />
   );
 };

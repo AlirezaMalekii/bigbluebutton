@@ -350,10 +350,12 @@ const buildSkyroomMobileLayout = ({
       top: DEFAULT_VALUES.navBarTop + banner,
       height: SKYROOM_MOBILE_NAVBAR_H,
     },
+    // Always pin with physical `left` — ActionsBar only applies left+width (not right),
+    // so RTL `right: edge` left the footer unanchored and visually off the tab bar.
     actionbarFullWidth: {
       width: viewportW - edge * 2,
-      left: isRTL ? null : edge,
-      right: isRTL ? edge : null,
+      left: edge,
+      right: null,
       top: viewportH - SKYROOM_FOOTER_H - lift,
       height: SKYROOM_FOOTER_H,
     },

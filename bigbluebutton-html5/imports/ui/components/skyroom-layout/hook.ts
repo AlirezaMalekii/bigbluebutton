@@ -239,19 +239,32 @@ export const useSkyroomColumnLayout = () => {
     }
   }, [notesOpen, layoutContextDispatch]);
 
-  // Phone: if the breakout box was active and the breakout ended (panel auto-closes), release
-  // the explicit selection so the bottom zone doesn't strand on an empty breakout panel.
+  // Phone: only release breakout selection on a real close (open → closed).
+  // Do NOT clear when activeBox was set ahead of the async panel open — that race
+  // wiped the tab right after create/invite auto-open.
+  const prevBreakoutOpenRef = useRef(breakoutOpen);
   useEffect(() => {
-    if (!isSkyroomMobileViewport()) return;
-    if (getSkyroomMobileActiveBox() === 'breakout' && !breakoutOpen) {
+    if (!isSkyroomMobileViewport()) {
+      prevBreakoutOpenRef.current = breakoutOpen;
+      return;
+    }
+    const wasOpen = prevBreakoutOpenRef.current;
+    prevBreakoutOpenRef.current = breakoutOpen;
+    if (wasOpen && !breakoutOpen && getSkyroomMobileActiveBox() === 'breakout') {
       setSkyroomMobileActiveBox(null);
     }
   }, [breakoutOpen]);
 
-  // Phone: release waiting-users box when the panel closes.
+  // Phone: release waiting-users box when the panel actually closes (open → closed).
+  const prevWaitingOpenRef = useRef(waitingUsersOpen);
   useEffect(() => {
-    if (!isSkyroomMobileViewport()) return;
-    if (getSkyroomMobileActiveBox() === 'waiting' && !waitingUsersOpen) {
+    if (!isSkyroomMobileViewport()) {
+      prevWaitingOpenRef.current = waitingUsersOpen;
+      return;
+    }
+    const wasOpen = prevWaitingOpenRef.current;
+    prevWaitingOpenRef.current = waitingUsersOpen;
+    if (wasOpen && !waitingUsersOpen && getSkyroomMobileActiveBox() === 'waiting') {
       setSkyroomMobileActiveBox(null);
     }
   }, [waitingUsersOpen]);

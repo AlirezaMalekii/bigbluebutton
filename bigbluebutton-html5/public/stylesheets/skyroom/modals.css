@@ -73,6 +73,9 @@
 
 /* ---------------------------------------------------------------------
    1) Modal shell padding
+   Note: :not(#fsmodal) has ID-level specificity. Phone full-screen modals
+   (timer / poll / presentations) override this via
+   html[data-skyroom] #modals-container … rules in responsive.css.
    --------------------------------------------------------------------- */
 .ReactModal__Content:not(#fsmodal) {
   padding: 28px 32px 32px !important;
@@ -753,6 +756,39 @@ html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"]
   #fsmodal[data-test="createBreakoutRoomModal"] [data-test="breakoutCreateSettings"] {
     grid-template-columns: 1fr !important;
     padding: 0.85rem 0.9rem !important;
+  }
+
+  /*
+   * Phone: keep header Create/Close inside the safe content box.
+   * Desktop modals.css sets Actions to width:auto + margin-inline-start:auto,
+   * which can shove «بستن» under the screen edge on RTL.
+   */
+  html[data-skyroom="true"] #fsmodal[data-test="createBreakoutRoomModal"] header {
+    padding-left: max(16px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(16px, env(safe-area-inset-right, 0px)) !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal[data-test="createBreakoutRoomModal"] header [class*="Actions"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    margin-inline-start: 0 !important;
+    justify-content: stretch !important;
+    gap: 10px !important;
+    box-sizing: border-box !important;
+  }
+
+  html[data-skyroom="true"] #fsmodal[data-test="createBreakoutRoomModal"] header [class*="Actions"] > .buttonWrapper,
+  html[data-skyroom="true"] #fsmodal[data-test="createBreakoutRoomModal"] header [class*="Actions"] > button {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
   }
 }
 

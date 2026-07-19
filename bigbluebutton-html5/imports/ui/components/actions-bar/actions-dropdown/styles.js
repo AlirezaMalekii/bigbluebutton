@@ -32,6 +32,7 @@ const TimerModalBody = styled.div`
   @media ${smallOnly} {
     flex: 1 1 auto;
     min-height: 0;
+    max-width: 100%;
     max-height: none;
     padding: 0;
   }

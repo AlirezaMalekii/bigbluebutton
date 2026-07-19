@@ -11,10 +11,6 @@ const intlMessages = defineMessages({
     id: 'app.createBreakoutRoom.nextLabel',
     description: 'Next label',
   },
-  backLabel: {
-    id: 'app.audio.backLabel',
-    description: 'Back label',
-  },
   breakoutRoomDesc: {
     id: 'app.createBreakoutRoom.modalDesc',
     description: 'modal description',
@@ -26,6 +22,10 @@ const intlMessages = defineMessages({
   breakoutRoomLabel: {
     id: 'app.createBreakoutRoom.breakoutRoomLabel',
     description: 'breakout room label',
+  },
+  participantsLabel: {
+    id: 'app.breakout.manager.participantsLabel',
+    description: 'Assigned participants count with unit, e.g. "2 people"',
   },
 });
 
@@ -40,18 +40,17 @@ const BreakoutRoomUserAssignmentMobile: React.FC<ChildComponentProps> = ({
   const [layer, setLayer] = useState<1 | 2 | 3>(1);
 
   const btnLevelId = useMemo(() => uniqueId('btn-set-level-'), []);
-  const levelingButton = useMemo(() => {
-    return (
-      <Button
-        color="primary"
-        size="lg"
-        label={layer === 1 ? intl.formatMessage(intlMessages.nextLabel)
-          : intl.formatMessage(intlMessages.backLabel)}
-        onClick={() => (layer === 1 ? setLayer(2) : setLayer(1))}
-        key={btnLevelId}
-      />
-    );
-  }, [layer]);
+  // Step 1 only: advance to room assignment. No bottom "Back" on step 2 —
+  // users create/close from the modal header instead.
+  const nextStepButton = layer === 1 ? (
+    <Button
+      color="primary"
+      size="lg"
+      label={intl.formatMessage(intlMessages.nextLabel)}
+      onClick={() => setLayer(2)}
+      key={btnLevelId}
+    />
+  ) : null;
 
   const layerTwo = useMemo(() => {
     if (layer === 2) {
@@ -70,7 +69,8 @@ const BreakoutRoomUserAssignmentMobile: React.FC<ChildComponentProps> = ({
                     <Styled.RoomItem key={`breakout-room-assign-${roomNumber}`}>
                       <Styled.ItemTitle>
                         {intl.formatMessage(intlMessages.breakoutRoomLabel, { roomNumber })}
-                        {assignedCount > 0 ? ` · ${assignedCount}` : ''}
+                        {' · '}
+                        {intl.formatMessage(intlMessages.participantsLabel, { count: assignedCount })}
                       </Styled.ItemTitle>
                       <Styled.ItemButton
                         label={intl.formatMessage(intlMessages.addParticipantLabel)}
@@ -92,7 +92,7 @@ const BreakoutRoomUserAssignmentMobile: React.FC<ChildComponentProps> = ({
       );
     }
     return null;
-  }, [layer, numberOfRooms, rooms]);
+  }, [layer, numberOfRooms, rooms, intl]);
 
   const closeUserPicker = () => setLayer(2);
 
@@ -114,8 +114,7 @@ const BreakoutRoomUserAssignmentMobile: React.FC<ChildComponentProps> = ({
   return (
     <>
       {layers[layer]}
-      {/* Layer 3 has its own Back/Confirm chrome; hide the wizard next/back. */}
-      {layer !== 3 ? levelingButton : null}
+      {nextStepButton}
     </>
   );
 };

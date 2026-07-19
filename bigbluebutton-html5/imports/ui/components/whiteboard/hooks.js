@@ -443,6 +443,16 @@ const isSkyroomMobileStylePanelMode = () => {
   return Boolean(document.getElementById('layout')?.hasAttribute('data-skyroom-mobile'));
 };
 
+const STYLE_PANEL_ANCHOR_PROPS = [
+  'position', 'top', 'left', 'right', 'bottom', 'transform', 'margin', 'z-index',
+];
+
+const isStylePanelPopoverOpen = (el) => {
+  if (!el) return false;
+  if (el.getAttribute('data-state') === 'open') return true;
+  return Boolean(el.querySelector?.('[data-state="open"]'));
+};
+
 /* eslint-disable no-param-reassign */
 const anchorSkyroomMobileStylePanel = () => {
   if (!isSkyroomMobileStylePanelMode()) return;
@@ -453,15 +463,30 @@ const anchorSkyroomMobileStylePanel = () => {
   const trigger = root.querySelector('button[data-testid="mobile.styles"][data-state="open"]')
     || root.querySelector('button[data-testid="mobile.styles"][aria-expanded="true"]');
 
+  // Only the styles popover (requires StylePanel body). Retry via rAF if it mounts late.
   const popover = root.querySelector('.tlui-popover__content[data-state="open"]:has(.tlui-style-panel)')
     || root.querySelector('[role="dialog"][data-state="open"]:has(.tlui-style-panel)');
 
   if (!trigger || !popover) return;
 
+  // Radix wraps content in a transformed popper node. Viewport coords must be
+  // applied on that wrapper (or transform:none first) — not only on the content.
+  const anchorTarget = popover.closest('[data-radix-popper-content-wrapper]') || popover;
+
   const gap = 8;
   const triggerRect = trigger.getBoundingClientRect();
-  const popoverHeight = popover.offsetHeight > 0 ? popover.offsetHeight : popover.scrollHeight;
-  const popoverWidth = popover.offsetWidth > 0 ? popover.offsetWidth : popover.scrollWidth;
+  const popoverHeight = Math.max(
+    popover.offsetHeight,
+    popover.scrollHeight,
+    anchorTarget.offsetHeight,
+    0,
+  );
+  const popoverWidth = Math.max(
+    popover.offsetWidth,
+    popover.scrollWidth,
+    anchorTarget.offsetWidth,
+    0,
+  );
 
   if (popoverHeight < 4 || popoverWidth < 4) return;
 
@@ -470,7 +495,7 @@ const anchorSkyroomMobileStylePanel = () => {
   ).getBoundingClientRect();
 
   let top = triggerRect.top - popoverHeight - gap;
-  top = Math.max(stageRect.top + gap, top);
+  top = Math.max(stageRect.top + gap, Math.min(top, triggerRect.top - gap - 4));
 
   let left = triggerRect.left + (triggerRect.width / 2) - (popoverWidth / 2);
   left = Math.max(stageRect.left + gap, left);
@@ -480,32 +505,39 @@ const anchorSkyroomMobileStylePanel = () => {
   const desiredLeft = `${Math.round(left)}px`;
 
   if (
-    popover.dataset.skyroomMobileStylePanelAnchored === 'true'
-    && popover.style.top === desiredTop
-    && popover.style.left === desiredLeft
+    anchorTarget.dataset.skyroomMobileStylePanelAnchored === 'true'
+    && anchorTarget.style.top === desiredTop
+    && anchorTarget.style.left === desiredLeft
   ) {
     return;
   }
 
-  popover.style.setProperty('position', 'fixed', 'important');
-  popover.style.setProperty('top', desiredTop, 'important');
-  popover.style.setProperty('left', desiredLeft, 'important');
-  popover.style.setProperty('right', 'auto', 'important');
-  popover.style.setProperty('bottom', 'auto', 'important');
-  popover.style.setProperty('transform', 'none', 'important');
-  popover.style.setProperty('margin', '0', 'important');
-  popover.style.setProperty('z-index', '1500', 'important');
-  popover.dataset.skyroomMobileStylePanelAnchored = 'true';
+  anchorTarget.style.setProperty('position', 'fixed', 'important');
+  anchorTarget.style.setProperty('top', desiredTop, 'important');
+  anchorTarget.style.setProperty('left', desiredLeft, 'important');
+  anchorTarget.style.setProperty('right', 'auto', 'important');
+  anchorTarget.style.setProperty('bottom', 'auto', 'important');
+  anchorTarget.style.setProperty('transform', 'none', 'important');
+  anchorTarget.style.setProperty('margin', '0', 'important');
+  anchorTarget.style.setProperty('z-index', '1500', 'important');
+  anchorTarget.dataset.skyroomMobileStylePanelAnchored = 'true';
+
+  // Keep content in normal flow inside the fixed wrapper.
+  if (anchorTarget !== popover) {
+    popover.style.setProperty('position', 'relative', 'important');
+    popover.style.setProperty('transform', 'none', 'important');
+    popover.style.setProperty('top', 'auto', 'important');
+    popover.style.setProperty('left', 'auto', 'important');
+    popover.style.setProperty('margin', '0', 'important');
+    popover.dataset.skyroomMobileStylePanelAnchored = 'true';
+  }
 };
 
 const clearSkyroomMobileStylePanelAnchors = () => {
-  document.querySelectorAll('[data-skyroom-mobile-style-panel-anchored="true"]').forEach((popover) => {
-    if (popover.getAttribute('data-state') !== 'open') {
-      delete popover.dataset.skyroomMobileStylePanelAnchored;
-      [
-        'position', 'top', 'left', 'right', 'bottom', 'transform', 'margin', 'z-index',
-      ].forEach((prop) => popover.style.removeProperty(prop));
-    }
+  document.querySelectorAll('[data-skyroom-mobile-style-panel-anchored="true"]').forEach((el) => {
+    if (isStylePanelPopoverOpen(el)) return;
+    delete el.dataset.skyroomMobileStylePanelAnchored;
+    STYLE_PANEL_ANCHOR_PROPS.forEach((prop) => el.style.removeProperty(prop));
   });
 };
 /* eslint-enable no-param-reassign */
@@ -522,6 +554,7 @@ const useSkyroomMobileStylePanelAnchor = (enabled) => {
       rafId = requestAnimationFrame(() => {
         clearSkyroomMobileStylePanelAnchors();
         anchorSkyroomMobileStylePanel();
+        // Second frame: StylePanel may mount after the popover shell opens.
         rafId = requestAnimationFrame(() => {
           rafId = null;
           anchorSkyroomMobileStylePanel();
@@ -534,10 +567,11 @@ const useSkyroomMobileStylePanelAnchor = (enabled) => {
       ? new MutationObserver(schedule)
       : null;
 
+    // Do not observe `style` — our own fixed positioning would retrigger forever.
     observer?.observe(root, {
       subtree: true,
       attributes: true,
-      attributeFilter: ['data-state', 'style'],
+      attributeFilter: ['data-state', 'aria-expanded'],
       childList: true,
     });
 
@@ -549,7 +583,10 @@ const useSkyroomMobileStylePanelAnchor = (enabled) => {
       observer?.disconnect();
       window.removeEventListener('resize', schedule);
       window.removeEventListener('scroll', schedule, true);
-      clearSkyroomMobileStylePanelAnchors();
+      document.querySelectorAll('[data-skyroom-mobile-style-panel-anchored="true"]').forEach((el) => {
+        el.removeAttribute('data-skyroom-mobile-style-panel-anchored');
+        STYLE_PANEL_ANCHOR_PROPS.forEach((prop) => el.style.removeProperty(prop));
+      });
     };
   }, [enabled]);
 };

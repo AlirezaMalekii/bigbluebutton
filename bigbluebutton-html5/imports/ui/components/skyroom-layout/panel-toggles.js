@@ -27,10 +27,12 @@ export const isSkyroomColumnLayout = () => {
 /** Scaled TLDraw bottom toolbar height reserved inside the whiteboard on phone. */
 export const getSkyroomMobileWbToolbarReserve = () => {
   const layoutEl = document.getElementById('layout');
-  if (!layoutEl) return 34;
+  if (!layoutEl) return 32;
   const styles = getComputedStyle(layoutEl);
-  const scale = parseFloat(styles.getPropertyValue('--skyroom-wb-scale')) || 0.68;
-  return Math.ceil(30 * scale * 0.88) + 2;
+  const scale = parseFloat(styles.getPropertyValue('--skyroom-wb-scale')) || 1;
+  const gap = parseFloat(styles.getPropertyValue('--skyroom-wb-toolbar-gap')) || 1;
+  // Compact 26px tools + padding + gap above slide-nav.
+  return Math.ceil(28 * scale) + Math.max(0, Math.round(gap));
 };
 
 /** True during bootstrap before #layout mounts (see main.html data-skyroom). */
@@ -179,7 +181,10 @@ export const openSkyroomBreakout = (layoutContextDispatch) => {
 /** Open breakout panel on desktop content sidebar or mobile bottom zone. */
 export const openSkyroomBreakoutPanel = (layoutContextDispatch) => {
   if (isSkyroomMobileViewport()) {
+    // Set explicit selection first, then open content — same order as tab taps.
     openSkyroomBreakout(layoutContextDispatch);
+    // Coalesce once more after React applies panel flags (avoids empty first paint).
+    dispatchSkyroomLayoutResizeNextFrame();
     return;
   }
   layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN, value: true });
