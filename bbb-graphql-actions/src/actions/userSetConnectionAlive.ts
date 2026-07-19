@@ -34,6 +34,9 @@ export default function buildRedisMessage(sessionVariables: Record<string, unkno
     traceLog = input.traceLog + '@gqlactions|' + new Date().toISOString();
   }
 
+  // Always include clientIsHidden — akka FAIL_ON_MISSING_CREATOR_PROPERTIES rejects
+  // UserConnectionAliveReqMsg when the field is omitted, which showed up as
+  // repeated deserialize errors during mobile webcam tab freezes.
   const body: Record<string, unknown> = {
     userId: routing.userId,
     sessionToken: sessionToken,
@@ -41,12 +44,11 @@ export default function buildRedisMessage(sessionVariables: Record<string, unkno
     clientSessionUUID: input.clientSessionUUID,
     networkRttInMs: input.networkRttInMs,
     applicationRttInMs: input.applicationRttInMs ?? 0,
-    traceLog
+    traceLog,
+    clientIsHidden: ('clientIsHidden' in input && input.clientIsHidden != null)
+      ? Boolean(input.clientIsHidden)
+      : false,
   };
-
-  if ('clientIsHidden' in input && input.clientIsHidden != null) {
-    body.clientIsHidden = input.clientIsHidden;
-  }
 
 
 

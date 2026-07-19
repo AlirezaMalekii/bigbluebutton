@@ -14,20 +14,43 @@ import {
 import { broadcastSkyroomNotesGlobalOpen } from './notes-panel-sync/useSkyroomNotesPanelSync';
 import { setSkyroomMobileActiveBox } from './mobile-bottom-state';
 import { dispatchSkyroomLayoutResize, dispatchSkyroomLayoutResizeNextFrame } from './layout-resize';
-import { cleanupWebcamMenuOverlayArtifacts } from './webcam-fullscreen/webcam-fullscreen';
+import {
+  cleanupWebcamMenuOverlayArtifacts,
+  syncWebcamFullscreenAttribute,
+} from './webcam-fullscreen/webcam-fullscreen';
+
+const getMobileCameraDockWrappers = () => {
+  if (typeof document === 'undefined') return [];
+  return Array.from(document.querySelectorAll('.react-draggable')).filter((el) => (
+    el instanceof HTMLElement && el.querySelector('#cameraDock')
+  ));
+};
 
 /**
- * Clear the bottom-webcam dock attribute immediately when leaving the webcams
- * tab. The layout engine only syncs these attrs on the next resize pass; until
- * then a fixed pointer-events:auto camera dock can cover chat/users and freeze taps.
+ * Clear the bottom-webcam dock immediately when leaving the webcams tab.
+ * Attribute alone can race the layout engine; also force the dock inert via
+ * inline styles so a stale fixed layer cannot eat taps over chat/users.
  */
 const syncSkyroomMobileWebcamDockVisibility = (box) => {
   const layoutEl = typeof document !== 'undefined'
     ? document.getElementById('layout')
     : null;
   if (!layoutEl?.hasAttribute('data-skyroom-mobile')) return;
-  if (box === 'webcams') return;
+
+  const docks = getMobileCameraDockWrappers();
+  if (box === 'webcams') {
+    docks.forEach((el) => {
+      el.style.removeProperty('pointer-events');
+      el.style.removeProperty('visibility');
+    });
+    return;
+  }
+
   layoutEl.removeAttribute('data-skyroom-mobile-bottom-webcams');
+  docks.forEach((el) => {
+    el.style.setProperty('pointer-events', 'none', 'important');
+    el.style.setProperty('visibility', 'hidden', 'important');
+  });
 };
 
 /** Phone breakpoint — matches layout/utils.js isMobile (clientWidth <= 599). */
@@ -46,8 +69,8 @@ export const getSkyroomMobileWbToolbarReserve = () => {
   const styles = getComputedStyle(layoutEl);
   const scale = parseFloat(styles.getPropertyValue('--skyroom-wb-scale')) || 1;
   const gap = parseFloat(styles.getPropertyValue('--skyroom-wb-toolbar-gap')) || 1;
-  // Compact 22px tools + padding + gap above slide-nav.
-  return Math.ceil(24 * scale) + Math.max(0, Math.round(gap));
+  // Balanced 28px tools + padding + gap above slide-nav.
+  return Math.ceil(34 * scale) + Math.max(0, Math.round(gap));
 };
 
 /** True during bootstrap before #layout mounts (see main.html data-skyroom). */
@@ -155,7 +178,10 @@ export const openSkyroomMobileBox = (layoutContextDispatch, box) => {
   // Hide the fixed camera dock synchronously when leaving webcams so it cannot
   // keep intercepting taps while the coalesced layout pass is pending.
   syncSkyroomMobileWebcamDockVisibility(box);
-  // MUI webcam menus can leave aria-hidden/inert on #app — clear on every tab change.
+  // MUI menus / webcam-FS leftovers can leave aria-hidden/inert on #app.
+  if (box !== 'webcams') {
+    syncWebcamFullscreenAttribute();
+  }
   cleanupWebcamMenuOverlayArtifacts();
 
   if (box !== 'users') closeSkyroomUsers(layoutContextDispatch);

@@ -27,7 +27,7 @@
 
     /* Module Resolution Options */
     "paths": {
-      /* Replaces deprecated baseUrl "." module lookup (TS 6+) */
+      /* Explicit relative targets — no deprecated baseUrl (TS 6+ IDE / future tsc). */
       "*": ["./*"],
       /* Support absolute /imports/* with a leading '/' */
       "/*": ["./*"],

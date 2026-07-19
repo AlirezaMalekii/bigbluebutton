@@ -25,7 +25,6 @@ import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
-  getSkyroomMobileWbToolbarReserve,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import { SKYROOM_MOBILE_ZONE_FS_EVENT } from '/imports/ui/components/skyroom-layout/mobile-zone-fullscreen-state';
 import {
@@ -472,11 +471,12 @@ class Presentation extends PureComponent {
 
     presentationSizes.presentationWidth = presentationBounds.width;
     if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
+      // Only reserve the slide-nav bar below the canvas. The pen toolbar floats
+      // over the stage — subtracting it here top-biases the letterboxed slide.
       const slideToolbarH = getToolbarHeight() || 14;
-      const wbToolbarReserve = getSkyroomMobileWbToolbarReserve();
       presentationSizes.presentationHeight = Math.max(
         80,
-        presentationBounds.height - slideToolbarH - wbToolbarReserve,
+        presentationBounds.height - slideToolbarH,
       );
     } else {
       presentationSizes.presentationHeight = presentationBounds.height;
@@ -812,8 +812,6 @@ class Presentation extends PureComponent {
     const toolbarHeight = getToolbarHeight();
     const isSkyroomMobileStage = isSkyroomColumnLayout() && isSkyroomMobileViewport();
     const slideToolbarH = toolbarHeight || 14;
-    const wbToolbarReserve = isSkyroomMobileStage ? getSkyroomMobileWbToolbarReserve() : 0;
-    const mobileChromeH = slideToolbarH + wbToolbarReserve;
     // Match upstream BBB: mount when fitted svg size is known. On Skyroom phone the
     // stage bounds arrive first — allow that as a bootstrap signal only.
     const stageReady = isSkyroomMobileStage
@@ -822,12 +820,14 @@ class Presentation extends PureComponent {
     // Phone: full-stage wrapper so presenter chrome (top actions + pen toolbar)
     // can use the available width; slide is letterbox-centered by the camera.
     // Desktop: keep upstream svgWidth×svgHeight fitted box.
+    // Do not subtract the floating pen-bar reserve from camera height — that
+    // leaves a dead band under the slide and looks top-aligned on phone.
     const wbPresentationWidth = isSkyroomMobileStage ? presentationBounds.width : svgWidth;
     const wbPresentationHeight = isSkyroomMobileStage
-      ? Math.max(80, presentationBounds.height - mobileChromeH)
+      ? Math.max(80, presentationBounds.height - slideToolbarH)
       : svgHeight;
     const wbPresentationAreaHeight = isSkyroomMobileStage
-      ? Math.max(80, presentationBounds.height - mobileChromeH)
+      ? Math.max(80, presentationBounds.height - slideToolbarH)
       : presentationBounds.height - toolbarHeight;
 
     const { presentationToolbarMinWidth } = DEFAULT_VALUES;

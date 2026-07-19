@@ -700,8 +700,8 @@
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] {
-    --skyroom-presentation-toolbar-h: 18px;
-    --skyroom-wb-toolbar-gap: 2px;
+    --skyroom-presentation-toolbar-h: 28px;
+    --skyroom-wb-toolbar-gap: 4px;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbar"] {
@@ -737,34 +737,28 @@
   }
 
   /*
-   * Phone slide-nav: keep the centered 3-column layout (poll | slides | zoom).
-   * In RTL, zoom/fit-to-width lands on the physical left and was clipping under
-   * the device edge — nudge with extra padding-left so that button stays fully
-   * visible without right-packing the whole bar.
+   * Phone slide-nav: one centered control group (not a 3-col grid).
+   * Empty poll column previously collapsed the grid and shoved slides to the
+   * right — flex + justify-content:center keeps zoom + slides as one unit.
    */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: center !important;
     align-items: center !important;
-    justify-items: stretch !important;
-    gap: 0 !important;
-    min-height: var(--skyroom-presentation-toolbar-h, 18px) !important;
-    height: var(--skyroom-presentation-toolbar-h, 18px) !important;
-    max-height: var(--skyroom-presentation-toolbar-h, 18px) !important;
+    direction: ltr !important;
+    grid-template-columns: none !important;
+    gap: 6px !important;
+    min-height: var(--skyroom-presentation-toolbar-h, 28px) !important;
+    height: var(--skyroom-presentation-toolbar-h, 28px) !important;
+    max-height: var(--skyroom-presentation-toolbar-h, 28px) !important;
     padding-block: 0 !important;
-    /* Extra physical-left inset: fit-to-width sits on the left in RTL and was clipping. */
-    padding-left: max(12px, env(safe-area-inset-left, 0px) + 10px) !important;
-    padding-right: max(6px, env(safe-area-inset-right, 0px) + 4px) !important;
+    padding-inline: max(10px, env(safe-area-inset-left, 0px) + 6px)
+      max(10px, env(safe-area-inset-right, 0px) + 6px) !important;
     overflow: visible !important;
     box-sizing: border-box !important;
-  }
-
-  /* LTR: fit-to-width is on the physical right — mirror the safe inset. */
-  [dir="ltr"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper,
-  [dir="ltr"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] {
-    padding-left: max(6px, env(safe-area-inset-left, 0px) + 4px) !important;
-    padding-right: max(12px, env(safe-area-inset-right, 0px) + 10px) !important;
   }
 
   #layout[data-skyroom-column="true"] #presentationToolbarWrapper [class*="QuickPollButtonWrapper"],
@@ -777,42 +771,26 @@
     overflow: visible !important;
   }
 
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper > div:not([hidden]),
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="QuickPollButtonWrapper"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="PresentationSlideControls"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="PresentationZoomControls"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="QuickPollButtonWrapper"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationSlideControls"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationZoomControls"] {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    max-width: none !important;
     display: flex !important;
     align-items: center !important;
-    gap: 1px !important;
+    justify-content: center !important;
+    gap: 2px !important;
     padding: 0 !important;
     margin: 0 !important;
+    direction: ltr !important;
   }
 
-  /* Center cluster stays centered; zoom cluster stays on its grid end (physical left in RTL). */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="PresentationSlideControls"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationSlideControls"] {
-    justify-content: center !important;
-    justify-self: center !important;
-  }
-
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="PresentationZoomControls"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationZoomControls"] {
-    justify-content: flex-start !important;
-    justify-self: start !important;
-    padding-left: 2px !important;
-  }
-
-  [dir="ltr"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="PresentationZoomControls"],
-  [dir="ltr"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationZoomControls"] {
-    justify-content: flex-end !important;
-    justify-self: end !important;
-    padding-left: 0 !important;
-    padding-right: 2px !important;
-  }
-
-  /* Drop empty poll/plugin + multi-user placeholder so side columns stay balanced. */
+  /* Drop empty poll/plugin + multi-user placeholder from the centered group. */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper > div:not([hidden]):not(:has(button)):not(:has(select)):not(:has([role="button"])),
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="QuickPollButtonWrapper"]:not(:has(button)):not(:has(select)),
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="QuickPollButtonWrapper"]:not(:has(button)):not(:has(select)),
@@ -830,7 +808,7 @@
     gap: 0 !important;
   }
 
-  /* Compact slide/zoom control buttons so the three clusters fit ~360px */
+  /* Slide/zoom control buttons — readable on phone, not microscopic. */
   #layout[data-skyroom-column="true"] #presentationToolbarWrapper button > span:first-child,
   #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] button > span:first-child {
     min-width: 14px !important;
@@ -842,11 +820,11 @@
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button > span:first-child,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button > span:first-child {
-    min-width: 11px !important;
-    min-height: 11px !important;
-    width: 11px !important;
-    height: 11px !important;
-    border-radius: 3px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+    border-radius: 5px !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button,
@@ -862,9 +840,9 @@
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] i,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] [class^="icon-bbb-"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] svg {
-    font-size: 0.5rem !important;
-    width: 9px !important;
-    height: 9px !important;
+    font-size: 0.7rem !important;
+    width: 12px !important;
+    height: 12px !important;
   }
 
   #layout[data-skyroom-column="true"] #presentationToolbarWrapper select,
@@ -880,12 +858,12 @@
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper select,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] select,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="SkipSlideSelect"] {
-    min-height: 11px !important;
-    height: 11px !important;
-    max-height: 11px !important;
-    font-size: 0.42rem !important;
-    line-height: 1 !important;
-    padding-inline: 2px !important;
+    min-height: 18px !important;
+    height: 18px !important;
+    max-height: 18px !important;
+    font-size: 0.62rem !important;
+    line-height: 1.1 !important;
+    padding-inline: 4px !important;
     padding-block: 0 !important;
     margin: 0 !important;
   }
@@ -908,9 +886,9 @@
     max-width: 100% !important;
     margin-inline: 0 !important;
     overflow: visible !important;
-    height: var(--skyroom-presentation-toolbar-h, 18px) !important;
-    min-height: var(--skyroom-presentation-toolbar-h, 18px) !important;
-    max-height: var(--skyroom-presentation-toolbar-h, 18px) !important;
+    height: var(--skyroom-presentation-toolbar-h, 28px) !important;
+    min-height: var(--skyroom-presentation-toolbar-h, 28px) !important;
+    max-height: var(--skyroom-presentation-toolbar-h, 28px) !important;
   }
 
   #layout[data-skyroom-column="true"] #presentationToolbarWrapper [class*="PresentationSlideControls"],
@@ -964,16 +942,20 @@
     touch-action: manipulation !important;
   }
 
-  /* Skyroom mobile — compact dark-glass pen bar. */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools {
-    background: rgba(10, 16, 28, 0.94) !important;
-    border: 1px solid rgba(32, 199, 187, 0.26) !important;
-    border-radius: 10px !important;
+  /* Skyroom mobile — balanced dark-glass pen bar (touchable, not bulky). */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element button[data-testid="mobile.styles"] {
+    background: rgba(10, 16, 28, 0.95) !important;
+    border: 1px solid rgba(32, 199, 187, 0.28) !important;
     box-shadow:
-      0 3px 10px rgba(0, 0, 0, 0.36),
-      inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
+      0 4px 14px rgba(0, 0, 0, 0.38),
+      inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools {
+    border-radius: 12px !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool,
@@ -1403,7 +1385,7 @@
 
   /* Webcam settings modal — taller + denser sheet; camera tab fits without initial scroll. */
   html[data-skyroom="true"] [data-test="webcamSettingsModal"].ReactModal__Content {
-    padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 8px 12px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
     max-height: min(92dvh, 640px) !important;
     overflow: hidden !important;
     display: flex !important;
@@ -1492,23 +1474,43 @@
 
   html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="Footer"] {
     flex-shrink: 0 !important;
-    padding-top: 4px !important;
+    padding-top: 6px !important;
+    padding-bottom: 2px !important;
     display: flex !important;
     flex-direction: row !important;
     align-items: stretch !important;
     gap: 8px !important;
     width: 100% !important;
+    overflow: visible !important;
   }
 
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="FooterContainer"],
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="FooterContainer"] > div {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* startSharingWebcam label is long in FA — never clip with a fixed height */
   html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="SharingButton"],
-  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="CancelButton"] {
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="CancelButton"],
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] button[data-test="startSharingWebcam"],
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] button[data-test="cancelSharingWebcam"] {
     flex: 1 1 0 !important;
     min-width: 0 !important;
     margin: 0 !important;
-    min-height: 36px !important;
-    height: 36px !important;
-    max-height: 36px !important;
-    font-size: 0.82rem !important;
+    min-height: 48px !important;
+    height: auto !important;
+    max-height: none !important;
+    font-size: 0.84rem !important;
+    white-space: normal !important;
+    line-height: 1.3 !important;
+    overflow: visible !important;
+    padding-block: 10px !important;
+    box-sizing: border-box !important;
   }
 
   html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="SharingButton"] .buttonWrapper,
@@ -1517,8 +1519,29 @@
   html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="CancelButton"] > button {
     width: 100% !important;
     margin: 0 !important;
-    min-height: 36px !important;
-    height: 36px !important;
+    min-height: 48px !important;
+    height: auto !important;
+    max-height: none !important;
+    padding-block: 10px !important;
+    box-sizing: border-box !important;
+    white-space: normal !important;
+    overflow: visible !important;
+  }
+
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] button[data-test="startSharingWebcam"] > span,
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] button[data-test="cancelSharingWebcam"] > span,
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="SharingButton"] > span,
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="CancelButton"] > span,
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="SharingButton"] > button > span,
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="CancelButton"] > button > span,
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="SharingButton"] .buttonWrapper > button > span,
+  html[data-skyroom="true"] [data-test="webcamSettingsModal"] [class*="CancelButton"] .buttonWrapper > button > span {
+    white-space: normal !important;
+    line-height: 1.3 !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    text-align: center !important;
+    max-height: none !important;
   }
 
   html[data-skyroom="true"] [data-test="webcamSettingsModal"] [data-test="virtualBackground"] [class*="BgWrapper"] {
@@ -2447,21 +2470,22 @@
      Pen toolbar uses stage width — not the portrait slide width.
      =================================================================== */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] {
-    --skyroom-wb-btn-size: 22px;
+    --skyroom-wb-btn-size: 28px;
+    --skyroom-wb-tool-size: 28px;
     --skyroom-wb-scale: 1;
-    --skyroom-wb-popover-scale: 0.82;
-    /* Sit flush above slide-nav; reserve still leaves room for the pen bar. */
-    --skyroom-wb-toolbar-gap: 2px;
+    --skyroom-wb-popover-scale: 0.88;
+    /* Sit just above slide-nav; pen bar floats over the canvas. */
+    --skyroom-wb-toolbar-gap: 4px;
   }
 
-  /* Bottom pen toolbar — full stage width, centered, never half-clipped. */
+  /* Bottom pen toolbar — full stage width, centered, complete and touchable. */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__bottom {
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    bottom: var(--skyroom-wb-toolbar-gap, 2px) !important;
-    padding-inline: 6px !important;
+    bottom: var(--skyroom-wb-toolbar-gap, 4px) !important;
+    padding-inline: 8px !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -2478,25 +2502,30 @@
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__inner {
+    /* Keep tools then styles (no row-reverse) so nothing looks half-missing. */
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: center !important;
+    align-items: center !important;
     transform: none !important;
     max-width: 100% !important;
     width: auto !important;
     margin-bottom: 0 !important;
-    gap: 2px !important;
-    align-items: center !important;
+    gap: 4px !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools {
     flex-wrap: nowrap !important;
-    gap: 1px !important;
-    padding: 2px 4px !important;
-    max-width: min(100%, 100vw - 20px) !important;
+    flex-direction: row !important;
+    gap: 2px !important;
+    padding: 3px 6px !important;
+    max-width: min(100%, calc(100vw - 48px)) !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     box-sizing: border-box !important;
-    border-radius: 10px !important;
+    border-radius: 12px !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools::-webkit-scrollbar {
@@ -2505,22 +2534,23 @@
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool .tlui-icon {
-    width: 22px !important;
-    height: 22px !important;
-    min-width: 22px !important;
+    width: var(--skyroom-wb-tool-size, 28px) !important;
+    height: var(--skyroom-wb-tool-size, 28px) !important;
+    min-width: var(--skyroom-wb-tool-size, 28px) !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool .tlui-icon,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool svg {
-    width: 14px !important;
-    height: 14px !important;
+    width: 16px !important;
+    height: 16px !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element button[data-testid="mobile.styles"] {
-    width: 22px !important;
-    height: 22px !important;
-    min-width: 22px !important;
-    border-radius: 7px !important;
+    width: var(--skyroom-wb-tool-size, 28px) !important;
+    height: var(--skyroom-wb-tool-size, 28px) !important;
+    min-width: var(--skyroom-wb-tool-size, 28px) !important;
+    border-radius: 10px !important;
+    flex: 0 0 auto !important;
   }
 
   /* Top-left: undo/redo — physical left in RTL too. */
@@ -2848,8 +2878,8 @@
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"]:not([data-skyroom-mobile-bottom-webcams="true"]):not([data-skyroom-mobile-top-webcams="true"]) .react-draggable:has(#cameraDock) {
     visibility: hidden !important;
     pointer-events: none !important;
-    content-visibility: hidden !important;
-    contain: strict !important;
+    /* Avoid content-visibility/contain:strict here — with live <video> tiles they
+       can lock the compositor on low-end Android during tab switches. */
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"][data-skyroom-mobile-bottom-webcams="true"] .react-draggable:has(#cameraDock) {

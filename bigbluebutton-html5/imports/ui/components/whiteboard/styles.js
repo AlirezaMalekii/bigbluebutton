@@ -176,15 +176,16 @@ const TldrawV2GlobalStyle = createGlobalStyle`
 
   ${({ isSkyroom, isSkyroomMobile }) => (isSkyroom ? `
     .tlui-toolbar__inner {
-      flex-direction: row-reverse !important;
+      /* Mobile: tools → styles in natural order so the bar stays complete. */
+      flex-direction: ${isSkyroomMobile ? 'row' : 'row-reverse'} !important;
     }
 
     .tlui-toolbar__tools {
       flex-direction: row !important;
       align-items: center !important;
       gap: 2px !important;
-      padding: 4px 6px !important;
-      border-radius: 14px !important;
+      padding: ${isSkyroomMobile ? '3px 6px' : '4px 6px'} !important;
+      border-radius: ${isSkyroomMobile ? '12px' : '14px'} !important;
       background: rgba(12, 20, 34, 0.92) !important;
       border: 1px solid rgba(20, 169, 158, 0.22) !important;
       backdrop-filter: blur(12px) !important;
@@ -221,8 +222,8 @@ const TldrawV2GlobalStyle = createGlobalStyle`
     }
 
     .tlui-button__tool {
-      width: ${isSkyroomMobile ? '26px' : '36px'} !important;
-      height: ${isSkyroomMobile ? '26px' : '36px'} !important;
+      width: ${isSkyroomMobile ? '28px' : '36px'} !important;
+      height: ${isSkyroomMobile ? '28px' : '36px'} !important;
       border-radius: ${isSkyroomMobile ? '8px' : '10px'} !important;
       color: #e8edf4 !important;
     }

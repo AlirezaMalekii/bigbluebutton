@@ -156,10 +156,8 @@
 
 /*
  * Hand / eraser have no style controls (tldraw disables the trigger).
- * Hide the whole Styles chip so it does not look tappable.
+ * Hide only the Styles chip — never the whole tools bar.
  */
-#layout[data-skyroom-column="true"] #whiteboard-element .tlui-toolbar:has([data-testid="tools.hand"][data-state="selected"]) .tlui-toolbar__tools:has([data-testid="mobile.styles"]),
-#layout[data-skyroom-column="true"] #whiteboard-element .tlui-toolbar:has([data-testid="tools.eraser"][data-state="selected"]) .tlui-toolbar__tools:has([data-testid="mobile.styles"]),
 #layout[data-skyroom-column="true"] #whiteboard-element .tlui-toolbar:has([data-testid="tools.hand"][data-state="selected"]) button[data-testid="mobile.styles"],
 #layout[data-skyroom-column="true"] #whiteboard-element .tlui-toolbar:has([data-testid="tools.eraser"][data-state="selected"]) button[data-testid="mobile.styles"] {
   display: none !important;

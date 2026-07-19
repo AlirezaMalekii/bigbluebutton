@@ -49,11 +49,10 @@ const ConnectionStatus = ({
       traceLog,
     };
 
+    // Always send clientIsHidden so akka deserialization never fails mid-meeting.
     const currentHidden = clientIsHiddenRef.current;
-    if (lastSentClientIsHiddenRef.current !== currentHidden) {
-      variables.clientIsHidden = currentHidden;
-      lastSentClientIsHiddenRef.current = currentHidden;
-    }
+    variables.clientIsHidden = currentHidden;
+    lastSentClientIsHiddenRef.current = currentHidden;
 
     updateConnectionAliveAtRef.current({ variables });
   };

@@ -845,6 +845,13 @@ const CustomLayout = (props) => {
         }
         if (skyroomLayout.mobileCamerasInBottom) {
           layoutEl?.setAttribute('data-skyroom-mobile-bottom-webcams', 'true');
+          // Drop emergency inert styles applied when leaving the webcams tab so the
+          // dock can receive taps again once the layout engine re-enables it.
+          document.querySelectorAll('.react-draggable').forEach((el) => {
+            if (!(el instanceof HTMLElement) || !el.querySelector('#cameraDock')) return;
+            el.style.removeProperty('pointer-events');
+            el.style.removeProperty('visibility');
+          });
         } else {
           layoutEl?.removeAttribute('data-skyroom-mobile-bottom-webcams');
         }

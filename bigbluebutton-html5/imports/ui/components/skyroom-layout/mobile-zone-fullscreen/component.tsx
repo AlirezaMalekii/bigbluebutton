@@ -75,20 +75,30 @@ const SkyroomMobileZoneFullscreenButtons: React.FC = () => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
+  // Resolve the header portal host without observing #layout subtree.
+  // A childList+subtree MutationObserver previously flooded setState during
+  // webcam↔chat switches (video DOM + layout attr churn) and froze mobile Chrome.
   useEffect(() => {
-    const sync = () => setHeaderSlot(bottomHeaderSlot(activeBox));
+    let cancelled = false;
+    let tries = 0;
+    let raf = 0;
+
+    const sync = () => {
+      if (cancelled) return;
+      const slot = bottomHeaderSlot(activeBox);
+      setHeaderSlot((prev) => (prev === slot ? prev : slot));
+      // Chat/users headers mount a frame or two after the tab switch.
+      if (!slot && (activeBox === 'chat' || activeBox === 'users' || activeBox === 'notes')
+        && tries < 12) {
+        tries += 1;
+        raf = window.requestAnimationFrame(sync);
+      }
+    };
+
     sync();
-    const layoutEl = document.getElementById('layout');
-    const mo = layoutEl
-      ? new MutationObserver(sync)
-      : null;
-    if (layoutEl && mo) {
-      mo.observe(layoutEl, { childList: true, subtree: true, attributes: true });
-    }
-    window.addEventListener('resize', sync);
     return () => {
-      mo?.disconnect();
-      window.removeEventListener('resize', sync);
+      cancelled = true;
+      if (raf) window.cancelAnimationFrame(raf);
     };
   }, [activeBox]);
 

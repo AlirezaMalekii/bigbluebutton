@@ -43,14 +43,13 @@ export const cleanupWebcamMenuOverlayArtifacts = () => {
   restore(document.querySelector('#app-container'));
   restore(document.querySelector('[data-reactroot]'));
 
-  // Orphaned webcam menu modals should not capture pointer events.
+  // Any closed/hidden MUI modal (webcam menu, chat overflow, etc.) must not
+  // keep capturing taps after a tab switch on mobile.
   document.querySelectorAll('.MuiModal-root').forEach((modal) => {
-    const isWebcamMenu = Boolean(
-      modal.querySelector('.skyroom-webcam-actions-menu, [id^="webcam-"][id*="-dropdown-menu"]'),
-    );
-    if (!isWebcamMenu) return;
     if (!(modal instanceof HTMLElement)) return;
-    if (modal.getAttribute('aria-hidden') === 'true' || modal.hasAttribute('aria-hidden')) {
+    const hidden = modal.getAttribute('aria-hidden') === 'true'
+      || modal.hasAttribute('aria-hidden');
+    if (hidden) {
       modal.style.setProperty('pointer-events', 'none');
     }
   });

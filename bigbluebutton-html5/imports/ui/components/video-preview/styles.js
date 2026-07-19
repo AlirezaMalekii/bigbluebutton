@@ -558,9 +558,22 @@ const SharingButton = styled(Button)`
   @media ${smallOnly} {
     flex: 1 1 0;
     margin: 0;
-    height: 2.125rem;
-    min-height: 36px;
+    /* FA «شروع اشتراک‌گذاری» needs 2 lines — fixed height clips the label */
+    height: auto;
+    min-height: 44px;
+    max-height: none;
     font-size: 0.82rem;
+    white-space: normal;
+    line-height: 1.25;
+    padding-block: 0.55rem;
+    overflow: visible;
+
+    & > span {
+      white-space: normal;
+      line-height: 1.25;
+      text-align: center;
+      overflow: visible;
+    }
   }
 `;
 
@@ -571,9 +584,21 @@ const CancelButton = styled(Button)`
   @media ${smallOnly} {
     flex: 1 1 0;
     margin: 0;
-    height: 2.125rem;
-    min-height: 36px;
+    height: auto;
+    min-height: 44px;
+    max-height: none;
     font-size: 0.82rem;
+    white-space: normal;
+    line-height: 1.25;
+    padding-block: 0.55rem;
+    overflow: visible;
+
+    & > span {
+      white-space: normal;
+      line-height: 1.25;
+      text-align: center;
+      overflow: visible;
+    }
   }
 `;
 
