@@ -548,18 +548,16 @@
 
   #layout[data-skyroom-column="true"] #ActionsBar > div {
     justify-content: center !important;
-    overflow-x: hidden !important;
+    /* Prefer scroll over clipping/overlap when two cluster shells cannot fit. */
+    overflow-x: auto !important;
     overflow-y: hidden !important;
     padding: 0 10px !important;
+    gap: 10px !important;
   }
 
   /* BBB sets display:contents on Right at small breakpoints — keep cluster */
   #layout[data-skyroom-column="true"] #ActionsBar > div > div:last-child {
     display: flex !important;
-  }
-
-  #layout[data-skyroom-column="true"] #ActionsBar > div {
-    gap: 8px !important;
   }
 
   #layout[data-skyroom-column="true"] #ActionsBar > div > div:not(:last-child) {

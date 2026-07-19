@@ -496,7 +496,7 @@
     justify-content: center !important;
     align-items: center !important;
     /* Gap separates the two main cluster shells so they never bleed into each other. */
-    gap: 8px !important;
+    gap: 10px !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     scrollbar-width: none !important;
@@ -621,6 +621,10 @@
     border-radius: 12px !important;
     margin: 0 !important;
     margin-inline-end: 0 !important;
+    margin-inline-start: 0 !important;
+    position: relative !important;
+    transform: none !important;
+    inset: auto !important;
   }
 
   /* Inter-cluster spacing comes from parent gap only. */
@@ -652,13 +656,23 @@
     transform: none !important;
   }
 
-  /* Center / right clusters must not grow or overlap. */
+  /* Kill BBB smallOnly child margins that inflate shells into each other. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar > div > div > *,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar > div > div > div > * {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-inline: 0 !important;
+  }
+
+  /* Center / right clusters — never grow into a neighbour; scroll row if needed. */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar > div > div:nth-child(2),
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar > div > div:last-child {
     flex: 0 0 auto !important;
+    flex-shrink: 0 !important;
     justify-content: center !important;
     gap: 3px !important;
     isolation: isolate !important;
+    max-width: none !important;
   }
 
   /* ===================================================================
@@ -687,7 +701,7 @@
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] {
     --skyroom-presentation-toolbar-h: 18px;
-    --skyroom-wb-toolbar-gap: 1px;
+    --skyroom-wb-toolbar-gap: 2px;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbar"] {
@@ -710,6 +724,7 @@
     padding-block: 1px !important;
   }
 
+  #layout[data-skyroom-column="true"] #presentationToolbarWrapper,
   #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] {
     overflow: visible !important;
     box-sizing: border-box !important;
@@ -722,32 +737,39 @@
   }
 
   /*
-   * Phone slide-nav: pack every control to the physical right, shorter bar,
-   * smaller icons/select — matches the annotated mobile request.
+   * Phone slide-nav: keep the centered 3-column layout (poll | slides | zoom).
+   * In RTL, zoom/fit-to-width lands on the physical left and was clipping under
+   * the device edge — nudge with extra padding-left so that button stays fully
+   * visible without right-packing the whole bar.
    */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    justify-content: flex-end !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
     align-items: center !important;
-    grid-template-columns: none !important;
-    gap: 2px !important;
+    justify-items: stretch !important;
+    gap: 0 !important;
     min-height: var(--skyroom-presentation-toolbar-h, 18px) !important;
     height: var(--skyroom-presentation-toolbar-h, 18px) !important;
     max-height: var(--skyroom-presentation-toolbar-h, 18px) !important;
     padding-block: 0 !important;
-    padding-left: 4px !important;
-    padding-right: 6px !important;
-    overflow: hidden !important;
+    /* Extra physical-left inset: fit-to-width sits on the left in RTL and was clipping. */
+    padding-left: max(12px, env(safe-area-inset-left, 0px) + 10px) !important;
+    padding-right: max(6px, env(safe-area-inset-right, 0px) + 4px) !important;
+    overflow: visible !important;
     box-sizing: border-box !important;
   }
 
-  [dir="rtl"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] {
-    /* flex-start = physical right in RTL */
-    justify-content: flex-start !important;
+  /* LTR: fit-to-width is on the physical right — mirror the safe inset. */
+  [dir="ltr"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper,
+  [dir="ltr"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] {
+    padding-left: max(6px, env(safe-area-inset-left, 0px) + 4px) !important;
+    padding-right: max(12px, env(safe-area-inset-right, 0px) + 10px) !important;
   }
 
+  #layout[data-skyroom-column="true"] #presentationToolbarWrapper [class*="QuickPollButtonWrapper"],
+  #layout[data-skyroom-column="true"] #presentationToolbarWrapper [class*="PresentationSlideControls"],
+  #layout[data-skyroom-column="true"] #presentationToolbarWrapper [class*="PresentationZoomControls"],
   #layout[data-skyroom-column="true"] [class*="QuickPollButtonWrapper"],
   #layout[data-skyroom-column="true"] [class*="PresentationSlideControls"],
   #layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] {
@@ -755,27 +777,53 @@
     overflow: visible !important;
   }
 
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="QuickPollButtonWrapper"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="PresentationSlideControls"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="PresentationZoomControls"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="QuickPollButtonWrapper"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationSlideControls"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationZoomControls"] {
-    flex: 0 0 auto !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: flex-end !important;
     gap: 1px !important;
     padding: 0 !important;
     margin: 0 !important;
   }
 
-  /* Drop empty poll/plugin slot so slide controls sit flush on the right. */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="QuickPollButtonWrapper"]:not(:has(button)):not(:has(select)) {
-    display: none !important;
+  /* Center cluster stays centered; zoom cluster stays on its grid end (physical left in RTL). */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="PresentationSlideControls"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationSlideControls"] {
+    justify-content: center !important;
+    justify-self: center !important;
   }
 
-  [dir="rtl"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="QuickPollButtonWrapper"],
-  [dir="rtl"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationSlideControls"],
-  [dir="rtl"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationZoomControls"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="PresentationZoomControls"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationZoomControls"] {
     justify-content: flex-start !important;
+    justify-self: start !important;
+    padding-left: 2px !important;
+  }
+
+  [dir="ltr"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="PresentationZoomControls"],
+  [dir="ltr"] #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationZoomControls"] {
+    justify-content: flex-end !important;
+    justify-self: end !important;
+    padding-left: 0 !important;
+    padding-right: 2px !important;
+  }
+
+  /* Drop empty poll/plugin + multi-user placeholder so side columns stay balanced. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper > div:not([hidden]):not(:has(button)):not(:has(select)):not(:has([role="button"])),
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="QuickPollButtonWrapper"]:not(:has(button)):not(:has(select)),
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="QuickPollButtonWrapper"]:not(:has(button)):not(:has(select)),
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper > div:not([hidden]):last-child > div:empty,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="MUTPlaceholder"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="MUTPlaceholder"] {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   #layout[data-skyroom-column="true"] [class*="QuickPollButtonWrapper"] {
@@ -783,6 +831,7 @@
   }
 
   /* Compact slide/zoom control buttons so the three clusters fit ~360px */
+  #layout[data-skyroom-column="true"] #presentationToolbarWrapper button > span:first-child,
   #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] button > span:first-child {
     min-width: 14px !important;
     min-height: 14px !important;
@@ -791,6 +840,7 @@
     padding: 0 !important;
   }
 
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button > span:first-child,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button > span:first-child {
     min-width: 11px !important;
     min-height: 11px !important;
@@ -799,12 +849,16 @@
     border-radius: 3px !important;
   }
 
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button {
     padding: 0 !important;
     margin: 0 !important;
     min-height: 0 !important;
   }
 
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper i,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class^="icon-bbb-"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper svg,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] i,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] [class^="icon-bbb-"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] svg {
@@ -813,6 +867,7 @@
     height: 9px !important;
   }
 
+  #layout[data-skyroom-column="true"] #presentationToolbarWrapper select,
   #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] select,
   #layout[data-skyroom-column="true"] [class*="SkipSlideSelect"] {
     min-height: 16px !important;
@@ -822,6 +877,7 @@
     padding-inline: 2px !important;
   }
 
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper select,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] select,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="SkipSlideSelect"] {
     min-height: 11px !important;
@@ -842,6 +898,7 @@
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="fitToWidthButton"] {
     position: relative !important;
     z-index: 2 !important;
+    flex-shrink: 0 !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbar"] {
@@ -850,29 +907,32 @@
     width: 100% !important;
     max-width: 100% !important;
     margin-inline: 0 !important;
+    overflow: visible !important;
     height: var(--skyroom-presentation-toolbar-h, 18px) !important;
     min-height: var(--skyroom-presentation-toolbar-h, 18px) !important;
     max-height: var(--skyroom-presentation-toolbar-h, 18px) !important;
   }
 
+  #layout[data-skyroom-column="true"] #presentationToolbarWrapper [class*="PresentationSlideControls"],
+  #layout[data-skyroom-column="true"] #presentationToolbarWrapper [class*="PresentationZoomControls"],
   #layout[data-skyroom-column="true"] [class*="PresentationSlideControls"],
   #layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] {
     gap: 1px !important;
   }
 
-  #layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] {
+  #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [class*="PresentationZoomControls"] {
     justify-content: flex-end !important;
     padding-inline: 0 !important;
     padding-inline-start: 4px !important;
   }
 
-  [dir="rtl"] #layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] {
+  [dir="rtl"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [class*="PresentationZoomControls"] {
     justify-content: flex-start !important;
     padding-inline-start: 10px !important;
     padding-inline-end: 2px !important;
   }
 
-  [dir="ltr"] #layout[data-skyroom-column="true"] [class*="PresentationZoomControls"] {
+  [dir="ltr"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [class*="PresentationZoomControls"] {
     padding-inline-end: 8px !important;
     padding-inline-start: 2px !important;
   }
@@ -904,14 +964,16 @@
     touch-action: manipulation !important;
   }
 
-  /* Skyroom mobile — dark glass toolbar (matches desktop Skyroom theme). */
+  /* Skyroom mobile — compact dark-glass pen bar. */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools {
-    background: rgba(12, 20, 34, 0.96) !important;
-    border: 1px solid rgba(20, 169, 158, 0.28) !important;
-    border-radius: 12px !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.38) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
+    background: rgba(10, 16, 28, 0.94) !important;
+    border: 1px solid rgba(32, 199, 187, 0.26) !important;
+    border-radius: 10px !important;
+    box-shadow:
+      0 3px 10px rgba(0, 0, 0, 0.36),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool,
@@ -1319,11 +1381,24 @@
     width: 100% !important;
   }
 
-  /* Comfortable tap targets for modal buttons */
+  /* Comfortable tap targets for modal buttons — keep full FA labels visible */
   html[data-skyroom="true"] .ReactModal__Content button[data-test="modalConfirmButton"],
   html[data-skyroom="true"] .ReactModal__Content button[data-test="modalDismissButton"],
   html[data-skyroom="true"] .ReactModal__Content .buttonWrapper > button {
     min-height: 44px !important;
+    height: auto !important;
+    white-space: normal !important;
+  }
+
+  html[data-skyroom="true"] .ReactModal__Content button[data-test="modalConfirmButton"] > span,
+  html[data-skyroom="true"] .ReactModal__Content button[data-test="modalDismissButton"] > span,
+  html[data-skyroom="true"] .ReactModal__Content button[color="primary"] > span,
+  html[data-skyroom="true"] .ReactModal__Content .buttonWrapper > button > span {
+    white-space: normal !important;
+    text-overflow: unset !important;
+    overflow: visible !important;
+    text-align: center !important;
+    line-height: 1.25 !important;
   }
 
   /* Webcam settings modal — taller + denser sheet; camera tab fits without initial scroll. */
@@ -2079,9 +2154,10 @@
     pointer-events: none !important;
   }
 
-  /* Centered title; close overlays the inline-end edge (left in RTL) */
-  html[data-skyroom="true"] .ReactModal__Content:not(#fsmodal):not([data-test="audioModal"]) > div > header [class*="Title"],
-  html[data-skyroom="true"] #modals-container .ReactModal__Content:not(#fsmodal):not([data-test="audioModal"]) > div > header [class*="Title"] {
+  /* Centered title; close overlays the inline-end edge (left in RTL).
+     Timer/poll use their own 3-column header chrome — exclude them here. */
+  html[data-skyroom="true"] .ReactModal__Content:not(#fsmodal):not([data-test="audioModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal):not([data-test="pollCreationModal"]):not(.poll-creation-modal) > div > header [class*="Title"],
+  html[data-skyroom="true"] #modals-container .ReactModal__Content:not(#fsmodal):not([data-test="audioModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal):not([data-test="pollCreationModal"]):not(.poll-creation-modal) > div > header [class*="Title"] {
     grid-area: 1 / 1 / 2 / 2 !important;
     margin: 0 !important;
     padding: 0 42px !important;
@@ -2094,8 +2170,9 @@
     color: var(--skyroom-modal-text, #eef4fb) !important;
   }
 
-  html[data-skyroom="true"] .ReactModal__Content:not(#fsmodal) > div > header button[data-test="closeModal"],
-  html[data-skyroom="true"] #modals-container .ReactModal__Content:not(#fsmodal) > div > header button[data-test="closeModal"] {
+  /* Bottom-sheet close on inline-end; exclude timer/poll (dedicated left-X chrome). */
+  html[data-skyroom="true"] .ReactModal__Content:not(#fsmodal):not([data-test="timerActivationModal"]):not(.timer-activation-modal):not([data-test="pollCreationModal"]):not(.poll-creation-modal) > div > header button[data-test="closeModal"],
+  html[data-skyroom="true"] #modals-container .ReactModal__Content:not(#fsmodal):not([data-test="timerActivationModal"]):not(.timer-activation-modal):not([data-test="pollCreationModal"]):not(.poll-creation-modal) > div > header button[data-test="closeModal"] {
     grid-area: 1 / 1 / 2 / 2 !important;
     justify-self: end !important;
     align-self: center !important;
@@ -2272,19 +2349,24 @@
     max-width: 100% !important;
     width: 100% !important;
     margin: 0 !important;
-    padding: 10px 14px !important;
+    padding: 10px 12px !important;
     box-sizing: border-box !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     justify-content: center !important;
+    white-space: normal !important;
+    height: auto !important;
+    line-height: 1.25 !important;
   }
 
   html[data-skyroom="true"] #fsmodal button[data-test="modalDismissButton"] > span,
   html[data-skyroom="true"] #fsmodal button[data-test="modalConfirmButton"] > span {
     max-width: 100% !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    white-space: normal !important;
     justify-content: center !important;
+    text-align: center !important;
+    line-height: 1.25 !important;
   }
 
   html[data-skyroom="true"] .ReactModal__Content [class*="ModalFooter"] > *,
@@ -2365,11 +2447,11 @@
      Pen toolbar uses stage width — not the portrait slide width.
      =================================================================== */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] {
-    --skyroom-wb-btn-size: 26px;
+    --skyroom-wb-btn-size: 22px;
     --skyroom-wb-scale: 1;
-    --skyroom-wb-popover-scale: 0.85;
+    --skyroom-wb-popover-scale: 0.82;
     /* Sit flush above slide-nav; reserve still leaves room for the pen bar. */
-    --skyroom-wb-toolbar-gap: 1px;
+    --skyroom-wb-toolbar-gap: 2px;
   }
 
   /* Bottom pen toolbar — full stage width, centered, never half-clipped. */
@@ -2378,8 +2460,8 @@
     right: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    bottom: var(--skyroom-wb-toolbar-gap, 1px) !important;
-    padding-inline: 4px !important;
+    bottom: var(--skyroom-wb-toolbar-gap, 2px) !important;
+    padding-inline: 6px !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -2400,21 +2482,21 @@
     max-width: 100% !important;
     width: auto !important;
     margin-bottom: 0 !important;
-    gap: 3px !important;
+    gap: 2px !important;
     align-items: center !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools {
     flex-wrap: nowrap !important;
-    gap: 2px !important;
-    padding: 4px 6px !important;
-    max-width: min(100%, 100vw - 16px) !important;
+    gap: 1px !important;
+    padding: 2px 4px !important;
+    max-width: min(100%, 100vw - 20px) !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     box-sizing: border-box !important;
-    border-radius: 12px !important;
+    border-radius: 10px !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools::-webkit-scrollbar {
@@ -2423,16 +2505,22 @@
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool .tlui-icon {
-    width: 26px !important;
-    height: 26px !important;
-    min-width: 26px !important;
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool .tlui-icon,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool svg {
+    width: 14px !important;
+    height: 14px !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element button[data-testid="mobile.styles"] {
-    width: 26px !important;
-    height: 26px !important;
-    min-width: 26px !important;
-    border-radius: 8px !important;
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    border-radius: 7px !important;
   }
 
   /* Top-left: undo/redo — physical left in RTL too. */
@@ -3040,9 +3128,8 @@
   }
 
   /*
-   * Timer / poll — 3-column chrome: spacer | title | close.
-   * Column 3 is inline-end (left in RTL), so the long Persian timer title
-   * never paints under the circular X.
+   * Timer / poll — 3-column chrome: close | title | spacer.
+   * Close stays on the physical left so Persian titles stay clear of the X.
    */
   html[data-skyroom="true"] [data-test="timerActivationModal"] > div > header,
   html[data-skyroom="true"] .timer-activation-modal > div > header,
@@ -3107,8 +3194,15 @@
   html[data-skyroom="true"] [data-test="pollCreationModal"] > div > header button[data-test="closeModal"],
   html[data-skyroom="true"] .poll-creation-modal > div > header button[data-test="closeModal"],
   html[data-skyroom="true"] #modals-container [data-test="timerActivationModal"] > div > header button[data-test="closeModal"],
-  html[data-skyroom="true"] #modals-container .timer-activation-modal > div > header button[data-test="closeModal"] {
-    grid-column: 3 / 4 !important;
+  html[data-skyroom="true"] #modals-container .timer-activation-modal > div > header button[data-test="closeModal"],
+  html[data-skyroom="true"] #modals-container [data-test="pollCreationModal"] > div > header button[data-test="closeModal"],
+  html[data-skyroom="true"] #modals-container .poll-creation-modal > div > header button[data-test="closeModal"],
+  html[data-skyroom="true"] .ReactModal__Content[data-test="timerActivationModal"] > div > header button[data-test="closeModal"],
+  html[data-skyroom="true"] .ReactModal__Content.timer-activation-modal > div > header button[data-test="closeModal"],
+  html[data-skyroom="true"] .ReactModal__Content[data-test="pollCreationModal"] > div > header button[data-test="closeModal"],
+  html[data-skyroom="true"] .ReactModal__Content.poll-creation-modal > div > header button[data-test="closeModal"] {
+    grid-area: auto !important;
+    grid-column: 1 / 2 !important;
     grid-row: 1 / 2 !important;
     justify-self: center !important;
     align-self: center !important;
@@ -3209,7 +3303,7 @@
     padding-bottom: 0.5rem !important;
   }
 
-  /* Footer pinned below scroll area — never clipped by overflow */
+  /* Footer pinned below scroll area — Cancel / Activate centered */
   html[data-skyroom="true"] [data-test="timerActivationModal"] [class*="TimerActivationWrapper"] > [class*="Actions"],
   html[data-skyroom="true"] .timer-activation-modal [class*="TimerActivationWrapper"] > [class*="Actions"] {
     position: relative !important;
@@ -3218,22 +3312,22 @@
     z-index: 4 !important;
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    align-items: stretch !important;
-    justify-content: stretch !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: center !important;
     gap: 10px !important;
     flex-shrink: 0 !important;
     margin-top: auto !important;
     margin-bottom: 0 !important;
     width: 100% !important;
     box-sizing: border-box !important;
-    padding: 12px 0 calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 12px 8px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
     background: linear-gradient(180deg, rgba(12, 18, 30, 0) 0%, #0c121e 18%, #0c121e 100%) !important;
   }
 
   html[data-skyroom="true"] [data-test="timerActivationModal"] [class*="TimerActivationWrapper"] > [class*="Actions"] .buttonWrapper,
   html[data-skyroom="true"] .timer-activation-modal [class*="TimerActivationWrapper"] > [class*="Actions"] .buttonWrapper {
-    flex: 1 1 0 !important;
+    flex: 0 0 auto !important;
     min-width: 0 !important;
     margin: 0 !important;
     width: auto !important;
@@ -3241,18 +3335,23 @@
 
   html[data-skyroom="true"] [data-test="timerActivationModal"] [class*="ActionButton"],
   html[data-skyroom="true"] .timer-activation-modal [class*="ActionButton"] {
-    flex: 1 1 0 !important;
-    min-width: 0 !important;
-    width: 100% !important;
+    flex: 0 0 auto !important;
+    min-width: 7.5rem !important;
+    width: auto !important;
+    max-width: 100% !important;
     margin: 0 !important;
+    white-space: normal !important;
   }
 
   html[data-skyroom="true"] [data-test="timerActivationModal"] [class*="ActionButton"] > span,
   html[data-skyroom="true"] .timer-activation-modal [class*="ActionButton"] > span {
-    width: 100% !important;
+    width: auto !important;
+    min-width: 7.5rem !important;
     min-height: 44px !important;
     justify-content: center !important;
+    padding-inline: 1.1rem !important;
     box-sizing: border-box !important;
+    white-space: normal !important;
   }
 
   html[data-skyroom="true"] [data-test="managePresentationsModalBody"] {
@@ -3352,6 +3451,7 @@
     width: 100% !important;
     flex: 1 1 0 !important;
     min-height: 44px !important;
+    height: auto !important;
     margin: 0 !important;
     padding: 10px 12px !important;
     border-radius: 12px !important;
@@ -3359,18 +3459,21 @@
     font-weight: 600 !important;
     box-shadow: none !important;
     box-sizing: border-box !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     justify-content: center !important;
-    white-space: nowrap !important;
+    white-space: normal !important;
+    line-height: 1.25 !important;
   }
 
   html[data-skyroom="true"] #fsmodal button[data-test="modalDismissButton"] > span,
   html[data-skyroom="true"] #fsmodal button[data-test="modalConfirmButton"] > span {
     max-width: 100% !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    white-space: normal !important;
     justify-content: center !important;
+    text-align: center !important;
+    line-height: 1.25 !important;
   }
 
   html[data-skyroom="true"] #fsmodal button[data-test="modalDismissButton"] {

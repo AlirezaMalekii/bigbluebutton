@@ -14,6 +14,21 @@ import {
 import { broadcastSkyroomNotesGlobalOpen } from './notes-panel-sync/useSkyroomNotesPanelSync';
 import { setSkyroomMobileActiveBox } from './mobile-bottom-state';
 import { dispatchSkyroomLayoutResize, dispatchSkyroomLayoutResizeNextFrame } from './layout-resize';
+import { cleanupWebcamMenuOverlayArtifacts } from './webcam-fullscreen/webcam-fullscreen';
+
+/**
+ * Clear the bottom-webcam dock attribute immediately when leaving the webcams
+ * tab. The layout engine only syncs these attrs on the next resize pass; until
+ * then a fixed pointer-events:auto camera dock can cover chat/users and freeze taps.
+ */
+const syncSkyroomMobileWebcamDockVisibility = (box) => {
+  const layoutEl = typeof document !== 'undefined'
+    ? document.getElementById('layout')
+    : null;
+  if (!layoutEl?.hasAttribute('data-skyroom-mobile')) return;
+  if (box === 'webcams') return;
+  layoutEl.removeAttribute('data-skyroom-mobile-bottom-webcams');
+};
 
 /** Phone breakpoint — matches layout/utils.js isMobile (clientWidth <= 599). */
 export const isSkyroomMobileViewport = () => typeof window !== 'undefined'
@@ -31,8 +46,8 @@ export const getSkyroomMobileWbToolbarReserve = () => {
   const styles = getComputedStyle(layoutEl);
   const scale = parseFloat(styles.getPropertyValue('--skyroom-wb-scale')) || 1;
   const gap = parseFloat(styles.getPropertyValue('--skyroom-wb-toolbar-gap')) || 1;
-  // Compact 26px tools + padding + gap above slide-nav.
-  return Math.ceil(28 * scale) + Math.max(0, Math.round(gap));
+  // Compact 22px tools + padding + gap above slide-nav.
+  return Math.ceil(24 * scale) + Math.max(0, Math.round(gap));
 };
 
 /** True during bootstrap before #layout mounts (see main.html data-skyroom). */
@@ -48,17 +63,19 @@ export const isPublicChatOpen = (sidebarContent) => (
 );
 
 export const openSkyroomPublicChat = (layoutContextDispatch) => {
+  // Set chat id first so ChatContainer never paints a stuck <ChatLoading>
+  // between panel-open and id assignment (common on slow mobile tab switches).
   layoutContextDispatch({
-    type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
-    value: true,
+    type: ACTIONS.SET_ID_CHAT_OPEN,
+    value: getPublicChatId(),
   });
   layoutContextDispatch({
     type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL,
     value: PANELS.CHAT,
   });
   layoutContextDispatch({
-    type: ACTIONS.SET_ID_CHAT_OPEN,
-    value: getPublicChatId(),
+    type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
+    value: true,
   });
 };
 
@@ -134,6 +151,12 @@ export const openSkyroomMobileBox = (layoutContextDispatch, box) => {
   // Explicit single source of truth — set first so the resolver/tab bar reflect the
   // choice immediately, before the per-panel state settles.
   setSkyroomMobileActiveBox(box);
+
+  // Hide the fixed camera dock synchronously when leaving webcams so it cannot
+  // keep intercepting taps while the coalesced layout pass is pending.
+  syncSkyroomMobileWebcamDockVisibility(box);
+  // MUI webcam menus can leave aria-hidden/inert on #app — clear on every tab change.
+  cleanupWebcamMenuOverlayArtifacts();
 
   if (box !== 'users') closeSkyroomUsers(layoutContextDispatch);
   // chat, breakout, and waiting-users share the content sidebar.

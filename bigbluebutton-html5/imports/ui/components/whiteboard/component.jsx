@@ -184,6 +184,9 @@ const hasLegacyScreenSpaceOffset = (x, y) => (
 // at ~0,0 when the viewed region is the whole slide. Viewport-specific negative
 // letterbox offsets from another client must not be replayed — they pin images
 // into a corner on phone.
+//
+// Also treat viewBox >= slide as "showing the whole slide" (common after a
+// phone presenter briefly published letterbox viewport ratios > 100%).
 const isFullSlideCameraView = (page) => {
   if (!page) return false;
   const {
@@ -194,10 +197,13 @@ const isFullSlideCameraView = (page) => {
   } = page;
   if (!(scaledWidth > 0) || !(scaledHeight > 0)) return false;
   if (!(scaledViewBoxWidth > 0) || !(scaledViewBoxHeight > 0)) return false;
-  return (
-    Math.abs(scaledViewBoxWidth - scaledWidth) <= CENTER_OFFSET_PUBLISH_EPSILON
-    && Math.abs(scaledViewBoxHeight - scaledHeight) <= CENTER_OFFSET_PUBLISH_EPSILON
-  );
+  const widthMatches = Math.abs(scaledViewBoxWidth - scaledWidth)
+    <= CENTER_OFFSET_PUBLISH_EPSILON;
+  const heightMatches = Math.abs(scaledViewBoxHeight - scaledHeight)
+    <= CENTER_OFFSET_PUBLISH_EPSILON;
+  const viewContainsSlide = scaledViewBoxWidth + CENTER_OFFSET_PUBLISH_EPSILON >= scaledWidth
+    && scaledViewBoxHeight + CENTER_OFFSET_PUBLISH_EPSILON >= scaledHeight;
+  return (widthMatches && heightMatches) || viewContainsSlide;
 };
 
 const shouldUseLocalFullSlideCamera = (page, backendX, backendY) => (
@@ -205,6 +211,16 @@ const shouldUseLocalFullSlideCamera = (page, backendX, backendY) => (
   || shouldLocallyCenterCamera(backendX, backendY)
   || hasLegacyScreenSpaceOffset(backendX, backendY)
 );
+
+// Publish a canonical full-slide view — never phone-specific letterbox x/y or
+// viewBox ratios > 100. Each client letterbox-centers locally instead.
+const buildPublishableFullSlideView = (pageId) => ({
+  pageId,
+  w: HUNDRED_PERCENT,
+  h: HUNDRED_PERCENT,
+  x: 0,
+  y: 0,
+});
 
 const CAMERA_TYPE = 'camera';
 const colorStyles = [
@@ -611,6 +627,12 @@ const Whiteboard = React.memo((props) => {
     // New presentation (e.g. freshly uploaded image): drop settled-view cache so
     // camera re-centers against the real viewport after layout settles.
     lastForcedViewRef.current = null;
+    try {
+      localStorage.removeItem('initialViewBoxWidth');
+      localStorage.removeItem('initialViewBoxHeight');
+    } catch (error) {
+      // ignore quota / private-mode failures
+    }
   }, [presentationId]);
 
   React.useEffect(() => {
@@ -1123,7 +1145,13 @@ const Whiteboard = React.memo((props) => {
     const innerWrapper = document.getElementById('presentationInnerWrapper');
     const containerWidth = container ? container.offsetWidth : 0;
     const innerWrapperWidth = innerWrapper ? innerWrapper.offsetWidth : 0;
-    const widthGap = Math.max(containerWidth - innerWrapperWidth, 0);
+    // Skyroom phone uses a full-stage wrapper on purpose; a transient width gap
+    // while layout settles must not shrink presenter zoom (that crops the image
+    // into the top-left corner).
+    const skyroomMobileStage = isSkyroomColumnLayout() && isSkyroomMobileViewport();
+    const widthGap = skyroomMobileStage
+      ? 0
+      : Math.max(containerWidth - innerWrapperWidth, 0);
     return { containerWidth, innerWrapperWidth, widthGap };
   };
 
@@ -1156,7 +1184,11 @@ const Whiteboard = React.memo((props) => {
       z: baseZoom,
     };
 
-    tlEditorRef.current.store.put([updatedCurrentCam]);
+    // mergeRemoteChanges → source "remote" so the user listener does not
+    // publish Skyroom letterbox x/y as the meeting-wide camera view.
+    tlEditorRef.current.store.mergeRemoteChanges(() => {
+      tlEditorRef.current.store.put([updatedCurrentCam]);
+    });
   };
 
   const calculateZoomWithGapValue = (
@@ -1704,14 +1736,32 @@ const Whiteboard = React.memo((props) => {
           }
 
           if ((panned || (zoomed || fitToWidthRef.current)) && isPresenterRef.current) {
-            const viewedRegionW = SlideCalcUtil.calcViewedRegionWidth(
-              editor?.getViewportPageBounds()?.w,
-              currentPresentationPageRef.current?.scaledWidth,
+            const page = currentPresentationPageRef.current;
+            const viewportPageBounds = editor?.getViewportPageBounds();
+            let viewedRegionW = SlideCalcUtil.calcViewedRegionWidth(
+              viewportPageBounds?.w,
+              page?.scaledWidth,
             );
-            const viewedRegionH = SlideCalcUtil.calcViewedRegionHeight(
-              editor?.getViewportPageBounds()?.h,
-              currentPresentationPageRef.current?.scaledHeight,
+            let viewedRegionH = SlideCalcUtil.calcViewedRegionHeight(
+              viewportPageBounds?.h,
+              page?.scaledHeight,
             );
+            let publishX = nextCam.x;
+            let publishY = nextCam.y;
+
+            // Skyroom phone letterboxes the slide inside a full-stage canvas.
+            // Those local negative camera offsets must stay local — publishing
+            // them (or viewBox > 100%) breaks the presenter's own later sync and
+            // is unnecessary because every client recenters full-slide views.
+            const showingFullSlide = viewedRegionW >= HUNDRED_PERCENT - 0.2
+              && viewedRegionH >= HUNDRED_PERCENT - 0.2;
+            if (showingFullSlide) {
+              viewedRegionW = HUNDRED_PERCENT;
+              viewedRegionH = HUNDRED_PERCENT;
+              publishX = 0;
+              publishY = 0;
+            }
+
             const tlCamPercent = Math.round(
               (nextCam.z / (initialZoomRef.current || 1)) * 100,
             );
@@ -1722,8 +1772,8 @@ const Whiteboard = React.memo((props) => {
 
             if (isWheelZoomRef.current) {
               zoomSlide(
-                viewedRegionW, viewedRegionH, nextCam.x, nextCam.y,
-                currentPresentationPageRef.current,
+                viewedRegionW, viewedRegionH, publishX, publishY,
+                page,
               );
               return;
             }
@@ -1736,8 +1786,8 @@ const Whiteboard = React.memo((props) => {
               hasZoomSyncedRef.current = true;
 
               zoomSlide(
-                viewedRegionW, viewedRegionH, nextCam.x, nextCam.y,
-                currentPresentationPageRef.current,
+                viewedRegionW, viewedRegionH, publishX, publishY,
+                page,
               );
             }
           }
@@ -1956,25 +2006,50 @@ const Whiteboard = React.memo((props) => {
           };
         }
 
-        // Get viewport dimensions and bounds
-        let viewportWidth;
-        let viewportHeight;
+        // Adjust camera position to ensure it stays within bounds.
+        // Use screenBounds/next.z — getViewportPageBounds() still reflects prev.z
+        // during onBeforeChange, which mis-clamps letterbox centering and leaves
+        // newly uploaded images stuck in the presenter's top-left corner on phone.
+        const isCameraRecord = next?.typeName === CAMERA_TYPE
+          || (typeof next?.id === 'string' && next.id.includes('camera'));
+        const panned = isCameraRecord && (prev.x !== next.x || prev.y !== next.y);
+        const zoomChanged = isCameraRecord && prev.z !== next.z;
+        // Presenters: also re-clamp on zoom so a z-only update at x/y=0 cannot
+        // leave a contain-fit slide pinned to the corner. Viewers: pan only
+        // (upstream), so following a zoomed presenter is unchanged.
+        const shouldClampCamera = !currentPresentationPageRef.current?.infiniteWhiteboard
+          && (panned || (zoomChanged && isPresenterRef.current));
+        if (shouldClampCamera) {
+          const presentationWidthLocal = currentPresentationPageRef.current?.scaledWidth || 0;
+          const presentationHeightLocal = currentPresentationPageRef.current?.scaledHeight || 0;
+          const zoom = Number.isFinite(next.z) && next.z > 0 ? next.z : 1;
+          const screenBounds = editor?.getViewportScreenBounds?.();
+          const screenW = screenBounds?.width > 0
+            ? screenBounds.width
+            : presentationAreaWidth;
+          const screenH = screenBounds?.height > 0
+            ? screenBounds.height
+            : presentationAreaHeight;
+          let viewportWidth = screenW / zoom;
+          let viewportHeight = screenH / zoom;
 
-        if (isPresenterRef.current) {
-          const viewportPageBounds = editor?.getViewportPageBounds();
-          viewportWidth = viewportPageBounds?.w;
-          viewportHeight = viewportPageBounds?.h;
-        } else {
-          viewportWidth = currentPresentationPageRef.current?.scaledViewBoxWidth;
-          viewportHeight = currentPresentationPageRef.current?.scaledViewBoxHeight;
-        }
+          // Non-Skyroom / following a zoomed presenter: prefer the published
+          // viewBox when the slide is larger than the local contain viewport.
+          if (!isPresenterRef.current) {
+            const viewBoxW = currentPresentationPageRef.current?.scaledViewBoxWidth;
+            const viewBoxH = currentPresentationPageRef.current?.scaledViewBoxHeight;
+            const presentationPage = currentPresentationPageRef.current;
+            const localFullSlide = shouldUseLocalFullSlideCamera(
+              presentationPage,
+              presentationPage?.xOffset,
+              presentationPage?.yOffset,
+            );
+            if (!localFullSlide && viewBoxW > 0 && viewBoxH > 0) {
+              viewportWidth = viewBoxW;
+              viewportHeight = viewBoxH;
+            }
+          }
 
-        const presentationWidthLocal = currentPresentationPageRef.current?.scaledWidth || 0;
-        const presentationHeightLocal = currentPresentationPageRef.current?.scaledHeight || 0;
-
-        // Adjust camera position to ensure it stays within bounds
-        const panned = next?.id?.includes('camera') && (prev.x !== next.x || prev.y !== next.y);
-        if (panned && !currentPresentationPageRef.current?.infiniteWhiteboard) {
           const { x: clampedX, y: clampedY } = clampCameraPanOffsets(
             next.x,
             next.y,
@@ -2234,51 +2309,35 @@ const Whiteboard = React.memo((props) => {
         tlEditorRef.current.store.put([updatedCurrentCam]);
       });
 
-      // Remote camera updates do not trigger the user-source listener,
-      // so publish the final settled presenter view explicitly (fit-to-width only,
-      // matching upstream) — never broadcast local letterbox offsets.
-      if (fitToWidthRef.current) {
+      // Remote camera updates do not trigger the user-source listener.
+      // Fit-to-width and full-slide contain views publish a canonical 100/100/0/0
+      // so phone letterbox offsets never become the meeting-wide camera.
+      if (fitToWidthRef.current || useFullSlideOrigin) {
         requestAnimationFrame(() => {
-          const viewportPageBounds = tlEditorRef.current?.getViewportPageBounds();
-          if (!viewportPageBounds?.w || !viewportPageBounds?.h) {
-            return;
-          }
-
-          const settledCamera = tlEditorRef.current?.getCamera();
-          if (!settledCamera) {
-            return;
-          }
-          const settledX = settledCamera.x;
-          const settledY = settledCamera.y;
-
-          const viewedRegionW = SlideCalcUtil.calcViewedRegionWidth(
-            viewportPageBounds.w,
-            currentPresentationPageRef.current?.scaledWidth,
-          );
-          const viewedRegionH = SlideCalcUtil.calcViewedRegionHeight(
-            viewportPageBounds.h,
-            currentPresentationPageRef.current?.scaledHeight,
-          );
-
-          const forcedView = {
-            pageId: curPageIdRef.current,
-            w: Number(viewedRegionW.toFixed(6)),
-            h: Number(viewedRegionH.toFixed(6)),
-            x: Number(settledX.toFixed(6)),
-            y: Number(settledY.toFixed(6)),
-          };
+          const forcedView = buildPublishableFullSlideView(curPageIdRef.current);
 
           if (isEqual(lastForcedViewRef.current, forcedView)) {
             return;
           }
 
+          const presentationPage = currentPresentationPageRef.current;
+          const backendAlreadyCanonical = shouldLocallyCenterCamera(
+            presentationPage?.xOffset,
+            presentationPage?.yOffset,
+          ) && isFullSlideCameraView(presentationPage);
+
+          if (backendAlreadyCanonical) {
+            lastForcedViewRef.current = forcedView;
+            return;
+          }
+
           lastForcedViewRef.current = forcedView;
           zoomSlide(
-            viewedRegionW,
-            viewedRegionH,
-            settledX,
-            settledY,
-            currentPresentationPageRef.current,
+            forcedView.w,
+            forcedView.h,
+            forcedView.x,
+            forcedView.y,
+            presentationPage,
           );
         });
       }
@@ -2336,9 +2395,19 @@ const Whiteboard = React.memo((props) => {
 
     if (isWheelZoomRef.current || isUserPanningRef.current) return undefined;
 
+    // Presenter mount can race the first svg dimensions; re-run adjustCamera so
+    // letterbox centering uses the live canvas after the asset size settles.
     const frameId = requestAnimationFrame(() => {
       pollInnerWrapperDimensionsUntilStable(() => {
-        syncCameraWithPresentationArea();
+        if (isPresenterRef.current) {
+          try {
+            adjustCameraOnMount(false);
+          } catch (error) {
+            syncCameraWithPresentationArea();
+          }
+        } else {
+          syncCameraWithPresentationArea();
+        }
       }, {
         maxTries: 60,
         stabilityFrames: 12,

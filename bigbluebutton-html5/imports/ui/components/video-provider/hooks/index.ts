@@ -68,7 +68,6 @@ import {
 import {
   isSkyroomMobileStageMediaActive,
   limitSkyroomMobileStageRemoteWebcams,
-  useSkyroomMobileWebcamsVisible,
 } from '/imports/ui/components/skyroom-layout/mobile-webcam-visibility';
 import {
   isSkyroomColumnLayout,
@@ -595,7 +594,6 @@ export const useVideoStreams = () => {
   const audioOnlyUsers = useAudioOnlyUsers();
   const myPageSize = useMyPageSize();
   const isPaginationEnabled = useIsPaginationEnabled();
-  const skyroomMobileWebcamsVisible = useSkyroomMobileWebcamsVisible();
   const hasScreenShare = layoutSelectInput((i: Input) => i.screenShare.hasScreenShare);
   const presentationIsOpen = layoutSelectInput((i: Input) => i.presentation.isOpen);
   const mobileStageMediaActive = isSkyroomMobileStageMediaActive(
@@ -621,9 +619,12 @@ export const useVideoStreams = () => {
 
   if (connectingStream) streams.push(connectingStream);
 
-  if (!viewParticipantsWebcams || !skyroomMobileWebcamsVisible) {
+  // Mobile stage: keep a capped remote set mounted even when the webcams tab is
+  // hidden. Visibility is CSS-gated on the dock; filtering remotes on every tab
+  // leave/reopen tore LiveKit down and froze low-end phones.
+  if (!viewParticipantsWebcams) {
     streams = streams.filter((vs) => videoService.isLocalStream(vs.stream));
-  } else if (mobileStageMediaActive && skyroomMobileWebcamsVisible) {
+  } else if (mobileStageMediaActive) {
     streams = limitSkyroomMobileStageRemoteWebcams(streams);
   } else if (inAnyGroup) {
     streams = streams.filter((vs) => videoService.isLocalStream(vs.stream)

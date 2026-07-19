@@ -272,6 +272,8 @@ export const useSkyroomColumnLayout = () => {
   // Phone: when a camera turns on (0 → >0) while something is shared on the stage,
   // auto-select the Webcams bottom box so the user sees it. (With nothing shared the
   // engine already fills the top zone with cameras, so no tab switch is needed.)
+  // Respect an explicit selection — never yank away from chat/users or reopen after
+  // the user closed the bottom zone (null), which raced with tab toggles and froze UI.
   const prevMeetingWebcamCountRef = useRef(layoutWebcamCount);
   useEffect(() => {
     const prev = prevMeetingWebcamCountRef.current;
@@ -279,6 +281,8 @@ export const useSkyroomColumnLayout = () => {
     if (!isSkyroomMobileViewport()) return;
     const stageActive = presentationIsOpen || hasActiveScreenShare;
     if (prev === 0 && layoutWebcamCount > 0 && stageActive) {
+      const explicit = getSkyroomMobileActiveBox();
+      if (explicit !== undefined && explicit !== 'webcams') return;
       openSkyroomMobileBox(layoutContextDispatch, 'webcams');
     }
   }, [layoutWebcamCount, presentationIsOpen, hasActiveScreenShare, layoutContextDispatch]);
@@ -290,6 +294,8 @@ export const useSkyroomColumnLayout = () => {
     if (!isLocalWebcamConnecting) return;
     const stageActive = presentationIsOpen || hasActiveScreenShare;
     if (!stageActive) return;
+    const explicit = getSkyroomMobileActiveBox();
+    if (explicit !== undefined && explicit !== 'webcams') return;
     openSkyroomMobileBox(layoutContextDispatch, 'webcams');
   }, [
     isLocalWebcamConnecting,

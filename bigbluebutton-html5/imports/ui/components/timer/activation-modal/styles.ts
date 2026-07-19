@@ -240,12 +240,13 @@ const Actions = styled.div`
 
   @media ${smallOnly} {
     flex-shrink: 0;
-    justify-content: stretch;
-    align-items: stretch;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
     gap: 10px;
     width: 100%;
     margin-top: auto;
-    padding: 12px 0 calc(14px + env(safe-area-inset-bottom, 0px));
+    padding: 12px 8px calc(14px + env(safe-area-inset-bottom, 0px));
     background: linear-gradient(180deg, rgba(12, 18, 30, 0) 0%, #0c121e 18%, #0c121e 100%);
   }
 `;
@@ -254,6 +255,13 @@ const Actions = styled.div`
 const ActionButton = styled(Button)`
   min-width: 8.5rem;
   border-radius: 999px;
+  white-space: normal;
+
+  @media ${smallOnly} {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: 100%;
+  }
 
   ${({ color }) => color === 'secondary' && `
     & > span {
