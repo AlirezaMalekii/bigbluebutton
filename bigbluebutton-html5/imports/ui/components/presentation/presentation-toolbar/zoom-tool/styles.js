@@ -8,6 +8,8 @@ import {
 import {
   whiteboardToolbarMargin,
   borderSize,
+  borderSizeLarge,
+  smPaddingY,
 } from '/imports/ui/stylesheets/styled-components/general';
 import Button from '/imports/ui/components/common/button/component';
 
@@ -53,37 +55,34 @@ const IncreaseZoomButton = styled(Button)`
   ${zoomIconButtonStyles}
 `;
 
-const ResetZoomButton = styled(Button)`
-  text-align: center;
-  color: ${colorGrayDark};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 0 !important;
-  font-weight: 700;
-  min-width: 3.25rem;
+const ZoomPercentSelect = styled.select`
+  padding: 0 ${smPaddingY};
+  margin: ${borderSize};
   margin-left: ${whiteboardToolbarMargin};
   margin-right: ${whiteboardToolbarMargin};
-  position: relative;
+  min-width: 3.25rem;
+  font-weight: 700;
   letter-spacing: -0.01em;
+  text-align: center;
+  color: ${colorGrayDark};
   background-color: ${zoomControlBg};
-  border-radius: 0.5rem;
-  box-shadow: none !important;
   border: 0;
-  transition: background-color 120ms ease, box-shadow 120ms ease, color 120ms ease;
+  border-radius: 0.5rem;
+  box-shadow: none;
+  cursor: pointer;
+  appearance: auto;
+
+  &:-moz-focusring {
+    outline: none;
+  }
 
   &:focus,
   &:hover {
     outline: transparent;
     outline-style: dotted;
     outline-width: ${borderSize};
-    background-color: ${zoomControlHoverBg} !important;
-    color: ${colorPrimary} !important;
-    border-radius: 0.5rem;
-  }
-
-  &:hover {
-    opacity: 1;
+    background-color: ${zoomControlHoverBg};
+    color: ${colorPrimary};
   }
 
   &:focus {
@@ -91,14 +90,33 @@ const ResetZoomButton = styled(Button)`
     box-shadow: ${zoomControlFocusShadow} !important;
   }
 
-  &:active:not([aria-disabled="true"]) {
-    background-color: ${zoomControlActiveBg} !important;
-    color: ${colorPrimary} !important;
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+`;
+
+const ResetZoomButton = styled(Button)`
+  ${zoomIconButtonStyles}
+
+  border: none !important;
+  margin-left: ${whiteboardToolbarMargin};
+  margin-right: ${whiteboardToolbarMargin};
+  min-width: auto;
+
+  & > span {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    padding-inline: 0.35rem;
+    min-width: 1.75rem;
+    border: solid ${borderSizeLarge} transparent;
   }
 `;
 
 export default {
   DecreaseZoomButton,
   IncreaseZoomButton,
+  ZoomPercentSelect,
   ResetZoomButton,
 };

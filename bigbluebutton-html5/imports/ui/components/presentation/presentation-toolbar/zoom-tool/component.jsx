@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { defineMessages, injectIntl } from 'react-intl';
 import {
   HUNDRED_PERCENT,
+  STEP,
 } from '/imports/utils/slideCalcUtils';
 import Styled from './styles';
 import HoldButton from './holdButton/component';
@@ -31,11 +32,30 @@ const intlMessages = defineMessages({
     id: 'app.presentation.presentationToolbar.zoomOutDesc',
     description: 'Aria description for decrement zoom level',
   },
+  zoomIndicator: {
+    id: 'app.presentation.presentationToolbar.zoomIndicator',
+    description: 'Current zoom percentage selector label',
+  },
   currentValue: {
     id: 'app.submenu.application.currentSize',
     description: 'current presentation zoom percentage aria description',
   },
 });
+
+const buildZoomOptions = (minBound, maxBound, step, currentValue) => {
+  const safeMin = Number.isFinite(minBound) ? minBound : HUNDRED_PERCENT;
+  const safeMax = Number.isFinite(maxBound) ? maxBound : HUNDRED_PERCENT;
+  const safeStep = Number.isFinite(step) && step > 0 ? step : STEP;
+  const opts = [];
+  for (let z = safeMin; z <= safeMax; z += safeStep) {
+    opts.push(z);
+  }
+  if (Number.isFinite(currentValue) && !opts.includes(currentValue)) {
+    opts.push(currentValue);
+    opts.sort((a, b) => a - b);
+  }
+  return opts;
+};
 
 class ZoomTool extends PureComponent {
   constructor(props) {
@@ -46,6 +66,7 @@ class ZoomTool extends PureComponent {
     this.mouseUpHandler = this.mouseUpHandler.bind(this);
     this.execInterval = this.execInterval.bind(this);
     this.onChanger = this.onChanger.bind(this);
+    this.handleSelectChange = this.handleSelectChange.bind(this);
     this.setInt = 0;
     this.state = {
       stateZoomValue: props.zoomValue,
@@ -60,6 +81,11 @@ class ZoomTool extends PureComponent {
     if (isDifferent) {
       this.onChanger(zoomValue);
     }
+  }
+
+  handleSelectChange(event) {
+    const next = Number(event.target.value);
+    if (Number.isFinite(next)) this.onChanger(next);
   }
 
   onChanger(value) {
@@ -164,6 +190,8 @@ class ZoomTool extends PureComponent {
     }
 
     const stateZoomPct = intl.formatNumber((stateZoomValue / 100), { style: 'percent' });
+    const zoomOptions = buildZoomOptions(minBound, maxBound, step, stateZoomValue);
+    const showReset = stateZoomValue !== HUNDRED_PERCENT;
 
     return (
       [
@@ -192,24 +220,49 @@ class ZoomTool extends PureComponent {
           </HoldButton>
         ),
         (
-          <span key="zoom-tool-2">
-            <Styled.ResetZoomButton
-              aria-label={intl.formatMessage(intlMessages.resetZoomLabel)}
-              aria-describedby="resetZoomDescription"
-              disabled={(stateZoomValue === HUNDRED_PERCENT) || !isConnected}
-              color="light"
-              customIcon={stateZoomPct}
-              size="md"
-              onClick={() => this.resetZoom()}
-              label={intl.formatMessage(intlMessages.resetZoomLabel)}
-              data-test="resetZoomButton"
-              hideLabel
-            />
-            <div id="resetZoomDescription" hidden>
-              {intl.formatMessage(intlMessages.currentValue, ({ size: stateZoomPct }))}
-            </div>
-          </span>
+          <Styled.ZoomPercentSelect
+            key="zoom-tool-2"
+            id="zoomSelect"
+            data-test="zoomSelect"
+            aria-label={intl.formatMessage(intlMessages.zoomIndicator)}
+            aria-describedby="zoomSelectDescription"
+            disabled={!isConnected}
+            value={stateZoomValue}
+            onChange={this.handleSelectChange}
+          >
+            {zoomOptions.map((z) => (
+              <option key={z} value={z}>
+                {intl.formatNumber((z / 100), { style: 'percent' })}
+              </option>
+            ))}
+          </Styled.ZoomPercentSelect>
         ),
+        (
+          <div id="zoomSelectDescription" key="zoom-tool-2-desc" hidden>
+            {intl.formatMessage(intlMessages.currentValue, ({ size: stateZoomPct }))}
+          </div>
+        ),
+        showReset ? (
+          <Styled.ResetZoomButton
+            key="zoom-tool-reset"
+            aria-label={intl.formatMessage(intlMessages.resetZoomLabel)}
+            aria-describedby="resetZoomDescription"
+            disabled={!isConnected}
+            color="light"
+            size="md"
+            circle
+            onClick={() => this.resetZoom()}
+            label={intl.formatMessage(intlMessages.resetZoomLabel)}
+            data-test="resetZoomButton"
+            icon="refresh"
+            hideLabel
+          />
+        ) : null,
+        showReset ? (
+          <div id="resetZoomDescription" key="zoom-tool-reset-desc" hidden>
+            {intl.formatMessage(intlMessages.resetZoomLabel)}
+          </div>
+        ) : null,
         (
           <HoldButton
             key="zoom-tool-3"

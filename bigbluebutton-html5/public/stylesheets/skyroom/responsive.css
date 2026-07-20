@@ -839,51 +839,65 @@
     z-index: 3 !important;
   }
 
-  /* Compact zoom − / % / + on phone slide-nav (same pill language as other tools). */
+  /* Compact zoom − / % select / reset / + on phone slide-nav. */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="zoomOutBtn"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="zoomInBtn"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="resetZoomButton"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="resetZoomButton"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="zoomSelect"] {
     margin: 0 !important;
     flex-shrink: 0 !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="resetZoomButton"] {
-    min-width: 26px !important;
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="zoomSelect"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="ZoomPercentSelect"] {
+    min-width: 34px !important;
     width: auto !important;
+    max-width: 48px !important;
     height: 16px !important;
     min-height: 16px !important;
     max-height: 16px !important;
-    padding: 0 3px !important;
+    padding: 0 2px !important;
     font-size: 0.52rem !important;
     font-weight: 700 !important;
     letter-spacing: -0.02em !important;
-    line-height: 1 !important;
+    line-height: 1.1 !important;
     border-radius: 5px !important;
     background-color: rgba(20, 32, 52, 0.92) !important;
     border: 1px solid rgba(32, 199, 187, 0.26) !important;
     color: #e8edf4 !important;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28) !important;
+    box-sizing: border-box !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="resetZoomButton"]:hover,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="resetZoomButton"]:focus {
-    background-color: rgba(32, 199, 187, 0.18) !important;
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="zoomSelect"]:hover,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="zoomSelect"]:focus,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="ZoomPercentSelect"]:hover,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="ZoomPercentSelect"]:focus {
     border-color: rgba(32, 199, 187, 0.48) !important;
+    background: rgba(32, 199, 187, 0.14) !important;
     color: #3fc2b8 !important;
+    outline: none !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="resetZoomButton"] > span,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="resetZoomButton"] > span:first-child {
-    min-width: 0 !important;
-    width: auto !important;
-    height: auto !important;
-    min-height: 0 !important;
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
+  /* Reset (refresh) only mounts when zoom ≠ 100% — keep it a compact icon chip. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="resetZoomButton"] {
     padding: 0 !important;
-    font-size: inherit !important;
-    color: inherit !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="resetZoomButton"] > span:first-child {
+    min-width: 16px !important;
+    min-height: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  /* Never un-hide BBB hideLabel on the reset chip (was merging % + reset text). */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="resetZoomButton"] [class*="ButtonLabel"] {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    font-size: 0 !important;
   }
 
   #layout[data-skyroom-column="true"] [class*="QuickPollButtonWrapper"] {
