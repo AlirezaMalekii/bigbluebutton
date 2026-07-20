@@ -3260,7 +3260,16 @@
     border: 1px solid rgba(32, 199, 187, 0.12) !important;
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.32) !important;
     max-height: 100% !important;
-    contain: layout paint !important;
+    /* Do not use contain/content-visibility with live <video> — locks the
+       compositor on low-end Android when switching tabs away from webcams. */
+    contain: none !important;
+  }
+
+  /* When the dock is not in a webcam zone, kill hit-testing even if :has() fails. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"]:not([data-skyroom-mobile-bottom-webcams="true"]):not([data-skyroom-mobile-top-webcams="true"]) #cameraDock,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"]:not([data-skyroom-mobile-bottom-webcams="true"]):not([data-skyroom-mobile-top-webcams="true"]) [data-test="cameraDock"] {
+    pointer-events: none !important;
+    visibility: hidden !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="VideoCanvas"] {

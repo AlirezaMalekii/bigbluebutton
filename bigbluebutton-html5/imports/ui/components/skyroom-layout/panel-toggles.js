@@ -27,30 +27,52 @@ const getMobileCameraDockWrappers = () => {
 };
 
 /**
- * Clear the bottom-webcam dock immediately when leaving the webcams tab.
- * Attribute alone can race the layout engine; also force the dock inert via
- * inline styles so a stale fixed layer cannot eat taps over chat/users.
+ * Keep the mobile camera dock interactive only while it owns a zone.
+ * Leaving the webcams tab can race the layout engine and leave a fixed live
+ * video layer eating every tap (UI feels fully frozen).
+ *
+ * @param {'webcams'|null|string|boolean} boxOrVisible
+ *   - 'webcams' / true → dock may receive taps
+ *   - false → neither zone; force dock fully inert
+ *   - other box key → clear bottom-webcams; inert only if top-zone cams are off
  */
-const syncSkyroomMobileWebcamDockVisibility = (box) => {
+export const syncSkyroomMobileWebcamDockVisibility = (boxOrVisible) => {
   const layoutEl = typeof document !== 'undefined'
     ? document.getElementById('layout')
     : null;
   if (!layoutEl?.hasAttribute('data-skyroom-mobile')) return;
 
   const docks = getMobileCameraDockWrappers();
-  if (box === 'webcams') {
+  const setDockInert = (inert) => {
     docks.forEach((el) => {
-      el.style.removeProperty('pointer-events');
-      el.style.removeProperty('visibility');
+      if (inert) {
+        el.style.setProperty('pointer-events', 'none', 'important');
+        el.style.setProperty('visibility', 'hidden', 'important');
+      } else {
+        el.style.removeProperty('pointer-events');
+        el.style.removeProperty('visibility');
+      }
     });
+  };
+
+  if (boxOrVisible === 'webcams' || boxOrVisible === true) {
+    setDockInert(false);
     return;
   }
 
+  if (boxOrVisible === false) {
+    layoutEl.removeAttribute('data-skyroom-mobile-bottom-webcams');
+    layoutEl.removeAttribute('data-skyroom-mobile-top-webcams');
+    setDockInert(true);
+    return;
+  }
+
+  // Tab switch away from webcams while a stage is shared: drop bottom ownership.
+  // When nothing is shared, cams stay in the top zone under chat/users — keep them.
   layoutEl.removeAttribute('data-skyroom-mobile-bottom-webcams');
-  docks.forEach((el) => {
-    el.style.setProperty('pointer-events', 'none', 'important');
-    el.style.setProperty('visibility', 'hidden', 'important');
-  });
+  if (!layoutEl.hasAttribute('data-skyroom-mobile-top-webcams')) {
+    setDockInert(true);
+  }
 };
 
 /** Phone breakpoint — matches layout/utils.js isMobile (clientWidth <= 599). */
@@ -232,6 +254,15 @@ export const openSkyroomMobileBox = (layoutContextDispatch, box) => {
   // flags, which update asynchronously. One coalesced recompute on the next frame
   // makes the first tab tap reliably reveal the new box without a resize storm.
   dispatchSkyroomLayoutResizeNextFrame();
+
+  // Layout's attribute pass can re-enable the dock a frame later — re-assert inert
+  // after that pass so chat/users never sit under a live video hit-target.
+  if (box !== 'webcams' && typeof window !== 'undefined') {
+    window.requestAnimationFrame(() => {
+      syncSkyroomMobileWebcamDockVisibility(box);
+      cleanupWebcamMenuOverlayArtifacts();
+    });
+  }
 };
 
 /**

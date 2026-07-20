@@ -34,7 +34,10 @@ import {
   subscribeSkyroomNotesOpen,
 } from '/imports/ui/components/skyroom-layout/notes-panel-state';
 import { subscribeSkyroomMobileBottom } from '/imports/ui/components/skyroom-layout/mobile-bottom-state';
-import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import {
+  isSkyroomColumnLayout,
+  syncSkyroomMobileWebcamDockVisibility,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const windowWidth = () => window.document.documentElement.clientWidth;
 const windowHeight = () => window.document.documentElement.clientHeight;
@@ -845,13 +848,7 @@ const CustomLayout = (props) => {
         }
         if (skyroomLayout.mobileCamerasInBottom) {
           layoutEl?.setAttribute('data-skyroom-mobile-bottom-webcams', 'true');
-          // Drop emergency inert styles applied when leaving the webcams tab so the
-          // dock can receive taps again once the layout engine re-enables it.
-          document.querySelectorAll('.react-draggable').forEach((el) => {
-            if (!(el instanceof HTMLElement) || !el.querySelector('#cameraDock')) return;
-            el.style.removeProperty('pointer-events');
-            el.style.removeProperty('visibility');
-          });
+          syncSkyroomMobileWebcamDockVisibility(true);
         } else {
           layoutEl?.removeAttribute('data-skyroom-mobile-bottom-webcams');
         }
@@ -868,6 +865,10 @@ const CustomLayout = (props) => {
             layoutEl.style.setProperty('--skyroom-mobile-top-left', `${topLeft}px`);
             layoutEl.style.removeProperty('--skyroom-mobile-top-right');
           }
+          // Top-zone cams (nothing shared) must stay tappable.
+          if (!skyroomLayout.mobileCamerasInBottom) {
+            syncSkyroomMobileWebcamDockVisibility(true);
+          }
         } else {
           layoutEl?.removeAttribute('data-skyroom-mobile-top-webcams');
           layoutEl.style.removeProperty('--skyroom-mobile-top-top');
@@ -875,6 +876,11 @@ const CustomLayout = (props) => {
           layoutEl.style.removeProperty('--skyroom-mobile-top-width');
           layoutEl.style.removeProperty('--skyroom-mobile-top-left');
           layoutEl.style.removeProperty('--skyroom-mobile-top-right');
+        }
+        // Neither zone owns cameras (e.g. stage + chat tab) — dock must stay inert.
+        // Skipping this re-enabled a full-size live video layer over chat/users.
+        if (!skyroomLayout.mobileCamerasInBottom && !skyroomLayout.mobileCamerasInTop) {
+          syncSkyroomMobileWebcamDockVisibility(false);
         }
         if (skyroomLayout.mobileTalkingRailOffset > 0) {
           layoutEl.setAttribute('data-skyroom-mobile-talking-rail', 'true');

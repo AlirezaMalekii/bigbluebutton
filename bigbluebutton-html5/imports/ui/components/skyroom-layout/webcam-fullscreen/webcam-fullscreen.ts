@@ -42,6 +42,12 @@ export const cleanupWebcamMenuOverlayArtifacts = () => {
   restore(document.getElementById('container'));
   restore(document.querySelector('#app-container'));
   restore(document.querySelector('[data-reactroot]'));
+  // Body/html can also receive inert from MUI focus traps on some browsers.
+  restore(document.body);
+  if (document.documentElement instanceof HTMLElement
+    && document.documentElement.hasAttribute('inert')) {
+    document.documentElement.removeAttribute('inert');
+  }
 
   // Any closed/hidden MUI modal (webcam menu, chat overflow, etc.) must not
   // keep capturing taps after a tab switch on mobile.
@@ -51,7 +57,11 @@ export const cleanupWebcamMenuOverlayArtifacts = () => {
     if (!(modal instanceof HTMLElement)) return;
     const isActionsMenu = modal.id === 'actions-dropdown-menu'
       || modal.classList.contains('skyroom-actions-menu');
-    if (modal.getAttribute('aria-hidden') === 'true') {
+    const hidden = modal.getAttribute('aria-hidden') === 'true'
+      || modal.getAttribute('aria-hidden') === ''
+      || window.getComputedStyle(modal).visibility === 'hidden'
+      || window.getComputedStyle(modal).display === 'none';
+    if (hidden) {
       modal.style.setProperty('pointer-events', 'none');
     } else if (isActionsMenu) {
       modal.style.setProperty('pointer-events', 'auto');
