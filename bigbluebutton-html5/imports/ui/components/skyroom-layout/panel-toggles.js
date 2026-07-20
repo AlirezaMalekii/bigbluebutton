@@ -276,6 +276,9 @@ export const openSkyroomMobileBox = (layoutContextDispatch, box) => {
  */
 export const openSkyroomPrivateChat = (layoutContextDispatch, chatId = '') => {
   setSkyroomMobileActiveBox('chat');
+  syncSkyroomMobileWebcamDockVisibility('chat');
+  syncWebcamFullscreenAttribute();
+  cleanupWebcamMenuOverlayArtifacts();
   closeSkyroomUsers(layoutContextDispatch);
   closeSkyroomNotes();
 
@@ -284,6 +287,12 @@ export const openSkyroomPrivateChat = (layoutContextDispatch, chatId = '') => {
   layoutContextDispatch({ type: ACTIONS.SET_ID_CHAT_OPEN, value: chatId });
 
   dispatchSkyroomLayoutResizeNextFrame();
+  if (typeof window !== 'undefined') {
+    window.requestAnimationFrame(() => {
+      syncSkyroomMobileWebcamDockVisibility('chat');
+      cleanupWebcamMenuOverlayArtifacts();
+    });
+  }
 };
 
 /** Show the breakout management/join panel in the mobile bottom zone (moderator or invitee). */
