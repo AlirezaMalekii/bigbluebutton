@@ -47,6 +47,7 @@ import SessionStorage from '/imports/ui/services/storage/session';
 import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
+  adjustSkyroomMobileCameraYOffset,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const USER_CAMERA_INTERACTION_MS = (
@@ -111,6 +112,29 @@ const calculateCenteredCameraOffsets = (
   }
 
   return { xOffset, yOffset };
+};
+
+/** Full-slide letterbox center, then nudge into the phone safe band under chrome. */
+const calculateSkyroomAwareCenteredCameraOffsets = (
+  scaledWidth,
+  scaledHeight,
+  baseZoom,
+  areaWidth,
+  areaHeight,
+  fitToWidthMode,
+) => {
+  const centered = calculateCenteredCameraOffsets(
+    scaledWidth,
+    scaledHeight,
+    baseZoom,
+    areaWidth,
+    areaHeight,
+    fitToWidthMode,
+  );
+  return {
+    xOffset: centered.xOffset,
+    yOffset: adjustSkyroomMobileCameraYOffset(centered.yOffset, baseZoom),
+  };
 };
 
 // Pan bounds in page-space. When the slide is smaller than the viewport, lock to
@@ -1358,7 +1382,7 @@ const Whiteboard = React.memo((props) => {
               presentationAreaWidth,
               presentationAreaHeight,
             );
-            const centered = calculateCenteredCameraOffsets(
+            const centered = calculateSkyroomAwareCenteredCameraOffsets(
               scaledWidth,
               scaledHeight,
               baseZoom,
@@ -1400,7 +1424,7 @@ const Whiteboard = React.memo((props) => {
               presentationAreaWidth,
               presentationAreaHeight,
             );
-            const centered = calculateCenteredCameraOffsets(
+            const centered = calculateSkyroomAwareCenteredCameraOffsets(
               viewerFitWidth,
               viewerFitHeight,
               baseZoom,
@@ -2285,7 +2309,7 @@ const Whiteboard = React.memo((props) => {
           presentationAreaWidth,
           presentationAreaHeight,
         );
-        const centered = calculateCenteredCameraOffsets(
+        const centered = calculateSkyroomAwareCenteredCameraOffsets(
           scaledWidth,
           scaledHeight,
           newZ,
@@ -2360,7 +2384,7 @@ const Whiteboard = React.memo((props) => {
           presentationAreaWidth,
           presentationAreaHeight,
         );
-        const centered = calculateCenteredCameraOffsets(
+        const centered = calculateSkyroomAwareCenteredCameraOffsets(
           viewerFitWidth,
           viewerFitHeight,
           newZoom,
@@ -2644,7 +2668,7 @@ const Whiteboard = React.memo((props) => {
           presentationAreaWidth,
           presentationAreaHeight,
         );
-        const centered = calculateCenteredCameraOffsets(
+        const centered = calculateSkyroomAwareCenteredCameraOffsets(
           viewerFitWidth,
           viewerFitHeight,
           fitZoom,

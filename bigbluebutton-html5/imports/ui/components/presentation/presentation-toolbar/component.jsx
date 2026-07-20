@@ -1,7 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { defineMessages, injectIntl } from 'react-intl';
-import deviceInfo from '/imports/utils/deviceInfo';
 import injectWbResizeEvent from '/imports/ui/components/presentation/resize-wrapper/component';
 import Button from '/imports/ui/components/common/button/component';
 import {
@@ -348,8 +347,6 @@ class PresentationToolbar extends PureComponent {
       numberOfJoinedUsers,
     } = this.props;
 
-    const { isMobile } = deviceInfo;
-
     const startOfSlides = !(currentSlideNum > 1);
     const endOfSlides = !(currentSlideNum < numberOfSlides);
 
@@ -485,43 +482,42 @@ class PresentationToolbar extends PureComponent {
           />
           )}
 
-          <Styled.WBAccessButton
-            data-test={multiUser ? 'turnMultiUsersWhiteboardOff' : 'turnMultiUsersWhiteboardOn'}
-            role="button"
-            aria-label={multiUserLabel}
-            color="light"
-            disabled={disableStartingMultiUser}
-            icon={multiUser ? 'multi_whiteboard' : 'whiteboard'}
-            size="md"
-            circle
-            onClick={() => this.handleSwitchWhiteboardMode(!multiUser)}
-            label={multiUserLabel}
-            hideLabel
-          />
-          {multiUser ? (
-            <Styled.MultiUserTool
+          <Styled.WBAccessCluster>
+            <Styled.WBAccessButton
+              data-test={multiUser ? 'turnMultiUsersWhiteboardOff' : 'turnMultiUsersWhiteboardOn'}
+              role="button"
+              aria-label={multiUserLabel}
+              color="light"
+              disabled={disableStartingMultiUser}
+              icon={multiUser ? 'multi_whiteboard' : 'whiteboard'}
+              size="md"
+              circle
               onClick={() => this.handleSwitchWhiteboardMode(!multiUser)}
-            >
-              {multiUserSize}
-            </Styled.MultiUserTool>
-          ) : (
-            <Styled.MUTPlaceholder />
-          )}
-          {!isMobile ? (
-            <TooltipContainer>
-              <ZoomTool
-                slidePosition={slidePosition}
-                zoomValue={zoom}
-                currentSlideNum={currentSlideNum}
-                change={this.change}
-                minBound={isInfiniteWhiteboard ? MIN_PERCENT : HUNDRED_PERCENT}
-                maxBound={MAX_PERCENT}
-                step={STEP}
-                isInfiniteWhiteboard={isInfiniteWhiteboard}
-                isConnected={isConnected}
-              />
-            </TooltipContainer>
-          ) : null}
+              label={multiUserLabel}
+              hideLabel
+            />
+            {multiUser ? (
+              <Styled.MultiUserTool
+                onClick={() => this.handleSwitchWhiteboardMode(!multiUser)}
+                aria-hidden="true"
+              >
+                {multiUserSize}
+              </Styled.MultiUserTool>
+            ) : null}
+          </Styled.WBAccessCluster>
+          <TooltipContainer>
+            <ZoomTool
+              slidePosition={slidePosition}
+              zoomValue={zoom}
+              currentSlideNum={currentSlideNum}
+              change={this.change}
+              minBound={isInfiniteWhiteboard ? MIN_PERCENT : HUNDRED_PERCENT}
+              maxBound={MAX_PERCENT}
+              step={STEP}
+              isInfiniteWhiteboard={isInfiniteWhiteboard}
+              isConnected={isConnected}
+            />
+          </TooltipContainer>
           <Styled.FitToWidthButton
             role="button"
             data-test="fitToWidthButton"

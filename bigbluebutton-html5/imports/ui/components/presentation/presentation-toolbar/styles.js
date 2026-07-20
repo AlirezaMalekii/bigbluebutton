@@ -17,7 +17,6 @@ import {
   borderSize,
   smPaddingY,
   borderSizeLarge,
-  smPaddingX,
 } from '/imports/ui/stylesheets/styled-components/general';
 import Button from '/imports/ui/components/common/button/component';
 
@@ -274,45 +273,37 @@ const FitToWidthButton = styled(Button)`
   }
 `;
 
+/* Wraps WB access + multi-user count so the badge never opens a flex gap. */
+const WBAccessCluster = styled.div`
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+`;
+
 const MultiUserTool = styled.span`
   background-color: ${colorDanger};
   border-radius: 50%;
-  width: 1rem;
-  height: 1rem;
-  position: relative;
-  z-index: 2;
-  bottom: 0.5rem;
+  width: 0.85rem;
+  height: 0.85rem;
+  position: absolute;
+  top: -0.15rem;
+  inset-inline-start: -0.2rem;
+  z-index: 3;
   color: ${colorWhite};
   display: flex;
   justify-content: center;
   align-items: center;
   box-shadow: 1px 1px ${borderSizeLarge} ${colorGrayDark};
-  font-size: ${smPaddingX};
+  font-size: 0.55rem;
+  line-height: 1;
   user-select: none;
   cursor: pointer;
-
-  [dir="ltr"] & {
-    right: 1rem;
-  }
-
-  [dir="rtl"] & {
-    left: 1rem;
-  }
+  pointer-events: auto;
 `;
 
 const MUTPlaceholder = styled.div`
-  width: 1rem;
-  height: 1rem;
-  position: relative;
-  bottom: 0.5rem;
-
-  [dir="ltr"] & {
-    right: 1rem;
-  }
-
-  [dir="rtl"] & {
-    left: 1rem;
-  }
+  display: none;
 `;
 
 const WBAccessButton = styled(Button)`
@@ -387,6 +378,7 @@ export default {
   SkipSlideSelect,
   PresentationZoomControls,
   FitToWidthButton,
+  WBAccessCluster,
   MultiUserTool,
   WBAccessButton,
   MUTPlaceholder,

@@ -117,6 +117,13 @@ class BBBMenu extends React.Component {
       onOpenChange(!controlledOpen);
       return;
     }
+    // Toggle on second trigger tap. Needed on mobile when a stuck/transparent
+    // backdrop cannot receive the dismiss click (e.g. keepMounted + pointer-events).
+    const { anchorEl } = this.state;
+    if (anchorEl) {
+      this.handleClose(event);
+      return;
+    }
     this.setState({ anchorEl: event.currentTarget });
   }
 

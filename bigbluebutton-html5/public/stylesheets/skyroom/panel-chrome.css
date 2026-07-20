@@ -287,6 +287,8 @@
 .MuiModal-root:has(.skyroom-user-actions-menu) .MuiBackdrop-root,
 .MuiModal-root:has(.skyroom-leave-meeting-menu) .MuiBackdrop-root,
 .MuiModal-root:has(.skyroom-actions-menu) .MuiBackdrop-root,
+.MuiModal-root.skyroom-actions-menu .MuiBackdrop-root,
+#actions-dropdown-menu .MuiBackdrop-root,
 .MuiModal-root:has(.skyroom-presentation-options-menu) .MuiBackdrop-root,
 .MuiModal-root:has(#presentation-download-dropdown) .MuiBackdrop-root {
   background-color: transparent !important;
@@ -310,6 +312,10 @@
 .MuiModal-root:has(.skyroom-leave-meeting-menu) .MuiPaper-root.override-mobile-styles,
 .MuiModal-root:has(.skyroom-actions-menu) .override-mobile-styles,
 .MuiModal-root:has(.skyroom-actions-menu) .MuiPaper-root.override-mobile-styles,
+.MuiModal-root.skyroom-actions-menu .override-mobile-styles,
+.MuiModal-root.skyroom-actions-menu .MuiPaper-root.override-mobile-styles,
+#actions-dropdown-menu .override-mobile-styles,
+#actions-dropdown-menu .MuiPaper-root.override-mobile-styles,
 .MuiModal-root:has(.skyroom-presentation-options-menu) .override-mobile-styles,
 .MuiModal-root:has(.skyroom-presentation-options-menu) .MuiPaper-root.override-mobile-styles,
 .MuiModal-root:has(#presentation-download-dropdown) .override-mobile-styles,

@@ -806,24 +806,84 @@
 
   /*
    * Space between next-slide (slide cluster) and whiteboard-access (zoom cluster).
-   * margin-inline-start tracks RTL/LTR so the gap always sits on that boundary.
-   *
-   * Multi-user count badge: when on, it sits between WB and fit-to-width in the
-   * flex row and opens a hole. Collapse it on phone — WB icon already switches
-   * to multi_whiteboard when active.
+   * Multi-user badge is absolutely positioned on WBAccessCluster — no flex gap.
    */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="PresentationZoomControls"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationZoomControls"] {
     margin-inline-start: 10px !important;
   }
 
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="WBAccessCluster"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="WBAccessCluster"] {
+    position: relative !important;
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    margin: 0 !important;
+  }
+
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="MultiUserTool"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="MultiUserTool"] {
-    display: none !important;
-    width: 0 !important;
-    min-width: 0 !important;
+    position: absolute !important;
+    top: -3px !important;
+    inset-inline-start: -3px !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 11px !important;
+    height: 11px !important;
+    min-width: 11px !important;
     margin: 0 !important;
     padding: 0 !important;
+    font-size: 0.5rem !important;
+    line-height: 1 !important;
+    z-index: 3 !important;
+  }
+
+  /* Compact zoom − / % / + on phone slide-nav (same pill language as other tools). */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="zoomOutBtn"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="zoomInBtn"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="resetZoomButton"] {
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="resetZoomButton"] {
+    min-width: 26px !important;
+    width: auto !important;
+    height: 16px !important;
+    min-height: 16px !important;
+    max-height: 16px !important;
+    padding: 0 3px !important;
+    font-size: 0.52rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1 !important;
+    border-radius: 5px !important;
+    background-color: rgba(20, 32, 52, 0.92) !important;
+    border: 1px solid rgba(32, 199, 187, 0.26) !important;
+    color: #e8edf4 !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28) !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="resetZoomButton"]:hover,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="resetZoomButton"]:focus {
+    background-color: rgba(32, 199, 187, 0.18) !important;
+    border-color: rgba(32, 199, 187, 0.48) !important;
+    color: #3fc2b8 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="resetZoomButton"] > span,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="resetZoomButton"] > span:first-child {
+    min-width: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    font-size: inherit !important;
+    color: inherit !important;
   }
 
   #layout[data-skyroom-column="true"] [class*="QuickPollButtonWrapper"] {
@@ -2136,20 +2196,32 @@
     max-width: min(280px, 94vw) !important;
   }
 
-  /* Actions "+" menu — above stage chrome (toolbar z 1001–1004). BBBMenu
-     defaults to inline zIndex:999 which left the open sheet untappable. */
-  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu):not([aria-hidden="true"]) {
+  /*
+   * Actions "+" menu — CRITICAL: BBBMenu puts className/id on the Modal ROOT
+   * (not a descendant). `:has(.skyroom-actions-menu)` never matched, so
+   * pointer-events/z-index overrides never applied and the open menu was dead.
+   */
+  html[data-skyroom="true"] #actions-dropdown-menu:not([aria-hidden="true"]),
+  html[data-skyroom="true"] .MuiModal-root.skyroom-actions-menu:not([aria-hidden="true"]) {
     z-index: 1600 !important;
     pointer-events: auto !important;
   }
 
-  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) .MuiPopover-root {
+  html[data-skyroom="true"] #actions-dropdown-menu[aria-hidden="true"],
+  html[data-skyroom="true"] .MuiModal-root.skyroom-actions-menu[aria-hidden="true"] {
+    pointer-events: none !important;
+  }
+
+  html[data-skyroom="true"] #actions-dropdown-menu .MuiPopover-root,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-actions-menu .MuiPopover-root {
     top: unset !important;
     z-index: 1600 !important;
   }
 
-  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) .override-mobile-styles,
-  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) .MuiPaper-root.override-mobile-styles {
+  html[data-skyroom="true"] #actions-dropdown-menu .override-mobile-styles,
+  html[data-skyroom="true"] #actions-dropdown-menu .MuiPaper-root.override-mobile-styles,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-actions-menu .override-mobile-styles,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-actions-menu .MuiPaper-root.override-mobile-styles {
     max-width: min(320px, 94vw) !important;
     max-height: min(72dvh, 480px) !important;
     overflow-y: auto !important;
@@ -2158,28 +2230,35 @@
     z-index: 1601 !important;
   }
 
-  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) .MuiBackdrop-root {
+  html[data-skyroom="true"] #actions-dropdown-menu .MuiBackdrop-root,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-actions-menu .MuiBackdrop-root {
     background-color: transparent !important;
     pointer-events: auto !important;
   }
 
-  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) .MuiList-root {
+  html[data-skyroom="true"] #actions-dropdown-menu .MuiList-root,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-actions-menu .MuiList-root {
     display: block !important;
     width: 100% !important;
+    pointer-events: auto !important;
   }
 
-  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) .MuiMenuItem-root,
-  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) [data-key^="menuItem-"] {
+  html[data-skyroom="true"] #actions-dropdown-menu .MuiMenuItem-root,
+  html[data-skyroom="true"] #actions-dropdown-menu [data-key^="menuItem-"],
+  html[data-skyroom="true"] .MuiModal-root.skyroom-actions-menu .MuiMenuItem-root,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-actions-menu [data-key^="menuItem-"] {
     width: 100% !important;
     min-height: 40px !important;
     pointer-events: auto !important;
     touch-action: manipulation !important;
   }
 
-  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) [class*="MenuItemWrapper"] {
+  html[data-skyroom="true"] #actions-dropdown-menu [class*="MenuItemWrapper"],
+  html[data-skyroom="true"] .MuiModal-root.skyroom-actions-menu [class*="MenuItemWrapper"] {
     flex-direction: row !important;
     align-items: center !important;
     width: 100% !important;
+    pointer-events: auto !important;
   }
 
   html[data-skyroom="true"] .MuiModal-root:has(.skyroom-audio-settings-menu) .override-mobile-styles,

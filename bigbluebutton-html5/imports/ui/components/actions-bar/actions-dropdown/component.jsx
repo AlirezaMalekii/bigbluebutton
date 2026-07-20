@@ -385,7 +385,11 @@ class ActionsDropdown extends PureComponent {
       ? availablePresentations.concat(availableActions)
       : availableActions;
 
-    const customStyles = { top: '-1rem' };
+    // zIndex must beat stage chrome (toolbar ~1001–1004). BBBMenu defaults to 999.
+    const customStyles = {
+      zIndex: 1600,
+      ...(!isMobile ? { top: '-1rem' } : {}),
+    };
 
     if (availableActions.length === 0 || !isConnected) {
       return null;
@@ -394,7 +398,7 @@ class ActionsDropdown extends PureComponent {
     return (
       <>
         <BBBMenu
-          customStyles={!isMobile ? customStyles : null}
+          customStyles={customStyles}
           overrideMobileStyles
           accessKey={OPEN_ACTIONS_AK}
           trigger={(
@@ -415,7 +419,9 @@ class ActionsDropdown extends PureComponent {
           opts={{
             id: 'actions-dropdown-menu',
             className: 'skyroom-actions-menu',
-            keepMounted: true,
+            // Unmount when closed so cleanupWebcamMenuOverlayArtifacts cannot leave
+            // a stuck pointer-events:none on a keepMounted modal root.
+            keepMounted: false,
             transitionDuration: 0,
             elevation: 8,
             getcontentanchorel: null,

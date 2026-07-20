@@ -73,6 +73,39 @@ export const getSkyroomMobileWbToolbarReserve = () => {
   return Math.ceil(30 * scale) + Math.max(0, Math.round(gap));
 };
 
+/** Top floating chrome (undo/redo + options) over the canvas on phone. */
+export const getSkyroomMobileWbTopChromeReserve = () => {
+  const layoutEl = document.getElementById('layout');
+  if (!layoutEl) return 32;
+  const styles = getComputedStyle(layoutEl);
+  const btn = parseFloat(styles.getPropertyValue('--skyroom-wb-btn-size')) || 24;
+  // Chip height + top offset + breathing room under the chips.
+  return Math.ceil(btn + 10);
+};
+
+/**
+ * Height used for camera fit on Skyroom phone — canvas minus slide-nav and the
+ * floating top/bottom chrome so the whole slide stays visible.
+ */
+export const getSkyroomMobileCameraFitHeight = (boundsHeight, slideToolbarH = 0) => {
+  const top = getSkyroomMobileWbTopChromeReserve();
+  const bottom = getSkyroomMobileWbToolbarReserve();
+  return Math.max(80, (boundsHeight || 0) - (slideToolbarH || 0) - top - bottom);
+};
+
+/**
+ * After equal letterbox-centering in the live canvas, shift camera.y so the
+ * slide sits in the safe band between top chrome and the pen bar.
+ * (More negative y moves content down in tldraw page-space.)
+ */
+export const adjustSkyroomMobileCameraYOffset = (yOffset, zoom) => {
+  if (!(isSkyroomColumnLayout() && isSkyroomMobileViewport())) return yOffset;
+  if (!(Number.isFinite(zoom) && zoom > 0) || !Number.isFinite(yOffset)) return yOffset;
+  const top = getSkyroomMobileWbTopChromeReserve();
+  const bottom = getSkyroomMobileWbToolbarReserve();
+  return yOffset - (top - bottom) / (2 * zoom);
+};
+
 /** True during bootstrap before #layout mounts (see main.html data-skyroom). */
 export const isSkyroomTheme = () => {
   if (isSkyroomColumnLayout()) return true;
