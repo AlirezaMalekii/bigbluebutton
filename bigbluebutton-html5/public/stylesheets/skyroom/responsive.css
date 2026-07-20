@@ -804,6 +804,28 @@
     padding: 0 !important;
   }
 
+  /*
+   * Space between next-slide (slide cluster) and whiteboard-access (zoom cluster).
+   * margin-inline-start tracks RTL/LTR so the gap always sits on that boundary.
+   *
+   * Multi-user count badge: when on, it sits between WB and fit-to-width in the
+   * flex row and opens a hole. Collapse it on phone — WB icon already switches
+   * to multi_whiteboard when active.
+   */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="PresentationZoomControls"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationZoomControls"] {
+    margin-inline-start: 10px !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [class*="MultiUserTool"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="MultiUserTool"] {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   #layout[data-skyroom-column="true"] [class*="QuickPollButtonWrapper"] {
     gap: 0 !important;
   }
@@ -820,15 +842,23 @@
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button > span:first-child,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button > span:first-child {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     min-width: 16px !important;
     min-height: 16px !important;
     width: 16px !important;
     height: 16px !important;
     border-radius: 5px !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     padding: 0 !important;
     margin: 0 !important;
     min-height: 0 !important;
@@ -836,6 +866,25 @@
     background-color: transparent !important;
     box-shadow: none !important;
     border: none !important;
+  }
+
+  /* Reset BBB prev/next icon padding-left (20%/60%) so glyphs sit in the pill. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button i,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button [class^="icon-bbb-"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper button svg,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button i,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button [class^="icon-bbb-"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] button svg {
+    padding: 0 !important;
+    padding-inline: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
   }
 
   /*
@@ -2087,12 +2136,50 @@
     max-width: min(280px, 94vw) !important;
   }
 
+  /* Actions "+" menu — above stage chrome (toolbar z 1001–1004). BBBMenu
+     defaults to inline zIndex:999 which left the open sheet untappable. */
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu):not([aria-hidden="true"]) {
+    z-index: 1600 !important;
+    pointer-events: auto !important;
+  }
+
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) .MuiPopover-root {
+    top: unset !important;
+    z-index: 1600 !important;
+  }
+
   html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) .override-mobile-styles,
   html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) .MuiPaper-root.override-mobile-styles {
     max-width: min(320px, 94vw) !important;
     max-height: min(72dvh, 480px) !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
+    pointer-events: auto !important;
+    z-index: 1601 !important;
+  }
+
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) .MuiBackdrop-root {
+    background-color: transparent !important;
+    pointer-events: auto !important;
+  }
+
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) .MuiList-root {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) .MuiMenuItem-root,
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) [data-key^="menuItem-"] {
+    width: 100% !important;
+    min-height: 40px !important;
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+  }
+
+  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-actions-menu) [class*="MenuItemWrapper"] {
+    flex-direction: row !important;
+    align-items: center !important;
+    width: 100% !important;
   }
 
   html[data-skyroom="true"] .MuiModal-root:has(.skyroom-audio-settings-menu) .override-mobile-styles,

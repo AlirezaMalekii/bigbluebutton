@@ -78,6 +78,15 @@ const getToolbarHeight = () => {
   return height;
 };
 
+// Match --skyroom-presentation-toolbar-h so camera fit never boots with height=0
+// (that over-zooms, then the shorter canvas looks top-biased).
+const SKYROOM_MOBILE_PRESENTATION_TOOLBAR_H = 22;
+
+const getSkyroomMobileSlideToolbarHeight = () => Math.max(
+  getToolbarHeight() || 0,
+  SKYROOM_MOBILE_PRESENTATION_TOOLBAR_H,
+);
+
 const IGNORE_PRESENTATION_RESTORATION_TIMEOUT = 5000;
 
 class Presentation extends PureComponent {
@@ -473,7 +482,7 @@ class Presentation extends PureComponent {
     if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
       // Only reserve the slide-nav bar below the canvas. The pen toolbar floats
       // over the stage — subtracting it here top-biases the letterboxed slide.
-      const slideToolbarH = getToolbarHeight() || 14;
+      const slideToolbarH = getSkyroomMobileSlideToolbarHeight();
       presentationSizes.presentationHeight = Math.max(
         80,
         presentationBounds.height - slideToolbarH,
@@ -811,7 +820,9 @@ class Presentation extends PureComponent {
 
     const toolbarHeight = getToolbarHeight();
     const isSkyroomMobileStage = isSkyroomColumnLayout() && isSkyroomMobileViewport();
-    const slideToolbarH = toolbarHeight || 14;
+    const slideToolbarH = isSkyroomMobileStage
+      ? getSkyroomMobileSlideToolbarHeight()
+      : (toolbarHeight || 14);
     // Match upstream BBB: mount when fitted svg size is known. On Skyroom phone the
     // stage bounds arrive first — allow that as a bootstrap signal only.
     const stageReady = isSkyroomMobileStage

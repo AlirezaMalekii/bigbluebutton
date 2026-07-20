@@ -45,12 +45,15 @@ export const cleanupWebcamMenuOverlayArtifacts = () => {
 
   // Any closed/hidden MUI modal (webcam menu, chat overflow, etc.) must not
   // keep capturing taps after a tab switch on mobile.
+  // Only aria-hidden="true" counts as closed — keepMounted menus use
+  // aria-hidden="false" while open; hasAttribute('aria-hidden') alone would
+  // incorrectly disable the open actions "+" dropdown.
   document.querySelectorAll('.MuiModal-root').forEach((modal) => {
     if (!(modal instanceof HTMLElement)) return;
-    const hidden = modal.getAttribute('aria-hidden') === 'true'
-      || modal.hasAttribute('aria-hidden');
-    if (hidden) {
+    if (modal.getAttribute('aria-hidden') === 'true') {
       modal.style.setProperty('pointer-events', 'none');
+    } else {
+      modal.style.removeProperty('pointer-events');
     }
   });
 

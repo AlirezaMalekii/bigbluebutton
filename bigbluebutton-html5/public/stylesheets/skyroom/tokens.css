@@ -37,9 +37,10 @@
   --icon-lg: 24px;
   --icon-toolbar: 24px;
 
-  /* Header / chrome (sync column-layout.js SKYROOM_NAVBAR_H / SKYROOM_FOOTER_H) */
+  /* Header / chrome (sync column-layout.js SKYROOM_NAVBAR_H / SKYROOM_FOOTER_H / SKYROOM_TOP_EDGE) */
   --skyroom-header-height: 56px;
   --skyroom-footer-height: 56px;
+  --skyroom-top-edge: 8px;
   --skyroom-header-accent-opacity: 0.5;
   --skyroom-header-subrow-gap: 0;
   --skyroom-panel-header-padding: var(--space-4) var(--space-4) var(--space-3);

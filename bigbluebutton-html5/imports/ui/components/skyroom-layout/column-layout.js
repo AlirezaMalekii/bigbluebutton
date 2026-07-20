@@ -22,10 +22,12 @@ export const SKYROOM_BLOCK_GAP = 12;
 export const SKYROOM_COLUMN_STACK_GAP = 8;
 const GAP = SKYROOM_COLUMN_STACK_GAP;
 const STAGE_GAP = SKYROOM_BLOCK_GAP;
-/** Match layout.css --skyroom-footer-h */
+/** Match tokens.css --skyroom-footer-height */
 export const SKYROOM_FOOTER_H = 56;
-/** Two-row navbar (title + talking/timer). Match layout.css --skyroom-navbar-h */
-export const SKYROOM_NAVBAR_H = 60;
+/** Match tokens.css --skyroom-header-height (was 60 — left a phantom band under the header). */
+export const SKYROOM_NAVBAR_H = 56;
+/** Vertical gap under the navbar — slightly tighter than side gutters / footer gap. */
+export const SKYROOM_TOP_EDGE = 8;
 /** @deprecated use SKYROOM_FOOTER_H */
 export const SKYROOM_CHROME_H = SKYROOM_FOOTER_H;
 /** Stage media (slides, whiteboard, screenshare) */
@@ -94,7 +96,7 @@ export const SKYROOM_MOBILE_FOOTER_LIFT = 3;
 export const SKYROOM_MOBILE_TAB_FOOTER_GAP = 4;
 export const SKYROOM_MOBILE_TAB_H = 36;
 /* The phone navbar is a single compact row (~48px), shorter than the desktop
-   two-row navbar (SKYROOM_NAVBAR_H=60). Use this for both the reserved top space
+   header (SKYROOM_NAVBAR_H). Use this for both the reserved top space
    and the navbar bounds so the stage sits right under the navbar with no empty band. */
 export const SKYROOM_MOBILE_NAVBAR_H = 48;
 
@@ -434,7 +436,9 @@ const adjustSkyroomColumnLayout = ({
     ? Math.min(MAX_COLUMN, Math.max(MIN_COLUMN, Math.round(viewportW * 0.21)))
     : 0;
 
-  const areaTop = SKYROOM_NAVBAR_H + banner + SKYROOM_BLOCK_GAP;
+  // Stage + sidebar (+ webcam strip) share areaTop so their tops stay aligned.
+  const areaTop = SKYROOM_NAVBAR_H + banner + SKYROOM_TOP_EDGE;
+  // Keep the familiar tight footer gap (page gutter); top uses SKYROOM_TOP_EDGE.
   const footerReserve = SKYROOM_FOOTER_H + SKYROOM_BLOCK_GAP;
   const areaHeight = viewportH - areaTop - footerReserve;
   const columnBottom = areaTop + areaHeight;
