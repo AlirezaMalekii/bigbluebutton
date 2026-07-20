@@ -453,17 +453,15 @@
   background-color: transparent !important;
 }
 
-/* Never use fullscreen mobile sheet for features menu */
+/*
+ * Never use fullscreen mobile sheet for features / leave / audio menus.
+ * Do NOT put the footer "+" actions menu here: resetting top/left/right/bottom
+ * kills MUI Popover anchor math (menu jumps to the top corner).
+ */
 .MuiModal-root:has(.skyroom-app-settings-menu) .override-mobile-styles,
 .MuiModal-root:has(.skyroom-app-settings-menu) .MuiPaper-root.override-mobile-styles,
 .MuiModal-root:has(.skyroom-leave-meeting-menu) .override-mobile-styles,
 .MuiModal-root:has(.skyroom-leave-meeting-menu) .MuiPaper-root.override-mobile-styles,
-.MuiModal-root:has(.skyroom-actions-menu) .override-mobile-styles,
-.MuiModal-root:has(.skyroom-actions-menu) .MuiPaper-root.override-mobile-styles,
-.MuiModal-root.skyroom-actions-menu .override-mobile-styles,
-.MuiModal-root.skyroom-actions-menu .MuiPaper-root.override-mobile-styles,
-#actions-dropdown-menu .override-mobile-styles,
-#actions-dropdown-menu .MuiPaper-root.override-mobile-styles,
 .MuiModal-root:has(.skyroom-audio-settings-menu) .override-mobile-styles,
 .MuiModal-root:has(.skyroom-audio-settings-menu) .MuiPaper-root.override-mobile-styles {
   position: absolute !important;
@@ -475,7 +473,23 @@
   max-width: min(260px, 92vw) !important;
 }
 
+/*
+ * Footer "+" actions menu — keep MUI top/left from the plus button.
+ * Only undo global mobile `.MuiPaper-root { width: 100% }`.
+ */
+.MuiModal-root:has(.skyroom-actions-menu) .override-mobile-styles,
+.MuiModal-root:has(.skyroom-actions-menu) .MuiPaper-root.override-mobile-styles,
+.MuiModal-root.skyroom-actions-menu .override-mobile-styles,
+.MuiModal-root.skyroom-actions-menu .MuiPaper-root.override-mobile-styles,
+#actions-dropdown-menu .override-mobile-styles,
+#actions-dropdown-menu .MuiPaper-root.override-mobile-styles {
+  width: auto !important;
+  max-width: min(300px, 92vw) !important;
+}
+
 @media (max-width: 899px) {
+  /* Undo globalStyles `.MuiPopover-root { top: 0 }` so the paper can sit
+     above the plus button. Do not touch Paper top/left. */
   .MuiModal-root:has(.skyroom-app-settings-menu) .MuiPopover-root,
   .MuiModal-root:has(.skyroom-leave-meeting-menu) .MuiPopover-root,
   .MuiModal-root:has(.skyroom-actions-menu) .MuiPopover-root,

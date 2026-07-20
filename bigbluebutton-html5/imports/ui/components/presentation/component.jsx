@@ -25,7 +25,8 @@ import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
-  getSkyroomMobileCameraFitHeight,
+  getSkyroomMobileCanvasHeight,
+  getSkyroomMobileCameraFitViewport,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import { SKYROOM_MOBILE_ZONE_FS_EVENT } from '/imports/ui/components/skyroom-layout/mobile-zone-fullscreen-state';
 import {
@@ -481,10 +482,10 @@ class Presentation extends PureComponent {
 
     presentationSizes.presentationWidth = presentationBounds.width;
     if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
-      // Fit height excludes slide-nav + floating top chrome + pen bar so the
-      // whole slide stays visible under those overlays.
+      // Canvas = stage minus slide-nav only. Floating chrome is handled by
+      // symmetric zoom insets + letterbox centering (not a shorter canvas).
       const slideToolbarH = getSkyroomMobileSlideToolbarHeight();
-      presentationSizes.presentationHeight = getSkyroomMobileCameraFitHeight(
+      presentationSizes.presentationHeight = getSkyroomMobileCanvasHeight(
         presentationBounds.height,
         slideToolbarH,
       );
@@ -829,15 +830,26 @@ class Presentation extends PureComponent {
     const stageReady = isSkyroomMobileStage
       ? (presentationWidth > 0 || (presentationBounds.width > 0 && presentationBounds.height > 0))
       : presentationWidth > 0;
-    // Phone: full-stage canvas (minus slide-nav); camera fit uses a shorter
-    // safe height so floating top chrome + pen bar do not clip the slide.
+    // Phone: full-stage canvas (minus slide-nav). Zoom uses a symmetric safe
+    // inset so floating chrome sits in the letterbox; camera centers in the
+    // live canvas (never shrink height alone — that pins slides to a corner).
     // Desktop: keep upstream svgWidth×svgHeight fitted box.
+    const skyroomMobileFit = isSkyroomMobileStage
+      ? getSkyroomMobileCameraFitViewport(
+        presentationBounds.width,
+        presentationBounds.height,
+        slideToolbarH,
+      )
+      : null;
     const wbPresentationWidth = isSkyroomMobileStage ? presentationBounds.width : svgWidth;
     const wbPresentationHeight = isSkyroomMobileStage
-      ? Math.max(80, presentationBounds.height - slideToolbarH)
+      ? getSkyroomMobileCanvasHeight(presentationBounds.height, slideToolbarH)
       : svgHeight;
+    const wbPresentationAreaWidth = isSkyroomMobileStage
+      ? skyroomMobileFit.width
+      : presentationBounds.width;
     const wbPresentationAreaHeight = isSkyroomMobileStage
-      ? getSkyroomMobileCameraFitHeight(presentationBounds.height, slideToolbarH)
+      ? skyroomMobileFit.height
       : presentationBounds.height - toolbarHeight;
 
     const { presentationToolbarMinWidth } = DEFAULT_VALUES;
@@ -977,7 +989,7 @@ class Presentation extends PureComponent {
                     presentationWidth={wbPresentationWidth}
                     presentationHeight={wbPresentationHeight}
                     presentationAreaHeight={wbPresentationAreaHeight}
-                    presentationAreaWidth={presentationBounds.width}
+                    presentationAreaWidth={wbPresentationAreaWidth}
                     isPanning={isPanning}
                     zoomChanger={this.zoomChanger}
                     fitToWidth={fitToWidth}

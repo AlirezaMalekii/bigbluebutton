@@ -13,6 +13,20 @@ index 3dccc68..91f79b5 100644
    return children ?? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_Canvas.Canvas, {});
  }
  function Crash({ crashingError }) {
+diff --git a/node_modules/@bigbluebutton/editor/dist-cjs/lib/utils/dom.js b/node_modules/@bigbluebutton/editor/dist-cjs/lib/utils/dom.js
+index f535032..ca5e35a 100644
+--- a/node_modules/@bigbluebutton/editor/dist-cjs/lib/utils/dom.js
++++ b/node_modules/@bigbluebutton/editor/dist-cjs/lib/utils/dom.js
+@@ -35,6 +35,9 @@ function loopToHtmlElement(elm) {
+     throw Error("Could not find a parent element of an HTML type!");
+ }
+ function preventDefault(event) {
++  // React attaches document touch listeners as passive; calling
++  // preventDefault there only logs a warning and cannot block the click.
++  if (event.cancelable === false) return;
+   event.preventDefault();
+   if (import_debug_flags.debugFlags.preventDefaultLogging.get()) {
+     console.warn("preventDefault called on event:", event);
 diff --git a/node_modules/@bigbluebutton/editor/dist-esm/lib/TldrawEditor.mjs b/node_modules/@bigbluebutton/editor/dist-esm/lib/TldrawEditor.mjs
 index e31bae3..8ca491b 100644
 --- a/node_modules/@bigbluebutton/editor/dist-esm/lib/TldrawEditor.mjs
@@ -28,6 +42,20 @@ index e31bae3..8ca491b 100644
    return children ?? /* @__PURE__ */ jsx(Canvas, {});
  }
  function Crash({ crashingError }) {
+diff --git a/node_modules/@bigbluebutton/editor/dist-esm/lib/utils/dom.mjs b/node_modules/@bigbluebutton/editor/dist-esm/lib/utils/dom.mjs
+index 68ed511..d195a05 100644
+--- a/node_modules/@bigbluebutton/editor/dist-esm/lib/utils/dom.mjs
++++ b/node_modules/@bigbluebutton/editor/dist-esm/lib/utils/dom.mjs
+@@ -8,6 +8,9 @@ function loopToHtmlElement(elm) {
+     throw Error("Could not find a parent element of an HTML type!");
+ }
+ function preventDefault(event) {
++  // React attaches document touch listeners as passive; calling
++  // preventDefault there only logs a warning and cannot block the click.
++  if (event.cancelable === false) return;
+   event.preventDefault();
+   if (debugFlags.preventDefaultLogging.get()) {
+     console.warn("preventDefault called on event:", event);
 diff --git a/node_modules/@bigbluebutton/editor/src/lib/TldrawEditor.tsx b/node_modules/@bigbluebutton/editor/src/lib/TldrawEditor.tsx
 index 26b89c8..2e718fb 100644
 --- a/node_modules/@bigbluebutton/editor/src/lib/TldrawEditor.tsx
@@ -43,3 +71,17 @@ index 26b89c8..2e718fb 100644
  
  	return children ?? <Canvas />
  }
+diff --git a/node_modules/@bigbluebutton/editor/src/lib/utils/dom.ts b/node_modules/@bigbluebutton/editor/src/lib/utils/dom.ts
+index 8936c91..3f6706b 100644
+--- a/node_modules/@bigbluebutton/editor/src/lib/utils/dom.ts
++++ b/node_modules/@bigbluebutton/editor/src/lib/utils/dom.ts
+@@ -36,6 +36,9 @@ export function loopToHtmlElement(elm: Element): HTMLElement {
+  * @public
+  */
+ export function preventDefault(event: React.BaseSyntheticEvent | Event) {
++	// React attaches document touch listeners as passive; calling
++	// preventDefault there only logs a warning and cannot block the click.
++	if (event.cancelable === false) return
+ 	event.preventDefault()
+ 	if (debugFlags.preventDefaultLogging.get()) {
+ 		console.warn('preventDefault called on event:', event)

@@ -106,27 +106,47 @@ export const getSkyroomMobileWbTopChromeReserve = () => {
 };
 
 /**
- * Height used for camera fit on Skyroom phone — canvas minus slide-nav and the
- * floating top/bottom chrome so the whole slide stays visible.
+ * Canvas height on Skyroom phone = stage bounds minus the slide-nav bar only.
+ * Floating pen/top chrome overlays the letterbox margins — never shrink this
+ * for camera math (that over-zooms and pins the slide to a corner).
  */
-export const getSkyroomMobileCameraFitHeight = (boundsHeight, slideToolbarH = 0) => {
-  const top = getSkyroomMobileWbTopChromeReserve();
-  const bottom = getSkyroomMobileWbToolbarReserve();
-  return Math.max(80, (boundsHeight || 0) - (slideToolbarH || 0) - top - bottom);
-};
+export const getSkyroomMobileCanvasHeight = (boundsHeight, slideToolbarH = 0) => (
+  Math.max(80, (boundsHeight || 0) - (slideToolbarH || 0))
+);
 
 /**
- * After equal letterbox-centering in the live canvas, shift camera.y so the
- * slide sits in the safe band between top chrome and the pen bar.
- * (More negative y moves content down in tldraw page-space.)
+ * Viewport used ONLY for zoom/fit calculation on phone.
+ * Symmetric insets leave room under floating top chips + pen bar while the
+ * camera still letterbox-centers in the live full canvas (no Y bias).
  */
-export const adjustSkyroomMobileCameraYOffset = (yOffset, zoom) => {
-  if (!(isSkyroomColumnLayout() && isSkyroomMobileViewport())) return yOffset;
-  if (!(Number.isFinite(zoom) && zoom > 0) || !Number.isFinite(yOffset)) return yOffset;
+export const getSkyroomMobileCameraFitViewport = (
+  boundsWidth,
+  boundsHeight,
+  slideToolbarH = 0,
+) => {
+  const canvasH = getSkyroomMobileCanvasHeight(boundsHeight, slideToolbarH);
+  const canvasW = Math.max(80, boundsWidth || 0);
   const top = getSkyroomMobileWbTopChromeReserve();
   const bottom = getSkyroomMobileWbToolbarReserve();
-  return yOffset - (top - bottom) / (2 * zoom);
+  // Symmetric vertical inset = the larger chrome band so content stays centered.
+  const vInset = Math.max(top, bottom);
+  const hInset = 8;
+  return {
+    width: Math.max(80, canvasW - (hInset * 2)),
+    height: Math.max(80, canvasH - (vInset * 2)),
+  };
 };
+
+/** @deprecated Use getSkyroomMobileCanvasHeight / getSkyroomMobileCameraFitViewport */
+export const getSkyroomMobileCameraFitHeight = (boundsHeight, slideToolbarH = 0) => (
+  getSkyroomMobileCameraFitViewport(0, boundsHeight, slideToolbarH).height
+);
+
+/**
+ * Kept for callers; equal letterbox in the live canvas is correct — do not
+ * asymmetrically nudge Y (that reintroduces top-left bias / dead bands).
+ */
+export const adjustSkyroomMobileCameraYOffset = (yOffset) => yOffset;
 
 /** True during bootstrap before #layout mounts (see main.html data-skyroom). */
 export const isSkyroomTheme = () => {

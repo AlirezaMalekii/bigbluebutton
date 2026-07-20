@@ -2226,9 +2226,13 @@
     pointer-events: none !important;
   }
 
+  /*
+   * Undo globalStyles mobile `.MuiPopover-root { top: 0 }` only.
+   * Never reset Paper top/left — that is what anchors the menu above "+".
+   */
   html[data-skyroom="true"] #actions-dropdown-menu .MuiPopover-root,
   html[data-skyroom="true"] .MuiModal-root.skyroom-actions-menu .MuiPopover-root {
-    top: unset !important;
+    top: auto !important;
     z-index: 1600 !important;
   }
 
@@ -2236,6 +2240,8 @@
   html[data-skyroom="true"] #actions-dropdown-menu .MuiPaper-root.override-mobile-styles,
   html[data-skyroom="true"] .MuiModal-root.skyroom-actions-menu .override-mobile-styles,
   html[data-skyroom="true"] .MuiModal-root.skyroom-actions-menu .MuiPaper-root.override-mobile-styles {
+    /* Preserve MUI-calculated top/left from the plus trigger. */
+    width: auto !important;
     max-width: min(320px, 94vw) !important;
     max-height: min(72dvh, 480px) !important;
     overflow-y: auto !important;

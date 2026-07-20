@@ -36,7 +36,12 @@ import {
   usePrevious,
   getDifferences,
 } from './utils';
-import { useMouseEvents, useCursor, useSkyroomMobileStylePanelAnchor } from './hooks';
+import {
+  useMouseEvents,
+  useCursor,
+  useSkyroomToolbarTouchFix,
+  useSkyroomMobileStylePanelAnchor,
+} from './hooks';
 import {
   notifyShapeNumberExceeded, getCustomEditorAssetUrls, getCustomAssetUrls,
   debouncedUpdateShapes, sanitizeShape,
@@ -47,7 +52,6 @@ import SessionStorage from '/imports/ui/services/storage/session';
 import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
-  adjustSkyroomMobileCameraYOffset,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const USER_CAMERA_INTERACTION_MS = (
@@ -114,7 +118,11 @@ const calculateCenteredCameraOffsets = (
   return { xOffset, yOffset };
 };
 
-/** Full-slide letterbox center, then nudge into the phone safe band under chrome. */
+/**
+ * Letterbox-center in the live canvas. Zoom may use a slightly smaller "safe"
+ * presentationArea* on phone; centering must still use the real viewport so
+ * the slide stays in the middle (never pinned to a corner).
+ */
 const calculateSkyroomAwareCenteredCameraOffsets = (
   scaledWidth,
   scaledHeight,
@@ -122,20 +130,14 @@ const calculateSkyroomAwareCenteredCameraOffsets = (
   areaWidth,
   areaHeight,
   fitToWidthMode,
-) => {
-  const centered = calculateCenteredCameraOffsets(
-    scaledWidth,
-    scaledHeight,
-    baseZoom,
-    areaWidth,
-    areaHeight,
-    fitToWidthMode,
-  );
-  return {
-    xOffset: centered.xOffset,
-    yOffset: adjustSkyroomMobileCameraYOffset(centered.yOffset, baseZoom),
-  };
-};
+) => calculateCenteredCameraOffsets(
+  scaledWidth,
+  scaledHeight,
+  baseZoom,
+  areaWidth,
+  areaHeight,
+  fitToWidthMode,
+);
 
 // Pan bounds in page-space. When the slide is smaller than the viewport, lock to
 // the centered camera so letterbox/pillarbox cannot collapse back to the corner.
@@ -2419,8 +2421,18 @@ const Whiteboard = React.memo((props) => {
 
     if (isWheelZoomRef.current || isUserPanningRef.current) return undefined;
 
-    // Presenter mount can race the first svg dimensions; re-run adjustCamera so
-    // letterbox centering uses the live canvas after the asset size settles.
+    // New/settled dimensions invalidate any prior "already published" fit so
+    // phone re-letterboxes the real image instead of keeping a corner crop.
+    lastForcedViewRef.current = null;
+    try {
+      localStorage.removeItem('initialViewBoxWidth');
+      localStorage.removeItem('initialViewBoxHeight');
+    } catch (error) {
+      // ignore quota / private-mode failures
+    }
+    initialViewBoxWidthRef.current = null;
+    initialViewBoxHeightRef.current = null;
+
     const frameId = requestAnimationFrame(() => {
       pollInnerWrapperDimensionsUntilStable(() => {
         if (isPresenterRef.current) {
@@ -2433,8 +2445,8 @@ const Whiteboard = React.memo((props) => {
           syncCameraWithPresentationArea();
         }
       }, {
-        maxTries: 60,
-        stabilityFrames: 12,
+        maxTries: 80,
+        stabilityFrames: 16,
       });
     });
     return () => cancelAnimationFrame(frameId);
@@ -2463,6 +2475,10 @@ const Whiteboard = React.memo((props) => {
       setWheelZoomTimeout,
       isInfiniteWhiteboard,
     },
+  );
+
+  useSkyroomToolbarTouchFix(
+    isSkyroomColumnLayout() && isSkyroomMobileViewport(),
   );
 
   useSkyroomMobileStylePanelAnchor(
