@@ -741,11 +741,17 @@ const adjustSkyroomColumnLayout = ({
       top: DEFAULT_VALUES.navBarTop + banner,
       height: SKYROOM_NAVBAR_H,
     },
+    // Pin to the viewport bottom. BBB's actionbarBounds.top still uses the
+    // upstream ~70px chrome height; if we only override height to 56px a gap
+    // shows under the footer where the stage wallpaper peeks through.
     actionbarFullWidth: {
       width: viewportW,
       left: 0,
       right: isRTL ? 0 : null,
+      top: viewportH - SKYROOM_FOOTER_H,
       height: SKYROOM_FOOTER_H,
+      innerHeight: SKYROOM_FOOTER_H,
+      padding: 0,
     },
   };
   /* eslint-enable no-param-reassign */

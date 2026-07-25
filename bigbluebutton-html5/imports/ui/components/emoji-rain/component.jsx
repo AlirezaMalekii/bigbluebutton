@@ -120,8 +120,8 @@ const EmojiRain = ({ reactions }) => {
     left: 0,
     overflow: 'hidden',
     pointerEvents: 'none',
-    // Match stage reaction overlay: above webcam/fullscreen chrome.
-    zIndex: 2500,
+    // Stay below ActionsBar menus / reaction picker (BBBMenu ~999).
+    zIndex: 2,
   };
 
   return <div ref={containerRef} style={containerStyle} data-test="emojiRain" />;

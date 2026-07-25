@@ -1,5 +1,5 @@
 import React, {
-  useContext, useEffect, useMemo, useState,
+  useContext, useEffect, useMemo, useRef, useState,
 } from 'react';
 import PropTypes from 'prop-types';
 import { defineMessages, useIntl } from 'react-intl';
@@ -72,9 +72,11 @@ const NavBarContainer = ({ children, ...props }) => {
     isModerator: user.isModerator,
     breakoutRoomsSummary: user.breakoutRoomsSummary,
   }));
-  const amIModerator = currentUserData?.isModerator;
-  const hasBreakoutInvitation = (currentUserData?.breakoutRoomsSummary?.totalOfJoinURL ?? 0) > 0
-    || (currentUserData?.breakoutRoomsSummary?.totalOfShowInvitation ?? 0) > 0;
+  const amIModerator = Boolean(currentUserData?.isModerator);
+  const breakoutSummary = currentUserData?.breakoutRoomsSummary;
+  const hasBreakoutInvitation = (breakoutSummary?.totalOfJoinURL ?? 0) > 0
+    || (breakoutSummary?.totalOfShowInvitation ?? 0) > 0;
+  const canAccessBreakoutPanel = amIModerator || hasBreakoutInvitation;
 
   const isExpanded = !!sidebarContentPanel || !!sidebarNavPanel;
 
@@ -102,20 +104,41 @@ const NavBarContainer = ({ children, ...props }) => {
     meetingId: m.meetingId,
     isBreakout: m.isBreakout,
     componentsFlags: m.componentsFlags,
-    breakoutPolicies: {
-      sequence: m.breakoutPolicies.sequence,
-    },
+    breakoutPolicies: m.breakoutPolicies,
   }));
 
-  const hasBreakoutRooms = Boolean(meeting?.componentsFlags?.hasBreakoutRoom);
-  // Do NOT gate on isSkyroomColumnLayout() here — that DOM flag is set after mount and
-  // is not reactive. Baking it into this prop can leave the header breakout chip stuck
-  // hidden even while the breakout panel is open. Skyroom gating stays in NavBar render.
-  const showBreakoutToggle = Boolean(
-    !meeting?.isBreakout
-    && hasBreakoutRooms
-    && (amIModerator || hasBreakoutInvitation),
-  );
+  const hasBreakoutRooms = Boolean(meeting?.componentsFlags?.hasBreakoutRoom)
+    || (breakoutSummary?.totalOfBreakoutRooms ?? 0) > 0;
+  const breakoutPanelOpen = sidebarContentPanel === PANELS.BREAKOUT;
+
+  // Keep the header breakout chip for the whole breakout session — not only while the
+  // content panel is open. Latch on when rooms/panel are observed; clear only on a
+  // real rooms-ended edge (hasBreakoutRooms true → false), never when merely closing
+  // the sidebar panel.
+  const [breakoutToggleAvailable, setBreakoutToggleAvailable] = useState(false);
+  const prevHasBreakoutRoomsRef = useRef(false);
+  useEffect(() => {
+    if (meeting?.isBreakout) {
+      prevHasBreakoutRoomsRef.current = false;
+      setBreakoutToggleAvailable(false);
+      return;
+    }
+    if (canAccessBreakoutPanel && (hasBreakoutRooms || breakoutPanelOpen)) {
+      setBreakoutToggleAvailable(true);
+    }
+    if (prevHasBreakoutRoomsRef.current && !hasBreakoutRooms) {
+      setBreakoutToggleAvailable(false);
+    }
+    prevHasBreakoutRoomsRef.current = hasBreakoutRooms;
+  }, [
+    meeting?.isBreakout,
+    canAccessBreakoutPanel,
+    hasBreakoutRooms,
+    breakoutPanelOpen,
+  ]);
+
+  // Skyroom gating stays in NavBar render (DOM column attr is not reactive here).
+  const showBreakoutToggle = breakoutToggleAvailable && !meeting?.isBreakout;
 
   const { data: welcomeData } = useQuery(GET_WELCOME_MESSAGE);
 

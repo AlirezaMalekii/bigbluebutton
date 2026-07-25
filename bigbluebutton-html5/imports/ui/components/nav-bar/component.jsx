@@ -529,9 +529,7 @@ class NavBar extends Component {
                   hasNotification={hasUnreadNotes}
                 />
               )}
-              {skyroomHeader
-                && shouldShowNavBarToggleButton
-                && (showBreakoutToggle || isBreakoutExpanded) && (
+              {skyroomHeader && shouldShowNavBarToggleButton && showBreakoutToggle && (
                 <Styled.NavbarToggleButton
                   tooltipplacement="right"
                   onClick={this.handleToggleBreakout}

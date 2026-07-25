@@ -16,11 +16,11 @@ const MAX_VISIBLE_REACTIONS = 10;
 const REACTION_TTL_MS = 7600;
 const DUPLICATE_WINDOW_MS = 1500;
 /**
- * Above stage media (6), webcam strip (8–9), webcam/layout fullscreen (~1500),
- * and skyroom action menus (~1601). pointer-events:none so chrome stays usable.
- * Below loading/error screens (9999+).
+ * Default: above stage media (6) and webcam strip (8–9), below ActionsBar (20)
+ * and BBBMenu (~999) so the footer reaction picker stays clickable.
+ * Webcam-fullscreen bump lives in skyroom CSS (above ~1502).
  */
-const STAGE_REACTION_Z_INDEX = 2500;
+const STAGE_REACTION_Z_INDEX = 15;
 
 const buildFixedStyle = (bounds) => ({
   top: `${bounds.top}px`,

@@ -359,10 +359,42 @@ ${buildBbbIconsFontFace()}
     margin-inline-end: 0.35rem;
   }
 
-  /* Hover keeps BBBMenu primary treatment; only nudge when that style is absent. */
+  /*
+   * Hover: soft teal wash + keep dark text/icons.
+   * BBBMenuItem forces white text on hover — override that for readable contrast
+   * on the light classroom-style menu card.
+   */
   .skyroom-user-actions-menu .MuiMenuItem-root:hover,
-  .MuiModal-root:has(.skyroom-user-actions-menu) .MuiMenuItem-root:hover {
-    background: rgba(32, 199, 187, 0.10) !important;
+  .skyroom-user-actions-menu .MuiMenuItem-root.Mui-focusVisible,
+  .MuiModal-root.skyroom-user-actions-menu .MuiMenuItem-root:hover,
+  .MuiModal-root.skyroom-user-actions-menu .MuiMenuItem-root.Mui-focusVisible,
+  .MuiModal-root:has(.skyroom-user-actions-menu) .MuiMenuItem-root:hover,
+  .MuiModal-root:has(.skyroom-user-actions-menu) .MuiMenuItem-root.Mui-focusVisible {
+    background: rgba(32, 199, 187, 0.12) !important;
+    color: #0f172a !important;
+  }
+
+  .skyroom-user-actions-menu .MuiMenuItem-root:hover *,
+  .skyroom-user-actions-menu .MuiMenuItem-root.Mui-focusVisible *,
+  .MuiModal-root.skyroom-user-actions-menu .MuiMenuItem-root:hover *,
+  .MuiModal-root.skyroom-user-actions-menu .MuiMenuItem-root.Mui-focusVisible *,
+  .MuiModal-root:has(.skyroom-user-actions-menu) .MuiMenuItem-root:hover *,
+  .MuiModal-root:has(.skyroom-user-actions-menu) .MuiMenuItem-root.Mui-focusVisible *,
+  .skyroom-user-actions-menu .MuiMenuItem-root:hover i,
+  .skyroom-user-actions-menu .MuiMenuItem-root.Mui-focusVisible i,
+  .MuiModal-root.skyroom-user-actions-menu .MuiMenuItem-root:hover i,
+  .MuiModal-root.skyroom-user-actions-menu .MuiMenuItem-root.Mui-focusVisible i,
+  .MuiModal-root:has(.skyroom-user-actions-menu) .MuiMenuItem-root:hover i,
+  .MuiModal-root:has(.skyroom-user-actions-menu) .MuiMenuItem-root.Mui-focusVisible i,
+  .skyroom-user-actions-menu .MuiMenuItem-root:hover [class*="icon-bbb-"],
+  .skyroom-user-actions-menu .MuiMenuItem-root.Mui-focusVisible [class*="icon-bbb-"],
+  .MuiModal-root:has(.skyroom-user-actions-menu) .MuiMenuItem-root:hover [class*="icon-bbb-"],
+  .MuiModal-root:has(.skyroom-user-actions-menu) .MuiMenuItem-root.Mui-focusVisible [class*="icon-bbb-"],
+  .skyroom-user-actions-menu .MuiMenuItem-root:hover [class*="Option"],
+  .skyroom-user-actions-menu .MuiMenuItem-root.Mui-focusVisible [class*="Option"],
+  .MuiModal-root:has(.skyroom-user-actions-menu) .MuiMenuItem-root:hover [class*="Option"],
+  .MuiModal-root:has(.skyroom-user-actions-menu) .MuiMenuItem-root.Mui-focusVisible [class*="Option"] {
+    color: #0f172a !important;
   }
 
   .MuiDivider-root {

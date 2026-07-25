@@ -26,6 +26,15 @@
   overflow: visible !important;
 }
 
+/* Desktop: flush to the physical bottom edge (no wallpaper sliver under the bar).
+   Overrides BBB's legacy actionbar top (computed from ~70px chrome) when Skyroom
+   uses the shorter --skyroom-footer-h. */
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #ActionsBar {
+  top: auto !important;
+  bottom: 0 !important;
+  height: var(--skyroom-footer-h, 56px) !important;
+}
+
 /* -----------------------------------------------------------------------
    Footer logos — platform + organization (left corner, compact)
    ----------------------------------------------------------------------- */
@@ -514,6 +523,33 @@
   align-items: center !important;
   justify-content: center !important;
   padding: 0 !important;
+}
+
+/*
+ * Reaction picker (BBBMenu id on MuiModal-root). Must stay above stage media
+ * and stageReactionOverlay (15 / 1510 in webcam-fs) so emoji items remain clickable.
+ */
+html[data-skyroom="true"] #reactions-dropdown-menu:not([aria-hidden="true"]),
+html[data-skyroom="true"] .MuiModal-root#reactions-dropdown-menu:not([aria-hidden="true"]) {
+  z-index: 2600 !important;
+  pointer-events: auto !important;
+}
+
+html[data-skyroom="true"] #reactions-dropdown-menu[aria-hidden="true"],
+html[data-skyroom="true"] .MuiModal-root#reactions-dropdown-menu[aria-hidden="true"] {
+  pointer-events: none !important;
+}
+
+html[data-skyroom="true"] #reactions-dropdown-menu .MuiPopover-root,
+html[data-skyroom="true"] #reactions-dropdown-menu .MuiPaper-root,
+html[data-skyroom="true"] #reactions-dropdown-menu .override-mobile-styles {
+  z-index: 2601 !important;
+  pointer-events: auto !important;
+}
+
+html[data-skyroom="true"] #reactions-dropdown-menu .MuiBackdrop-root {
+  background-color: transparent !important;
+  pointer-events: auto !important;
 }
 
 #layout[data-skyroom-column="true"] #ActionsBar [data-test="reactionsButton"] > span:first-child > span {

@@ -97,11 +97,17 @@
   z-index: 6 !important;
 }
 
-/* Floating reactions: above stage/webcam/fullscreen; never capture clicks */
+/* Floating reactions: above stage/webcam strip; below footer menus (picker) */
 #layout[data-skyroom-column="true"] [data-test="stageReactionOverlay"],
 #layout [data-test="stageReactionOverlay"] {
-  z-index: 2500 !important;
+  z-index: 15 !important;
   pointer-events: none !important;
+}
+
+/* Webcam layout-fullscreen sits at ~1500–1502 — lift bubbles above it only then */
+#layout[data-skyroom-webcam-fullscreen] [data-test="stageReactionOverlay"],
+html.skyroom-webcam-fs #layout [data-test="stageReactionOverlay"] {
+  z-index: 1510 !important;
 }
 
 /* Narrow sidebar column */
