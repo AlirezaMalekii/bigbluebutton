@@ -165,7 +165,7 @@ class UrlMappings {
     }
 
     "/bigbluebutton/api/getRecordingAssetFile"(controller: "recording") {
-      action = [GET: 'getRecordingAssetFileHandler']
+      action = [GET: 'getRecordingAssetFileHandler', HEAD: 'getRecordingAssetFileHandler']
     }
 
     "/bigbluebutton/$controller/$action?/$id?(.${format})?" {

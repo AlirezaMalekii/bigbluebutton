@@ -92,7 +92,7 @@ const mountOverlayContent = (targetWindow: Window, options: OverlayOpenOptions):
     throw new Error('Screen share chat overlay renderer is not registered');
   }
 
-  copyStylesToWindow(targetWindow);
+  copyStylesToWindow(targetWindow, { isRTL: options.isRTL });
   applyWindowChrome(targetWindow);
 
   const rootEl = targetWindow.document.createElement('div');

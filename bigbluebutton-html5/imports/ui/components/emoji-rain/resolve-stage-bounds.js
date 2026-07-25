@@ -4,8 +4,9 @@
  * geometry can diverge from presentation/externalVideo output bounds — so
  * measuring the painted stage element is the reliable source for overlays.
  *
- * When presentation/screenshare is minimized or hidden (webcam-as-stage,
- * webcam fullscreen, empty stage), fall back so reaction bubbles still paint.
+ * When presentation/screenshare is minimized or hidden, do NOT fall back to
+ * the stage webcam strip alone (short travel). Prefer the full central stage
+ * (strip + media column) from skyroom CSS geometry.
  */
 
 const STAGE_SELECTORS = [
@@ -14,13 +15,13 @@ const STAGE_SELECTORS = [
   '[data-test="presentationContainer"]',
 ];
 
-/** Used when primary stage media is hidden/minimized. */
-const FALLBACK_SELECTORS = [
+const FULLSCREEN_WEBCAM_SELECTORS = [
   '[data-skyroom-webcam-fs-active="true"]',
-  '#skyroom-stage-webcam-dock',
+];
+
+/** Large stage fill when presentation is closed (not the top strip). */
+const CENTER_STAGE_SELECTORS = [
   '#skyroom-center-webcam-dock',
-  '#cameraDock',
-  '[data-test="cameraDock"]',
 ];
 
 const toBounds = (rect) => ({
@@ -62,33 +63,42 @@ const resolveFromSelectors = (selectors) => {
 };
 
 /**
- * Stage geometry written by customLayout for skyroom column mode.
- * Survives presentation minimize (media may be visibility:hidden).
+ * Full central stage column from skyroom CSS vars.
+ * Includes the viewer webcam strip top when present, down to stage bottom,
+ * so hidden-presentation reactions travel the same tall path as before.
  */
-const resolveCssStageBounds = () => {
+const resolveFullCssStageBounds = () => {
   const layoutEl = document.getElementById('layout');
   if (!layoutEl) return null;
 
   const style = window.getComputedStyle(layoutEl);
-  const top = parseFloat(style.getPropertyValue('--skyroom-stage-top'));
-  const left = parseFloat(style.getPropertyValue('--skyroom-stage-left'));
-  const width = parseFloat(style.getPropertyValue('--skyroom-stage-width'));
-  const bottom = parseFloat(style.getPropertyValue('--skyroom-stage-bottom'));
+  const stageTop = parseFloat(style.getPropertyValue('--skyroom-stage-top'));
+  const stageLeft = parseFloat(style.getPropertyValue('--skyroom-stage-left'));
+  const stageWidth = parseFloat(style.getPropertyValue('--skyroom-stage-width'));
+  const stageBottom = parseFloat(style.getPropertyValue('--skyroom-stage-bottom'));
+  const webcamTop = parseFloat(style.getPropertyValue('--skyroom-stage-webcam-top'));
 
-  if (![top, left, width, bottom].every(Number.isFinite)) return null;
+  if (![stageLeft, stageWidth, stageBottom].every(Number.isFinite)) return null;
 
-  const height = bottom - top;
-  if (!hasUsableStageBounds({ width, height })) return null;
+  let top = Number.isFinite(stageTop) ? stageTop : NaN;
+  // Strip sits above media; union both so bubbles rise across the whole stage.
+  if (Number.isFinite(webcamTop) && (!Number.isFinite(top) || webcamTop < top)) {
+    top = webcamTop;
+  }
+  if (!Number.isFinite(top)) return null;
+
+  const height = stageBottom - top;
+  if (!hasUsableStageBounds({ width: stageWidth, height })) return null;
 
   return {
     element: layoutEl,
     bounds: {
       top,
-      left,
-      width,
+      left: stageLeft,
+      width: stageWidth,
       height,
-      right: left + width,
-      bottom,
+      right: stageLeft + stageWidth,
+      bottom: stageBottom,
     },
   };
 };
@@ -106,9 +116,14 @@ const resolveViewportBounds = () => ({
 });
 
 export const resolveStageDomBounds = () => (
-  resolveFromSelectors(STAGE_SELECTORS)
-  || resolveFromSelectors(FALLBACK_SELECTORS)
-  || resolveCssStageBounds()
+  // Layout-fullscreen webcam covers the meeting surface.
+  resolveFromSelectors(FULLSCREEN_WEBCAM_SELECTORS)
+  // Visible presentation / screenshare / external stage media.
+  || resolveFromSelectors(STAGE_SELECTORS)
+  // Presentation hidden: full stage column (never strip-only).
+  || resolveFullCssStageBounds()
+  // Center webcam zone filling the former presentation hole.
+  || resolveFromSelectors(CENTER_STAGE_SELECTORS)
   || resolveViewportBounds()
 );
 

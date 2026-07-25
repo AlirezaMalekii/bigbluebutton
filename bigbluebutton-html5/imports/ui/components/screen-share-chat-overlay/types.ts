@@ -30,8 +30,8 @@ export const OVERLAY_DEFAULT_HEIGHT = 500;
 export const OVERLAY_COMPACT_WIDTH = 300;
 export const OVERLAY_COMPACT_HEIGHT = 190;
 export const OVERLAY_COLLAPSED_HEIGHT = 44;
-/** Compact presenter self-webcam strip above the floating panel. */
-export const OVERLAY_SELF_WEBCAM_HEIGHT = 118;
+/** Presenter self-webcam strip above the floating panel (16:9 + gap, no crop). */
+export const OVERLAY_SELF_WEBCAM_HEIGHT = 186;
 export const OVERLAY_POPUP_NAME = 'bbb-screen-share-chat-overlay';
 export const OVERLAY_FULL_MESSAGE_LIMIT = 20;
 export const OVERLAY_COMPACT_MESSAGE_LIMIT = 2;

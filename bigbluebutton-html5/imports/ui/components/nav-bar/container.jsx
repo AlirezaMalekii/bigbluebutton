@@ -107,10 +107,12 @@ const NavBarContainer = ({ children, ...props }) => {
     },
   }));
 
-  const hasBreakoutRooms = meeting?.componentsFlags?.hasBreakoutRoom ?? false;
+  const hasBreakoutRooms = Boolean(meeting?.componentsFlags?.hasBreakoutRoom);
+  // Do NOT gate on isSkyroomColumnLayout() here — that DOM flag is set after mount and
+  // is not reactive. Baking it into this prop can leave the header breakout chip stuck
+  // hidden even while the breakout panel is open. Skyroom gating stays in NavBar render.
   const showBreakoutToggle = Boolean(
-    isSkyroomColumnLayout()
-    && !meeting?.isBreakout
+    !meeting?.isBreakout
     && hasBreakoutRooms
     && (amIModerator || hasBreakoutInvitation),
   );

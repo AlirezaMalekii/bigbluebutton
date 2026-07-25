@@ -50,12 +50,14 @@ export const OverlaySelfWebcamFrame = styled.div`
   position: relative;
   flex-shrink: 0;
   width: 100%;
-  height: 110px;
+  aspect-ratio: 16 / 9;
+  max-height: 180px;
+  height: auto;
   margin: 0 0 6px;
   overflow: hidden;
   border-radius: 14px;
   border: 1px solid rgba(148, 163, 184, 0.18);
-  background: #0a1424;
+  background: #07101d;
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
 `;
 
@@ -63,7 +65,9 @@ export const OverlaySelfWebcamVideo = styled.video<{ $mirrored?: boolean }>`
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* Show the full camera frame — never crop top/bottom. */
+  object-fit: contain;
+  object-position: center;
   background: #07101d;
   transform: ${({ $mirrored }) => ($mirrored ? 'scaleX(-1)' : 'none')};
 `;
@@ -242,17 +246,24 @@ export const OverlayUsersPanelRoot = styled.div`
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  padding: 4px 2px 6px;
+  padding: 0 0 4px;
   background: #0b1220;
+  --skyroom-user-row-h: 34px;
+  --skyroom-panel-text: #eef4fb;
+  --skyroom-panel-text-muted: rgba(210, 224, 238, 0.82);
+  --skyroom-panel-accent: #20c7bb;
 
   /* Match floating overlay chrome while reusing sidebar list rows. */
   [class*="VirtualizedList"],
   ul {
     background: transparent !important;
+    flex: 1 1 auto;
+    min-height: 0;
   }
 
   li {
-    margin-inline: 0.25rem !important;
+    margin: 0 !important;
+    padding: 0 6px !important;
   }
 `;
 

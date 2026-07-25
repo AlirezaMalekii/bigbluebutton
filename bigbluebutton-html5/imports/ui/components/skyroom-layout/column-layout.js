@@ -26,8 +26,8 @@ const STAGE_GAP = SKYROOM_BLOCK_GAP;
 export const SKYROOM_FOOTER_H = 56;
 /** Match tokens.css --skyroom-header-height (was 60 — left a phantom band under the header). */
 export const SKYROOM_NAVBAR_H = 56;
-/** Vertical gap under the navbar — slightly tighter than side gutters / footer gap. */
-export const SKYROOM_TOP_EDGE = 8;
+/** Vertical gap under the navbar — keep tighter than side/footer gutters. */
+export const SKYROOM_TOP_EDGE = 4;
 /** @deprecated use SKYROOM_FOOTER_H */
 export const SKYROOM_CHROME_H = SKYROOM_FOOTER_H;
 /** Stage media (slides, whiteboard, screenshare) */

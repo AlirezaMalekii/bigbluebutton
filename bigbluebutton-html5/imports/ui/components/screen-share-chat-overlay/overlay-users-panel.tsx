@@ -11,6 +11,12 @@ import IntersectionWatcher from '/imports/ui/components/user-list/user-list-cont
 import useHiddenTabUserIds from '/imports/ui/components/user-list/user-list-content/user-participants/user-list-participants/useHiddenTabUserIds';
 import UserListParticipantsStyles from '/imports/ui/components/user-list/user-list-content/user-participants/user-list-participants/styles';
 import roveBuilder from '/imports/ui/core/utils/keyboardRove';
+import {
+  SkyroomUserSearchProvider,
+  useSkyroomUserSearch,
+} from '/imports/ui/components/skyroom-layout/user-search/context';
+import SkyroomUserSearch from '/imports/ui/components/skyroom-layout/user-search/component';
+import SkyroomUserSearchResults from '/imports/ui/components/skyroom-layout/user-search/search-results';
 import { OverlayEmptyState, OverlayUsersPanelRoot } from './styles';
 
 const intlMessages = defineMessages({
@@ -25,11 +31,12 @@ const intlMessages = defineMessages({
 });
 
 /**
- * Same participant rows as the sidebar users box (avatar, status, actions),
+ * Same participant chrome as the sidebar users box: search + compact rows + actions,
  * without the sidebar plugin "user list open" side-effects.
  */
-const OverlayUsersPanel: React.FC = () => {
+const OverlayUsersList: React.FC = () => {
   const intl = useIntl();
+  const { searchTerm, isSearching } = useSkyroomUserSearch();
   const hiddenTabUserIds = useHiddenTabUserIds();
   const userListRef = React.useRef<HTMLUListElement | null>(null);
   const selectedUserRef = React.useRef<HTMLElement | null>(null);
@@ -46,28 +53,43 @@ const OverlayUsersPanel: React.FC = () => {
   const rove = useMemo(() => roveBuilder(selectedUserRef, 'user-index'), []);
 
   useEffect(() => {
-    // Keep keyboard rove selection scoped to this overlay list instance.
     selectedUserRef.current = null;
-  }, [count]);
+  }, [count, isSearching]);
+
+  if (isSearching) {
+    return (
+      <>
+        <SkyroomUserSearch forceEnabled />
+        <SkyroomUserSearchResults searchTerm={searchTerm} />
+      </>
+    );
+  }
 
   if (loading && count === 0) {
     return (
-      <OverlayEmptyState>
-        {intl.formatMessage(intlMessages.loading)}
-      </OverlayEmptyState>
+      <>
+        <SkyroomUserSearch forceEnabled />
+        <OverlayEmptyState>
+          {intl.formatMessage(intlMessages.loading)}
+        </OverlayEmptyState>
+      </>
     );
   }
 
   if (count === 0) {
     return (
-      <OverlayEmptyState>
-        {intl.formatMessage(intlMessages.empty)}
-      </OverlayEmptyState>
+      <>
+        <SkyroomUserSearch forceEnabled />
+        <OverlayEmptyState>
+          {intl.formatMessage(intlMessages.empty)}
+        </OverlayEmptyState>
+      </>
     );
   }
 
   return (
-    <OverlayUsersPanelRoot data-test="screenShareChatOverlayUsers">
+    <>
+      <SkyroomUserSearch forceEnabled />
       <UserListParticipantsStyles.UserListColumn
         onKeyDown={rove}
         tabIndex={0}
@@ -110,8 +132,16 @@ const OverlayUsersPanel: React.FC = () => {
           })}
         </UserListParticipantsStyles.VirtualizedList>
       </UserListParticipantsStyles.UserListColumn>
-    </OverlayUsersPanelRoot>
+    </>
   );
 };
+
+const OverlayUsersPanel: React.FC = () => (
+  <OverlayUsersPanelRoot data-test="screenShareChatOverlayUsers">
+    <SkyroomUserSearchProvider>
+      <OverlayUsersList />
+    </SkyroomUserSearchProvider>
+  </OverlayUsersPanelRoot>
+);
 
 export default OverlayUsersPanel;

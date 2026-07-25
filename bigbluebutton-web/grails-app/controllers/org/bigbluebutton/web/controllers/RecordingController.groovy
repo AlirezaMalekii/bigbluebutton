@@ -566,16 +566,119 @@ class RecordingController {
         return
       }
 
-      response.addHeader("Cache-Control", "private, max-age=3600")
-      render(
-        file: assetFile,
-        fileName: assetFile.getName(),
-        contentType: resolveRecordingAssetContentType(assetId, assetFile)
+      streamRecordingAssetFile(
+        assetFile,
+        resolveRecordingAssetContentType(assetId, assetFile)
       )
     } catch (IOException e) {
       log.error("Failed to stream recording asset for {} asset {}", recordId, assetId, e)
       response.setStatus(404)
       render(text: "Asset not found", contentType: "text/plain")
+    }
+  }
+
+  /**
+   * Stream a published recording asset with HTTP Range support so HTML5
+   * video/audio players can seek (scrub) large WebM/OGG files.
+   */
+  private void streamRecordingAssetFile(File assetFile, String contentType) {
+    long fileLength = assetFile.length()
+    boolean isHead = "HEAD".equalsIgnoreCase(request.method)
+
+    response.setContentType(contentType)
+    response.setHeader("Accept-Ranges", "bytes")
+    response.setHeader("Cache-Control", "private, max-age=3600")
+    response.setHeader("Content-Disposition", "inline; filename=\"${assetFile.getName()}\"")
+
+    long start = 0L
+    long end = fileLength > 0 ? fileLength - 1 : 0L
+    boolean isRange = false
+
+    String rangeHeader = request.getHeader("Range")
+    if (rangeHeader != null && rangeHeader.startsWith("bytes=") && fileLength > 0) {
+      String spec = rangeHeader.substring(6).trim()
+      // Multi-range requests are uncommon for media players; fall back to full body.
+      if (!spec.contains(",")) {
+        try {
+          String[] parts = spec.split("-", 2)
+          if (parts[0] == "") {
+            // Suffix range: bytes=-N
+            long suffixLength = Long.parseLong(parts[1])
+            if (suffixLength > 0) {
+              start = Math.max(0L, fileLength - suffixLength)
+              end = fileLength - 1
+              isRange = true
+            }
+          } else {
+            start = Long.parseLong(parts[0])
+            end = (parts.length > 1 && parts[1] != "") ? Long.parseLong(parts[1]) : (fileLength - 1)
+            isRange = true
+          }
+        } catch (NumberFormatException ignored) {
+          isRange = false
+        }
+      }
+    }
+
+    if (isRange) {
+      if (start < 0 || start >= fileLength || end < start) {
+        response.setStatus(416)
+        response.setHeader("Content-Range", "bytes */" + fileLength)
+        response.flushBuffer()
+        return
+      }
+
+      end = Math.min(end, fileLength - 1)
+      long contentLength = end - start + 1
+      response.setStatus(206)
+      response.setHeader("Content-Range", "bytes ${start}-${end}/${fileLength}")
+      response.setHeader("Content-Length", String.valueOf(contentLength))
+      if (!isHead) {
+        copyFileRange(assetFile, start, contentLength)
+      } else {
+        response.flushBuffer()
+      }
+      return
+    }
+
+    response.setStatus(200)
+    response.setHeader("Content-Length", String.valueOf(fileLength))
+    if (!isHead && fileLength > 0) {
+      copyFileRange(assetFile, 0L, fileLength)
+    } else {
+      response.flushBuffer()
+    }
+  }
+
+  private void copyFileRange(File file, long start, long length) throws IOException {
+    InputStream inputStream = new FileInputStream(file)
+    try {
+      long skipped = 0L
+      while (skipped < start) {
+        long n = inputStream.skip(start - skipped)
+        if (n <= 0) break
+        skipped += n
+      }
+      if (skipped < start) {
+        byte[] discard = new byte[8192]
+        while (skipped < start) {
+          int read = inputStream.read(discard, 0, (int) Math.min(discard.length, start - skipped))
+          if (read == -1) break
+          skipped += read
+        }
+      }
+
+      byte[] buffer = new byte[8192]
+      long remaining = length
+      while (remaining > 0) {
+        int read = inputStream.read(buffer, 0, (int) Math.min(buffer.length, remaining))
+        if (read == -1) break
+        response.outputStream.write(buffer, 0, read)
+        remaining -= read
+      }
+      response.outputStream.flush()
+    } finally {
+      inputStream.close()
     }
   }
 

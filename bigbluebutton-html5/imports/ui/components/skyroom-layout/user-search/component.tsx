@@ -23,15 +23,26 @@ const messages = defineMessages({
   },
 });
 
-const SkyroomUserSearch: React.FC = () => {
+interface SkyroomUserSearchProps {
+  /** Force-show search even outside the main skyroom layout (e.g. floating overlay). */
+  forceEnabled?: boolean;
+}
+
+const SkyroomUserSearch: React.FC<SkyroomUserSearchProps> = ({
+  forceEnabled = false,
+}) => {
   const intl = useIntl();
   const {
     searchTerm, setSearchTerm, clearSearch, isSearching,
   } = useSkyroomUserSearch();
-  const [enabled, setEnabled] = useState(false);
+  const [enabled, setEnabled] = useState(forceEnabled);
   const [localValue, setLocalValue] = useState(searchTerm);
 
   useEffect(() => {
+    if (forceEnabled) {
+      setEnabled(true);
+      return undefined;
+    }
     const layoutEl = document.getElementById('layout');
     const check = () => {
       setEnabled(Boolean(layoutEl?.hasAttribute(SKYROOM_COLUMN_ATTR)));
@@ -42,7 +53,7 @@ const SkyroomUserSearch: React.FC = () => {
       observer.observe(layoutEl, { attributes: true, attributeFilter: [SKYROOM_COLUMN_ATTR] });
     }
     return () => observer.disconnect();
-  }, []);
+  }, [forceEnabled]);
 
   useEffect(() => {
     setLocalValue(searchTerm);

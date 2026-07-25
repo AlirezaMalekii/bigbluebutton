@@ -61,12 +61,14 @@
   min-width: 0 !important;
 }
 
-/* Zone 1 — sidebar toggles */
+/* Zone 1 — sidebar toggles (above absolute center title so chips never clip away) */
 #layout[data-skyroom-column="true"] #Navbar > div:first-child > div:first-child {
   order: 1 !important;
   flex: 0 0 auto !important;
   gap: 5px !important;
   padding-inline-end: 2px !important;
+  position: relative !important;
+  z-index: 3 !important;
 }
 
 /* Zone 2 — session title + recording (dead center of header) */
