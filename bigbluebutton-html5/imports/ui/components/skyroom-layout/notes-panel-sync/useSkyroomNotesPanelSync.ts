@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useMutation } from '@apollo/client';
 import createUseSubscription from '/imports/ui/core/hooks/createUseSubscription';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
+import logger from '/imports/startup/client/logger';
 import {
   getSkyroomNotesSyncEntryId,
   setSkyroomNotesGlobalOpen,
@@ -102,7 +103,10 @@ export const useSkyroomNotesPanelSync = () => {
       }
       lastAppliedVersion.current = version;
     } catch (error) {
-      console.warn('Skyroom shared notes panel sync failed', error);
+      logger.warn({
+        logCode: 'skyroom_notes_panel_sync_failed',
+        extraInfo: { errorMessage: `${error}` },
+      }, 'Skyroom shared notes panel sync failed');
     } finally {
       pendingBroadcast.current = false;
     }

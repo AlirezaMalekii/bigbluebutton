@@ -4,6 +4,7 @@ import {
 import { useMutation } from '@apollo/client';
 import createUseSubscription from '/imports/ui/core/hooks/createUseSubscription';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
+import logger from '/imports/startup/client/logger';
 import {
   getGlobalSkyroomWebcamZoneOverrides,
   getSkyroomWebcamGlobalSyncEntryId,
@@ -128,7 +129,10 @@ export const useSkyroomWebcamZoneSync = () => {
       }
       lastAppliedVersion.current = Math.max(lastAppliedVersion.current, version);
     } catch (error) {
-      console.warn('Skyroom webcam zone sync failed', error);
+      logger.warn({
+        logCode: 'skyroom_webcam_zone_sync_failed',
+        extraInfo: { errorMessage: `${error}` },
+      }, 'Skyroom webcam zone sync failed');
     } finally {
       pendingBroadcast.current = false;
       const queued = queuedZones.current;

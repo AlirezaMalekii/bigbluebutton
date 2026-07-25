@@ -54,10 +54,11 @@ kill_docker() {
 
 trap 'kill_docker' SIGINT SIGTERM
 
-# Try to pull Docker Image 5 times (to bypass "toomanyrequests: You have reached your pull rate limit." error)
+# Retry docker pulls for rate limits and transient registry timeouts.
+# Prefer more frequent shorter waits over a few long 5-minute gaps.
 retry_count=0
-max_retries=5
-retry_wait=300  # wait time in seconds (5 minutes)
+max_retries=8
+retry_wait=30
 
 while [[ $retry_count -lt $max_retries ]]; do
     if docker version >/dev/null 2>&1; then
@@ -78,9 +79,17 @@ while [[ $retry_count -lt $max_retries ]]; do
         retry_count=$((retry_count+1))
         if [[ $retry_count -lt $max_retries ]]; then
             echo "Waiting for $retry_wait seconds before retrying..."
-            sleep $retry_wait
+            sleep "$retry_wait"
+            # Exponential backoff capped at 3 minutes.
+            retry_wait=$((retry_wait * 2))
+            if [[ $retry_wait -gt 180 ]]; then
+                retry_wait=180
+            fi
+        elif "${DOCKER_CMD[@]}" image inspect "$DOCKER_IMAGE" >/dev/null 2>&1; then
+            echo "Pull failed after retries, but local image $DOCKER_IMAGE is available; continuing."
+            break
         else
-            echo "Exceeded maximum retry attempts. Exiting."
+            echo "Exceeded maximum retry attempts and no local image is available. Exiting."
             exit 1
         fi
     fi

@@ -238,6 +238,37 @@ jobs:
         if: steps.package_plan.outputs.packages != ''
         run: build/get_external_dependencies.sh
 
+      - name: Pre-pull BBB build Docker image
+        if: steps.package_plan.outputs.packages != ''
+        run: |
+          set -euo pipefail
+          DOCKER_IMAGE="$(
+            python3 -c 'import yaml; print(yaml.load(open("./.gitlab-ci.yml"), Loader=yaml.SafeLoader)["default"]["image"])'
+          )"
+          echo "Pre-pulling ${DOCKER_IMAGE}"
+          retry_wait=30
+          for attempt in 1 2 3 4 5 6 7 8; do
+            if docker pull "$DOCKER_IMAGE"; then
+              echo "Docker image ready after attempt ${attempt}"
+              exit 0
+            fi
+            echo "docker pull attempt ${attempt} failed"
+            if [[ "$attempt" -lt 8 ]]; then
+              echo "Waiting ${retry_wait}s before retry..."
+              sleep "$retry_wait"
+              retry_wait=$((retry_wait * 2))
+              if [[ "$retry_wait" -gt 180 ]]; then
+                retry_wait=180
+              fi
+            fi
+          done
+          if docker image inspect "$DOCKER_IMAGE" >/dev/null 2>&1; then
+            echo "Pull failed, continuing with locally available image"
+            exit 0
+          fi
+          echo "Unable to pull or locate BBB build image" >&2
+          exit 1
+
       - name: Build selected Debian packages
         if: steps.package_plan.outputs.packages != ''
         env:
