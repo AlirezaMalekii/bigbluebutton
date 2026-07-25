@@ -110,10 +110,35 @@ collect_debs() {
 
 remote_bootstrap() {
   log "Ensuring repository server prerequisites"
+  # Skip apt-get when tools are already installed so flaky regional mirrors
+  # (e.g. archive.ito.gov.ir mid-sync) cannot fail an otherwise ready publish.
   ssh_cmd "set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
-apt-get update
-apt-get install -y nginx aptly gnupg ca-certificates curl rsync
+need_pkgs=()
+for pkg in nginx aptly gnupg ca-certificates curl rsync; do
+  if ! dpkg-query -W -f='\${Status}' \"\$pkg\" 2>/dev/null | grep -q 'install ok installed'; then
+    need_pkgs+=(\"\$pkg\")
+  fi
+done
+if (( \${#need_pkgs[@]} > 0 )); then
+  echo \"Installing missing packages: \${need_pkgs[*]}\"
+  apt_ok=0
+  for attempt in 1 2 3 4 5; do
+    if apt-get update; then
+      apt_ok=1
+      break
+    fi
+    echo \"apt-get update attempt \${attempt} failed; retrying...\"
+    sleep \$((attempt * 5))
+  done
+  if [[ \"\$apt_ok\" != \"1\" ]]; then
+    echo 'apt-get update failed after retries' >&2
+    exit 1
+  fi
+  apt-get install -y \"\${need_pkgs[@]}\"
+else
+  echo 'Repository prerequisites already installed; skipping apt-get'
+fi
 install -d -m 0755 '${REMOTE_BASE}/incoming' '${WEB_ROOT}/repo' '${WEB_ROOT}/assets'
 if ! gpg --batch --list-keys '${GPG_IDENTITY}' >/dev/null 2>&1; then
   cat >/tmp/safemeet-gpg.batch <<'GPGEOF'
