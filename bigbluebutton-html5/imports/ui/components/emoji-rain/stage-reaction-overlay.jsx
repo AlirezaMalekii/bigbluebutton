@@ -15,8 +15,12 @@ import Styled from './stage-reaction-overlay-styles';
 const MAX_VISIBLE_REACTIONS = 10;
 const REACTION_TTL_MS = 7600;
 const DUPLICATE_WINDOW_MS = 1500;
-/** Above skyroom stage (6) and stage webcam strip (8); below actions bar (20). */
-const STAGE_REACTION_Z_INDEX = 15;
+/**
+ * Above stage media (6), webcam strip (8–9), webcam/layout fullscreen (~1500),
+ * and skyroom action menus (~1601). pointer-events:none so chrome stays usable.
+ * Below loading/error screens (9999+).
+ */
+const STAGE_REACTION_Z_INDEX = 2500;
 
 const buildFixedStyle = (bounds) => ({
   top: `${bounds.top}px`,
@@ -82,6 +86,7 @@ const StageReactionOverlay = ({ reactions }) => {
     let frameId = null;
     let resizeObserver = null;
     let observedElement = null;
+    let layoutObserver = null;
 
     const measure = () => {
       const resolved = resolveStageDomBounds();
@@ -135,12 +140,30 @@ const StageReactionOverlay = ({ reactions }) => {
     window.addEventListener('resize', scheduleMeasure);
     window.addEventListener('orientationchange', scheduleMeasure);
 
+    // Presentation minimize / webcam fullscreen swap stage targets without
+    // always changing layout output dimensions.
+    const layoutEl = document.getElementById('layout');
+    if (layoutEl && typeof MutationObserver !== 'undefined') {
+      layoutObserver = new MutationObserver(scheduleMeasure);
+      layoutObserver.observe(layoutEl, {
+        attributes: true,
+        attributeFilter: [
+          'data-skyroom-presentation-minimized',
+          'data-skyroom-webcam-fullscreen',
+          'data-skyroom-stage-webcams',
+          'data-skyroom-stage-full',
+          'data-skyroom-screen-share',
+        ],
+      });
+    }
+
     return () => {
       if (frameId != null) window.cancelAnimationFrame(frameId);
       retryTimers.forEach((timer) => window.clearTimeout(timer));
       window.removeEventListener('resize', scheduleMeasure);
       window.removeEventListener('orientationchange', scheduleMeasure);
       if (resizeObserver) resizeObserver.disconnect();
+      if (layoutObserver) layoutObserver.disconnect();
     };
   }, [layoutSignal]);
 
@@ -166,16 +189,6 @@ const StageReactionOverlay = ({ reactions }) => {
 
     expireTimersRef.current.set(id, timer);
   };
-
-  // Clear in-flight bubbles when the stage disappears so remount cannot
-  // restart CSS animations. Do not mark events as seen while hidden.
-  useEffect(() => {
-    if (boundsVisible) return undefined;
-
-    clearExpireTimers();
-    setFloatingReactions([]);
-    return undefined;
-  }, [boundsVisible]);
 
   useEffect(() => () => {
     clearExpireTimers();

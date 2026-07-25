@@ -1,7 +1,9 @@
+import Auth from '/imports/ui/services/auth';
 import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
 import {
   SKYROOM_WEBCAM_ZONES,
   getSkyroomWebcamZoneOverrides,
+  isSkyroomWebcamZoneModeratorView,
 } from './webcam-zone-store';
 
 /** Max presenter/moderator webcams shown above the users panel (sidebar). */
@@ -40,9 +42,29 @@ export const isPrivilegedStream = (item) => {
     return Boolean(item.isModerator || item.presenter);
   }
   if (item.type === VIDEO_TYPES.STREAM) {
-    return isPrivilegedCameraUser(item.user);
+    if (isPrivilegedCameraUser(item.user)) return true;
+    // Local feed: follow meeting-role context immediately on promote/demote.
+    // user_camera.isModerator can lag one subscription tick and used to leave
+    // the tile on stage (or black) until a full refresh.
+    if (
+      item.userId === Auth.userID
+      && (
+        isSkyroomWebcamZoneModeratorView()
+        || Boolean(item.user?.presenter)
+      )
+    ) {
+      return true;
+    }
+    return false;
   }
   return false;
+};
+
+/** Privilege fingerprint for layout/list invalidation when roles change. */
+export const getSkyroomStreamPrivilegeKey = (item) => {
+  if (!item) return 'x';
+  if (item.type === VIDEO_TYPES.CONNECTING) return 'c';
+  return isPrivilegedStream(item) ? 'p' : 'v';
 };
 
 export const classifySkyroomCameras = (streams = []) => {
@@ -240,11 +262,56 @@ const defaultZoneForStream = (stream, privilegedSidebarKeys, stageMediaOpen) => 
   return SKYROOM_WEBCAM_ZONES.STAGE;
 };
 
-const buildDefaultSidebarKeys = (active) => {
-  const privileged = active.filter(isPrivilegedStream);
+const buildDefaultSidebarKeys = (active, zoneOverrides = {}) => {
+  // Preserve video-provider sort order (self / pin / alpha) so the first
+  // privileged cams claim the sidebar slots; excess stay on stage, still
+  // ahead of viewers after reorderStageByPrivilege.
+  // Skip cams with an explicit non-sidebar override so they do not consume a
+  // default slot (e.g. a mod dragged to stage leaves room for a promote).
+  const privileged = active.filter((stream) => {
+    if (!isPrivilegedStream(stream)) return false;
+    const override = zoneOverrides[getSkyroomStreamKey(stream)];
+    return !override || override === SKYROOM_WEBCAM_ZONES.SIDEBAR;
+  });
   return new Set(
     privileged.slice(0, PRIVILEGED_SIDEBAR_MAX).map(getSkyroomStreamKey),
   );
+};
+
+/** Keep up to MAX sidebar tiles; prefer privileged, then explicit overrides. */
+const enforceSidebarCap = (sidebar, stage) => {
+  if (sidebar.length <= PRIVILEGED_SIDEBAR_MAX) return;
+
+  const privileged = [];
+  const others = [];
+  sidebar.forEach((stream) => {
+    if (isPrivilegedStream(stream)) privileged.push(stream);
+    else others.push(stream);
+  });
+
+  const keep = [];
+  while (keep.length < PRIVILEGED_SIDEBAR_MAX && privileged.length) {
+    keep.push(privileged.shift());
+  }
+  while (keep.length < PRIVILEGED_SIDEBAR_MAX && others.length) {
+    keep.push(others.shift());
+  }
+
+  sidebar.splice(0, sidebar.length, ...keep);
+  stage.push(...privileged, ...others);
+};
+
+/** Moderators/presenters first in the stage strip when sidebar slots are full. */
+const reorderStageByPrivilege = (stage) => {
+  if (stage.length < 2) return;
+  const privileged = [];
+  const others = [];
+  stage.forEach((stream) => {
+    if (isPrivilegedStream(stream)) privileged.push(stream);
+    else others.push(stream);
+  });
+  if (privileged.length === 0 || others.length === 0) return;
+  stage.splice(0, stage.length, ...privileged, ...others);
 };
 
 const applyDragPreviewToZones = (sidebar, stage, center, active, dragPreview) => {
@@ -301,7 +368,7 @@ export const partitionSkyroomStreams = (
     applyDragPreview = false,
   } = options;
   const active = (streams || []).filter(isActiveStream);
-  const defaultSidebarKeys = buildDefaultSidebarKeys(active);
+  const defaultSidebarKeys = buildDefaultSidebarKeys(active, zoneOverrides);
 
   const sidebar = [];
   const stage = [];
@@ -331,10 +398,7 @@ export const partitionSkyroomStreams = (
     }
   });
 
-  if (sidebar.length > PRIVILEGED_SIDEBAR_MAX) {
-    const overflow = sidebar.splice(PRIVILEGED_SIDEBAR_MAX);
-    stage.push(...overflow);
-  }
+  enforceSidebarCap(sidebar, stage);
 
   if (!sidebarStackVisible && (sidebar.length > 0 || center.length > 0)) {
     stage.push(...sidebar, ...center);
@@ -344,11 +408,10 @@ export const partitionSkyroomStreams = (
 
   if (applyDragPreview && dragPreview) {
     applyDragPreviewToZones(sidebar, stage, center, active, dragPreview);
-    if (sidebar.length > PRIVILEGED_SIDEBAR_MAX) {
-      const overflow = sidebar.splice(PRIVILEGED_SIDEBAR_MAX);
-      stage.push(...overflow);
-    }
+    enforceSidebarCap(sidebar, stage);
   }
+
+  reorderStageByPrivilege(stage);
 
   return {
     sidebar,

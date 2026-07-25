@@ -70,6 +70,10 @@ if [ -d /var/bigbluebutton ]; then
   mkdir -p /var/bigbluebutton/unpublished
   echo -n "."
   chown -R $BIGBLUEBUTTON_USER:$BIGBLUEBUTTON_USER /var/bigbluebutton/unpublished
+
+  # SafeMeet: persistent class materials (presentations + whiteboard across sessions)
+  mkdir -p /var/bigbluebutton/safemeet-class-materials
+  chown -R $BIGBLUEBUTTON_USER:$BIGBLUEBUTTON_USER /var/bigbluebutton/safemeet-class-materials
   echo
 else
   echo "Warning: BigBlueButton not installed"

@@ -380,8 +380,10 @@ const CreateBreakoutRoom: React.FC<CreateBreakoutRoomProps> = ({
     );
     setIsOpen(false);
     if (!isUpdate) {
-      // Open after the create modal unmounts so mobile activeBox isn't cleared by
-      // transient layout/panel teardown during modal close.
+      // Open the breakout management panel for the creator. Retry shortly after the
+      // create modal unmounts so mobile activeBox / desktop content panel aren't
+      // cleared by transient layout teardown during modal close.
+      openSkyroomBreakoutPanel(layoutContextDispatch);
       window.setTimeout(() => {
         openSkyroomBreakoutPanel(layoutContextDispatch);
       }, 50);

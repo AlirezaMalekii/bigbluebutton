@@ -15,6 +15,7 @@ import {
   OVERLAY_DEFAULT_HEIGHT,
   OVERLAY_DEFAULT_WIDTH,
   OVERLAY_POPUP_NAME,
+  OVERLAY_SELF_WEBCAM_HEIGHT,
 } from './types';
 import copyStylesToWindow from './copy-styles';
 import {
@@ -24,6 +25,8 @@ import {
 
 export const overlayVisibilityVar = makeVar<OverlayVisibility>('closed');
 export const overlayModeVar = makeVar<OverlayMode>(null);
+/** Presenter preference: show own webcam above the floating panel when a local cam is live. */
+export const overlaySelfWebcamEnabledVar = makeVar(true);
 
 let externalWindow: Window | null = null;
 let reactRoot: Root | null = null;
@@ -104,6 +107,7 @@ const markOverlayClosedFromExternalWindow = (): void => {
   externalWindow = null;
   setMode(null);
   setVisibility('closed');
+  overlaySelfWebcamEnabledVar(true);
   window.dispatchEvent(new CustomEvent('bbb-screen-share-chat-overlay-closed'));
 };
 
@@ -121,6 +125,32 @@ const resizeOverlayWindow = (width: number, height: number): void => {
       },
     }, 'Could not resize screen share chat overlay window');
   }
+};
+
+export const resizeOverlayWindowTo = (width: number, height: number): void => {
+  resizeOverlayWindow(width, height);
+};
+
+export const getOverlayBaseSize = (
+  visibility: OverlayVisibility = overlayVisibilityVar(),
+): { width: number; height: number } => {
+  if (visibility === 'hidden') {
+    return { width: OVERLAY_DEFAULT_WIDTH, height: OVERLAY_COLLAPSED_HEIGHT };
+  }
+  if (visibility === 'compact') {
+    return { width: OVERLAY_COMPACT_WIDTH, height: OVERLAY_COMPACT_HEIGHT };
+  }
+  return { width: OVERLAY_DEFAULT_WIDTH, height: OVERLAY_DEFAULT_HEIGHT };
+};
+
+/** Resize for current visibility, optionally adding the self-webcam strip height. */
+export const syncOverlayWindowSize = (includeSelfWebcam = false): void => {
+  const visibility = overlayVisibilityVar();
+  const { width, height } = getOverlayBaseSize(visibility);
+  const extra = visibility === 'open' && includeSelfWebcam
+    ? OVERLAY_SELF_WEBCAM_HEIGHT
+    : 0;
+  resizeOverlayWindow(width, height + extra);
 };
 
 const moveOverlayWindow = (left: number, top: number): void => {
@@ -214,6 +244,7 @@ const cleanupOverlay = ({ notifyParent = false }: { notifyParent?: boolean } = {
   externalWindow = null;
   setMode(null);
   setVisibility('closed');
+  overlaySelfWebcamEnabledVar(true);
 
   if (notifyParent) {
     window.dispatchEvent(new CustomEvent('bbb-screen-share-chat-overlay-closed'));

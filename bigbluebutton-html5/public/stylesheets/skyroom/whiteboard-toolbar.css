@@ -446,16 +446,49 @@ body.lang-fa #whiteboard-element .tl-text-measure {
   font-size: 1rem !important;
 }
 
-/* Webcam tile fullscreen overlay */
+/* Webcam tile fullscreen — icon-only, top-left; background on hover/focus */
+.skyroom-webcam-fullscreen-btn,
+.skyroom-webcam-fullscreen-btn [class*="FullscreenButtonWrapper"] {
+  top: 2px !important;
+  left: 2px !important;
+  right: auto !important;
+  margin: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
 .skyroom-webcam-fullscreen-btn button,
 .skyroom-webcam-fullscreen-btn [class*="FullscreenButton"] {
-  min-width: 36px !important;
-  min-height: 36px !important;
-  border-radius: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.skyroom-webcam-fullscreen-btn button:hover,
+.skyroom-webcam-fullscreen-btn button:focus-visible,
+.skyroom-webcam-fullscreen-btn [class*="FullscreenButton"]:hover,
+.skyroom-webcam-fullscreen-btn [class*="FullscreenButton"]:focus-visible {
   background: rgba(0, 0, 0, 0.45) !important;
+  background-color: rgba(0, 0, 0, 0.45) !important;
 }
 
 .skyroom-webcam-fullscreen-btn button i,
 .skyroom-webcam-fullscreen-btn [class*="FullscreenButton"] i {
   color: #fff !important;
+  font-size: 0.75rem !important;
+  line-height: 1 !important;
+  border: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
 }

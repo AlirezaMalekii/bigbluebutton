@@ -3,6 +3,7 @@ import { layoutSelectInput } from '/imports/ui/components/layout/context';
 import { Input } from '/imports/ui/components/layout/layoutTypes';
 import videoService from '/imports/ui/components/video-provider/service';
 import { StreamItem } from '/imports/ui/components/video-provider/types';
+import UserListService from '/imports/ui/components/user-list/service';
 import {
   isPublicChatOpen,
   isSkyroomColumnLayout,
@@ -10,10 +11,35 @@ import {
 } from './panel-toggles';
 import { resolveSkyroomMobileBox, subscribeSkyroomMobileBottom } from './mobile-bottom-state';
 import { getSkyroomNotesOpen, subscribeSkyroomNotesOpen } from './notes-panel-state';
-import { useLayoutWebcamCount } from '/imports/ui/components/video-provider/hooks';
+import { isPrivilegedStream } from './camera-placement';
 
-/** Max remote webcams decoded while mobile stage (screenshare/slides) is active. */
+/** Max remote webcams decoded while stage is active and the webcams tab is hidden. */
 export const SKYROOM_MOBILE_STAGE_MAX_REMOTE_WEBCAMS = 1;
+
+/**
+ * Cap while the mobile webcams box is open (2×2 viewport + scroll).
+ * Keeps decode cost bounded on low-end phones without BBB pagination.
+ */
+export const SKYROOM_MOBILE_WEBCAMS_TAB_MAX_REMOTE_WEBCAMS = 16;
+
+/**
+ * Sticky high-water mark so leaving the webcams tab does not immediately tear
+ * LiveKit remotes down (that remount loop froze low-end Android clients).
+ */
+let stickyRemoteCap = SKYROOM_MOBILE_STAGE_MAX_REMOTE_WEBCAMS;
+
+export const resetSkyroomMobileWebcamRemoteCap = () => {
+  stickyRemoteCap = SKYROOM_MOBILE_STAGE_MAX_REMOTE_WEBCAMS;
+};
+
+/** Moderator/presenter first, then name — used before remote capping. */
+export const sortSkyroomMobileRemoteWebcams = (a: StreamItem, b: StreamItem): number => {
+  const pa = isPrivilegedStream(a);
+  const pb = isPrivilegedStream(b);
+  if (pa && !pb) return -1;
+  if (!pa && pb) return 1;
+  return UserListService.sortUsersByName(a, b);
+};
 
 export const computeSkyroomMobileWebcamsVisible = ({
   hasScreenShare,
@@ -40,17 +66,36 @@ export const computeSkyroomMobileWebcamsVisible = ({
   return activeBox === 'webcams';
 };
 
-export const limitSkyroomMobileStageRemoteWebcams = (streams: StreamItem[]): StreamItem[] => {
+export const limitSkyroomMobileStageRemoteWebcams = (
+  streams: StreamItem[],
+  { webcamsVisible = false }: { webcamsVisible?: boolean } = {},
+): StreamItem[] => {
   const locals = streams.filter((vs) => videoService.isLocalStream(vs.stream));
-  const remotes = streams.filter((vs) => !videoService.isLocalStream(vs.stream));
+  const remotes = streams
+    .filter((vs) => !videoService.isLocalStream(vs.stream))
+    .slice()
+    .sort(sortSkyroomMobileRemoteWebcams);
 
-  if (remotes.length <= SKYROOM_MOBILE_STAGE_MAX_REMOTE_WEBCAMS) {
-    return streams;
+  if (webcamsVisible) {
+    stickyRemoteCap = Math.min(
+      remotes.length,
+      SKYROOM_MOBILE_WEBCAMS_TAB_MAX_REMOTE_WEBCAMS,
+    );
+  }
+
+  // Visible tab: show the grid set. Hidden: keep sticky count so tab switches
+  // do not remount remotes (CSS already gates dock visibility).
+  const cap = webcamsVisible
+    ? SKYROOM_MOBILE_WEBCAMS_TAB_MAX_REMOTE_WEBCAMS
+    : Math.max(SKYROOM_MOBILE_STAGE_MAX_REMOTE_WEBCAMS, stickyRemoteCap);
+
+  if (remotes.length <= cap) {
+    return [...locals, ...remotes];
   }
 
   return [
     ...locals,
-    ...remotes.slice(0, SKYROOM_MOBILE_STAGE_MAX_REMOTE_WEBCAMS),
+    ...remotes.slice(0, cap),
   ];
 };
 
@@ -72,7 +117,8 @@ export const useSkyroomMobileWebcamsVisible = (): boolean => {
   const sidebarContent = layoutSelectInput((i: Input) => i.sidebarContent);
   const hasScreenShare = layoutSelectInput((i: Input) => i.screenShare.hasScreenShare);
   const presentationIsOpen = layoutSelectInput((i: Input) => i.presentation.isOpen);
-  const layoutWebcamCount = useLayoutWebcamCount();
+  // Prefer layout cameraDock count to avoid a circular import with video-provider/hooks.
+  const cameraDock = layoutSelectInput((i: Input) => i.cameraDock);
   const [notesOpen, setNotesOpen] = useState(getSkyroomNotesOpen);
   const [, bumpMobileBottom] = useReducer((x: number) => x + 1, 0);
 
@@ -82,7 +128,7 @@ export const useSkyroomMobileWebcamsVisible = (): boolean => {
   return computeSkyroomMobileWebcamsVisible({
     hasScreenShare,
     presentationIsOpen,
-    numCameras: layoutWebcamCount,
+    numCameras: cameraDock?.numCameras ?? 0,
     usersOpen: sidebarNavigation.isOpen,
     chatOpen: isPublicChatOpen(sidebarContent),
     notesOpen,

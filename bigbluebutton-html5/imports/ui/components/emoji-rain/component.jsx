@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import Service from './service';
 import logger from '/imports/startup/client/logger';
@@ -119,10 +120,21 @@ const EmojiRain = ({ reactions }) => {
     left: 0,
     overflow: 'hidden',
     pointerEvents: 'none',
-    zIndex: 2,
+    // Match stage reaction overlay: above webcam/fullscreen chrome.
+    zIndex: 2500,
   };
 
   return <div ref={containerRef} style={containerStyle} data-test="emojiRain" />;
+};
+
+EmojiRain.propTypes = {
+  reactions: PropTypes.arrayOf(PropTypes.shape({
+    eventId: PropTypes.string,
+    reaction: PropTypes.string.isRequired,
+    creationDate: PropTypes.instanceOf(Date).isRequired,
+    userId: PropTypes.string,
+    userName: PropTypes.string,
+  })).isRequired,
 };
 
 export default EmojiRain;

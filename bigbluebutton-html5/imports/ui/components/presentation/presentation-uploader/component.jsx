@@ -25,6 +25,7 @@ import {
 } from './presentationMediaSync';
 import OnlineVideoSection from './online-video-section/component';
 import Service from './service';
+import SkyroomFileTypeIcon from '/imports/ui/components/skyroom-layout/file-type-icon/SkyroomFileTypeIcon';
 /* eslint-disable react/sort-comp */
 
 const propTypes = {
@@ -1374,6 +1375,7 @@ class PresentationUploader extends Component {
         </Styled.ColRadio>
         <Styled.ColName role="cell">
           <Styled.FileNameCell>
+            <SkyroomFileTypeIcon filename={item.name} size={20} />
             <span title={item.name}>{item.name}</span>
           </Styled.FileNameCell>
         </Styled.ColName>

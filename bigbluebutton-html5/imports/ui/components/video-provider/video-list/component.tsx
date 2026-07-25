@@ -22,6 +22,7 @@ import {
 } from '/imports/ui/components/skyroom-layout/webcam-bounds-store';
 import {
   getSkyroomStreamKey,
+  getSkyroomStreamPrivilegeKey,
   partitionSkyroomStreams,
   computeSkyroomStripGrid,
   computeSkyroomSidebarGrid,
@@ -243,11 +244,19 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     } = prevProps;
     const { width: prevCameraDockWidth, height: prevCameraDockHeight } = prevCameraDock;
 
+    const privilegeKey = (list: VideoItem[]) => list
+      .map((s) => {
+        const id = s.type !== VIDEO_TYPES.GRID ? s.stream : s.userId;
+        return `${id ?? ''}:${getSkyroomStreamPrivilegeKey(s)}`;
+      })
+      .join('|');
+
     if (layoutType !== prevLayoutType
       || focusedId !== prevFocusedId
       || cameraDockWidth !== prevCameraDockWidth
       || cameraDockHeight !== prevCameraDockHeight
-      || streams.length !== prevStreams.length) {
+      || streams.length !== prevStreams.length
+      || privilegeKey(streams) !== privilegeKey(prevStreams)) {
       this.handleCanvasResize();
     }
   }
@@ -459,7 +468,11 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       && cameraDock?.height > 0
       && visibleStreams.length > 0
     ) {
-      if (visibleStreams.length === 1) {
+      const gutter = Number.isFinite(gridGutter) ? gridGutter : 0;
+      const count = visibleStreams.length;
+
+      if (count === 1) {
+        // One cam: fill the entire webcam box.
         optimalGrid = {
           columns: 1,
           rows: 1,
@@ -467,17 +480,38 @@ class VideoList extends Component<VideoListProps, VideoListState> {
           height: cameraDock.height,
           filledArea: cameraDock.width * cameraDock.height,
         };
-      } else {
-        // Fixed 2-col tile size from dock width so extra rows overflow and the dock scrolls.
-        // Do not use findOptimalGrid here — it shrinks cells to fit all rows in dock height.
-        const gutter = Number.isFinite(gridGutter) ? gridGutter : 0;
-        const mobileColumns = Math.min(2, visibleStreams.length);
-        const rows = Math.ceil(visibleStreams.length / mobileColumns);
+      } else if (count === 2) {
+        // Two cams: side-by-side, each column fills the full dock height.
+        // Match responsive.css gap/padding so tiles stay inside the box.
+        const chrome = 4; // list padding 2px × 2
         const cellWidth = Math.max(
           1,
-          Math.floor((cameraDock.width - ((mobileColumns - 1) * gutter)) / mobileColumns),
+          Math.floor((cameraDock.width - chrome - gutter) / 2),
         );
-        const cellHeight = Math.max(1, Math.ceil(cellWidth / ASPECT_RATIO));
+        const cellHeight = Math.max(1, cameraDock.height - chrome);
+        optimalGrid = {
+          columns: 2,
+          rows: 1,
+          width: cameraDock.width,
+          height: cameraDock.height,
+          cellWidth,
+          cellHeight,
+          filledArea: cellWidth * cellHeight * 2,
+        };
+      } else {
+        // 3+: 2-column grid sized so two rows fill the dock (2×2 viewport);
+        // further rows overflow and the dock scrolls.
+        const mobileColumns = 2;
+        const rows = Math.ceil(count / mobileColumns);
+        const chrome = 4; // list padding 2px × 2
+        const cellWidth = Math.max(
+          1,
+          Math.floor((cameraDock.width - chrome - gutter) / mobileColumns),
+        );
+        const cellHeight = Math.max(
+          1,
+          Math.floor((cameraDock.height - chrome - gutter) / 2),
+        );
         optimalGrid = {
           columns: mobileColumns,
           rows,
@@ -485,7 +519,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
           height: (cellHeight * rows) + ((rows - 1) * gutter),
           cellWidth,
           cellHeight,
-          filledArea: cellWidth * cellHeight * visibleStreams.length,
+          filledArea: cellWidth * cellHeight * count,
         };
       }
     }
@@ -892,8 +926,13 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     const { optimalGrid, autoplayBlocked } = this.state;
     const { position } = cameraDock;
     const fillMobileDock = isSkyroomColumnLayout() && isSkyroomMobileViewport();
+    const visibleCount = streams.filter(
+      (item) => item.type === VIDEO_TYPES.GRID || !('render' in item) || item.render !== false,
+    ).length;
+    // 2 cams fill the dock; 3+ use fixed row tracks so extra rows scroll inside the dock.
+    const mobilePairFill = fillMobileDock && visibleCount === 2 && Boolean(optimalGrid.cellHeight);
     const mobileScrollGrid = fillMobileDock
-      && streams.length > 1
+      && visibleCount > 2
       && Boolean(optimalGrid.cellHeight);
 
     let listWidth = `${optimalGrid.width}px`;
@@ -903,9 +942,24 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       listWidth = '100%';
       listHeight = `${optimalGrid.height}px`;
       listGridRows = `repeat(${optimalGrid.rows}, ${optimalGrid.cellHeight}px)`;
+    } else if (mobilePairFill) {
+      listWidth = '100%';
+      listHeight = '100%';
+      listGridRows = `${optimalGrid.cellHeight}px`;
     } else if (fillMobileDock) {
       listWidth = '100%';
       listHeight = '100%';
+    }
+
+    // Pair fills the dock; 3+ grows so the dock (not the canvas) scrolls.
+    let canvasHeight;
+    let canvasMaxHeight;
+    if (mobileScrollGrid) {
+      canvasHeight = 'max-content';
+      canvasMaxHeight = 'none';
+    } else if (fillMobileDock) {
+      canvasHeight = '100%';
+      canvasMaxHeight = '100%';
     }
 
     return (
@@ -918,9 +972,8 @@ class VideoList extends Component<VideoListProps, VideoListState> {
           minHeight: fillMobileDock ? 0 : undefined,
           alignItems: fillMobileDock ? 'stretch' : undefined,
           justifyContent: fillMobileDock ? 'stretch' : undefined,
-          // Let the dock scroll when many cams; canvas must not clip content height.
-          height: mobileScrollGrid ? 'max-content' : undefined,
-          maxHeight: mobileScrollGrid ? 'none' : undefined,
+          height: canvasHeight,
+          maxHeight: canvasMaxHeight,
         }}
       >
         {this.renderPreviousPageButton()}

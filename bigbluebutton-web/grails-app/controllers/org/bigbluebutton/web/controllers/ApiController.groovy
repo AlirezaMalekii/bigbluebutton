@@ -32,6 +32,7 @@ import org.bigbluebutton.api.*
 import org.bigbluebutton.api.domain.GuestPolicy
 import org.bigbluebutton.api.domain.Meeting
 import org.bigbluebutton.api.domain.UserSession
+import org.bigbluebutton.api.service.ClassMaterialsService
 import org.bigbluebutton.api.service.ServiceUtils
 import org.bigbluebutton.api.service.ValidationService
 import org.bigbluebutton.api.util.ParamsUtil
@@ -40,6 +41,7 @@ import org.bigbluebutton.presentation.PresentationUrlDownloadService
 import org.bigbluebutton.presentation.SupportedFileTypes
 import org.bigbluebutton.presentation.UploadedPresentation
 import org.bigbluebutton.web.services.PresentationService
+import org.apache.commons.io.FileUtils
 import org.bigbluebutton.web.services.turn.RemoteIceCandidate
 import org.bigbluebutton.web.services.turn.StunServer
 import org.bigbluebutton.web.services.turn.StunTurnService
@@ -65,6 +67,7 @@ class ApiController {
   StunTurnService stunTurnService
   ResponseBuilder responseBuilder = initResponseBuilder()
   ValidationService validationService
+  ClassMaterialsService classMaterialsService
 
 
   def initResponseBuilder = {
@@ -229,8 +232,11 @@ class ApiController {
 
     if (meetingService.createMeeting(newMeeting)) {
       respondWithConference(newMeeting, null, null)
-      // See if the request came with pre-uploading of presentation.
-      uploadDocuments(xmlModules, newMeeting, false);  //
+      // SafeMeet: restore previous class presentations/whiteboard when available;
+      // otherwise fall back to default/pre-uploaded documents.
+      if (!restoreClassMaterials(newMeeting)) {
+        uploadDocuments(xmlModules, newMeeting, false);
+      }
     } else {
       // Translate the external meeting id into an internal meeting id.
       String internalMeetingId = paramsProcessorUtil.convertToInternalMeetingId(params.meetingID);
@@ -1502,6 +1508,96 @@ class ApiController {
           render(contentType: "application/json", text: builder.toPrettyString())
         }
       }
+    }
+  }
+
+  /**
+   * SafeMeet: restore presentations from the class-materials store for this external meetingID.
+   * Presentation IDs are preserved so whiteboard annotations remount onto the same page IDs.
+   * @return true when at least one presentation was queued for restore
+   */
+  private boolean restoreClassMaterials(Meeting conf) {
+    try {
+      if (classMaterialsService == null || !classMaterialsService.isEnabled()) {
+        return false
+      }
+      if (conf.isBreakout()) {
+        return false
+      }
+      if (conf.getDisabledFeatures().contains("presentation")) {
+        return false
+      }
+      String extId = conf.getExternalId()
+      if (!classMaterialsService.hasValidMaterials(extId)) {
+        return false
+      }
+
+      def presentations = classMaterialsService.listPresentations(extId)
+      if (presentations == null || presentations.isEmpty()) {
+        return false
+      }
+
+      boolean anyRestored = false
+      boolean hasCurrent = presentations.any { it.current }
+      presentations.eachWithIndex { meta, index ->
+        File original = classMaterialsService.findOriginalFile(extId, meta.id)
+        if (original == null || !original.isFile()) {
+          log.warn("SafeMeet class materials: missing original for presentationId={} extId={}", meta.id, extId)
+          return
+        }
+
+        String presentationDir = presentationService.getPresentationDir()
+        File uploadDir = Util.ensurePresentationDir(conf.getInternalId(), presentationDir, meta.id)
+        if (uploadDir == null) {
+          log.warn("SafeMeet class materials: could not create upload dir for presentationId={}", meta.id)
+          return
+        }
+
+        String filenameExt = FilenameUtils.getExtension(original.getName())
+        if (StringUtils.isEmpty(filenameExt)) {
+          filenameExt = FilenameUtils.getExtension(meta.name)
+        }
+        String newFilename = Util.createNewFilename(meta.id, filenameExt)
+        File dest = new File(uploadDir, newFilename)
+        FileUtils.copyFile(original, dest)
+
+        boolean isCurrent = meta.current || (!hasCurrent && index == 0)
+        def uploadFailed = false
+        def uploadFailReasons = new ArrayList<String>()
+
+        if (SupportedFileTypes.isPresentationMimeTypeValid(dest, filenameExt)) {
+          processUploadedFile(
+              "DEFAULT_PRESENTATION_POD",
+              conf.getInternalId(),
+              meta.id,
+              meta.name ?: original.getName(),
+              dest,
+              isCurrent,
+              "safemeet-class-materials-authz-token",
+              uploadFailed,
+              uploadFailReasons,
+              meta.downloadable,
+              meta.removable,
+              meta.defaultPresentation
+          )
+          anyRestored = true
+          log.info("SafeMeet class materials: queued restore presentationId={} name={} meeting={}",
+              meta.id, meta.name, conf.getInternalId())
+        } else {
+          org.bigbluebutton.presentation.Util.deleteDirectoryFromFileHandlingErrors(dest)
+          log.warn("SafeMeet class materials: invalid mime for presentationId={}", meta.id)
+        }
+      }
+
+      if (anyRestored) {
+        classMaterialsService.touch(extId)
+        log.info("SafeMeet class materials restored for extId={} internalId={}",
+            extId, conf.getInternalId())
+      }
+      return anyRestored
+    } catch (Exception e) {
+      log.error("SafeMeet class materials restore failed for meeting {}", conf?.getInternalId(), e)
+      return false
     }
   }
 

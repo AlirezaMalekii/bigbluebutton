@@ -17,11 +17,22 @@ interface OverlayReactionBubbleProps {
   $delay: number;
 }
 
-export const OverlayShell = styled.div<RTLProps & CompactProps>`
+export const OverlayFrame = styled.div<RTLProps>`
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
+  min-height: 0;
+  direction: ${({ $isRTL }) => ($isRTL ? 'rtl' : 'ltr')};
+  font-family: 'IRANYekan', 'Source Sans Pro', Tahoma, Arial, sans-serif;
+`;
+
+export const OverlayShell = styled.div<RTLProps & CompactProps>`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
   background: #0b1220;
   border-radius: 16px;
   overflow: hidden;
@@ -33,6 +44,46 @@ export const OverlayShell = styled.div<RTLProps & CompactProps>`
   ${({ $compact }) => $compact && css`
     border-radius: 14px;
   `}
+`;
+
+export const OverlaySelfWebcamFrame = styled.div`
+  position: relative;
+  flex-shrink: 0;
+  width: 100%;
+  height: 110px;
+  margin: 0 0 6px;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: #0a1424;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+`;
+
+export const OverlaySelfWebcamVideo = styled.video<{ $mirrored?: boolean }>`
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #07101d;
+  transform: ${({ $mirrored }) => ($mirrored ? 'scaleX(-1)' : 'none')};
+`;
+
+export const OverlaySelfWebcamLabel = styled.span`
+  position: absolute;
+  inset-inline-start: 8px;
+  bottom: 7px;
+  max-width: calc(100% - 16px);
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(8, 16, 28, 0.72);
+  color: #e8f0fa;
+  font-size: 0.64rem;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
 `;
 
 export const OverlayHeader = styled.div<RTLProps & { $collapsed?: boolean }>`
@@ -63,14 +114,13 @@ export const OverlayHeader = styled.div<RTLProps & { $collapsed?: boolean }>`
 
 export const DragHandle = styled.div`
   display: flex;
-  flex-direction: row-reverse;
+  flex-direction: row;
   align-items: center;
   justify-content: flex-start;
-  gap: 7px;
+  gap: 8px;
   min-width: 0;
   flex: 1;
   order: 2;
-  text-align: right;
 `;
 
 export const DragGrip = styled.span`
@@ -99,6 +149,51 @@ export const HeaderTitle = styled.span`
   text-overflow: ellipsis;
 `;
 
+export const HeaderTabs = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 2px;
+  border-radius: 12px;
+  background: rgba(8, 16, 28, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+`;
+
+export const HeaderTabButton = styled.button<{ $active?: boolean }>`
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  min-width: 0;
+  max-width: 118px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 10px;
+  background: ${({ $active }) => ($active ? '#27415f' : 'transparent')};
+  color: ${({ $active }) => ($active ? '#ffffff' : '#c5d3e4')};
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    color: #ffffff;
+    background: ${({ $active }) => ($active ? '#315277' : 'rgba(39, 65, 95, 0.45)')};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${colorPrimary};
+    outline-offset: 1px;
+  }
+
+  &[aria-selected='true'] {
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.18);
+  }
+`;
+
 export const HeaderActions = styled.div<RTLProps>`
   display: flex;
   align-items: center;
@@ -107,29 +202,57 @@ export const HeaderActions = styled.div<RTLProps>`
   order: 1;
 `;
 
-export const HeaderButton = styled.button`
+export const HeaderButton = styled.button<{ $active?: boolean; $disabledLook?: boolean }>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  border: 1px solid ${({ $active }) => (
+    $active ? 'rgba(77, 141, 207, 0.55)' : 'rgba(148, 163, 184, 0.18)'
+  )};
   border-radius: 11px;
-  background: #1b2a40;
+  background: ${({ $active }) => ($active ? '#27415f' : '#1b2a40')};
   color: #e5edf7;
   cursor: pointer;
-  font-size: 1.18rem;
+  font-size: 1.05rem;
   line-height: 1;
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition: background 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+  opacity: ${({ $disabledLook }) => ($disabledLook ? 0.45 : 1)};
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: #253852;
     transform: translateY(-1px);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    transform: none;
   }
 
   &:focus-visible {
     outline: 2px solid ${colorPrimary};
     outline-offset: 1px;
+  }
+`;
+
+export const OverlayUsersPanelRoot = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 4px 2px 6px;
+  background: #0b1220;
+
+  /* Match floating overlay chrome while reusing sidebar list rows. */
+  [class*="VirtualizedList"],
+  ul {
+    background: transparent !important;
+  }
+
+  li {
+    margin-inline: 0.25rem !important;
   }
 `;
 

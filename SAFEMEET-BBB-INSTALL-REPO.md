@@ -109,6 +109,8 @@ useDefaultDarkLogo=true
 defaultDarkLogoURL=https://<bbb-host>/safemeet/logo.<ext>
 ```
 
+Class materials persistence (presentations + whiteboard across sessions for the same external `meetingID`) is documented in `docs/safemeet/class-materials-persistence.md`. Defaults are enabled with 14-day idle retention under `/var/bigbluebutton/safemeet-class-materials`.
+
 Backups are written to:
 
 ```text

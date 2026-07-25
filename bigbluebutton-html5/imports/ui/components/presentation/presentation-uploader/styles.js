@@ -389,13 +389,21 @@ const ColName = styled.div`
 const FileNameCell = styled.div`
   min-width: 0;
   width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
 
-  & > span {
+  & > .skyroom-file-type-icon {
+    flex: 0 0 auto;
+  }
+
+  & > span:not(.skyroom-file-type-icon) {
     display: block;
     min-width: 0;
+    flex: 1 1 auto;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -714,7 +722,7 @@ const PresentationItem = styled.div.attrs({
       align-self: center;
     }
 
-    [class*="FileNameCell"] > span {
+    [class*="FileNameCell"] > span:not(.skyroom-file-type-icon) {
       font-size: 0.84rem !important;
       font-weight: 600 !important;
       line-height: 1.3 !important;

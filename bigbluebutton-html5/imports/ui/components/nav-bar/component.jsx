@@ -512,22 +512,6 @@ class NavBar extends Component {
                   hasNotification={hasUnreadMessages}
                 />
               )}
-              {showBreakoutToggle && isSkyroomColumnLayout() && shouldShowNavBarToggleButton && (
-                <Styled.NavbarToggleButton
-                  tooltipplacement="right"
-                  onClick={this.handleToggleBreakout}
-                  color={isPhone && isBreakoutExpanded ? 'primary' : 'dark'}
-                  size="md"
-                  circle
-                  hideLabel
-                  data-test="toggleBreakoutNav"
-                  label={intl.formatMessage(intlMessages.toggleBreakoutLabel)}
-                  tooltipLabel={intl.formatMessage(intlMessages.toggleBreakoutLabel)}
-                  aria-label={intl.formatMessage(intlMessages.toggleBreakoutLabel)}
-                  icon="rooms"
-                  aria-expanded={isBreakoutExpanded}
-                />
-              )}
               {showSharedNotesToggle && (
                 <Styled.NavbarToggleButton
                   tooltipplacement="right"
@@ -543,6 +527,22 @@ class NavBar extends Component {
                   icon="copy"
                   aria-expanded={isSharedNotesExpanded}
                   hasNotification={hasUnreadNotes}
+                />
+              )}
+              {showBreakoutToggle && isSkyroomColumnLayout() && shouldShowNavBarToggleButton && (
+                <Styled.NavbarToggleButton
+                  tooltipplacement="right"
+                  onClick={this.handleToggleBreakout}
+                  color={isPhone && isBreakoutExpanded ? 'primary' : 'dark'}
+                  size="md"
+                  circle
+                  hideLabel
+                  data-test="toggleBreakoutNav"
+                  label={intl.formatMessage(intlMessages.toggleBreakoutLabel)}
+                  tooltipLabel={intl.formatMessage(intlMessages.toggleBreakoutLabel)}
+                  aria-label={intl.formatMessage(intlMessages.toggleBreakoutLabel)}
+                  icon="rooms"
+                  aria-expanded={isBreakoutExpanded}
                 />
               )}
               {shouldShowNavBarToggleButton && !isUserListExpanded && document.dir === 'ltr'

@@ -7,6 +7,7 @@ import Session from '/imports/ui/services/storage/in-memory';
 import { SKYROOM_COLUMN_ATTR } from './column-layout';
 import { clearSkyroomWebcamLayout } from './webcam-bounds-store';
 import { clearSkyroomWebcamZones } from './webcam-zone-store';
+import { resetSkyroomMobileWebcamRemoteCap } from './mobile-webcam-visibility';
 import {
   isPublicChatOpen,
   isSkyroomNotesOpen,
@@ -30,20 +31,39 @@ import {
 } from './white-label';
 import { dispatchSkyroomLayoutResize } from './layout-resize';
 
+type SkyroomPanelVisibility = {
+  usersOpen: boolean;
+  chatOpen: boolean;
+  breakoutOpen: boolean;
+  waitingUsersOpen: boolean;
+  notesOpen: boolean;
+};
+
 const syncSkyroomLayoutAttributes = (
   layoutEl: HTMLElement | null,
-  usersOpen: boolean,
-  chatOpen: boolean,
-  notesOpen: boolean,
+  {
+    usersOpen,
+    chatOpen,
+    breakoutOpen,
+    waitingUsersOpen,
+    notesOpen,
+  }: SkyroomPanelVisibility,
 ) => {
   if (!layoutEl) return;
 
+  // Content sidebar hosts chat OR breakout OR waiting — keep a dedicated flag for the
+  // wrapper, and separate panel flags so header toggles light the correct chip.
+  const contentOpen = chatOpen || breakoutOpen || waitingUsersOpen;
+
   layoutEl.setAttribute('data-skyroom-users-visible', usersOpen ? 'true' : 'false');
   layoutEl.setAttribute('data-skyroom-chat-visible', chatOpen ? 'true' : 'false');
+  layoutEl.setAttribute('data-skyroom-breakout-visible', breakoutOpen ? 'true' : 'false');
+  layoutEl.setAttribute('data-skyroom-waiting-visible', waitingUsersOpen ? 'true' : 'false');
+  layoutEl.setAttribute('data-skyroom-content-visible', contentOpen ? 'true' : 'false');
   layoutEl.setAttribute('data-skyroom-notes-visible', notesOpen ? 'true' : 'false');
   layoutEl.setAttribute(
     'data-skyroom-stage-full',
-    (!usersOpen && !chatOpen && !notesOpen) ? 'true' : 'false',
+    (!usersOpen && !contentOpen && !notesOpen) ? 'true' : 'false',
   );
 };
 
@@ -63,14 +83,10 @@ export const useSkyroomColumnLayout = () => {
 
   const usersOpen = sidebarNavigation.isOpen;
   const chatOpen = isPublicChatOpen(sidebarContent);
-  // Breakout shares the content sidebar with chat. The `chat-visible` layout attribute really
-  // gates the content wrapper (see layout.css), so it must be true for breakout too — otherwise
-  // the breakout management/join panel is hidden and unreachable.
   const breakoutOpen = sidebarContent.isOpen
     && sidebarContent.sidebarContentPanel === PANELS.BREAKOUT;
   const waitingUsersOpen = sidebarContent.isOpen
     && sidebarContent.sidebarContentPanel === PANELS.WAITING_USERS;
-  const contentOpen = chatOpen || breakoutOpen || waitingUsersOpen;
   const [notesOpen, setNotesOpen] = useState(isSkyroomNotesOpen);
   const hasExternalVideo = layoutSelectInput((i: Input) => i.externalVideo.hasExternalVideo);
   const stageMediaMinimized = (hasActiveScreenShare || hasExternalVideo) && !presentationIsOpen;
@@ -153,6 +169,9 @@ export const useSkyroomColumnLayout = () => {
         layoutEl.removeAttribute(SKYROOM_COLUMN_ATTR);
         layoutEl.removeAttribute('data-skyroom-users-visible');
         layoutEl.removeAttribute('data-skyroom-chat-visible');
+        layoutEl.removeAttribute('data-skyroom-breakout-visible');
+        layoutEl.removeAttribute('data-skyroom-waiting-visible');
+        layoutEl.removeAttribute('data-skyroom-content-visible');
         layoutEl.removeAttribute('data-skyroom-notes-visible');
         layoutEl.removeAttribute('data-skyroom-stage-full');
         layoutEl.removeAttribute('data-skyroom-mobile');
@@ -161,6 +180,7 @@ export const useSkyroomColumnLayout = () => {
         layoutEl.removeAttribute('data-skyroom-mobile-zone-fs');
         layoutEl.removeAttribute('data-skyroom-mobile-bottom-webcams');
         layoutEl.removeAttribute('data-skyroom-mobile-top-webcams');
+        layoutEl.removeAttribute('data-skyroom-mobile-webcam-scroll');
         layoutEl.style.removeProperty('--skyroom-mobile-bottom-width');
         layoutEl.style.removeProperty('--skyroom-mobile-bottom-left');
         layoutEl.style.removeProperty('--skyroom-mobile-bottom-right');
@@ -183,6 +203,7 @@ export const useSkyroomColumnLayout = () => {
         layoutEl.style.removeProperty('--skyroom-stage-webcam-width');
         clearSkyroomWebcamLayout();
         clearSkyroomWebcamZones();
+        resetSkyroomMobileWebcamRemoteCap();
         setSkyroomMobileZoneFullscreen(null);
         resetSkyroomMobileStatusRail();
         resetSkyroomMobileTalkingRail();
@@ -199,7 +220,13 @@ export const useSkyroomColumnLayout = () => {
 
   useEffect(() => {
     const layoutEl = document.getElementById('layout');
-    syncSkyroomLayoutAttributes(layoutEl, usersOpen, contentOpen, notesOpen);
+    syncSkyroomLayoutAttributes(layoutEl, {
+      usersOpen,
+      chatOpen,
+      breakoutOpen,
+      waitingUsersOpen,
+      notesOpen,
+    });
     if (layoutEl) {
       if (hasActiveScreenShare) {
         layoutEl.setAttribute('data-skyroom-screen-share', 'true');
@@ -212,7 +239,15 @@ export const useSkyroomColumnLayout = () => {
         layoutEl.removeAttribute('data-skyroom-presentation-minimized');
       }
     }
-  }, [usersOpen, contentOpen, notesOpen, hasActiveScreenShare, stageMediaMinimized]);
+  }, [
+    usersOpen,
+    chatOpen,
+    breakoutOpen,
+    waitingUsersOpen,
+    notesOpen,
+    hasActiveScreenShare,
+    stageMediaMinimized,
+  ]);
 
   // Phone: sync navbar-opened notes with the bottom zone. Tab-bar switches go through
   // openSkyroomMobileBox first (activeBox is updated synchronously); while notesOpen

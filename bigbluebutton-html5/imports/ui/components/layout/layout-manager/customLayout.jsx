@@ -38,6 +38,7 @@ import {
   isSkyroomColumnLayout,
   syncSkyroomMobileWebcamDockVisibility,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import { getSkyroomStreamPrivilegeKey } from '/imports/ui/components/skyroom-layout/camera-placement';
 
 const windowWidth = () => window.document.documentElement.clientWidth;
 const windowHeight = () => window.document.documentElement.clientHeight;
@@ -81,8 +82,10 @@ const CustomLayout = (props) => {
   const layoutVideoStreams = useStreams();
   const layoutWebcamCount = useLayoutWebcamCount();
   const { isConnecting: isLocalWebcamConnecting } = useVideoState();
+  // Include privilege so promote/demote recalculates sidebar vs stage docks.
+  // Stream id alone stayed stable and left the promoted cam black/missing.
   const videoStreamLayoutKey = layoutVideoStreams
-    .map((s) => `${s.type}:${s.stream ?? s.userId ?? ''}`)
+    .map((s) => `${s.type}:${s.stream ?? s.userId ?? ''}:${getSkyroomStreamPrivilegeKey(s)}`)
     .join('|');
   const { data: meetingData } = useMeeting((m) => ({
     hasScreenshare: m.componentsFlags?.hasScreenshare,
@@ -183,11 +186,14 @@ const CustomLayout = (props) => {
     isPresentationEnabled,
     layoutVideoStreams.length,
     layoutWebcamCount,
+    videoStreamLayoutKey,
+    localUserIsPrivileged,
     skyroomNotesOpen,
     isLocalWebcamConnecting,
   ]);
 
-  // Screenshare + new webcams: run layout immediately (throttle alone leaves full-height share)
+  // Screenshare, new webcams, or role moves: recalculate immediately
+  // (throttle alone can leave a full-height share / stale sidebar dock).
   useEffect(() => {
     if (deviceType === null) return undefined;
     const layoutEl = document.getElementById('layout');
@@ -202,6 +208,7 @@ const CustomLayout = (props) => {
     layoutVideoStreams.length,
     layoutWebcamCount,
     videoStreamLayoutKey,
+    localUserIsPrivileged,
     cameraDockInput.numCameras,
     isLocalWebcamConnecting,
     deviceType,
@@ -882,6 +889,16 @@ const CustomLayout = (props) => {
         if (!skyroomLayout.mobileCamerasInBottom && !skyroomLayout.mobileCamerasInTop) {
           syncSkyroomMobileWebcamDockVisibility(false);
         }
+        // Hint that the 2×2 webcam grid can scroll when more than 4 cams are present.
+        const mobileWebcamCount = cameraDockInput?.numCameras ?? 0;
+        const mobileWebcamsOpen = Boolean(
+          skyroomLayout.mobileCamerasInBottom || skyroomLayout.mobileCamerasInTop,
+        );
+        if (mobileWebcamsOpen && mobileWebcamCount > 4) {
+          layoutEl?.setAttribute('data-skyroom-mobile-webcam-scroll', 'true');
+        } else {
+          layoutEl?.removeAttribute('data-skyroom-mobile-webcam-scroll');
+        }
         if (skyroomLayout.mobileTalkingRailOffset > 0) {
           layoutEl.setAttribute('data-skyroom-mobile-talking-rail', 'true');
           layoutEl.style.setProperty(
@@ -926,6 +943,7 @@ const CustomLayout = (props) => {
         layoutEl?.style.removeProperty('--skyroom-mobile-bottom-right');
         layoutEl?.removeAttribute('data-skyroom-mobile-bottom-webcams');
         layoutEl?.removeAttribute('data-skyroom-mobile-top-webcams');
+        layoutEl?.removeAttribute('data-skyroom-mobile-webcam-scroll');
         layoutEl?.style.removeProperty('--skyroom-mobile-top-top');
         layoutEl?.style.removeProperty('--skyroom-mobile-top-height');
         layoutEl?.style.removeProperty('--skyroom-mobile-top-width');
@@ -1084,6 +1102,7 @@ const CustomLayout = (props) => {
       layoutElOff?.removeAttribute('data-skyroom-mobile-has-top');
       layoutElOff?.removeAttribute('data-skyroom-mobile-has-bottom');
       layoutElOff?.removeAttribute('data-skyroom-mobile-zone-fs');
+      layoutElOff?.removeAttribute('data-skyroom-mobile-webcam-scroll');
       layoutElOff?.style.removeProperty('--skyroom-mobile-edge');
       layoutElOff?.style.removeProperty('--skyroom-mobile-footer-lift');
       layoutElOff?.style.removeProperty('--skyroom-mobile-bottom-top');

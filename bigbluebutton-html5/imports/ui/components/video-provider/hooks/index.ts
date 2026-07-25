@@ -68,6 +68,7 @@ import {
 import {
   isSkyroomMobileStageMediaActive,
   limitSkyroomMobileStageRemoteWebcams,
+  useSkyroomMobileWebcamsVisible,
 } from '/imports/ui/components/skyroom-layout/mobile-webcam-visibility';
 import {
   isSkyroomColumnLayout,
@@ -346,7 +347,9 @@ export const useMyPageSize = () => {
       size = pageSizes?.viewer;
   }
 
-  const actualSize = size ?? 0;
+  // SafeMeet mobile uses a scrollable 2×2 grid instead of BBB page arrows.
+  const skyroomMobileGrid = isSkyroomColumnLayout() && isSkyroomMobileViewport();
+  const actualSize = skyroomMobileGrid ? 0 : (size ?? 0);
 
   useEffect(() => {
     setVideoState({ pageSize: actualSize });
@@ -600,6 +603,7 @@ export const useVideoStreams = () => {
     hasScreenShare,
     presentationIsOpen,
   );
+  const mobileWebcamsVisible = useSkyroomMobileWebcamsVisible();
   const { senderIds, senderIdsInGroups, inAnyGroup } = useVideoSenders();
   let streams: StreamItem[] = [...videoStreams];
   let totalNumberOfOtherStreams: number | undefined;
@@ -619,13 +623,15 @@ export const useVideoStreams = () => {
 
   if (connectingStream) streams.push(connectingStream);
 
-  // Mobile stage: keep a capped remote set mounted even when the webcams tab is
-  // hidden. Visibility is CSS-gated on the dock; filtering remotes on every tab
-  // leave/reopen tore LiveKit down and froze low-end phones.
+  // Mobile stage: keep remotes mounted while the dock is CSS-hidden. When the
+  // webcams tab is open, raise the cap for the 2×2 scroll grid; when closed,
+  // keep a sticky high-water mark so tab switches do not remount LiveKit.
   if (!viewParticipantsWebcams) {
     streams = streams.filter((vs) => videoService.isLocalStream(vs.stream));
   } else if (mobileStageMediaActive) {
-    streams = limitSkyroomMobileStageRemoteWebcams(streams);
+    streams = limitSkyroomMobileStageRemoteWebcams(streams, {
+      webcamsVisible: mobileWebcamsVisible,
+    });
   } else if (inAnyGroup) {
     streams = streams.filter((vs) => videoService.isLocalStream(vs.stream)
       || (senderIds?.has(vs.userId)));

@@ -17,6 +17,7 @@ import Session from '/imports/ui/services/storage/in-memory';
 import { notify } from '/imports/ui/services/notification';
 import { ModalRegistration } from '/imports/ui/core/singletons/modalController';
 import { SKYROOM_OPEN_POLL_RESULTS_EVENT } from '/imports/ui/components/skyroom-layout/active-poll-summary/openPollResultsModal';
+import { getSkyroomFileTypeMenuIcon } from '/imports/ui/components/skyroom-layout/file-type-icon/SkyroomFileTypeIcon';
 
 const propTypes = {
   hasActivePoll: PropTypes.bool,
@@ -352,7 +353,7 @@ class ActionsDropdown extends PureComponent {
         return (
           {
             customStyles: p.current ? customStyles : null,
-            icon: 'file',
+            icon: getSkyroomFileTypeMenuIcon(p.name),
             iconRight: p.current ? 'check' : null,
             selected: !!p.current,
             label: p.name,

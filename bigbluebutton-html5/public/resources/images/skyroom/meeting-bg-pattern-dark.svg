@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400" fill="none">
+  <!-- Seamless meeting doodle tile for dark SafeMeet stage -->
+  <g stroke="#E8EEF7" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" opacity="0.12">
+    <!-- video camera -->
+    <g transform="translate(28 36) rotate(-8)">
+      <rect x="0" y="4" width="26" height="18" rx="3"/>
+      <path d="M26 9l12-5v16l-12-5z"/>
+    </g>
+    <!-- mic -->
+    <g transform="translate(92 22) rotate(12)">
+      <rect x="6" y="0" width="10" height="16" rx="5"/>
+      <path d="M3 14c0 5 4 9 8 9s8-4 8-9"/>
+      <path d="M11 23v6M6 29h10"/>
+    </g>
+    <!-- chat bubble -->
+    <g transform="translate(150 40) rotate(-6)">
+      <path d="M2 2h28a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H14l-8 7v-7H2a4 4 0 0 1-4-4V6a4 4 0 0 1 4-4z"/>
+      <circle cx="10" cy="13" r="1.2" fill="#E8EEF7" stroke="none"/>
+      <circle cx="17" cy="13" r="1.2" fill="#E8EEF7" stroke="none"/>
+      <circle cx="24" cy="13" r="1.2" fill="#E8EEF7" stroke="none"/>
+    </g>
+    <!-- wifi -->
+    <g transform="translate(220 28) rotate(4)">
+      <path d="M4 16c6-8 18-8 24 0"/>
+      <path d="M9 20c4-5 10-5 14 0"/>
+      <circle cx="16" cy="25" r="1.6" fill="#E8EEF7" stroke="none"/>
+    </g>
+    <!-- monitor -->
+    <g transform="translate(290 34) rotate(-10)">
+      <rect x="0" y="0" width="34" height="22" rx="2.5"/>
+      <path d="M12 22v5h10v-5M8 27h18"/>
+    </g>
+    <!-- headphones -->
+    <g transform="translate(355 48) rotate(8)">
+      <path d="M4 16v-4a12 12 0 0 1 24 0v4"/>
+      <rect x="0" y="14" width="7" height="12" rx="2"/>
+      <rect x="25" y="14" width="7" height="12" rx="2"/>
+    </g>
+
+    <!-- users -->
+    <g transform="translate(40 110) rotate(6)">
+      <circle cx="10" cy="7" r="5"/>
+      <path d="M0 22c1-6 5-9 10-9s9 3 10 9"/>
+      <circle cx="24" cy="9" r="4"/>
+      <path d="M18 22c1-4 3-6 6-6 4 0 7 3 8 6"/>
+    </g>
+    <!-- phone -->
+    <g transform="translate(110 118) rotate(-14)">
+      <rect x="0" y="0" width="16" height="28" rx="3"/>
+      <circle cx="8" cy="23" r="1.4"/>
+      <path d="M5 3h6"/>
+    </g>
+    <!-- presentation board -->
+    <g transform="translate(175 105) rotate(7)">
+      <rect x="0" y="6" width="36" height="24" rx="2"/>
+      <path d="M18 6V1M10 1h16"/>
+      <path d="M8 16l6 5 7-8 7 4"/>
+    </g>
+    <!-- envelope -->
+    <g transform="translate(250 118) rotate(-5)">
+      <rect x="0" y="4" width="30" height="20" rx="2"/>
+      <path d="M0 6l15 10L30 6"/>
+    </g>
+    <!-- globe -->
+    <g transform="translate(325 112) rotate(10)">
+      <circle cx="14" cy="14" r="13"/>
+      <ellipse cx="14" cy="14" rx="6" ry="13"/>
+      <path d="M1 14h26M4 7h20M4 21h20"/>
+    </g>
+
+    <!-- calendar -->
+    <g transform="translate(22 195) rotate(-7)">
+      <rect x="0" y="4" width="26" height="22" rx="2"/>
+      <path d="M0 11h26M7 1v6M19 1v6"/>
+      <circle cx="9" cy="17" r="1.2" fill="#E8EEF7" stroke="none"/>
+      <circle cx="15" cy="17" r="1.2" fill="#E8EEF7" stroke="none"/>
+      <circle cx="21" cy="17" r="1.2" fill="#E8EEF7" stroke="none"/>
+    </g>
+    <!-- lightbulb -->
+    <g transform="translate(88 200) rotate(9)">
+      <path d="M12 2a9 9 0 0 1 5 16c0 2-1 3-2 4H9c-1-1-2-2-2-4A9 9 0 0 1 12 2z"/>
+      <path d="M9 24h6M10 27h4"/>
+    </g>
+    <!-- share / nodes -->
+    <g transform="translate(155 205) rotate(-11)">
+      <circle cx="6" cy="6" r="4"/>
+      <circle cx="26" cy="6" r="4"/>
+      <circle cx="16" cy="24" r="4"/>
+      <path d="M9 8l11 13M23 8L19 20"/>
+    </g>
+    <!-- star -->
+    <g transform="translate(230 198) rotate(16)">
+      <path d="M12 1l3 7h7l-5.5 4.5 2 7L12 15.5 5.5 19.5l2-7L2 8h7z"/>
+    </g>
+    <!-- tablet -->
+    <g transform="translate(295 205) rotate(-4)">
+      <rect x="0" y="0" width="22" height="30" rx="3"/>
+      <circle cx="11" cy="25" r="1.3"/>
+    </g>
+    <!-- play circle -->
+    <g transform="translate(355 210) rotate(5)">
+      <circle cx="12" cy="12" r="12"/>
+      <path d="M9 7l10 5-10 5z"/>
+    </g>
+
+    <!-- second chat -->
+    <g transform="translate(48 285) rotate(11)">
+      <path d="M3 3h24a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H12l-7 6v-6H3a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3z"/>
+    </g>
+    <!-- camera / photo -->
+    <g transform="translate(120 290) rotate(-8)">
+      <rect x="0" y="6" width="30" height="20" rx="3"/>
+      <circle cx="15" cy="16" r="5"/>
+      <path d="M8 6l2-4h10l2 4"/>
+    </g>
+    <!-- signal bars -->
+    <g transform="translate(195 295) rotate(3)">
+      <path d="M2 22V16M9 22V11M16 22V6M23 22V2"/>
+    </g>
+    <!-- cloud -->
+    <g transform="translate(250 288) rotate(-12)">
+      <path d="M10 24H28a8 8 0 0 0 0-16 10 10 0 0 0-19-2A7 7 0 0 0 10 24z"/>
+    </g>
+    <!-- cursor / pointer -->
+    <g transform="translate(330 292) rotate(18)">
+      <path d="M2 2l12 18 1-8 8-1z"/>
+    </g>
+    <!-- document -->
+    <g transform="translate(365 300) rotate(-6)">
+      <path d="M4 0h14l8 8v20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2z"/>
+      <path d="M18 0v8h8M7 15h12M7 20h9"/>
+    </g>
+
+    <!-- filler doodles -->
+    <circle cx="70" cy="70" r="2.2" fill="#E8EEF7" stroke="none" opacity="0.9"/>
+    <circle cx="200" cy="88" r="1.6" fill="#E8EEF7" stroke="none"/>
+    <circle cx="340" cy="80" r="2" fill="#E8EEF7" stroke="none"/>
+    <circle cx="145" cy="165" r="1.8" fill="#E8EEF7" stroke="none"/>
+    <circle cx="280" cy="170" r="1.5" fill="#E8EEF7" stroke="none"/>
+    <circle cx="55" cy="250" r="1.7" fill="#E8EEF7" stroke="none"/>
+    <circle cx="360" cy="250" r="2" fill="#E8EEF7" stroke="none"/>
+    <circle cx="175" cy="345" r="1.6" fill="#E8EEF7" stroke="none"/>
+    <circle cx="310" cy="355" r="1.8" fill="#E8EEF7" stroke="none"/>
+    <path d="M205 155c6-4 12 2 8 8" opacity="0.85"/>
+    <path d="M95 335c8-2 10 6 4 10" opacity="0.85"/>
+    <path d="M270 70c5 4 2 10-4 8" opacity="0.85"/>
+    <path d="M30 340l6 2M36 340l-2 6" opacity="0.7"/>
+    <path d="M380 160l5 1M385 161l-1 5" opacity="0.7"/>
+  </g>
+
+  <!-- soft teal accent doodles  brand identity without noise -->
+  <g stroke="#20C7BB" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.08">
+    <g transform="translate(200 250) rotate(-20)">
+      <rect x="0" y="4" width="22" height="15" rx="2.5"/>
+      <path d="M22 8l10-4v14l-10-4z"/>
+    </g>
+    <g transform="translate(75 155) rotate(15)">
+      <path d="M2 12c5-7 15-7 20 0"/>
+      <path d="M6 16c3-4 9-4 12 0"/>
+      <circle cx="12" cy="20" r="1.4" fill="#20C7BB" stroke="none"/>
+    </g>
+    <g transform="translate(310 155) rotate(-8)">
+      <circle cx="10" cy="6" r="4"/>
+      <path d="M2 20c1-5 4-7 8-7s7 2 8 7"/>
+    </g>
+    <g transform="translate(160 330) rotate(8)">
+      <rect x="2" y="0" width="8" height="13" rx="4"/>
+      <path d="M0 12c0 4 3 7 6 7s6-3 6-7"/>
+      <path d="M6 19v5M2 24h8"/>
+    </g>
+  </g>
+</svg>

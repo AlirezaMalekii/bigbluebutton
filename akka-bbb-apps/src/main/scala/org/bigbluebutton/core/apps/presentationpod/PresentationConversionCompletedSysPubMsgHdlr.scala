@@ -1,6 +1,7 @@
 package org.bigbluebutton.core.apps.presentationpod
 
 import org.bigbluebutton.common2.msgs._
+import org.bigbluebutton.core.apps.safemeet.SafemeetClassMaterials
 import org.bigbluebutton.core.bus.MessageBus
 import org.bigbluebutton.core.db.{NotificationDAO, PresPresentationDAO}
 import org.bigbluebutton.core.domain.MeetingState2x
@@ -72,6 +73,9 @@ trait PresentationConversionCompletedSysPubMsgHdlr {
       }
 
       state.update(pods)
+
+      // Restore whiteboard annotations from SafeMeet class materials (same external meetingID).
+      SafemeetClassMaterials.maybeRestoreAnnotations(liveMeeting, pres.id)
 
       val conversion = state.presentationConversions.find(pres.id)
       conversion match {

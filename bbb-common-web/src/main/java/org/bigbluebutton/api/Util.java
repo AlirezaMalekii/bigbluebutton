@@ -86,6 +86,23 @@ public final class Util {
 		return null;
 	}
 
+	/**
+	 * Like createPresentationDir, but also returns an already-existing directory.
+	 * Used by SafeMeet class-materials restore which reuses stable presentation IDs.
+	 */
+	public static File ensurePresentationDir(String meetingId, String presentationDir, String presentationId) {
+		if (Util.isMeetingIdValidFormat(meetingId) && Util.isPresIdValidFormat(presentationId)) {
+			String meetingPath = presentationDir + File.separatorChar + meetingId + File.separatorChar + meetingId;
+			String presPath = meetingPath + File.separatorChar + presentationId;
+			File dir = new File(presPath);
+			if (dir.exists() || dir.mkdirs()) {
+				return dir;
+			}
+		}
+
+		return null;
+	}
+
 	public static File getMeetingDirPath(String presentationBaseDir, String meetingId) {
 		if (Util.isMeetingIdValidFormat(meetingId)) {
 			String meetingPath = presentationBaseDir + File.separatorChar + meetingId + File.separatorChar + meetingId;

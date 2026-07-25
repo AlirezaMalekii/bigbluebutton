@@ -13,6 +13,7 @@ import org.bigbluebutton.core.domain.MeetingState2x
 import org.bigbluebutton.core.models._
 import org.bigbluebutton.core2.MeetingStatus2x
 import org.bigbluebutton.core2.message.senders.{MsgBuilder, UserJoinedMeetingEvtMsgBuilder}
+import org.bigbluebutton.core.apps.safemeet.SafemeetClassMaterials
 import org.bigbluebutton.core.util.TimeUtil
 
 trait HandlerHelpers extends SystemConfiguration {
@@ -290,6 +291,30 @@ trait HandlerHelpers extends SystemConfiguration {
   }
 
   def sendEndMeetingDueToExpiry(reason: String, eventBus: InternalEventBus, outGW: OutMsgRouter, liveMeeting: LiveMeeting, userId: String): Unit = {
+    sendEndMeetingDueToExpiry(reason, eventBus, outGW, liveMeeting, userId, None)
+  }
+
+  def sendEndMeetingDueToExpiry(
+      reason:      String,
+      eventBus:    InternalEventBus,
+      outGW:       OutMsgRouter,
+      liveMeeting: LiveMeeting,
+      userId:      String,
+      state:       MeetingState2x
+  ): Unit = {
+    sendEndMeetingDueToExpiry(reason, eventBus, outGW, liveMeeting, userId, Some(state))
+  }
+
+  private def sendEndMeetingDueToExpiry(
+      reason:      String,
+      eventBus:    InternalEventBus,
+      outGW:       OutMsgRouter,
+      liveMeeting: LiveMeeting,
+      userId:      String,
+      stateOpt:    Option[MeetingState2x]
+  ): Unit = {
+    // Persist class presentations + whiteboard before akka/Postgres state is destroyed.
+    stateOpt.foreach(state => SafemeetClassMaterials.snapshot(liveMeeting, state))
     endMeeting(outGW, liveMeeting, reason, userId)
     notifyParentThatBreakoutEnded(eventBus, liveMeeting)
     ejectAllUsersFromVoiceConf(outGW, liveMeeting)

@@ -97,9 +97,10 @@
   z-index: 6 !important;
 }
 
-/* Floating reactions must paint above stage/whiteboard/webcam strip */
-#layout[data-skyroom-column="true"] [data-test="stageReactionOverlay"] {
-  z-index: 15 !important;
+/* Floating reactions: above stage/webcam/fullscreen; never capture clicks */
+#layout[data-skyroom-column="true"] [data-test="stageReactionOverlay"],
+#layout [data-test="stageReactionOverlay"] {
+  z-index: 2500 !important;
   pointer-events: none !important;
 }
 
@@ -433,7 +434,8 @@
   pointer-events: none !important;
 }
 
-#layout[data-skyroom-column="true"][data-skyroom-chat-visible="false"] .resizeSidebarContentWrapper {
+/* Content wrapper hosts chat / breakout / waiting — use content-visible, not chat-only */
+#layout[data-skyroom-column="true"][data-skyroom-content-visible="false"] .resizeSidebarContentWrapper {
   display: none !important;
   visibility: hidden !important;
   height: 0 !important;
@@ -443,8 +445,9 @@
 }
 
 /* Single panel expanded — full column height for the visible box */
-#layout[data-skyroom-column="true"][data-skyroom-users-visible="false"][data-skyroom-chat-visible="true"] [data-test="publicChatPanel"],
-#layout[data-skyroom-column="true"][data-skyroom-users-visible="true"][data-skyroom-chat-visible="false"] [data-test="userListContainer"] {
+#layout[data-skyroom-column="true"][data-skyroom-users-visible="false"][data-skyroom-content-visible="true"] [data-test="publicChatPanel"],
+#layout[data-skyroom-column="true"][data-skyroom-users-visible="false"][data-skyroom-content-visible="true"] [data-test="breakoutRoomPanel"],
+#layout[data-skyroom-column="true"][data-skyroom-users-visible="true"][data-skyroom-content-visible="false"] [data-test="userListContainer"] {
   min-height: 100% !important;
 }
 

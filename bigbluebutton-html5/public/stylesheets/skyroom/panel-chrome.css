@@ -280,6 +280,12 @@
 }
 
 /* --- Dropdown menus (light card) --- */
+/* className/id are on the Modal ROOT — include direct selectors, not only :has() */
+#user-options-dropdown-menu .MuiBackdrop-root,
+.MuiModal-root.skyroom-user-options-menu .MuiBackdrop-root,
+#chat-options-dropdown-menu .MuiBackdrop-root,
+.MuiModal-root.skyroom-chat-options-menu .MuiBackdrop-root,
+.MuiModal-root.skyroom-user-actions-menu .MuiBackdrop-root,
 .MuiModal-root:has(#user-options-dropdown-menu) .MuiBackdrop-root,
 .MuiModal-root:has(.skyroom-user-options-menu) .MuiBackdrop-root,
 .MuiModal-root:has(.skyroom-chat-options-menu) .MuiBackdrop-root,
@@ -292,6 +298,27 @@
 .MuiModal-root:has(.skyroom-presentation-options-menu) .MuiBackdrop-root,
 .MuiModal-root:has(#presentation-download-dropdown) .MuiBackdrop-root {
   background-color: transparent !important;
+}
+
+/*
+ * Outside-click dismiss: open anchored menus must receive backdrop clicks.
+ * BBBMenu puts id/className on MuiModal-root; a prior cleanup pass can leave
+ * inline pointer-events:none on keepMounted roots — force auto while open.
+ */
+#user-options-dropdown-menu:not([aria-hidden="true"]),
+.MuiModal-root.skyroom-user-options-menu:not([aria-hidden="true"]),
+#chat-options-dropdown-menu:not([aria-hidden="true"]),
+.MuiModal-root.skyroom-chat-options-menu:not([aria-hidden="true"]),
+.MuiModal-root.skyroom-user-actions-menu:not([aria-hidden="true"]) {
+  pointer-events: auto !important;
+}
+
+#user-options-dropdown-menu:not([aria-hidden="true"]) .MuiBackdrop-root,
+.MuiModal-root.skyroom-user-options-menu:not([aria-hidden="true"]) .MuiBackdrop-root,
+#chat-options-dropdown-menu:not([aria-hidden="true"]) .MuiBackdrop-root,
+.MuiModal-root.skyroom-chat-options-menu:not([aria-hidden="true"]) .MuiBackdrop-root,
+.MuiModal-root.skyroom-user-actions-menu:not([aria-hidden="true"]) .MuiBackdrop-root {
+  pointer-events: auto !important;
 }
 
 .MuiModal-root:has(.skyroom-audio-settings-menu) .MuiBackdrop-root {

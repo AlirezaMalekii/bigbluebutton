@@ -18,9 +18,19 @@ const EXTENSION_CANONICAL_MIME = {
   wav: 'audio/wav',
 };
 
+const toAsciiDigits = (value) => value.replace(/[۰-۹٠-٩]/g, (digit) => {
+  const persian = '۰۱۲۳۴۵۶۷۸۹';
+  const arabicIndic = '٠١٢٣٤٥٦٧٨٩';
+  const persianIndex = persian.indexOf(digit);
+  if (persianIndex >= 0) return String(persianIndex);
+  const arabicIndex = arabicIndic.indexOf(digit);
+  if (arabicIndex >= 0) return String(arabicIndex);
+  return digit;
+});
+
 const normalizeExtension = (filename) => {
   if (!filename || typeof filename !== 'string') return '';
-  const parts = filename.split('.');
+  const parts = toAsciiDigits(filename).split('.');
   if (parts.length < 2) return '';
   return `.${parts.pop().toLowerCase()}`;
 };

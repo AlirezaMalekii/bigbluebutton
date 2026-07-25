@@ -3,6 +3,7 @@ import UserListService from '/imports/ui/components/user-list/service';
 import Auth from '/imports/ui/services/auth';
 import VideoService from './service';
 import { VIDEO_TYPES } from './enums';
+import { isPrivilegedStream } from '/imports/ui/components/skyroom-layout/camera-placement';
 
 const DEFAULT_SORTING_MODE = 'LOCAL_ALPHABETICAL';
 
@@ -80,19 +81,20 @@ export const sortLocalAlphabetical = (s1: StreamItem, s2: StreamItem) => mandato
     || sortByLocal(s1, s2)
     || UserListService.sortUsersByName(s1, s2);
 
-// moderator before viewer (connecting streams have no role tier)
+// moderator/presenter before viewer (connecting streams have no role tier;
+// local promote/demote uses the same privilege helper as desktop zone placement)
 export const sortModerator = (s1: StreamItem, s2: StreamItem) => {
   if (s1.type === VIDEO_TYPES.CONNECTING || s2.type === VIDEO_TYPES.CONNECTING) {
     return 0;
   }
-  const m1 = Boolean(s1.user?.isModerator);
-  const m2 = Boolean(s2.user?.isModerator);
+  const m1 = isPrivilegedStream(s1);
+  const m2 = isPrivilegedStream(s2);
   if (m1 && !m2) return -1;
   if (!m1 && m2) return 1;
   return 0;
 };
 
-// Skyroom mobile: self → moderators → others (no pin-first so cell 1 is always self)
+// Skyroom mobile: self → moderators/presenters → others (no pin-first so cell 1 is always self)
 export const sortLocalModeratorAlphabetical = (s1: StreamItem, s2: StreamItem) => sortByLocal(s1, s2)
   || sortModerator(s1, s2)
   || UserListService.sortUsersByName(s1, s2);

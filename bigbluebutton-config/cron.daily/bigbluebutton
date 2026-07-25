@@ -28,6 +28,8 @@ history=5
 unrecorded_days=14
 published_days=14
 log_history=28
+# SafeMeet class materials (presentations + whiteboard) idle retention in days
+safemeet_class_materials_days=14
 
 # Load variables from /etc/default/bigbluebutton-cron-config if it exists
 if [ -r /etc/default/bigbluebutton-cron-config ]; then
@@ -38,6 +40,18 @@ fi
 # Delete presentations older than N days
 #
 find /var/bigbluebutton/ -maxdepth 1 -type d -name "*-[0-9]*" -mtime +$history -exec rm -rf '{}' +
+
+#
+# SafeMeet: purge idle class-materials snapshots (manifest last write = last access/snapshot)
+#
+if [ -d /var/bigbluebutton/safemeet-class-materials ]; then
+  find /var/bigbluebutton/safemeet-class-materials -mindepth 2 -maxdepth 2 -type f -name 'manifest.json' -mtime +$safemeet_class_materials_days -print |
+    while read -r manifest; do
+      class_dir=$(dirname "$manifest")
+      logger "Removing expired SafeMeet class materials: $class_dir"
+      rm -rf "$class_dir"
+    done
+fi
 
 #
 # Delete streams from mediasoup/livekit older than N days

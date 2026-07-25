@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import BreakoutRoomItem from './component';
 import { layoutSelectInput, layoutDispatch } from '../../../layout/context';
@@ -38,8 +38,14 @@ const BreakoutRoomContainer = ({ breakoutRoom }) => {
     && (hasInvitation || isModerator)
     && !isSkyroomMobileViewport();
 
+  // Only close the breakout panel when rooms actually end (true → false).
+  // Closing whenever `!hasBreakoutRoom` races create: the modal opens the panel
+  // before GraphQL flips the flag, which wiped the panel and left chat closed.
+  const prevHasBreakoutRoomRef = useRef(hasBreakoutRoom);
   useEffect(() => {
-    if (!hasBreakoutRoom && sidebarContentPanel === PANELS.BREAKOUT) {
+    const hadBreakoutRoom = prevHasBreakoutRoomRef.current;
+    prevHasBreakoutRoomRef.current = hasBreakoutRoom;
+    if (hadBreakoutRoom && !hasBreakoutRoom && sidebarContentPanel === PANELS.BREAKOUT) {
       layoutContextDispatch({
         type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
         value: false,

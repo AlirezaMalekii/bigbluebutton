@@ -164,6 +164,12 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
         <property name="paramsProcessorUtil" ref="paramsProcessorUtil"/>
     </bean>
 
+    <bean id="classMaterialsService" class="org.bigbluebutton.api.service.impl.ClassMaterialsServiceImpl">
+        <property name="enabled" value="${safemeetClassMaterialsEnabled}"/>
+        <property name="materialsDir" value="${safemeetClassMaterialsDir}"/>
+        <property name="retentionDays" value="${safemeetClassMaterialsRetentionDays}"/>
+    </bean>
+
     <bean id="recordingService" class="org.bigbluebutton.api.service.impl.RecordingServiceFileImpl">
         <property name="recordingStatusDir" value="${recordStatusDir}"/>
         <property name="publishedDir" value="${publishedDir}"/>

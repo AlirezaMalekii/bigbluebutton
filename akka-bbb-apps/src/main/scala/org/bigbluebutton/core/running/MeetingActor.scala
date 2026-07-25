@@ -1105,7 +1105,8 @@ class MeetingActor(
           sendEndMeetingDueToExpiry(
             MeetingEndReason.ENDED_DUE_TO_NO_AUTHED_USER,
             eventBus, outGW, liveMeeting,
-            "system"
+            "system",
+            state
           )
         }
       }
@@ -1126,7 +1127,8 @@ class MeetingActor(
         sendEndMeetingDueToExpiry(
           MeetingEndReason.ENDED_DUE_TO_NO_MODERATOR,
           eventBus, outGW, liveMeeting,
-          "system"
+          "system",
+          state
         )
       } else {
         val msToEndMeeting = state.expiryTracker.lastModeratorLeftOnInMs - (TimeUtil.timeNowInMs() - state.expiryTracker.endWhenNoModeratorDelayInMs)

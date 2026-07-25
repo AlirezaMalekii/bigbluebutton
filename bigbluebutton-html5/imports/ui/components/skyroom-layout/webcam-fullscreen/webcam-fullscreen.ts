@@ -52,18 +52,24 @@ export const cleanupWebcamMenuOverlayArtifacts = () => {
   // Any closed/hidden MUI modal (webcam menu, chat overflow, etc.) must not
   // keep capturing taps after a tab switch on mobile.
   // Only aria-hidden="true" counts as closed. Open Skyroom menus must stay
-  // tappable — force auto so a prior inline `none` cannot stick.
+  // tappable — force auto so a prior inline `none` cannot stick and block
+  // backdrop outside-click dismiss (users ⚙ / chat ⋯ / user-row ⋯ / "+").
   document.querySelectorAll('.MuiModal-root').forEach((modal) => {
     if (!(modal instanceof HTMLElement)) return;
-    const isActionsMenu = modal.id === 'actions-dropdown-menu'
-      || modal.classList.contains('skyroom-actions-menu');
+    const isAnchoredSkyroomMenu = modal.id === 'actions-dropdown-menu'
+      || modal.id === 'user-options-dropdown-menu'
+      || modal.id === 'chat-options-dropdown-menu'
+      || modal.classList.contains('skyroom-actions-menu')
+      || modal.classList.contains('skyroom-user-options-menu')
+      || modal.classList.contains('skyroom-chat-options-menu')
+      || modal.classList.contains('skyroom-user-actions-menu');
     const hidden = modal.getAttribute('aria-hidden') === 'true'
       || modal.getAttribute('aria-hidden') === ''
       || window.getComputedStyle(modal).visibility === 'hidden'
       || window.getComputedStyle(modal).display === 'none';
     if (hidden) {
       modal.style.setProperty('pointer-events', 'none');
-    } else if (isActionsMenu) {
+    } else if (isAnchoredSkyroomMenu) {
       modal.style.setProperty('pointer-events', 'auto');
     } else {
       modal.style.removeProperty('pointer-events');

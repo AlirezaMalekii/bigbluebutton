@@ -182,7 +182,9 @@ const SkyroomChatHeaderActions: React.FC = () => {
         opts={{
           id: 'chat-options-dropdown-menu',
           className: 'skyroom-chat-options-menu',
-          keepMounted: true,
+          // Unmount when closed so cleanupWebcamMenuOverlayArtifacts cannot leave
+          // a stuck pointer-events:none that blocks backdrop outside-click dismiss.
+          keepMounted: false,
           transitionDuration: 0,
           elevation: 8,
           getcontentanchorel: null,

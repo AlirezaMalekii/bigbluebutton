@@ -338,13 +338,24 @@ export const isSkyroomBreakoutOpen = (sidebarContent) => (
   sidebarContent.isOpen && sidebarContent.sidebarContentPanel === PANELS.BREAKOUT
 );
 
-/** Close breakout management panel and restore the chat content box (Skyroom). */
+/**
+ * Close breakout management panel.
+ * Desktop: hide content sidebar (same toggle pattern as chat).
+ * Mobile: return to the chat bottom box so the zone is never empty after close.
+ */
 export const closeSkyroomBreakoutPanel = (layoutContextDispatch) => {
   if (isSkyroomMobileViewport()) {
     openSkyroomMobileBox(layoutContextDispatch, 'chat');
     return;
   }
-  openSkyroomPublicChat(layoutContextDispatch);
+  layoutContextDispatch({
+    type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
+    value: false,
+  });
+  layoutContextDispatch({
+    type: ACTIONS.SET_SIDEBAR_CONTENT_PANEL,
+    value: PANELS.NONE,
+  });
   dispatchSkyroomLayoutResize();
 };
 
@@ -352,7 +363,7 @@ export const closeSkyroomBreakoutPanel = (layoutContextDispatch) => {
 export const toggleSkyroomBreakout = (layoutContextDispatch, sidebarContent) => {
   const isOpen = isSkyroomBreakoutOpen(sidebarContent);
   if (isSkyroomMobileViewport()) {
-    openSkyroomMobileBox(layoutContextDispatch, isOpen ? 'chat' : 'breakout');
+    openSkyroomMobileBox(layoutContextDispatch, isOpen ? null : 'breakout');
     return;
   }
   if (isOpen) {

@@ -1151,11 +1151,24 @@ html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"]
   color: var(--skyroom-modal-text, #eef4fb) !important;
 }
 
-#fsmodal[data-test="managePresentationsModal"] [class*="FileName"] > span {
+#fsmodal[data-test="managePresentationsModal"] [class*="FileName"] {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.55rem !important;
+  min-width: 0 !important;
+}
+
+#fsmodal[data-test="managePresentationsModal"] [class*="FileName"] > span:not(.skyroom-file-type-icon) {
   color: var(--skyroom-modal-text, #eef4fb) !important;
   font-size: 0.875rem !important;
   font-weight: 500 !important;
   position: static !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+#fsmodal[data-test="managePresentationsModal"] [class*="FileName"] > .skyroom-file-type-icon {
+  flex: 0 0 auto !important;
 }
 
 #fsmodal[data-test="managePresentationsModal"] [class*="FileStatus"],
@@ -1407,7 +1420,7 @@ html[data-skyroom="true"] [data-test="audioSettingsModal"] [class*="EnterAudio"]
     padding: 10px 12px !important;
   }
 
-  #fsmodal[data-test="managePresentationsModal"] [data-skyroom="presentation-row"] [class*="FileNameCell"] > span {
+  #fsmodal[data-test="managePresentationsModal"] [data-skyroom="presentation-row"] [class*="FileNameCell"] > span:not(.skyroom-file-type-icon) {
     font-size: 0.84rem !important;
     font-weight: 600 !important;
     line-height: 1.3 !important;
