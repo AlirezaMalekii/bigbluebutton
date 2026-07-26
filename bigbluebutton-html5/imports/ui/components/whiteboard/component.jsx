@@ -68,10 +68,41 @@ const isBackgroundShape = (shape) => isBackgroundShapeId(shape?.id);
 // Live tldraw viewport — used only for letterbox centering when the canvas is
 // larger than the fitted slide (Skyroom phone full-stage chrome). Do NOT feed
 // this into widthGap zoom math; upstream uses presentationArea* for that.
+//
+// Skyroom phone zooms against a slightly smaller "safe" presentationArea* so
+// floating chrome does not clip the slide. Centering MUST use the real canvas
+// (#presentationInnerWrapper / presentationWidth×Height). Falling back to the
+// shrunk fit area yields y≈0 for height-limited PDFs and pins them to a corner
+// in the split top zone.
 const resolveCameraViewportSize = (editor, fallbackWidth, fallbackHeight) => {
   const bounds = editor?.getViewportScreenBounds?.();
-  const width = bounds?.width > 0 ? bounds.width : fallbackWidth;
-  const height = bounds?.height > 0 ? bounds.height : fallbackHeight;
+  const editorW = bounds?.width > 0 ? bounds.width : 0;
+  const editorH = bounds?.height > 0 ? bounds.height : 0;
+  let width = editorW > 0 ? editorW : fallbackWidth;
+  let height = editorH > 0 ? editorH : fallbackHeight;
+
+  if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
+    const inner = typeof document !== 'undefined'
+      ? document.getElementById('presentationInnerWrapper')
+      : null;
+    const domW = inner?.clientWidth || 0;
+    const domH = inner?.clientHeight || 0;
+    const canvasW = domW > 0 ? domW : fallbackWidth;
+    const canvasH = domH > 0 ? domH : fallbackHeight;
+    // Prefer the DOM canvas when the editor has not settled, or when it reports
+    // a viewport smaller than the real stage (fit-area / stale bounds).
+    if (canvasW > 0 && canvasH > 0) {
+      if (
+        !(editorW > 0 && editorH > 0)
+        || editorW + 1 < canvasW
+        || editorH + 1 < canvasH
+      ) {
+        width = canvasW;
+        height = canvasH;
+      }
+    }
+  }
+
   return {
     areaWidth: Number.isFinite(width) ? width : 0,
     areaHeight: Number.isFinite(height) ? height : 0,
@@ -1381,8 +1412,8 @@ const Whiteboard = React.memo((props) => {
               areaHeight: cameraAreaHeight,
             } = resolveCameraViewportSize(
               tlEditorRef.current,
-              presentationAreaWidth,
-              presentationAreaHeight,
+              presentationWidth,
+              presentationHeight,
             );
             const centered = calculateSkyroomAwareCenteredCameraOffsets(
               scaledWidth,
@@ -1423,8 +1454,8 @@ const Whiteboard = React.memo((props) => {
               areaHeight: cameraAreaHeight,
             } = resolveCameraViewportSize(
               tlEditorRef.current,
-              presentationAreaWidth,
-              presentationAreaHeight,
+              presentationWidth,
+              presentationHeight,
             );
             const centered = calculateSkyroomAwareCenteredCameraOffsets(
               viewerFitWidth,
@@ -2049,13 +2080,16 @@ const Whiteboard = React.memo((props) => {
           const presentationWidthLocal = currentPresentationPageRef.current?.scaledWidth || 0;
           const presentationHeightLocal = currentPresentationPageRef.current?.scaledHeight || 0;
           const zoom = Number.isFinite(next.z) && next.z > 0 ? next.z : 1;
-          const screenBounds = editor?.getViewportScreenBounds?.();
-          const screenW = screenBounds?.width > 0
-            ? screenBounds.width
-            : presentationAreaWidth;
-          const screenH = screenBounds?.height > 0
-            ? screenBounds.height
-            : presentationAreaHeight;
+          // Clamp against the real canvas (presentationWidth×Height / DOM), never
+          // the Skyroom phone "safe" fit area — that re-pins letterboxed slides.
+          const {
+            areaWidth: screenW,
+            areaHeight: screenH,
+          } = resolveCameraViewportSize(
+            editor,
+            presentationWidth,
+            presentationHeight,
+          );
           let viewportWidth = screenW / zoom;
           let viewportHeight = screenH / zoom;
 
@@ -2308,8 +2342,8 @@ const Whiteboard = React.memo((props) => {
           areaHeight: cameraAreaHeight,
         } = resolveCameraViewportSize(
           tlEditorRef.current,
-          presentationAreaWidth,
-          presentationAreaHeight,
+          presentationWidth,
+          presentationHeight,
         );
         const centered = calculateSkyroomAwareCenteredCameraOffsets(
           scaledWidth,
@@ -2383,8 +2417,8 @@ const Whiteboard = React.memo((props) => {
           areaHeight: cameraAreaHeight,
         } = resolveCameraViewportSize(
           tlEditorRef.current,
-          presentationAreaWidth,
-          presentationAreaHeight,
+          presentationWidth,
+          presentationHeight,
         );
         const centered = calculateSkyroomAwareCenteredCameraOffsets(
           viewerFitWidth,
@@ -2681,8 +2715,8 @@ const Whiteboard = React.memo((props) => {
           areaHeight: cameraAreaHeight,
         } = resolveCameraViewportSize(
           tlEditorRef.current,
-          presentationAreaWidth,
-          presentationAreaHeight,
+          presentationWidth,
+          presentationHeight,
         );
         const centered = calculateSkyroomAwareCenteredCameraOffsets(
           viewerFitWidth,

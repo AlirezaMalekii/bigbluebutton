@@ -55,10 +55,12 @@
    * Phone: wrapper spans the stage so presenter top actions + pen toolbar can
    * use the full width. Slide content is fit+centered by the whiteboard camera
    * (not by shrinking this box to the image width).
+   * Keep overflow hidden on the canvas so a briefly uncentered camera cannot
+   * paint the PDF/image outside the top-zone card onto the page.
    */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationInnerWrapper {
     max-width: 100% !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     left: 0 !important;
     right: 0 !important;
     top: 0 !important;
@@ -680,7 +682,12 @@
      In RTL the zoom cluster (fit-width) lands in column 1 visually; keep
      all three clusters inside the stage with minmax columns + safe inset.
      =================================================================== */
+  /* Clip slide pixels to the stage card; only the slide-nav bar may paint out. */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationContainer"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="presentationContainer"] {
+    overflow: hidden !important;
+  }
+
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="Presentation"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="SvgContainer"] {
     overflow: visible !important;
@@ -1127,12 +1134,19 @@
 
   /* TLDraw toolbar — upstream BBB mobile layout; Radix owns popover placement. */
 
-  /* Let toolbar popovers escape presentation clip on phone. */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationInnerWrapper,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element,
+  /*
+   * Pen toolbar / Radix popovers may paint outside the whiteboard chrome, but
+   * the stage card and slide canvas stay clipped so a corner-pinned camera
+   * cannot draw the PDF onto the page behind the top zone.
+   */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tl-container {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__bottom {
     overflow: visible !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tl-container,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tl-canvas {
+    overflow: hidden !important;
   }
 
   /*

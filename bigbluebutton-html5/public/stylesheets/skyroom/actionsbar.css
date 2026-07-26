@@ -26,13 +26,18 @@
   overflow: visible !important;
 }
 
-/* Desktop: flush to the physical bottom edge (no wallpaper sliver under the bar).
-   Overrides BBB's legacy actionbar top (computed from ~70px chrome) when Skyroom
-   uses the shorter --skyroom-footer-h. */
+/*
+ * Desktop only: close the wallpaper sliver under the footer.
+ * BBB places the bar with top = viewportH - ~70px, while Skyroom height is 56px.
+ * Keep that top (do NOT set top:auto) and stretch to bottom:0 so the page
+ * geometry stays put and only the empty strip below the bar is filled.
+ */
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #ActionsBar {
-  top: auto !important;
   bottom: 0 !important;
-  height: var(--skyroom-footer-h, 56px) !important;
+  height: auto !important;
+  min-height: var(--skyroom-footer-h, 56px) !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 /* -----------------------------------------------------------------------

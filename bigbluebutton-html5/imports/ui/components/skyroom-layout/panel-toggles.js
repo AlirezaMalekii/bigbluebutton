@@ -118,6 +118,9 @@ export const getSkyroomMobileCanvasHeight = (boundsHeight, slideToolbarH = 0) =>
  * Viewport used ONLY for zoom/fit calculation on phone.
  * Symmetric insets leave room under floating top chips + pen bar while the
  * camera still letterbox-centers in the live full canvas (no Y bias).
+ *
+ * On short split stages, cap insets so the fit box does not collapse and push
+ * the slide into a tiny top-left crop.
  */
 export const getSkyroomMobileCameraFitViewport = (
   boundsWidth,
@@ -129,8 +132,11 @@ export const getSkyroomMobileCameraFitViewport = (
   const top = getSkyroomMobileWbTopChromeReserve();
   const bottom = getSkyroomMobileWbToolbarReserve();
   // Symmetric vertical inset = the larger chrome band so content stays centered.
-  const vInset = Math.max(top, bottom);
-  const hInset = 8;
+  // Never consume more than ~18% of a short canvas (mobile top/bottom split).
+  const rawVInset = Math.max(top, bottom);
+  const maxVInset = Math.max(0, Math.floor(canvasH * 0.18));
+  const vInset = Math.min(rawVInset, maxVInset);
+  const hInset = Math.min(8, Math.max(0, Math.floor(canvasW * 0.04)));
   return {
     width: Math.max(80, canvasW - (hInset * 2)),
     height: Math.max(80, canvasH - (vInset * 2)),
