@@ -309,7 +309,11 @@
 .MuiModal-root.skyroom-user-options-menu:not([aria-hidden="true"]),
 #chat-options-dropdown-menu:not([aria-hidden="true"]),
 .MuiModal-root.skyroom-chat-options-menu:not([aria-hidden="true"]),
-.MuiModal-root.skyroom-user-actions-menu:not([aria-hidden="true"]) {
+.MuiModal-root.skyroom-user-actions-menu:not([aria-hidden="true"]),
+#app-settings-dropdown-menu:not([aria-hidden="true"]),
+.MuiModal-root.skyroom-app-settings-menu:not([aria-hidden="true"]),
+#app-leave-meeting-menu:not([aria-hidden="true"]),
+.MuiModal-root.skyroom-leave-meeting-menu:not([aria-hidden="true"]) {
   pointer-events: auto !important;
 }
 
@@ -317,7 +321,11 @@
 .MuiModal-root.skyroom-user-options-menu:not([aria-hidden="true"]) .MuiBackdrop-root,
 #chat-options-dropdown-menu:not([aria-hidden="true"]) .MuiBackdrop-root,
 .MuiModal-root.skyroom-chat-options-menu:not([aria-hidden="true"]) .MuiBackdrop-root,
-.MuiModal-root.skyroom-user-actions-menu:not([aria-hidden="true"]) .MuiBackdrop-root {
+.MuiModal-root.skyroom-user-actions-menu:not([aria-hidden="true"]) .MuiBackdrop-root,
+#app-settings-dropdown-menu:not([aria-hidden="true"]) .MuiBackdrop-root,
+.MuiModal-root.skyroom-app-settings-menu:not([aria-hidden="true"]) .MuiBackdrop-root,
+#app-leave-meeting-menu:not([aria-hidden="true"]) .MuiBackdrop-root,
+.MuiModal-root.skyroom-leave-meeting-menu:not([aria-hidden="true"]) .MuiBackdrop-root {
   pointer-events: auto !important;
 }
 

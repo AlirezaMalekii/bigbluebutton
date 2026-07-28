@@ -435,10 +435,15 @@
 /* ---------------------------------------------------------------------
    Options dropdown (ویژگی‌ها) — transparent overlay, compact panel
    --------------------------------------------------------------------- */
+/* className/id sit on MuiModal-root — use direct selectors, not only :has() */
+#app-settings-dropdown-menu .MuiBackdrop-root,
+.MuiModal-root.skyroom-app-settings-menu .MuiBackdrop-root,
 .MuiModal-root:has(.skyroom-app-settings-menu) .MuiBackdrop-root {
   background-color: transparent !important;
 }
 
+#app-leave-meeting-menu .MuiBackdrop-root,
+.MuiModal-root.skyroom-leave-meeting-menu .MuiBackdrop-root,
 .MuiModal-root:has(.skyroom-leave-meeting-menu) .MuiBackdrop-root {
   background-color: transparent !important;
 }
@@ -458,12 +463,79 @@
 }
 
 /*
+ * Header leave / settings menus must paint ABOVE the presentation/whiteboard
+ * (toolbar ~1002, paper default 999) and remain fully clickable. Same pattern
+ * as #reactions-dropdown-menu. Direct root selectors — class/id are on Modal.
+ */
+html[data-skyroom="true"] #app-settings-dropdown-menu:not([aria-hidden="true"]),
+html[data-skyroom="true"] .MuiModal-root.skyroom-app-settings-menu:not([aria-hidden="true"]),
+html[data-skyroom="true"] #app-leave-meeting-menu:not([aria-hidden="true"]),
+html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hidden="true"]) {
+  z-index: 2500 !important;
+  pointer-events: auto !important;
+}
+
+html[data-skyroom="true"] #app-settings-dropdown-menu[aria-hidden="true"],
+html[data-skyroom="true"] .MuiModal-root.skyroom-app-settings-menu[aria-hidden="true"],
+html[data-skyroom="true"] #app-leave-meeting-menu[aria-hidden="true"],
+html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu[aria-hidden="true"] {
+  pointer-events: none !important;
+}
+
+html[data-skyroom="true"] #app-settings-dropdown-menu:not([aria-hidden="true"]) .MuiPopover-root,
+html[data-skyroom="true"] #app-settings-dropdown-menu:not([aria-hidden="true"]) .MuiPaper-root,
+html[data-skyroom="true"] #app-settings-dropdown-menu:not([aria-hidden="true"]) .override-mobile-styles,
+html[data-skyroom="true"] .MuiModal-root.skyroom-app-settings-menu:not([aria-hidden="true"]) .MuiPopover-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-app-settings-menu:not([aria-hidden="true"]) .MuiPaper-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-app-settings-menu:not([aria-hidden="true"]) .override-mobile-styles,
+html[data-skyroom="true"] #app-leave-meeting-menu:not([aria-hidden="true"]) .MuiPopover-root,
+html[data-skyroom="true"] #app-leave-meeting-menu:not([aria-hidden="true"]) .MuiPaper-root,
+html[data-skyroom="true"] #app-leave-meeting-menu:not([aria-hidden="true"]) .override-mobile-styles,
+html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hidden="true"]) .MuiPopover-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hidden="true"]) .MuiPaper-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hidden="true"]) .override-mobile-styles {
+  z-index: 2501 !important;
+  pointer-events: auto !important;
+}
+
+html[data-skyroom="true"] #app-settings-dropdown-menu:not([aria-hidden="true"]) .MuiBackdrop-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-app-settings-menu:not([aria-hidden="true"]) .MuiBackdrop-root,
+html[data-skyroom="true"] #app-leave-meeting-menu:not([aria-hidden="true"]) .MuiBackdrop-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hidden="true"]) .MuiBackdrop-root {
+  background-color: transparent !important;
+  pointer-events: auto !important;
+}
+
+html[data-skyroom="true"] #app-settings-dropdown-menu:not([aria-hidden="true"]) .MuiList-root,
+html[data-skyroom="true"] #app-settings-dropdown-menu:not([aria-hidden="true"]) .MuiMenuItem-root,
+html[data-skyroom="true"] #app-settings-dropdown-menu:not([aria-hidden="true"]) [data-key^="menuItem-"],
+html[data-skyroom="true"] .MuiModal-root.skyroom-app-settings-menu:not([aria-hidden="true"]) .MuiList-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-app-settings-menu:not([aria-hidden="true"]) .MuiMenuItem-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-app-settings-menu:not([aria-hidden="true"]) [data-key^="menuItem-"],
+html[data-skyroom="true"] #app-leave-meeting-menu:not([aria-hidden="true"]) .MuiList-root,
+html[data-skyroom="true"] #app-leave-meeting-menu:not([aria-hidden="true"]) .MuiMenuItem-root,
+html[data-skyroom="true"] #app-leave-meeting-menu:not([aria-hidden="true"]) [data-key^="menuItem-"],
+html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hidden="true"]) .MuiList-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hidden="true"]) .MuiMenuItem-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hidden="true"]) [data-key^="menuItem-"] {
+  pointer-events: auto !important;
+}
+
+/*
  * Never use fullscreen mobile sheet for features / leave / audio menus.
  * Do NOT put the footer "+" actions menu here: resetting top/left/right/bottom
  * kills MUI Popover anchor math (menu jumps to the top corner).
  */
+#app-settings-dropdown-menu .override-mobile-styles,
+#app-settings-dropdown-menu .MuiPaper-root.override-mobile-styles,
+.MuiModal-root.skyroom-app-settings-menu .override-mobile-styles,
+.MuiModal-root.skyroom-app-settings-menu .MuiPaper-root.override-mobile-styles,
 .MuiModal-root:has(.skyroom-app-settings-menu) .override-mobile-styles,
 .MuiModal-root:has(.skyroom-app-settings-menu) .MuiPaper-root.override-mobile-styles,
+#app-leave-meeting-menu .override-mobile-styles,
+#app-leave-meeting-menu .MuiPaper-root.override-mobile-styles,
+.MuiModal-root.skyroom-leave-meeting-menu .override-mobile-styles,
+.MuiModal-root.skyroom-leave-meeting-menu .MuiPaper-root.override-mobile-styles,
 .MuiModal-root:has(.skyroom-leave-meeting-menu) .override-mobile-styles,
 .MuiModal-root:has(.skyroom-leave-meeting-menu) .MuiPaper-root.override-mobile-styles,
 .MuiModal-root:has(.skyroom-audio-settings-menu) .override-mobile-styles,

@@ -59,10 +59,14 @@ export const cleanupWebcamMenuOverlayArtifacts = () => {
     const isAnchoredSkyroomMenu = modal.id === 'actions-dropdown-menu'
       || modal.id === 'user-options-dropdown-menu'
       || modal.id === 'chat-options-dropdown-menu'
+      || modal.id === 'app-leave-meeting-menu'
+      || modal.id === 'app-settings-dropdown-menu'
       || modal.classList.contains('skyroom-actions-menu')
       || modal.classList.contains('skyroom-user-options-menu')
       || modal.classList.contains('skyroom-chat-options-menu')
-      || modal.classList.contains('skyroom-user-actions-menu');
+      || modal.classList.contains('skyroom-user-actions-menu')
+      || modal.classList.contains('skyroom-leave-meeting-menu')
+      || modal.classList.contains('skyroom-app-settings-menu');
     const hidden = modal.getAttribute('aria-hidden') === 'true'
       || modal.getAttribute('aria-hidden') === ''
       || window.getComputedStyle(modal).visibility === 'hidden'

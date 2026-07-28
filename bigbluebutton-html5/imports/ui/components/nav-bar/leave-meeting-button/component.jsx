@@ -157,7 +157,7 @@ class LeaveMeetingButton extends PureComponent {
       connected,
     } = this.props;
 
-    const customStyles = { top: '1rem' };
+    const customStyles = { top: '1rem', zIndex: 2500 };
 
     const actions = this.renderMenuItems();
 
@@ -198,7 +198,9 @@ class LeaveMeetingButton extends PureComponent {
             opts={{
               id: 'app-leave-meeting-menu',
               className: 'skyroom-leave-meeting-menu',
-              keepMounted: true,
+              // Unmount when closed so cleanupWebcamMenuOverlayArtifacts cannot leave
+              // a stuck pointer-events:none that blocks backdrop outside-click dismiss.
+              keepMounted: false,
               transitionDuration: 0,
               elevation: 8,
               getcontentanchorel: null,

@@ -427,12 +427,14 @@ class OptionsDropdown extends PureComponent {
     const {
       intl, shortcuts: OPEN_OPTIONS_AK, isDropdownOpen, isMobile, isRTL,
     } = this.props;
-    const customStyles = { top: '1rem' };
+    const customStyles = { top: '1rem', zIndex: 2500 };
     const skyroomColumn = isSkyroomColumnLayout();
     const menuOpts = {
       id: 'app-settings-dropdown-menu',
       className: 'skyroom-app-settings-menu',
-      keepMounted: true,
+      // Unmount when closed so cleanupWebcamMenuOverlayArtifacts cannot leave
+      // a stuck pointer-events:none that blocks backdrop outside-click dismiss.
+      keepMounted: false,
       transitionDuration: 0,
       elevation: skyroomColumn ? 8 : 3,
       getcontentanchorel: null,

@@ -84,25 +84,25 @@ export const isSkyroomColumnLayout = () => {
   return Boolean(layoutEl?.hasAttribute(SKYROOM_COLUMN_ATTR));
 };
 
-/** Scaled TLDraw bottom toolbar height reserved inside the whiteboard on phone. */
+/** Scaled TLDraw bottom toolbar height reserved under the slide on phone. */
 export const getSkyroomMobileWbToolbarReserve = () => {
   const layoutEl = document.getElementById('layout');
-  if (!layoutEl) return 32;
+  if (!layoutEl) return 28;
   const styles = getComputedStyle(layoutEl);
-  const scale = parseFloat(styles.getPropertyValue('--skyroom-wb-scale')) || 1;
-  const gap = parseFloat(styles.getPropertyValue('--skyroom-wb-toolbar-gap')) || 1;
-  // Compact 24px tools + padding + gap above slide-nav.
-  return Math.ceil(30 * scale) + Math.max(0, Math.round(gap));
+  const tool = parseFloat(styles.getPropertyValue('--skyroom-wb-tool-size')) || 20;
+  const gap = parseFloat(styles.getPropertyValue('--skyroom-wb-toolbar-gap')) || 2;
+  // Compact tool row + padding + gap above slide-nav.
+  return Math.ceil(tool + 8) + Math.max(0, Math.round(gap));
 };
 
-/** Top floating chrome (undo/redo + options) over the canvas on phone. */
+/** Top presenter chips (undo/redo + options) band above the slide on phone. */
 export const getSkyroomMobileWbTopChromeReserve = () => {
   const layoutEl = document.getElementById('layout');
-  if (!layoutEl) return 32;
+  if (!layoutEl) return 28;
   const styles = getComputedStyle(layoutEl);
-  const btn = parseFloat(styles.getPropertyValue('--skyroom-wb-btn-size')) || 24;
-  // Chip height + top offset + breathing room under the chips.
-  return Math.ceil(btn + 10);
+  const btn = parseFloat(styles.getPropertyValue('--skyroom-wb-btn-size')) || 20;
+  // Chip height + vertical padding under the chips.
+  return Math.ceil(btn + 8);
 };
 
 /**

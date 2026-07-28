@@ -588,6 +588,16 @@ html.skyroom-webcam-fs #layout [data-test="stageReactionOverlay"] {
   padding: 0 0 0 var(--space-2);
 }
 
+/* Slide-nav: always span the stage card, never the fitted file width. */
+#layout[data-skyroom-column="true"] [class*="PresentationToolbar"],
+#layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"],
+#layout[data-skyroom-column="true"] #presentationToolbarWrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+}
+
 /*
  * Center the fitted BBB slide box (svgWidth×svgHeight) in the stage — desktop
  * and phone. Prefer flex on SvgContainer; avoid transform on the wrapper so

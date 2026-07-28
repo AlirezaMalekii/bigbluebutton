@@ -25,6 +25,8 @@ import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
+  getSkyroomMobileWbTopChromeReserve,
+  getSkyroomMobileWbToolbarReserve,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import { SKYROOM_MOBILE_ZONE_FS_EVENT } from '/imports/ui/components/skyroom-layout/mobile-zone-fullscreen-state';
 import {
@@ -232,6 +234,7 @@ class Presentation extends PureComponent {
       restoreOnUpdate,
       layoutContextDispatch,
       userIsPresenter,
+      hasWBAccess,
       presentationBounds,
       numCameras,
       intl,
@@ -349,6 +352,16 @@ class Presentation extends PureComponent {
     if (!userIsPresenter && prevProps.userIsPresenter && fitToWidth) {
       setPresentationFitToWidth(false);
     }
+
+    // Presenter chrome reserves change available slide height on phone.
+    if (
+      (userIsPresenter !== prevProps.userIsPresenter
+        || hasWBAccess !== prevProps.hasWBAccess)
+      && isSkyroomColumnLayout()
+      && isSkyroomMobileViewport()
+    ) {
+      this.onResize();
+    }
   }
 
   componentWillUnmount() {
@@ -465,25 +478,29 @@ class Presentation extends PureComponent {
     const {
       presentationBounds,
       presentationAreaSize: newPresentationAreaSize,
+      userIsPresenter,
+      hasWBAccess,
     } = this.props;
     const presentationSizes = {
       presentationWidth: 0,
       presentationHeight: 0,
     };
 
-    // Phone top-zone is short; reserve the real slide-nav height so calculateSize()
-    // produces a fitted svg box that actually fits inside the card (same model as
-    // desktop). Camera letterboxing in a full-stage canvas was unreliable on split.
+    // Phone: reserve slide-nav + presenter top chips + pen bar so calculateSize()
+    // yields a shorter slide that sits between chrome bands (not under them).
     const isMobileStage = isSkyroomColumnLayout() && isSkyroomMobileViewport();
     const toolbarH = isMobileStage
       ? getSkyroomMobileSlideToolbarHeight()
       : (getToolbarHeight() || 0);
+    const presenterChromeH = isMobileStage && (userIsPresenter || hasWBAccess)
+      ? (getSkyroomMobileWbTopChromeReserve() + getSkyroomMobileWbToolbarReserve())
+      : 0;
 
     if (newPresentationAreaSize?.presentationAreaWidth > 0) {
       presentationSizes.presentationWidth = newPresentationAreaSize.presentationAreaWidth;
       presentationSizes.presentationHeight = Math.max(
         80,
-        (newPresentationAreaSize.presentationAreaHeight || 0) - toolbarH,
+        (newPresentationAreaSize.presentationAreaHeight || 0) - toolbarH - presenterChromeH,
       );
       return presentationSizes;
     }
@@ -493,7 +510,7 @@ class Presentation extends PureComponent {
     presentationSizes.presentationWidth = presentationBounds.width || 0;
     presentationSizes.presentationHeight = Math.max(
       80,
-      (presentationBounds.height || 0) - toolbarH,
+      (presentationBounds.height || 0) - toolbarH - presenterChromeH,
     );
     return presentationSizes;
   }
@@ -825,21 +842,28 @@ class Presentation extends PureComponent {
 
     const toolbarHeight = getToolbarHeight();
     const isSkyroomMobileStage = isSkyroomColumnLayout() && isSkyroomMobileViewport();
+    const isSkyroomStage = isSkyroomColumnLayout();
+    const showPresenterChrome = Boolean(userIsPresenter || hasWBAccess);
     const slideToolbarH = isSkyroomMobileStage
       ? getSkyroomMobileSlideToolbarHeight()
       : (toolbarHeight || 14);
+    const topChromeH = isSkyroomMobileStage && showPresenterChrome
+      ? getSkyroomMobileWbTopChromeReserve()
+      : 0;
+    const penBarH = isSkyroomMobileStage && showPresenterChrome
+      ? getSkyroomMobileWbToolbarReserve()
+      : 0;
     // Fitted svg box is required before mounting — a bounds-only bootstrap left a
     // white empty top card on phone (0×0 / full-stage canvas with no slide).
     const hasFittedSlide = svgWidth > 0 && svgHeight > 0;
     const stageReady = hasFittedSlide && presentationWidth > 0;
-    // Phone + desktop: same upstream model — whiteboard = fitted slide box
-    // (svgWidth×svgHeight), CSS-centered in the stage. Camera stays near 0,0.
+    // Phone + desktop: whiteboard = fitted slide box; camera stays near 0,0.
     const wbPresentationWidth = svgWidth;
     const wbPresentationHeight = svgHeight;
     const wbPresentationAreaWidth = presentationBounds.width;
     const wbPresentationAreaHeight = Math.max(
       80,
-      (presentationBounds.height || 0) - slideToolbarH,
+      (presentationBounds.height || 0) - slideToolbarH - topChromeH - penBarH,
     );
 
     const { presentationToolbarMinWidth } = DEFAULT_VALUES;
@@ -851,13 +875,19 @@ class Presentation extends PureComponent {
         && !fullscreenContext
       );
 
-    // Slide-nav follows the fitted slide width (centered with it on phone).
+    // Slide-nav always spans the stage card — never the (possibly narrow) file width.
     let containerWidth;
-    if (isLargePresentation) {
+    if (isSkyroomStage) {
+      containerWidth = presentationBounds.width;
+    } else if (isLargePresentation) {
       containerWidth = svgWidth;
     } else {
       containerWidth = presentationToolbarMinWidth;
     }
+
+    const svgStackHeight = hasFittedSlide
+      ? (topChromeH + svgHeight + penBarH + (isSkyroomMobileStage ? slideToolbarH : toolbarHeight))
+      : undefined;
 
     const slideContent = currentSlide?.content
       ? `${intl.formatMessage(intlMessages.slideContentStart)}
@@ -912,18 +942,47 @@ class Presentation extends PureComponent {
           >
             <Styled.SvgContainer
               data-test="presentationSvgContainer"
+              data-skyroom-presenter-chrome={isSkyroomMobileStage && showPresenterChrome ? 'true' : undefined}
               style={{
-                // Phone: size the block to the fitted slide + slide-nav, then let
-                // Presentation flex-center that block in the top-zone card.
-                height: hasFittedSlide
-                  ? (svgHeight + (isSkyroomMobileStage ? slideToolbarH : toolbarHeight))
-                  : undefined,
-                width: isSkyroomMobileStage ? '100%' : undefined,
+                // Phone presenter: top chips + slide + pen bar + slide-nav stack.
+                // Viewers / desktop: fitted slide + slide-nav only.
+                height: svgStackHeight,
+                width: isSkyroomMobileStage || isSkyroomStage ? '100%' : undefined,
               }}
             >
+              {isSkyroomMobileStage && showPresenterChrome
+                && !tldrawIsMounting && stageReady && currentSlide && (
+                <div
+                  className="skyroom-mobile-presenter-chrome"
+                  data-test="skyroomMobilePresenterChrome"
+                >
+                  <Styled.ExtraTools {...{ isToolbarVisible }}>
+                    <TooltipContainer title={intl?.messages['app.shortcut-help.undo']}>
+                      <Styled.Button
+                        aria-label={intl?.messages['app.shortcut-help.undo']}
+                        onClick={() => tldrawAPI?.undo()}
+                        className="tlui-undo skyroom-wb-action-btn"
+                      >
+                        <Styled.IconWithMask mask={`${window.meetingClientSettings.public.app.basename}/svgs/tldraw/undo.svg`} />
+                      </Styled.Button>
+                    </TooltipContainer>
+                    <TooltipContainer title={intl?.messages['app.shortcut-help.redo']}>
+                      <Styled.Button
+                        aria-label={intl?.messages['app.shortcut-help.redo']}
+                        onClick={() => tldrawAPI?.redo()}
+                        className="tlui-redo skyroom-wb-action-btn"
+                      >
+                        <Styled.IconWithMask mask={`${window.meetingClientSettings.public.app.basename}/svgs/tldraw/redo.svg`} />
+                      </Styled.Button>
+                    </TooltipContainer>
+                  </Styled.ExtraTools>
+                  {this.renderPresentationMenu()}
+                </div>
+              )}
               <div
                 style={{
                   position: 'absolute',
+                  top: topChromeH || undefined,
                   width: Math.max(0, svgDimensions.width),
                   height: Math.max(0, svgDimensions.height),
                   textAlign: 'center',
@@ -932,7 +991,7 @@ class Presentation extends PureComponent {
                 }}
                 id="presentationInnerWrapper"
               >
-                {((userIsPresenter || hasWBAccess)
+                {!isSkyroomMobileStage && ((userIsPresenter || hasWBAccess)
                   && (!tldrawIsMounting && stageReady && currentSlide)) && (
                   <Styled.ExtraTools {...{ isToolbarVisible }}>
                     <TooltipContainer title={intl?.messages['app.shortcut-help.undo']}>
@@ -955,7 +1014,8 @@ class Presentation extends PureComponent {
                     </TooltipContainer>
                   </Styled.ExtraTools>
                 )}
-                {!tldrawIsMounting
+                {!isSkyroomMobileStage
+                  && !tldrawIsMounting
                   && stageReady
                   && currentSlide
                   && this.renderPresentationMenu()}
@@ -1007,9 +1067,11 @@ class Presentation extends PureComponent {
                   }}
                   style={{
                     width: containerWidth,
+                    left: 0,
+                    right: 0,
                   }}
                 >
-                  {this.renderPresentationToolbar(svgWidth)}
+                  {this.renderPresentationToolbar(containerWidth)}
                 </Styled.PresentationToolbar>
               )}
             </Styled.SvgContainer>
