@@ -549,6 +549,10 @@ const PresentationMenu = (props) => {
         <input
           type="file"
           id="hiddenFileInput"
+          className="skyroom-hidden-file-input"
+          hidden
+          aria-hidden="true"
+          tabIndex={-1}
           style={{ display: 'none' }}
           onChange={handleFileInput}
         />

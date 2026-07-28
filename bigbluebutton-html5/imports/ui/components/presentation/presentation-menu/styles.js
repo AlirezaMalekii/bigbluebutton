@@ -18,12 +18,13 @@ const ToolbarDock = styled.div`
   position: absolute;
   left: auto;
   right: 14px;
-  top: 14px;
+  top: 4px;
   z-index: 1001;
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 8px;
+  height: var(--skyroom-wb-btn-size, 30px);
 
   [dir="rtl"] & {
     left: auto;
@@ -35,10 +36,12 @@ const ActionButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: var(--skyroom-wb-btn-size, 30px);
+  height: var(--skyroom-wb-btn-size, 30px);
+  min-width: var(--skyroom-wb-btn-size, 30px);
+  min-height: var(--skyroom-wb-btn-size, 30px);
   padding: 0;
-  border-radius: 12px;
+  border-radius: 8px;
   cursor: pointer;
   color: #e8edf4;
   background: linear-gradient(165deg, rgba(28, 40, 62, 0.95) 0%, rgba(16, 24, 40, 0.92) 100%);

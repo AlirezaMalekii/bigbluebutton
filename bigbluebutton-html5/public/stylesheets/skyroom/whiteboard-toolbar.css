@@ -45,8 +45,20 @@
   right: calc(8px * var(--skyroom-wb-scale, 1));
 }
 
-#WhiteboardOptionButton[data-skyroom-wb-toolbar="true"] > * {
+#WhiteboardOptionButton[data-skyroom-wb-toolbar="true"] > *:not(input) {
   pointer-events: auto;
+}
+
+#WhiteboardOptionButton input[type="file"],
+#hiddenFileInput,
+.skyroom-hidden-file-input {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+  clip: rect(0, 0, 0, 0) !important;
 }
 
 #WhiteboardOptionButton .skyroom-wb-action-btn {
