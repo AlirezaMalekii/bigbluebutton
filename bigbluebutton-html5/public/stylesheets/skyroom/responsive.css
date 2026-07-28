@@ -37,34 +37,30 @@
     margin: 0 !important;
   }
 
-  /* Stage content — full-stage chrome; slide is camera-letterboxed inside. */
+  /*
+   * Phone stage — same model as desktop: fitted slide box (svgW×svgH) is
+   * flex-centered inside the top-zone card. Do NOT stretch the whiteboard to
+   * the full card and rely on camera letterboxing (that produced a white box).
+   */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="Presentation"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationContainer"] [class*="Presentation"] {
-    align-items: stretch !important;
+    align-items: center !important;
     justify-content: center !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="SvgContainer"] {
-    align-items: stretch !important;
+    align-items: center !important;
     justify-content: center !important;
     max-width: 100% !important;
     width: 100% !important;
   }
 
-  /*
-   * Phone: wrapper spans the stage so presenter top actions + pen toolbar can
-   * use the full width. Slide content is fit+centered by the whiteboard camera
-   * (not by shrinking this box to the image width).
-   * Keep overflow hidden on the canvas so a briefly uncentered camera cannot
-   * paint the PDF/image outside the top-zone card onto the page.
-   */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationInnerWrapper {
     max-width: 100% !important;
     overflow: hidden !important;
     left: 0 !important;
     right: 0 !important;
-    top: 0 !important;
-    width: 100% !important;
+    margin-inline: auto !important;
     transform: none !important;
   }
 

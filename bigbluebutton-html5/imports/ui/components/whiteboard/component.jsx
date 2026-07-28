@@ -65,41 +65,23 @@ const isBackgroundShapeId = (id) => typeof id === 'string' && id.startsWith(BG_S
 
 const isBackgroundShape = (shape) => isBackgroundShapeId(shape?.id);
 
-// Live tldraw viewport — used only for letterbox centering when the canvas is
-// larger than the fitted slide (Skyroom phone full-stage chrome). Do NOT feed
-// this into widthGap zoom math; upstream uses presentationArea* for that.
-//
-// Skyroom phone zooms against a slightly smaller "safe" presentationArea* so
-// floating chrome does not clip the slide. Centering MUST use the real canvas
-// (#presentationInnerWrapper / presentationWidth×Height). Falling back to the
-// shrunk fit area yields y≈0 for height-limited PDFs and pins them to a corner
-// in the split top zone.
+// Viewport for letterbox centering. Do NOT feed this into widthGap zoom math.
+// Phone uses a fitted svg box (#presentationInnerWrapper = slide size); prefer
+// that DOM size so stale full-stage editor bounds cannot blank the top card.
 const resolveCameraViewportSize = (editor, fallbackWidth, fallbackHeight) => {
   const bounds = editor?.getViewportScreenBounds?.();
-  const editorW = bounds?.width > 0 ? bounds.width : 0;
-  const editorH = bounds?.height > 0 ? bounds.height : 0;
-  let width = editorW > 0 ? editorW : fallbackWidth;
-  let height = editorH > 0 ? editorH : fallbackHeight;
+  let width = bounds?.width > 0 ? bounds.width : fallbackWidth;
+  let height = bounds?.height > 0 ? bounds.height : fallbackHeight;
 
   if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
     const inner = typeof document !== 'undefined'
       ? document.getElementById('presentationInnerWrapper')
       : null;
-    const domW = inner?.clientWidth || 0;
-    const domH = inner?.clientHeight || 0;
-    const canvasW = domW > 0 ? domW : fallbackWidth;
-    const canvasH = domH > 0 ? domH : fallbackHeight;
-    // Prefer the DOM canvas when the editor has not settled, or when it reports
-    // a viewport smaller than the real stage (fit-area / stale bounds).
+    const canvasW = inner?.clientWidth || fallbackWidth;
+    const canvasH = inner?.clientHeight || fallbackHeight;
     if (canvasW > 0 && canvasH > 0) {
-      if (
-        !(editorW > 0 && editorH > 0)
-        || editorW + 1 < canvasW
-        || editorH + 1 < canvasH
-      ) {
-        width = canvasW;
-        height = canvasH;
-      }
+      width = canvasW;
+      height = canvasH;
     }
   }
 
@@ -1202,13 +1184,9 @@ const Whiteboard = React.memo((props) => {
     const innerWrapper = document.getElementById('presentationInnerWrapper');
     const containerWidth = container ? container.offsetWidth : 0;
     const innerWrapperWidth = innerWrapper ? innerWrapper.offsetWidth : 0;
-    // Skyroom phone uses a full-stage wrapper on purpose; a transient width gap
-    // while layout settles must not shrink presenter zoom (that crops the image
-    // into the top-left corner).
-    const skyroomMobileStage = isSkyroomColumnLayout() && isSkyroomMobileViewport();
-    const widthGap = skyroomMobileStage
-      ? 0
-      : Math.max(containerWidth - innerWrapperWidth, 0);
+    // Phone now uses the same fitted svg box as desktop, so upstream widthGap
+    // (stage − slide) is correct again for presenter zoom.
+    const widthGap = Math.max(containerWidth - innerWrapperWidth, 0);
     return { containerWidth, innerWrapperWidth, widthGap };
   };
 

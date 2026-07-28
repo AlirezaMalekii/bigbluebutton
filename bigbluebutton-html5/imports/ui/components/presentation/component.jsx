@@ -25,8 +25,6 @@ import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
-  getSkyroomMobileCanvasHeight,
-  getSkyroomMobileCameraFitViewport,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import { SKYROOM_MOBILE_ZONE_FS_EVENT } from '/imports/ui/components/skyroom-layout/mobile-zone-fullscreen-state';
 import {
@@ -473,25 +471,30 @@ class Presentation extends PureComponent {
       presentationHeight: 0,
     };
 
-    if (newPresentationAreaSize) {
+    // Phone top-zone is short; reserve the real slide-nav height so calculateSize()
+    // produces a fitted svg box that actually fits inside the card (same model as
+    // desktop). Camera letterboxing in a full-stage canvas was unreliable on split.
+    const isMobileStage = isSkyroomColumnLayout() && isSkyroomMobileViewport();
+    const toolbarH = isMobileStage
+      ? getSkyroomMobileSlideToolbarHeight()
+      : (getToolbarHeight() || 0);
+
+    if (newPresentationAreaSize?.presentationAreaWidth > 0) {
       presentationSizes.presentationWidth = newPresentationAreaSize.presentationAreaWidth;
-      presentationSizes.presentationHeight = newPresentationAreaSize.presentationAreaHeight
-        - (getToolbarHeight() || 0);
+      presentationSizes.presentationHeight = Math.max(
+        80,
+        (newPresentationAreaSize.presentationAreaHeight || 0) - toolbarH,
+      );
       return presentationSizes;
     }
 
-    presentationSizes.presentationWidth = presentationBounds.width;
-    if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
-      // Canvas = stage minus slide-nav only. Floating chrome is handled by
-      // symmetric zoom insets + letterbox centering (not a shorter canvas).
-      const slideToolbarH = getSkyroomMobileSlideToolbarHeight();
-      presentationSizes.presentationHeight = getSkyroomMobileCanvasHeight(
-        presentationBounds.height,
-        slideToolbarH,
-      );
-    } else {
-      presentationSizes.presentationHeight = presentationBounds.height;
-    }
+    if (!presentationBounds) return presentationSizes;
+
+    presentationSizes.presentationWidth = presentationBounds.width || 0;
+    presentationSizes.presentationHeight = Math.max(
+      80,
+      (presentationBounds.height || 0) - toolbarH,
+    );
     return presentationSizes;
   }
 
@@ -825,32 +828,19 @@ class Presentation extends PureComponent {
     const slideToolbarH = isSkyroomMobileStage
       ? getSkyroomMobileSlideToolbarHeight()
       : (toolbarHeight || 14);
-    // Match upstream BBB: mount when fitted svg size is known. On Skyroom phone the
-    // stage bounds arrive first — allow that as a bootstrap signal only.
-    const stageReady = isSkyroomMobileStage
-      ? (presentationWidth > 0 || (presentationBounds.width > 0 && presentationBounds.height > 0))
-      : presentationWidth > 0;
-    // Phone: full-stage canvas (minus slide-nav). Zoom uses a symmetric safe
-    // inset so floating chrome sits in the letterbox; camera centers in the
-    // live canvas (never shrink height alone — that pins slides to a corner).
-    // Desktop: keep upstream svgWidth×svgHeight fitted box.
-    const skyroomMobileFit = isSkyroomMobileStage
-      ? getSkyroomMobileCameraFitViewport(
-        presentationBounds.width,
-        presentationBounds.height,
-        slideToolbarH,
-      )
-      : null;
-    const wbPresentationWidth = isSkyroomMobileStage ? presentationBounds.width : svgWidth;
-    const wbPresentationHeight = isSkyroomMobileStage
-      ? getSkyroomMobileCanvasHeight(presentationBounds.height, slideToolbarH)
-      : svgHeight;
-    const wbPresentationAreaWidth = isSkyroomMobileStage
-      ? skyroomMobileFit.width
-      : presentationBounds.width;
-    const wbPresentationAreaHeight = isSkyroomMobileStage
-      ? skyroomMobileFit.height
-      : presentationBounds.height - toolbarHeight;
+    // Fitted svg box is required before mounting — a bounds-only bootstrap left a
+    // white empty top card on phone (0×0 / full-stage canvas with no slide).
+    const hasFittedSlide = svgWidth > 0 && svgHeight > 0;
+    const stageReady = hasFittedSlide && presentationWidth > 0;
+    // Phone + desktop: same upstream model — whiteboard = fitted slide box
+    // (svgWidth×svgHeight), CSS-centered in the stage. Camera stays near 0,0.
+    const wbPresentationWidth = svgWidth;
+    const wbPresentationHeight = svgHeight;
+    const wbPresentationAreaWidth = presentationBounds.width;
+    const wbPresentationAreaHeight = Math.max(
+      80,
+      (presentationBounds.height || 0) - slideToolbarH,
+    );
 
     const { presentationToolbarMinWidth } = DEFAULT_VALUES;
 
@@ -861,12 +851,9 @@ class Presentation extends PureComponent {
         && !fullscreenContext
       );
 
-    // Upstream BBB sizes the slide-nav toolbar to the fitted slide width. On
-    // Skyroom phone keep it full-stage so zoom/slide controls stay usable.
+    // Slide-nav follows the fitted slide width (centered with it on phone).
     let containerWidth;
-    if (isSkyroomMobileStage) {
-      containerWidth = presentationBounds.width;
-    } else if (isLargePresentation) {
+    if (isLargePresentation) {
       containerWidth = svgWidth;
     } else {
       containerWidth = presentationToolbarMinWidth;
@@ -926,19 +913,19 @@ class Presentation extends PureComponent {
             <Styled.SvgContainer
               data-test="presentationSvgContainer"
               style={{
-                height: isSkyroomMobileStage ? '100%' : svgHeight + toolbarHeight,
+                // Phone: size the block to the fitted slide + slide-nav, then let
+                // Presentation flex-center that block in the top-zone card.
+                height: hasFittedSlide
+                  ? (svgHeight + (isSkyroomMobileStage ? slideToolbarH : toolbarHeight))
+                  : undefined,
                 width: isSkyroomMobileStage ? '100%' : undefined,
               }}
             >
               <div
                 style={{
                   position: 'absolute',
-                  width: isSkyroomMobileStage
-                    ? '100%'
-                    : Math.max(0, svgDimensions.width),
-                  height: isSkyroomMobileStage
-                    ? `calc(100% - ${slideToolbarH}px)`
-                    : Math.max(0, svgDimensions.height),
+                  width: Math.max(0, svgDimensions.width),
+                  height: Math.max(0, svgDimensions.height),
                   textAlign: 'center',
                   display: !presentationIsOpen ? 'none' : 'block',
                   zIndex: 1,

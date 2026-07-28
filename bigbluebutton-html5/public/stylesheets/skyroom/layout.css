@@ -589,16 +589,16 @@ html.skyroom-webcam-fs #layout [data-test="stageReactionOverlay"] {
 }
 
 /*
- * Desktop: center the fitted BBB slide box (svgWidth×svgHeight) in the stage.
- * Prefer flex on SvgContainer; avoid transform on the wrapper so absolute chrome
- * (ExtraTools / options) keeps a predictable containing block.
+ * Center the fitted BBB slide box (svgWidth×svgHeight) in the stage — desktop
+ * and phone. Prefer flex on SvgContainer; avoid transform on the wrapper so
+ * absolute chrome (ExtraTools / options) keeps a predictable containing block.
  */
-#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [class*="SvgContainer"] {
+#layout[data-skyroom-column="true"] [class*="SvgContainer"] {
   align-items: center !important;
   justify-content: center !important;
 }
 
-#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #presentationInnerWrapper {
+#layout[data-skyroom-column="true"] #presentationInnerWrapper {
   left: 0 !important;
   right: 0 !important;
   margin-inline: auto !important;
