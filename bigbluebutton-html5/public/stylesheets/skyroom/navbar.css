@@ -522,29 +522,22 @@ html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hi
 }
 
 /*
- * Never use fullscreen mobile sheet for features / leave / audio menus.
- * Do NOT put the footer "+" actions menu here: resetting top/left/right/bottom
- * kills MUI Popover anchor math (menu jumps to the top corner).
+ * Header leave / settings / audio — keep MUI paper top/left from the trigger.
+ * Never reset top/left/right/bottom here: that sends the menu to the page corner
+ * (same bug as the footer "+" menu). Only undo full-width mobile sheet styles.
  */
 #app-settings-dropdown-menu .override-mobile-styles,
 #app-settings-dropdown-menu .MuiPaper-root.override-mobile-styles,
 .MuiModal-root.skyroom-app-settings-menu .override-mobile-styles,
 .MuiModal-root.skyroom-app-settings-menu .MuiPaper-root.override-mobile-styles,
-.MuiModal-root:has(.skyroom-app-settings-menu) .override-mobile-styles,
-.MuiModal-root:has(.skyroom-app-settings-menu) .MuiPaper-root.override-mobile-styles,
 #app-leave-meeting-menu .override-mobile-styles,
 #app-leave-meeting-menu .MuiPaper-root.override-mobile-styles,
 .MuiModal-root.skyroom-leave-meeting-menu .override-mobile-styles,
 .MuiModal-root.skyroom-leave-meeting-menu .MuiPaper-root.override-mobile-styles,
-.MuiModal-root:has(.skyroom-leave-meeting-menu) .override-mobile-styles,
-.MuiModal-root:has(.skyroom-leave-meeting-menu) .MuiPaper-root.override-mobile-styles,
+.MuiModal-root.skyroom-audio-settings-menu .override-mobile-styles,
+.MuiModal-root.skyroom-audio-settings-menu .MuiPaper-root.override-mobile-styles,
 .MuiModal-root:has(.skyroom-audio-settings-menu) .override-mobile-styles,
 .MuiModal-root:has(.skyroom-audio-settings-menu) .MuiPaper-root.override-mobile-styles {
-  position: absolute !important;
-  top: auto !important;
-  left: auto !important;
-  right: auto !important;
-  bottom: auto !important;
   width: auto !important;
   max-width: min(260px, 92vw) !important;
 }
@@ -564,14 +557,19 @@ html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hi
 }
 
 @media (max-width: 899px) {
-  /* Undo globalStyles `.MuiPopover-root { top: 0 }` so the paper can sit
-     above the plus button. Do not touch Paper top/left. */
+  /* Undo globalStyles `.MuiPopover-root { top: 0 }` so anchored paper can sit
+     under the header buttons. Do not touch Paper top/left. */
+  #app-settings-dropdown-menu .MuiPopover-root,
+  .MuiModal-root.skyroom-app-settings-menu .MuiPopover-root,
   .MuiModal-root:has(.skyroom-app-settings-menu) .MuiPopover-root,
+  #app-leave-meeting-menu .MuiPopover-root,
+  .MuiModal-root.skyroom-leave-meeting-menu .MuiPopover-root,
   .MuiModal-root:has(.skyroom-leave-meeting-menu) .MuiPopover-root,
   .MuiModal-root:has(.skyroom-actions-menu) .MuiPopover-root,
   .MuiModal-root.skyroom-actions-menu .MuiPopover-root,
   #actions-dropdown-menu .MuiPopover-root,
-  .MuiModal-root:has(.skyroom-audio-settings-menu) .MuiPopover-root {
+  .MuiModal-root:has(.skyroom-audio-settings-menu) .MuiPopover-root,
+  .MuiModal-root.skyroom-audio-settings-menu .MuiPopover-root {
     top: auto !important;
   }
 }

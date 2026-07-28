@@ -200,7 +200,7 @@ const Button = styled.button`
 
 const ExtraTools = styled.div`
   position: absolute;
-  top: 2px;
+  top: 4px;
   left: 10px;
   right: auto;
   z-index: 399;

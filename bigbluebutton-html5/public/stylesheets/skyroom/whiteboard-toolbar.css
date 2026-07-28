@@ -23,9 +23,10 @@
   position: absolute;
   /* Below tldraw style/color popovers (1100+) so pen options cover corner actions on phone. */
   z-index: 1001;
-  top: calc(10px * var(--skyroom-wb-scale, 1));
+  /* Match ExtraTools top so both chip rows share one baseline (desktop + phone). */
+  top: 4px;
   left: auto;
-  right: calc(10px * var(--skyroom-wb-scale, 1));
+  right: calc(8px * var(--skyroom-wb-scale, 1));
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -35,12 +36,13 @@
   background: transparent;
   border: none;
   pointer-events: none;
+  height: var(--skyroom-wb-btn-size, 30px);
 }
 
 [dir="rtl"] #WhiteboardOptionButton[data-skyroom-wb-toolbar="true"] {
   /* Black action chips stay on the physical right in RTL too. */
   left: auto;
-  right: calc(10px * var(--skyroom-wb-scale, 1));
+  right: calc(8px * var(--skyroom-wb-scale, 1));
 }
 
 #WhiteboardOptionButton[data-skyroom-wb-toolbar="true"] > * {
@@ -104,8 +106,8 @@
 /* Top-left undo/redo — physical left corner on the slide surface (same in LTR and RTL). */
 #layout[data-skyroom-column="true"] #presentationInnerWrapper [class*="ExtraTools"] {
   position: absolute !important;
-  top: calc(10px * var(--skyroom-wb-scale, 1)) !important;
-  left: calc(10px * var(--skyroom-wb-scale, 1)) !important;
+  top: 4px !important;
+  left: calc(8px * var(--skyroom-wb-scale, 1)) !important;
   right: auto !important;
   z-index: 1001 !important;
   display: flex !important;
@@ -117,7 +119,7 @@
 }
 
 [dir="rtl"] #layout[data-skyroom-column="true"] #presentationInnerWrapper [class*="ExtraTools"] {
-  left: calc(10px * var(--skyroom-wb-scale, 1)) !important;
+  left: calc(8px * var(--skyroom-wb-scale, 1)) !important;
   right: auto !important;
 }
 
@@ -147,8 +149,8 @@
   height: calc(13px * var(--skyroom-wb-scale, 1)) !important;
 }
 
-/* TLDraw tools — Skyroom mobile + desktop: hug slide-nav bar. */
-#layout[data-skyroom-column="true"] #whiteboard-element .tlui-layout__bottom {
+/* TLDraw tools — desktop: hug slide-nav bar. Phone positions under the slide. */
+#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) #whiteboard-element .tlui-layout__bottom {
   top: auto !important;
   bottom: var(--skyroom-wb-toolbar-gap, 4px) !important;
   padding-bottom: 0 !important;
