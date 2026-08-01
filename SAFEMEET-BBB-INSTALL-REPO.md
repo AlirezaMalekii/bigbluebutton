@@ -52,12 +52,46 @@ Run this on the target BBB server, not on the repo server:
 wget -qO- https://new-bbb-install.roomeet.ir/bbb-install-safemeet-3.0.sh | bash -s -- \
   -w -v jammy-300 -s live71.roomeet.ir -e cert@roomeet.ir \
   --default-pdf-url "https://example.com/default.pdf" \
-  --logo-url "https://example.com/logo.svg"
+  --logo-url "https://example.com/logo.svg" \
+  --theme-id roomeet
 ```
 
 Fresh install first uses the existing Roomeet/BBB install flow as the baseline,
 then adds the SafeMeet repository and upgrades any BBB packages that exist there.
 This lets the SafeMeet repo start small and override only changed packages.
+
+## Meeting theme packs
+
+Default packaged meeting UI stays SafeMeet teal. Optional per-server palettes:
+
+```text
+https://new-bbb-install.roomeet.ir/themes/safemeet.json
+https://new-bbb-install.roomeet.ir/themes/roomeet.json
+```
+
+Apply RooMeet colors:
+
+```bash
+wget -qO- https://new-bbb-install.roomeet.ir/bbb-install-safemeet-3.0.sh | bash -s -- \
+  -s live71.roomeet.ir --config-only --theme-id roomeet
+```
+
+Or point at any public JSON:
+
+```bash
+wget -qO- https://new-bbb-install.roomeet.ir/bbb-install-safemeet-3.0.sh | bash -s -- \
+  -s live71.roomeet.ir --config-only \
+  --theme-config-url "https://cdn.example.com/safemeet/themes/custom.json"
+```
+
+Reset to packaged default:
+
+```bash
+wget -qO- https://new-bbb-install.roomeet.ir/bbb-install-safemeet-3.0.sh | bash -s -- \
+  -s live71.roomeet.ir --config-only --theme-reset
+```
+
+Theme docs and schema notes: `branding/themes/README.md`.
 
 ## Update Existing BBB Server
 
@@ -91,6 +125,8 @@ The installer caches assets locally on the BBB server:
 ```text
 /var/www/bigbluebutton-default/assets/safemeet/default.pdf
 /var/www/bigbluebutton-default/assets/safemeet/logo.<ext>
+/var/www/bigbluebutton-default/assets/safemeet/theme.json
+/var/www/bigbluebutton-default/assets/safemeet/theme-override.css
 ```
 
 It writes persistent BBB web overrides to:
@@ -108,6 +144,9 @@ defaultLogoURL=https://<bbb-host>/safemeet/logo.<ext>
 useDefaultDarkLogo=true
 defaultDarkLogoURL=https://<bbb-host>/safemeet/logo.<ext>
 ```
+
+Meeting theme JSON is also stored at `/etc/safemeet-bbb/theme.json`. The HTML5
+client loads `/safemeet/theme-override.css` when present.
 
 Class materials persistence (presentations + whiteboard across sessions for the same external `meetingID`) is documented in `docs/safemeet/class-materials-persistence.md`. Defaults are enabled with 14-day idle retention under `/var/bigbluebutton/safemeet-class-materials`.
 
@@ -133,6 +172,8 @@ bbb-conf --status
 bbb-conf --check
 curl -fsS "https://<bbb-host>/safemeet/default.pdf" >/dev/null
 curl -fsS "https://<bbb-host>/safemeet/logo.svg" >/dev/null
+curl -fsS "https://<bbb-host>/safemeet/theme-override.css" >/dev/null   # only if a theme was applied
 ```
 
-New default PDF/logo values are reliable for newly created meetings.
+New default PDF/logo/theme values are reliable for newly created meetings (hard-refresh
+existing HTML5 tabs after a theme change).

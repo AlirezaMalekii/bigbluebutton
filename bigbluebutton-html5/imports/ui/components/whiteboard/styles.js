@@ -205,32 +205,46 @@ const TldrawV2GlobalStyle = createGlobalStyle`
       position: relative !important;
     }
 
+    /* Mobile: sit under the fitted slide (top:100%). Desktop: hug slide-nav. */
     .tlui-layout__bottom {
       grid-row: unset !important;
       grid-column: unset !important;
       position: absolute !important;
-      top: auto !important;
-      bottom: var(--skyroom-wb-toolbar-gap, 8px) !important;
-      /* Mobile: full stage width + no translate (left:50% + translateX fights responsive.css and clips the bar). */
-      left: ${isSkyroomMobile ? '0' : '50%'} !important;
-      right: ${isSkyroomMobile ? '0' : 'auto'} !important;
-      transform: ${isSkyroomMobile ? 'none' : 'translateX(-50%)'} !important;
+      top: ${isSkyroomMobile
+      ? 'calc(100% + var(--skyroom-wb-toolbar-gap, 2px))'
+      : 'auto'} !important;
+      bottom: ${isSkyroomMobile
+      ? 'auto'
+      : 'var(--skyroom-wb-toolbar-gap, 8px)'} !important;
+      left: 50% !important;
+      right: auto !important;
+      transform: translateX(-50%) !important;
       z-index: 12 !important;
-      width: ${isSkyroomMobile ? '100%' : 'max-content'} !important;
-      max-width: ${isSkyroomMobile ? '100%' : 'none'} !important;
+      width: max-content !important;
+      max-width: min(100vw - 20px, 100%) !important;
       height: auto !important;
       margin: 0 !important;
       pointer-events: auto !important;
       touch-action: manipulation !important;
-      ${isSkyroomMobile ? 'display: flex !important; justify-content: center !important;' : ''}
+      display: flex !important;
+      justify-content: center !important;
     }
 
+    /* tldraw defaults (overflow:clip + contain:strict) hide anything past 100% height. */
+    ${isSkyroomMobile ? `
+    #whiteboard-element .tlui-layout {
+      overflow: visible !important;
+      contain: none !important;
+      max-height: none !important;
+    }
+    ` : ''}
+
     .tlui-button__tool {
-      width: ${isSkyroomMobile ? '24px' : '36px'} !important;
-      height: ${isSkyroomMobile ? '24px' : '36px'} !important;
-      min-width: ${isSkyroomMobile ? '24px' : '36px'} !important;
-      min-height: ${isSkyroomMobile ? '24px' : '36px'} !important;
-      border-radius: ${isSkyroomMobile ? '7px' : '10px'} !important;
+      width: ${isSkyroomMobile ? '16px' : '36px'} !important;
+      height: ${isSkyroomMobile ? '16px' : '36px'} !important;
+      min-width: ${isSkyroomMobile ? '16px' : '36px'} !important;
+      min-height: ${isSkyroomMobile ? '16px' : '36px'} !important;
+      border-radius: ${isSkyroomMobile ? '5px' : '10px'} !important;
       color: #e8edf4 !important;
       ${isSkyroomMobile ? 'display: inline-flex !important; align-items: center !important; justify-content: center !important; overflow: visible !important;' : ''}
     }

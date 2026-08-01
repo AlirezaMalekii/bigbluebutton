@@ -42,13 +42,13 @@
    * flex-centered inside the top-zone card. Do NOT stretch the whiteboard to
    * the full card and rely on camera letterboxing (that produced a white box).
    */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="Presentation"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationContainer"] [class*="Presentation"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-skyroom-presentation],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationContainer"] [data-skyroom-presentation] {
     align-items: center !important;
     justify-content: center !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="SvgContainer"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-skyroom-svg-container] {
     align-items: center !important;
     justify-content: center !important;
     max-width: 100% !important;
@@ -57,11 +57,17 @@
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationInnerWrapper {
     max-width: 100% !important;
+    /* Clip slide pixels; pen bar paints in the reserved band below this box. */
     overflow: hidden !important;
     left: 0 !important;
     right: 0 !important;
     margin-inline: auto !important;
     transform: none !important;
+  }
+
+  /* Presenter: let the under-slide pen toolbar escape the fitted slide box. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-skyroom-svg-container][data-skyroom-presenter-chrome="true"] #presentationInnerWrapper {
+    overflow: visible !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element,
@@ -684,8 +690,8 @@
     overflow: hidden !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="Presentation"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="SvgContainer"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-skyroom-presentation],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-skyroom-svg-container] {
     overflow: visible !important;
   }
 
@@ -1138,6 +1144,16 @@
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__bottom {
     overflow: visible !important;
+  }
+
+  /*
+   * tldraw ships `.tlui-layout { overflow: clip; contain: strict }` — that
+   * paint-contains the bottom toolbar when we park it under the slide
+   * (top: calc(100% + gap)). Drop containment so the pen bar can show.
+   */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout {
+    contain: none !important;
+    max-height: none !important;
   }
 
   /*
@@ -2833,8 +2849,8 @@
     overflow: visible !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="SvgContainer"][data-skyroom-presenter-chrome="true"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="Presentation"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-skyroom-svg-container][data-skyroom-presenter-chrome="true"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-skyroom-presentation] {
     overflow: visible !important;
   }
 
@@ -2967,8 +2983,8 @@
     color: #e8edf4 !important;
   }
 
-  /* Top-left: undo/redo — grid column 1, compact. */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-presenter-chrome [class*="ExtraTools"] {
+  /* Top-left: undo/redo — grid column 1, compact (same size/baseline as right chips). */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-presenter-chrome [data-skyroom-extra-tools="true"] {
     grid-column: 1 !important;
     position: relative !important;
     inset: auto !important;
@@ -3061,9 +3077,19 @@
     line-height: 1 !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-presenter-chrome [class*="ExtraTools"] > [class*="Button"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-presenter-chrome [class*="ExtraTools"] button,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-presenter-chrome [class*="ExtraTools"] .skyroom-wb-action-btn {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-presenter-chrome [data-skyroom-extra-tools="true"] > * {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: var(--skyroom-wb-btn-size, 16px) !important;
+    margin: 0 !important;
+    flex: 0 0 auto !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-presenter-chrome [data-skyroom-extra-tools="true"] button,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-presenter-chrome [data-skyroom-extra-tools="true"] .skyroom-wb-action-btn,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-presenter-chrome .tlui-undo,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-presenter-chrome .tlui-redo {
     width: var(--skyroom-wb-btn-size, 16px) !important;
     height: var(--skyroom-wb-btn-size, 16px) !important;
     min-width: var(--skyroom-wb-btn-size, 16px) !important;
@@ -3076,10 +3102,14 @@
     border-radius: 5px !important;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28) !important;
     box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-presenter-chrome [class*="ExtraTools"] .tlui-icon,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-presenter-chrome [class*="ExtraTools"] [class*="IconWithMask"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-presenter-chrome [data-skyroom-extra-tools="true"] .tlui-icon,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-presenter-chrome .tlui-undo .tlui-icon,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-presenter-chrome .tlui-redo .tlui-icon {
     width: 9px !important;
     height: 9px !important;
     min-width: 9px !important;
@@ -3380,14 +3410,18 @@
     padding: 0 !important;
     width: 100% !important;
     height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    overflow: visible !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] {
     border-radius: 14px !important;
-    overflow: hidden !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior: contain !important;
     background: rgba(10, 16, 26, 0.82) !important;
     display: flex !important;
     align-items: flex-start !important;
@@ -3427,7 +3461,10 @@
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="VideoList"] {
     width: 100% !important;
-    height: max-content !important;
+    /* Do NOT set height with !important — JS sets an explicit px height for 3+
+       so extra 2×2 rows overflow and #cameraDock can scroll. Percentage-based
+       max-content sizing + height:100% tiles was collapsing the grid into the
+       dock and hiding cams below the fold with no scroll. */
     max-height: none !important;
     align-self: stretch !important;
     align-content: start !important;
@@ -3474,6 +3511,19 @@
     width: 100% !important;
   }
 
+  /* Default (3+): stretch into fixed grid-row tracks from JS. Avoid height:100% —
+     circular % sizing against the dock collapses extra rows and blocks scroll. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [data-test="webcamVideoItem"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    align-self: stretch !important;
+    aspect-ratio: unset !important;
+  }
+
+  /* 1–2 cams: fill the dock (overrides the 3+ defaults above). */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [data-test="webcamVideoItem"]:only-child,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="VideoList"]:has([data-test="webcamVideoItem"]:first-child:nth-last-child(2)) [data-test="webcamVideoItem"] {
     width: 100% !important;
@@ -3483,12 +3533,9 @@
     max-height: 100% !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [data-test="webcamVideoItem"] {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-height: 0 !important;
-    height: 100% !important;
-    aspect-ratio: unset !important;
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [data-test="webcamVideoItem"] video,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [data-test="videoContainer"] {
+    touch-action: pan-y !important;
   }
 
   /* Scroll affordance when more than one 2×2 page of cams is below the fold. */

@@ -14,7 +14,7 @@
   --skyroom-wb-btn-size: 30px;
 }
 
-#layout[data-skyroom-column="true"] #presentationInnerWrapper [class*="ExtraTools"],
+#layout[data-skyroom-column="true"] #presentationInnerWrapper [data-skyroom-extra-tools="true"],
 #layout[data-skyroom-column="true"] #presentationInnerWrapper #WhiteboardOptionButton[data-skyroom-wb-toolbar="true"] {
   z-index: 1002 !important;
 }
@@ -116,7 +116,7 @@
 }
 
 /* Top-left undo/redo — physical left corner on the slide surface (same in LTR and RTL). */
-#layout[data-skyroom-column="true"] #presentationInnerWrapper [class*="ExtraTools"] {
+#layout[data-skyroom-column="true"] #presentationInnerWrapper [data-skyroom-extra-tools="true"] {
   position: absolute !important;
   top: 4px !important;
   left: calc(8px * var(--skyroom-wb-scale, 1)) !important;
@@ -130,14 +130,14 @@
   gap: calc(5px * var(--skyroom-wb-scale, 1)) !important;
 }
 
-[dir="rtl"] #layout[data-skyroom-column="true"] #presentationInnerWrapper [class*="ExtraTools"] {
+[dir="rtl"] #layout[data-skyroom-column="true"] #presentationInnerWrapper [data-skyroom-extra-tools="true"] {
   left: calc(8px * var(--skyroom-wb-scale, 1)) !important;
   right: auto !important;
 }
 
-#layout[data-skyroom-column="true"] #presentationInnerWrapper [class*="ExtraTools"] > [class*="Button"],
-#layout[data-skyroom-column="true"] #presentationInnerWrapper [class*="ExtraTools"] button,
-#layout[data-skyroom-column="true"] #presentationInnerWrapper [class*="ExtraTools"] .skyroom-wb-action-btn {
+#layout[data-skyroom-column="true"] #presentationInnerWrapper [data-skyroom-extra-tools="true"] > [class*="Button"],
+#layout[data-skyroom-column="true"] #presentationInnerWrapper [data-skyroom-extra-tools="true"] button,
+#layout[data-skyroom-column="true"] #presentationInnerWrapper [data-skyroom-extra-tools="true"] .skyroom-wb-action-btn {
   width: var(--skyroom-wb-btn-size, 30px) !important;
   height: var(--skyroom-wb-btn-size, 30px) !important;
   min-width: var(--skyroom-wb-btn-size, 30px) !important;
@@ -156,7 +156,7 @@
   color: #e8edf4 !important;
 }
 
-#layout[data-skyroom-column="true"] #presentationInnerWrapper [class*="ExtraTools"] .tlui-icon {
+#layout[data-skyroom-column="true"] #presentationInnerWrapper [data-skyroom-extra-tools="true"] .tlui-icon {
   width: calc(13px * var(--skyroom-wb-scale, 1)) !important;
   height: calc(13px * var(--skyroom-wb-scale, 1)) !important;
 }

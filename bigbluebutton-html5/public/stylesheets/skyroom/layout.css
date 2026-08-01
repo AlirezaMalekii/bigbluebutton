@@ -762,8 +762,8 @@ html.skyroom-webcam-fs #layout [data-test="stageReactionOverlay"] {
 }
 
 /* Presentation extra-tools (undo/redo strip above whiteboard) */
-#layout[data-skyroom-column="true"] [class*="ExtraTools"] > [class*="Button"],
-#layout[data-skyroom-column="true"] [class*="ExtraTools"] button {
+#layout[data-skyroom-column="true"] [data-skyroom-extra-tools="true"] > [class*="Button"],
+#layout[data-skyroom-column="true"] [data-skyroom-extra-tools="true"] button {
   background-color: rgba(18, 28, 46, 0.88) !important;
   border: 1px solid rgba(20, 169, 158, 0.24) !important;
   box-shadow:
@@ -773,8 +773,8 @@ html.skyroom-webcam-fs #layout [data-test="stageReactionOverlay"] {
   transition: border-color 150ms ease, background-color 150ms ease !important;
 }
 
-#layout[data-skyroom-column="true"] [class*="ExtraTools"] > [class*="Button"]:hover,
-#layout[data-skyroom-column="true"] [class*="ExtraTools"] button:hover {
+#layout[data-skyroom-column="true"] [data-skyroom-extra-tools="true"] > [class*="Button"]:hover,
+#layout[data-skyroom-column="true"] [data-skyroom-extra-tools="true"] button:hover {
   background-color: var(--skyroom-accent-hover-bg, rgba(32, 199, 187, 0.16)) !important;
   border-color: var(--skyroom-accent-border, rgba(32, 199, 187, 0.42)) !important;
   box-shadow:
@@ -783,8 +783,8 @@ html.skyroom-webcam-fs #layout [data-test="stageReactionOverlay"] {
     inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
 }
 
-#layout[data-skyroom-column="true"] [class*="ExtraTools"] > [class*="Button"]:active,
-#layout[data-skyroom-column="true"] [class*="ExtraTools"] button:active {
+#layout[data-skyroom-column="true"] [data-skyroom-extra-tools="true"] > [class*="Button"]:active,
+#layout[data-skyroom-column="true"] [data-skyroom-extra-tools="true"] button:active {
   background-color: rgba(13, 136, 126, 0.28) !important;
   border-color: var(--skyroom-accent, #20c7bb) !important;
 }

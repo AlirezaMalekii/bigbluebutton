@@ -126,7 +126,9 @@ const PresentationContainer = styled.div`
   overflow: hidden;
 `;
 
-const Presentation = styled.div`
+const Presentation = styled.div.attrs({
+  'data-skyroom-presentation': 'true',
+})`
   order: 1;
   display: flex;
   flex-direction: row;
@@ -138,7 +140,9 @@ const Presentation = styled.div`
   position: relative;
 `;
 
-const SvgContainer = styled.div`
+const SvgContainer = styled.div.attrs({
+  'data-skyroom-svg-container': 'true',
+})`
   width: 100%;
   position: relative;
   display: flex;
@@ -198,7 +202,9 @@ const Button = styled.button`
   }
 `;
 
-const ExtraTools = styled.div`
+const ExtraTools = styled.div.attrs({
+  'data-skyroom-extra-tools': 'true',
+})`
   position: absolute;
   top: 4px;
   left: 10px;

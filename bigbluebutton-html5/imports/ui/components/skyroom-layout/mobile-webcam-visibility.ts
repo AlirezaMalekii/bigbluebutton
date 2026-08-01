@@ -63,7 +63,20 @@ export const computeSkyroomMobileWebcamsVisible = ({
   if (!hasStage) return true;
 
   const activeBox = resolveSkyroomMobileBox({ usersOpen, chatOpen, notesOpen });
-  return activeBox === 'webcams';
+  if (activeBox === 'webcams') return true;
+
+  // Layout may already own a webcam zone before activeBox catches up (tab race).
+  if (typeof document !== 'undefined') {
+    const layoutEl = document.getElementById('layout');
+    if (
+      layoutEl?.hasAttribute('data-skyroom-mobile-bottom-webcams')
+      || layoutEl?.hasAttribute('data-skyroom-mobile-top-webcams')
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 export const limitSkyroomMobileStageRemoteWebcams = (

@@ -10,17 +10,23 @@
 #   wget -qO- https://new-bbb-install.roomeet.ir/bbb-install-safemeet-3.0.sh | bash -s -- \
 #     -w -v jammy-300 -s live71.roomeet.ir -e cert@roomeet.ir \
 #     --default-pdf-url https://example.com/default.pdf \
-#     --logo-url https://example.com/logo.svg
+#     --logo-url https://example.com/logo.svg \
+#     --theme-config-url https://cdn.example.com/safemeet/themes/roomeet.json
 set -euo pipefail
 
 SAFE_REPO_DOMAIN="${SAFE_REPO_DOMAIN:-new-bbb-install.roomeet.ir}"
 SAFE_REPO_URL="${SAFE_REPO_URL:-https://${SAFE_REPO_DOMAIN}}"
 SAFE_REPO_KEY_URL="${SAFE_REPO_KEY_URL:-${SAFE_REPO_URL}/repo/bigbluebutton.asc}"
+SAFE_THEMES_URL="${SAFE_THEMES_URL:-${SAFE_REPO_URL}/themes}"
 BASE_INSTALLER_URL="${BASE_INSTALLER_URL:-https://bbb-install.roomeet.ir/bbb-install-3.0.sh}"
 STATE_DIR="/etc/safemeet-bbb"
 STATE_FILE="${STATE_DIR}/install.env"
 BACKUP_DIR="/var/backups/safemeet-bbb"
 ASSET_DIR="/var/www/bigbluebutton-default/assets/safemeet"
+THEME_JSON_STATE="${STATE_DIR}/theme.json"
+THEME_CSS_ASSET="${ASSET_DIR}/theme-override.css"
+THEME_JSON_ASSET="${ASSET_DIR}/theme.json"
+THEME_COMPILE_URL="${THEME_COMPILE_URL:-${SAFE_THEMES_URL}/safemeet-theme-compile.py}"
 BBB_WEB_PROPS="/etc/bigbluebutton/bbb-web.properties"
 APT_LIST="/etc/apt/sources.list.d/bigbluebutton.list"
 SAFE_APT_LIST="/etc/apt/sources.list.d/safemeet-bigbluebutton.list"
@@ -29,10 +35,14 @@ APT_PIN="/etc/apt/preferences.d/safemeet-bbb"
 DEFAULT_PDF_URL=""
 LOGO_URL=""
 DARK_LOGO_URL=""
+THEME_CONFIG_URL=""
+THEME_ID=""
+THEME_RESET=0
 CONFIG_ONLY=0
 DRY_RUN=0
 SKIP_HEALTH_CHECK=0
 PACKAGES_UPGRADED=0
+THEME_CHANGED=0
 INSTALL_ARGS=()
 
 log() {
@@ -55,6 +65,10 @@ SafeMeet options:
   --default-pdf-url URL   Download and set the default whiteboard PDF.
   --logo-url URL          Download and set the default meeting logo.
   --dark-logo-url URL     Download and set the dark-mode meeting logo.
+  --theme-config-url URL  Download a theme JSON and apply meeting palette override.
+  --theme-id ID           Shortcut for built-in themes hosted at ${SAFE_THEMES_URL}/<id>.json
+                          (examples: safemeet, roomeet).
+  --theme-reset           Remove meeting theme override and restore packaged default.
   --config-only           Do not run BBB install/upgrade; only apply SafeMeet config.
   --dry-run               Print planned actions without changing the target server.
   --skip-health-check     Skip bbb-conf/http checks at the end.
@@ -108,6 +122,18 @@ backup_file() {
 
 write_state() {
   local host="$1"
+  local theme_url="${THEME_CONFIG_URL}"
+  local theme_id_value="${THEME_ID}"
+  if [[ -z "$theme_url" && -f "$STATE_FILE" ]]; then
+    theme_url="$(sed -n 's/^THEME_CONFIG_URL=//p' "$STATE_FILE" | tail -n 1)"
+  fi
+  if [[ -z "$theme_id_value" && -f "$STATE_FILE" ]]; then
+    theme_id_value="$(sed -n 's/^THEME_ID=//p' "$STATE_FILE" | tail -n 1)"
+  fi
+  if [[ "$THEME_RESET" == "1" ]]; then
+    theme_url=""
+    theme_id_value=""
+  fi
   mkdir -p "$STATE_DIR"
   cat > "$STATE_FILE" <<EOF
 SAFE_REPO_URL=${SAFE_REPO_URL}
@@ -115,9 +141,109 @@ HOST=${host}
 DEFAULT_PDF_URL=${DEFAULT_PDF_URL}
 LOGO_URL=${LOGO_URL}
 DARK_LOGO_URL=${DARK_LOGO_URL}
+THEME_CONFIG_URL=${theme_url}
+THEME_ID=${theme_id_value}
 UPDATED_AT=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
 EOF
   chmod 600 "$STATE_FILE"
+}
+
+resolve_theme_config_url() {
+  if [[ -n "$THEME_CONFIG_URL" ]]; then
+    printf '%s' "$THEME_CONFIG_URL"
+    return 0
+  fi
+  if [[ -n "$THEME_ID" ]]; then
+    [[ "$THEME_ID" =~ ^[a-z0-9][a-z0-9_-]*$ ]] \
+      || die "--theme-id must be lowercase alphanumeric (optionally -/_)."
+    printf '%s/%s.json' "$SAFE_THEMES_URL" "$THEME_ID"
+    return 0
+  fi
+  return 1
+}
+
+fetch_theme_compiler() {
+  local dest="$1"
+  if [[ -f "${BASH_SOURCE[0]%/*}/scripts/safemeet-theme-compile.py" ]]; then
+    cp -a "${BASH_SOURCE[0]%/*}/scripts/safemeet-theme-compile.py" "$dest"
+    return 0
+  fi
+  if [[ -f "/usr/local/lib/safemeet/safemeet-theme-compile.py" ]]; then
+    cp -a "/usr/local/lib/safemeet/safemeet-theme-compile.py" "$dest"
+    return 0
+  fi
+  log "Downloading theme compiler: ${THEME_COMPILE_URL}"
+  curl -fL --connect-timeout 15 --max-time 60 "$THEME_COMPILE_URL" -o "$dest"
+  test -s "$dest" || die "Theme compiler download produced an empty file."
+}
+
+apply_theme_config() {
+  local host="$1"
+  local stamp="$2"
+  local theme_url=""
+  local tmp_json tmp_css tmp_py
+
+  if [[ "$THEME_RESET" == "1" ]]; then
+    if [[ "$DRY_RUN" == "1" ]]; then
+      log "DRY RUN: would remove ${THEME_CSS_ASSET}, ${THEME_JSON_ASSET}, ${THEME_JSON_STATE}"
+      return 0
+    fi
+    backup_file "$THEME_CSS_ASSET" "$stamp"
+    backup_file "$THEME_JSON_ASSET" "$stamp"
+    backup_file "$THEME_JSON_STATE" "$stamp"
+    rm -f "$THEME_CSS_ASSET" "$THEME_JSON_ASSET" "$THEME_JSON_STATE"
+    THEME_CHANGED=1
+    log "Meeting theme override removed; packaged SafeMeet default will be used"
+    return 0
+  fi
+
+  if theme_url="$(resolve_theme_config_url)"; then
+    :
+  elif [[ -f "$THEME_JSON_STATE" && ! -s "$THEME_CSS_ASSET" ]]; then
+    log "Rebuilding missing theme override from cached JSON"
+    theme_url=""
+  else
+    return 0
+  fi
+
+  if [[ "$DRY_RUN" == "1" ]]; then
+    if [[ -n "$theme_url" ]]; then
+      log "DRY RUN: would download theme JSON from ${theme_url}"
+    fi
+    log "DRY RUN: would compile theme override to ${THEME_CSS_ASSET}"
+    return 0
+  fi
+
+  command -v python3 >/dev/null 2>&1 || die "python3 is required to compile meeting themes."
+
+  mkdir -p "$STATE_DIR" "$ASSET_DIR"
+  backup_file "$THEME_CSS_ASSET" "$stamp"
+  backup_file "$THEME_JSON_ASSET" "$stamp"
+  backup_file "$THEME_JSON_STATE" "$stamp"
+
+  tmp_json="$(mktemp /tmp/safemeet-theme.XXXXXX.json)"
+  tmp_css="$(mktemp /tmp/safemeet-theme.XXXXXX.css)"
+  tmp_py="$(mktemp /tmp/safemeet-theme.XXXXXX.py)"
+  # shellcheck disable=SC2064
+  trap 'rm -f "'"$tmp_json"'" "'"$tmp_css"'" "'"$tmp_py"'"; trap - RETURN' RETURN
+
+  if [[ -n "$theme_url" ]]; then
+    download_asset "$theme_url" "$tmp_json" "theme JSON"
+  else
+    cp -a "$THEME_JSON_STATE" "$tmp_json"
+  fi
+
+  fetch_theme_compiler "$tmp_py"
+  chmod 0755 "$tmp_py"
+  python3 "$tmp_py" --validate-only "$tmp_json"
+  python3 "$tmp_py" "$tmp_json" -o "$tmp_css"
+  test -s "$tmp_css" || die "Theme compiler produced an empty CSS file."
+
+  install -m 0644 "$tmp_json" "$THEME_JSON_STATE"
+  install -m 0644 "$tmp_json" "$THEME_JSON_ASSET"
+  install -m 0644 "$tmp_css" "$THEME_CSS_ASSET"
+  THEME_CHANGED=1
+  log "Meeting theme override applied at https://${host}/safemeet/theme-override.css"
 }
 
 install_repo_key_and_pin() {
@@ -340,6 +466,7 @@ apply_safemeet_config() {
   if [[ "$DRY_RUN" == "1" ]]; then
     log "DRY RUN: would backup ${BBB_WEB_PROPS}, ${APT_LIST}, ${SAFE_APT_LIST}, and ${APT_PIN}"
     log "DRY RUN: would cache assets in ${ASSET_DIR}"
+    apply_theme_config "$host" "$stamp"
     return 0
   fi
 
@@ -383,6 +510,11 @@ apply_safemeet_config() {
     changed=1
   fi
 
+  apply_theme_config "$host" "$stamp"
+  if [[ "$THEME_CHANGED" == "1" ]]; then
+    changed=1
+  fi
+
   chown -R root:root "$ASSET_DIR"
   chmod -R a+rX "$ASSET_DIR"
   write_state "$host"
@@ -399,7 +531,7 @@ health_check() {
   [[ "$SKIP_HEALTH_CHECK" == "1" ]] && return 0
   [[ "$DRY_RUN" == "1" ]] && return 0
 
-  if [[ "$PACKAGES_UPGRADED" -eq 0 && -z "$DEFAULT_PDF_URL" && -z "$LOGO_URL" && -z "$DARK_LOGO_URL" ]]; then
+  if [[ "$PACKAGES_UPGRADED" -eq 0 && -z "$DEFAULT_PDF_URL" && -z "$LOGO_URL" && -z "$DARK_LOGO_URL" && -z "$THEME_CONFIG_URL" && -z "$THEME_ID" && "$THEME_RESET" != "1" && "$THEME_CHANGED" != "1" ]]; then
     log "No package or config changes applied; skipping health checks"
     return 0
   fi
@@ -419,6 +551,10 @@ health_check() {
     logo_path="$(grep -E '^defaultLogoURL=' "$BBB_WEB_PROPS" | tail -n 1 | cut -d= -f2-)"
     [[ -n "$logo_path" ]] && curl -fsSL "$logo_path" -o /dev/null \
       || die "Logo is not reachable at ${logo_path}"
+  fi
+  if [[ "$THEME_CHANGED" == "1" && "$THEME_RESET" != "1" ]]; then
+    curl -fsSL "https://${host}/safemeet/theme-override.css" -o /dev/null \
+      || die "Theme override is not reachable at https://${host}/safemeet/theme-override.css"
   fi
 }
 
@@ -445,6 +581,23 @@ parse_args() {
         ;;
       --dark-logo-url=*)
         DARK_LOGO_URL="${1#--dark-logo-url=}"
+        ;;
+      --theme-config-url)
+        shift
+        THEME_CONFIG_URL="${1:-}"
+        ;;
+      --theme-config-url=*)
+        THEME_CONFIG_URL="${1#--theme-config-url=}"
+        ;;
+      --theme-id)
+        shift
+        THEME_ID="${1:-}"
+        ;;
+      --theme-id=*)
+        THEME_ID="${1#--theme-id=}"
+        ;;
+      --theme-reset)
+        THEME_RESET=1
         ;;
       --config-only)
         CONFIG_ONLY=1
@@ -474,6 +627,13 @@ main() {
   [[ -n "$DEFAULT_PDF_URL" ]] && validate_url "$DEFAULT_PDF_URL" "--default-pdf-url"
   [[ -n "$LOGO_URL" ]] && validate_url "$LOGO_URL" "--logo-url"
   [[ -n "$DARK_LOGO_URL" ]] && validate_url "$DARK_LOGO_URL" "--dark-logo-url"
+  [[ -n "$THEME_CONFIG_URL" ]] && validate_url "$THEME_CONFIG_URL" "--theme-config-url"
+  if [[ -n "$THEME_CONFIG_URL" && -n "$THEME_ID" ]]; then
+    die "Use either --theme-config-url or --theme-id, not both."
+  fi
+  if [[ "$THEME_RESET" == "1" && ( -n "$THEME_CONFIG_URL" || -n "$THEME_ID" ) ]]; then
+    die "Do not combine --theme-reset with --theme-config-url/--theme-id."
+  fi
 
   local host stamp
   host="$(detect_host)"
@@ -481,6 +641,11 @@ main() {
 
   log "Target host: ${host}"
   log "SafeMeet repo: ${SAFE_REPO_URL}/jammy-300"
+  if [[ -n "$THEME_ID" ]]; then
+    log "Theme id: ${THEME_ID}"
+  elif [[ -n "$THEME_CONFIG_URL" ]]; then
+    log "Theme config: ${THEME_CONFIG_URL}"
+  fi
 
   if [[ "$CONFIG_ONLY" != "1" ]]; then
     if bbb_installed; then

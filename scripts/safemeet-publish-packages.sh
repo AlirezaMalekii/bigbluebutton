@@ -179,6 +179,15 @@ upload_files() {
       "${REPO_ROOT}/bbb-install-safemeet-3.0.sh" \
       "${REPO_USER}@${REPO_HOST}:${WEB_ROOT}/bbb-install-safemeet-3.0.sh"
     ssh_cmd "chmod 0644 '${WEB_ROOT}/bbb-install-safemeet-3.0.sh'"
+
+    log "Publishing meeting theme JSON packs and compiler"
+    ssh_cmd "install -d -m 0755 '${WEB_ROOT}/themes'"
+    rsync -az -e "$(rsync_rsh)" \
+      "${REPO_ROOT}/branding/themes/safemeet.json" \
+      "${REPO_ROOT}/branding/themes/roomeet.json" \
+      "${REPO_ROOT}/scripts/safemeet-theme-compile.py" \
+      "${REPO_USER}@${REPO_HOST}:${WEB_ROOT}/themes/"
+    ssh_cmd "chmod 0644 '${WEB_ROOT}/themes/'*.json '${WEB_ROOT}/themes/safemeet-theme-compile.py'"
   fi
 
   REMOTE_INCOMING="$remote_incoming"

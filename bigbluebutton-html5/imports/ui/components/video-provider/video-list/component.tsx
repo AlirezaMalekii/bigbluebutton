@@ -90,6 +90,8 @@ const findOptimalGrid = (
     rows,
     width: (cellWidth * columns) + gutterTotalWidth,
     height: (cellHeight * rows) + gutterTotalHeight,
+    cellWidth,
+    cellHeight,
     filledArea: (cellWidth * cellHeight) * numItems,
   };
 };
@@ -929,23 +931,36 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     const visibleCount = streams.filter(
       (item) => item.type === VIDEO_TYPES.GRID || !('render' in item) || item.render !== false,
     ).length;
+    // Prefer explicit cellHeight from mobile setOptimalGrid; fall back so a stale
+    // grid without cell metrics still scrolls instead of fitting everything in-dock.
+    const dockH = Math.max(1, cameraDock?.height || 0);
+    const dockW = Math.max(1, cameraDock?.width || 0);
+    const mobileColumns = 2;
+    const mobileRows = Math.max(1, Math.ceil(visibleCount / mobileColumns));
+    const mobileChrome = 4;
+    const mobileGutter = 4;
+    const fallbackCellHeight = Math.max(
+      1,
+      Math.floor((dockH - mobileChrome - mobileGutter) / 2),
+    );
+    const scrollCellHeight = optimalGrid.cellHeight || fallbackCellHeight;
+    const scrollListHeight = (scrollCellHeight * mobileRows)
+      + ((mobileRows - 1) * mobileGutter);
     // 2 cams fill the dock; 3+ use fixed row tracks so extra rows scroll inside the dock.
-    const mobilePairFill = fillMobileDock && visibleCount === 2 && Boolean(optimalGrid.cellHeight);
-    const mobileScrollGrid = fillMobileDock
-      && visibleCount > 2
-      && Boolean(optimalGrid.cellHeight);
+    const mobilePairFill = fillMobileDock && visibleCount === 2;
+    const mobileScrollGrid = fillMobileDock && visibleCount > 2 && dockH > 0 && dockW > 0;
 
     let listWidth = `${optimalGrid.width}px`;
     let listHeight = `${optimalGrid.height}px`;
     let listGridRows = `repeat(${optimalGrid.rows}, 1fr)`;
     if (mobileScrollGrid) {
       listWidth = '100%';
-      listHeight = `${optimalGrid.height}px`;
-      listGridRows = `repeat(${optimalGrid.rows}, ${optimalGrid.cellHeight}px)`;
+      listHeight = `${scrollListHeight}px`;
+      listGridRows = `repeat(${mobileRows}, ${scrollCellHeight}px)`;
     } else if (mobilePairFill) {
       listWidth = '100%';
       listHeight = '100%';
-      listGridRows = `${optimalGrid.cellHeight}px`;
+      listGridRows = `${optimalGrid.cellHeight || (dockH - mobileChrome)}px`;
     } else if (fillMobileDock) {
       listWidth = '100%';
       listHeight = '100%';
@@ -986,10 +1001,13 @@ class VideoList extends Component<VideoListProps, VideoListState> {
             style={{
               width: listWidth,
               height: listHeight,
-              gridTemplateColumns: `repeat(${optimalGrid.columns}, 1fr)`,
+              gridTemplateColumns: mobileScrollGrid
+                ? `repeat(${mobileColumns}, 1fr)`
+                : `repeat(${optimalGrid.columns}, 1fr)`,
               gridTemplateRows: listGridRows,
             }}
             className="video-provider_list"
+            data-skyroom-mobile-webcam-grid={mobileScrollGrid ? 'scroll' : undefined}
           >
             {this.renderVideoList()}
           </Styled.VideoList>

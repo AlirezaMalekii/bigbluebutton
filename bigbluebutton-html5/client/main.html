@@ -183,6 +183,29 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
       if (document.body) document.body.classList.add('lang-fa');
     });
     try { window.localStorage.setItem('skyroom-theme', 'dark'); } catch (e) {}
+
+    /* Optional per-server palette override written by bbb-install-safemeet
+       to /var/www/bigbluebutton-default/assets/safemeet/theme-override.css
+       and served at /safemeet/theme-override.css. Missing file = default theme. */
+    (function loadSafemeetThemeOverride() {
+      var href = '/safemeet/theme-override.css';
+      var apply = function () {
+        if (document.querySelector('link[data-safemeet-theme-override]')) return;
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.setAttribute('data-safemeet-theme-override', 'true');
+        link.crossOrigin = 'anonymous';
+        document.head.appendChild(link);
+      };
+      if (typeof fetch !== 'function') {
+        apply();
+        return;
+      }
+      fetch(href, { method: 'HEAD', cache: 'no-cache', credentials: 'same-origin' })
+        .then(function (res) { if (res && res.ok) apply(); })
+        .catch(function () { /* keep packaged SafeMeet default */ });
+    })();
   </script>
   
   <style>

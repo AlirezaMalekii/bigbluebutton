@@ -41,6 +41,11 @@ Core values currently include:
 - muted text: `#8B95A5`
 - danger base: `#DF2721`
 
+Install-time alternate palettes live in `branding/themes/*.json` and are applied
+per server through `bbb-install-safemeet-3.0.sh --theme-id` /
+`--theme-config-url` as a CSS variable override. Packaged defaults stay SafeMeet
+teal unless an override is present.
+
 Use semantic variables rather than these literals:
 
 - `--color-primary`, `--color-text`, `--color-heading`

@@ -1,0 +1,236 @@
+{
+  "schemaVersion": 1,
+  "id": "safemeet",
+  "name": "SafeMeet",
+  "description": "Default SafeMeet meeting palette — dark-first teal brand.",
+  "dark": {
+    "brand": {
+      "50": "#E9F8F6",
+      "100": "#D1F2EE",
+      "200": "#8CDDD6",
+      "300": "#3FC2B8",
+      "400": "#14A99E",
+      "500": "#0D887E",
+      "600": "#0A6F67",
+      "700": "#075952",
+      "accent": "#20C7BB",
+      "gradient": "linear-gradient(135deg, #0D887E 0%, #14A99E 100%)",
+      "gradientSoft": "linear-gradient(135deg, rgba(13, 136, 126, 0.18) 0%, rgba(20, 169, 158, 0.28) 100%)"
+    },
+    "status": {
+      "success": "#14A99E",
+      "danger": "#DF2721",
+      "dangerEnd": "#FF6A66",
+      "dangerSoft": "rgba(223, 39, 33, 0.16)",
+      "dangerBorder": "rgba(223, 39, 33, 0.38)",
+      "dangerGradient": "linear-gradient(135deg, #DF2721 0%, #FF6A66 100%)",
+      "warning": "#F5C451"
+    },
+    "surface": {
+      "background": "#0A1220",
+      "backgroundDeep": "#070B14",
+      "content": "#141c28",
+      "surface": "#151c28",
+      "surface2": "#0f141c",
+      "surface3": "#1a2436",
+      "offWhite": "#141E32",
+      "userList": "#121a28",
+      "dropdown": "#151c28",
+      "toolbarButton": "#121820",
+      "toolbarList": "#151c28",
+      "toolbarListFocus": "#1a2436",
+      "btnDefault": "#101D38",
+      "listHover": "#16264A",
+      "overlay": "rgba(3, 6, 12, 0.78)",
+      "loader": "#0A1220",
+      "webcam": "#050811",
+      "grayLightest": "#1A2742",
+      "grayLighter": "#243355",
+      "grayLight": "#6B7689"
+    },
+    "text": {
+      "primary": "#E6EDF7",
+      "secondary": "#B5C0CE",
+      "muted": "#8B95A5",
+      "body": "#C6D0DC",
+      "onBrand": "#FFFFFF",
+      "white": "#FFFFFF"
+    },
+    "accent": {
+      "soft": "rgba(32, 199, 187, 0.12)",
+      "border": "rgba(32, 199, 187, 0.36)",
+      "glow": "rgba(32, 199, 187, 0.10)",
+      "hoverBg": "rgba(32, 199, 187, 0.14)",
+      "activeBg": "linear-gradient(145deg, rgba(13, 136, 126, 0.88), rgba(10, 111, 103, 0.92))",
+      "btnPrimaryBorder": "rgba(20, 169, 158, 0.55)",
+      "ghostBg": "rgba(20, 169, 158, 0.12)",
+      "ghostBorder": "rgba(20, 169, 158, 0.28)",
+      "blueLightest": "rgba(20, 169, 158, 0.22)",
+      "webcamPlaceholderBorder": "rgba(20, 169, 158, 0.45)",
+      "webcamTalking": "rgba(20, 169, 158, 0.22)"
+    },
+    "border": {
+      "default": "rgba(20, 169, 158, 0.18)",
+      "strong": "rgba(20, 169, 158, 0.34)",
+      "subtle": "rgba(218, 230, 245, 0.08)",
+      "emphasis": "rgba(20, 169, 158, 0.14)"
+    },
+    "glass": {
+      "glass": "rgba(14, 24, 48, 0.62)",
+      "strong": "rgba(11, 20, 38, 0.88)",
+      "blur": "saturate(170%) blur(16px)"
+    },
+    "shadow": {
+      "glowSm": "0 0 0 1px rgba(20, 169, 158, 0.10)",
+      "glowMd": "0 6px 16px rgba(13, 136, 126, 0.18)"
+    },
+    "gradientBg": "radial-gradient(1100px 580px at 10% 0%, rgba(32, 199, 187, 0.16), transparent 56%), radial-gradient(980px 540px at 92% 100%, rgba(20, 169, 158, 0.12), transparent 58%), radial-gradient(720px 420px at 55% 45%, rgba(88, 120, 190, 0.07), transparent 62%), linear-gradient(180deg, #0E1830 0%, #0A1220 42%, #070B14 100%)",
+    "loader": {
+      "bullet": "#20C7BB",
+      "ring": "rgba(32, 199, 187, 0.18)",
+      "ringActive": "rgba(32, 199, 187, 0.85)"
+    },
+    "panel": {
+      "bg": "linear-gradient(180deg, rgba(8, 18, 32, 0.96), rgba(5, 14, 26, 0.98))",
+      "solid": "#0d1828",
+      "border": "rgba(32, 199, 187, 0.12)",
+      "divider": "rgba(255, 255, 255, 0.06)",
+      "header": "linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02))",
+      "text": "#eef4fb",
+      "textMuted": "rgba(210, 224, 238, 0.82)",
+      "textDim": "rgba(198, 208, 220, 0.62)",
+      "input": "rgba(5, 10, 18, 0.72)",
+      "accent": "#20C7BB",
+      "accent2": "rgba(32, 199, 187, 0.85)",
+      "accentSoft": "rgba(32, 199, 187, 0.14)",
+      "shadow": "0 4px 16px rgba(0, 0, 0, 0.32), 0 1px 4px rgba(0, 0, 0, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.04)",
+      "bubbleBg": "rgba(20, 30, 44, 0.84)",
+      "bubbleText": "#dfe9f5"
+    },
+    "modal": {
+      "surface": "#151c28",
+      "border": "rgba(20, 169, 158, 0.18)",
+      "text": "#E6EDF7",
+      "textMuted": "#8B95A5"
+    },
+    "skeleton": {
+      "base": "#1a2436",
+      "highlight": "rgba(32, 199, 187, 0.18)"
+    }
+  },
+  "light": {
+    "brand": {
+      "50": "#E9F8F6",
+      "100": "#D1F2EE",
+      "200": "#8CDDD6",
+      "300": "#3FC2B8",
+      "400": "#14A99E",
+      "500": "#0D887E",
+      "600": "#0A6F67",
+      "700": "#075952",
+      "accent": "#0D887E",
+      "gradient": "linear-gradient(135deg, #0D887E 0%, #14A99E 100%)",
+      "gradientSoft": "linear-gradient(135deg, rgba(13, 136, 126, 0.10) 0%, rgba(20, 169, 158, 0.18) 100%)"
+    },
+    "status": {
+      "success": "#0D887E",
+      "danger": "#DF2721",
+      "dangerEnd": "#FF6A66",
+      "dangerSoft": "rgba(223, 39, 33, 0.12)",
+      "dangerBorder": "rgba(223, 39, 33, 0.32)",
+      "dangerGradient": "linear-gradient(135deg, #DF2721 0%, #FF6A66 100%)",
+      "warning": "#D97706"
+    },
+    "surface": {
+      "background": "#EEF2F7",
+      "backgroundDeep": "#E8EEF5",
+      "content": "#FFFFFF",
+      "surface": "#FFFFFF",
+      "surface2": "#F4F7FA",
+      "surface3": "#E9EEF5",
+      "offWhite": "#EEF2F7",
+      "userList": "#FFFFFF",
+      "dropdown": "#FFFFFF",
+      "toolbarButton": "#FFFFFF",
+      "toolbarList": "#F4F7FA",
+      "toolbarListFocus": "#E9F8F6",
+      "btnDefault": "#FFFFFF",
+      "listHover": "#E9F8F6",
+      "overlay": "rgba(7, 11, 20, 0.55)",
+      "loader": "#EEF2F7",
+      "webcam": "#0B1220",
+      "grayLightest": "#E3E8EE",
+      "grayLighter": "#CDD5DF",
+      "grayLight": "#94A3B8"
+    },
+    "text": {
+      "primary": "#0B1220",
+      "secondary": "#4E5A66",
+      "muted": "#6B7689",
+      "body": "#1F2A37",
+      "onBrand": "#FFFFFF",
+      "white": "#FFFFFF"
+    },
+    "accent": {
+      "soft": "rgba(13, 136, 126, 0.10)",
+      "border": "rgba(13, 136, 126, 0.28)",
+      "glow": "rgba(13, 136, 126, 0.08)",
+      "hoverBg": "rgba(13, 136, 126, 0.12)",
+      "activeBg": "linear-gradient(145deg, rgba(13, 136, 126, 0.92), rgba(10, 111, 103, 0.94))",
+      "btnPrimaryBorder": "rgba(13, 136, 126, 0.5)",
+      "ghostBg": "rgba(13, 136, 126, 0.08)",
+      "ghostBorder": "rgba(13, 136, 126, 0.22)",
+      "blueLightest": "rgba(13, 136, 126, 0.16)",
+      "webcamPlaceholderBorder": "rgba(13, 136, 126, 0.45)",
+      "webcamTalking": "rgba(13, 136, 126, 0.18)"
+    },
+    "border": {
+      "default": "rgba(13, 136, 126, 0.16)",
+      "strong": "rgba(13, 136, 126, 0.28)",
+      "subtle": "rgba(11, 18, 32, 0.08)",
+      "emphasis": "rgba(13, 136, 126, 0.14)"
+    },
+    "glass": {
+      "glass": "rgba(255, 255, 255, 0.72)",
+      "strong": "rgba(255, 255, 255, 0.92)",
+      "blur": "saturate(180%) blur(14px)"
+    },
+    "shadow": {
+      "glowSm": "0 0 0 1px rgba(13, 136, 126, 0.10)",
+      "glowMd": "0 6px 16px rgba(13, 136, 126, 0.14)"
+    },
+    "gradientBg": "radial-gradient(1100px 560px at 8% 0%, rgba(13, 136, 126, 0.09), transparent 58%), radial-gradient(900px 520px at 100% 100%, rgba(20, 169, 158, 0.07), transparent 55%), radial-gradient(700px 420px at 50% 40%, rgba(120, 140, 180, 0.05), transparent 60%), linear-gradient(180deg, #F3F6FA 0%, #EEF2F7 55%, #E8EEF5 100%)",
+    "loader": {
+      "bullet": "#0D887E",
+      "ring": "rgba(13, 136, 126, 0.18)",
+      "ringActive": "rgba(13, 136, 126, 0.85)"
+    },
+    "panel": {
+      "bg": "linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 247, 250, 0.98))",
+      "solid": "#FFFFFF",
+      "border": "rgba(13, 136, 126, 0.14)",
+      "divider": "rgba(11, 18, 32, 0.08)",
+      "header": "linear-gradient(180deg, rgba(13, 136, 126, 0.06), rgba(13, 136, 126, 0.02))",
+      "text": "#0B1220",
+      "textMuted": "rgba(78, 90, 102, 0.92)",
+      "textDim": "rgba(107, 118, 137, 0.78)",
+      "input": "rgba(238, 242, 247, 0.92)",
+      "accent": "#0D887E",
+      "accent2": "rgba(13, 136, 126, 0.85)",
+      "accentSoft": "rgba(13, 136, 126, 0.12)",
+      "shadow": "0 8px 24px rgba(11, 18, 32, 0.08), 0 2px 6px rgba(11, 18, 32, 0.04)",
+      "bubbleBg": "rgba(233, 248, 246, 0.92)",
+      "bubbleText": "#1F2A37"
+    },
+    "modal": {
+      "surface": "#FFFFFF",
+      "border": "rgba(13, 136, 126, 0.16)",
+      "text": "#0B1220",
+      "textMuted": "#6B7689"
+    },
+    "skeleton": {
+      "base": "#E9EEF5",
+      "highlight": "rgba(13, 136, 126, 0.14)"
+    }
+  }
+}

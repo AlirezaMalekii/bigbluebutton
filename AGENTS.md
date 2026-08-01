@@ -16,6 +16,7 @@ This repository is the SafeMeet fork of BigBlueButton 3.x. Keep BBB as the realt
 - Design system: `docs/safemeet/meeting-ui-design-system.md`
 - Architecture map: `docs/safemeet/meeting-ui-architecture.md`
 - Quality checklist: `docs/safemeet/meeting-ui-quality-checklist.md`
+- Meeting theme packs (install-time JSON): `branding/themes/`
 
 Use project skills under `.cursor/skills/` for deep feature planning, UI implementation, realtime tracing, verification, and upstream-impact review. Short Persian product requests should still be investigated and converted into complete interaction, responsive, permission, accessibility, and verification requirements.
 
