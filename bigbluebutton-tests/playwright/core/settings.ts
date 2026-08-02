@@ -6,6 +6,7 @@ export interface Settings {
   directLeaveButton?: boolean;
   // Audio
   autoJoinAudioModal?: boolean;
+  silentAudioJoin?: boolean;
   listenOnlyMode?: boolean;
   forceListenOnly?: boolean;
   skipEchoTest?: boolean;
@@ -60,6 +61,7 @@ export async function generateSettingsData(page: Page): Promise<Settings | undef
       directLeaveButton: settingsData.app?.defaultSettings?.application?.directLeaveButton,
       // Audio
       autoJoinAudioModal: settingsData.app?.autoJoin,
+      silentAudioJoin: settingsData.app?.silentAudioJoin,
       listenOnlyMode: settingsData.app?.listenOnlyMode,
       forceListenOnly: settingsData.app?.forceListenOnly,
       skipEchoTest: settingsData.app?.skipCheck,

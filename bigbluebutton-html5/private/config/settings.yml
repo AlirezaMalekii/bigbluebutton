@@ -7,7 +7,8 @@ public:
     # audio
     autoJoin: true
     # Join audio automatically without showing the mic/listen-only choice modal.
-    # Attendees join as listen-only; moderators join with a muted microphone.
+    # All participants, including moderators, join as listen-only. The existing
+    # microphone setup flow remains available from the audio control.
     silentAudioJoin: true
     # Set to false disables the listen only option in audio modal.
     listenOnlyMode: true

@@ -120,6 +120,7 @@ const AudioContainer = (props) => {
   const KURENTO_CONFIG = window.meetingClientSettings.public.kurento;
 
   const autoJoin = getFromUserSettings('bbb_auto_join_audio', APP_CONFIG.autoJoin);
+  const silentAudioJoin = getFromUserSettings('bbb_silent_audio_join', APP_CONFIG.silentAudioJoin);
   const enableVideo = getFromUserSettings('bbb_enable_video', KURENTO_CONFIG.enableVideo);
   const autoShareWebcam = getFromUserSettings('bbb_auto_share_webcam', KURENTO_CONFIG.autoShareWebcam);
   const { userWebcam } = userLocks;
@@ -196,6 +197,32 @@ const AudioContainer = (props) => {
       }
       return Promise.resolve(false);
     }
+
+    if (silentAudioJoin) {
+      didMountAutoJoin = true;
+
+      if (!currentUserHasVoice && !Service.isUsingAudio()) {
+        joinListenOnly()
+          .then(() => {
+            // Browsers may still require a user gesture before playing remote
+            // audio. Show only the existing autoplay prompt in that case.
+            if (Service.autoplayBlocked()) {
+              Session.setItem('audioModalIsOpen', true);
+              openAudioModal();
+            }
+          })
+          .catch(() => {
+            notify(intl.formatMessage(intlMessages.genericError), 'error', 'no_audio');
+          });
+      }
+
+      if (enableVideo && autoShareWebcam) {
+        openVideoPreviewModal();
+      }
+
+      return Promise.resolve(true);
+    }
+
     Session.setItem('audioModalIsOpen', true);
     if (enableVideo && autoShareWebcam) {
       if (!currentUserHasVoice) {
@@ -305,6 +332,7 @@ const AudioContainer = (props) => {
             priority: 'high',
             setIsOpen: audioModal.isOpen ? audioModal.close : audioModal.open,
             isOpen: audioModal.isOpen,
+            content: silentAudioJoin ? 'autoplayBlocked' : undefined,
           }}
         />
       ) : null}

@@ -137,9 +137,21 @@ export class Page {
     if (shouldCheckAllInitialSteps !== undefined ? shouldCheckAllInitialSteps : true) {
       if (!shouldAvoidLayoutCheck) await this.waitForSelector('div#layout', ELEMENT_WAIT_EXTRA_LONG_TIME);
       this.settings = await generateSettingsData(this.page);
-      const { autoJoinAudioModal } = this.settings || {};
+      const { autoJoinAudioModal, silentAudioJoin } = this.settings || {};
       if (isRecording && !isModerator) await this.closeRecordingModal();
-      if (shouldCloseAudioModal && autoJoinAudioModal) await this.closeAudioModal();
+      if (shouldCloseAudioModal && autoJoinAudioModal) {
+        if (silentAudioJoin) {
+          await this.wasRemoved(e.audioModal, 'should not display the audio choice modal during silent audio join');
+          await this.hasElement(
+            e.audioDropdownMenu,
+            'should join audio automatically in listen-only mode',
+            ELEMENT_WAIT_EXTRA_LONG_TIME,
+          );
+          await this.leaveAudio();
+        } else {
+          await this.closeAudioModal();
+        }
+      }
     }
     // overwrite for font used in CI
     await this.page.addStyleTag({
