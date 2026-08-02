@@ -557,6 +557,52 @@ html[data-skyroom="true"] #reactions-dropdown-menu .MuiBackdrop-root {
   pointer-events: auto !important;
 }
 
+/*
+ * Audio device selector (BBBMenu is portaled next to #layout).
+ * Keep the open surface above stage/whiteboard layers and let MUI's backdrop
+ * receive outside clicks so its existing onClose handler can dismiss the menu.
+ */
+html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]),
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) {
+  z-index: 2600 !important;
+  pointer-events: auto !important;
+}
+
+html[data-skyroom="true"] #audio-selector-dropdown-menu[aria-hidden="true"],
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu[aria-hidden="true"] {
+  pointer-events: none !important;
+}
+
+html[data-skyroom="true"] #audio-selector-dropdown-menu .MuiBackdrop-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .MuiBackdrop-root {
+  background-color: transparent !important;
+  pointer-events: auto !important;
+}
+
+html[data-skyroom="true"] #audio-selector-dropdown-menu .MuiPaper-root,
+html[data-skyroom="true"] #audio-selector-dropdown-menu .override-mobile-styles,
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .MuiPaper-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .override-mobile-styles {
+  z-index: 2601 !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+html[data-skyroom="true"] #audio-selector-dropdown-menu .MuiList-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .MuiList-root {
+  display: block !important;
+  width: 100% !important;
+  pointer-events: auto !important;
+}
+
+html[data-skyroom="true"] #audio-selector-dropdown-menu .MuiMenuItem-root,
+html[data-skyroom="true"] #audio-selector-dropdown-menu [data-key^="menuItem-"],
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .MuiMenuItem-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu [data-key^="menuItem-"] {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+}
+
 #layout[data-skyroom-column="true"] #ActionsBar [data-test="reactionsButton"] > span:first-child > span {
   display: inline-grid !important;
   place-items: center !important;

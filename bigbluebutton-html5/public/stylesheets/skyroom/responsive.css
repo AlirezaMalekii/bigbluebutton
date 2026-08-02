@@ -2313,12 +2313,54 @@
     pointer-events: auto !important;
   }
 
+  /*
+   * Audio selector — the speaker button is the BBBMenu trigger on touch
+   * devices. Its Modal root is portaled beside #layout, so it must be raised
+   * here (the last-loaded stylesheet), not only through in-layout selectors.
+   */
+  html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]),
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) {
+    z-index: 2600 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  html[data-skyroom="true"] #audio-selector-dropdown-menu[aria-hidden="true"],
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu[aria-hidden="true"] {
+    pointer-events: none !important;
+  }
+
+  html[data-skyroom="true"] #audio-selector-dropdown-menu .MuiBackdrop-root,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .MuiBackdrop-root {
+    background-color: transparent !important;
+    pointer-events: auto !important;
+  }
+
+  html[data-skyroom="true"] #audio-selector-dropdown-menu .override-mobile-styles,
+  html[data-skyroom="true"] #audio-selector-dropdown-menu .MuiPaper-root.override-mobile-styles,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .override-mobile-styles,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .MuiPaper-root.override-mobile-styles,
   html[data-skyroom="true"] .MuiModal-root:has(.skyroom-audio-settings-menu) .override-mobile-styles,
   html[data-skyroom="true"] .MuiModal-root:has(.skyroom-audio-settings-menu) .MuiPaper-root.override-mobile-styles {
+    z-index: 2601 !important;
+    width: auto !important;
     max-width: min(320px, 94vw) !important;
     max-height: min(72dvh, 480px) !important;
     overflow-y: auto !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
     -webkit-overflow-scrolling: touch;
+  }
+
+  html[data-skyroom="true"] #audio-selector-dropdown-menu .MuiList-root,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .MuiList-root,
+  html[data-skyroom="true"] #audio-selector-dropdown-menu .MuiMenuItem-root,
+  html[data-skyroom="true"] #audio-selector-dropdown-menu [data-key^="menuItem-"],
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .MuiMenuItem-root,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu [data-key^="menuItem-"] {
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
   }
 
   /* Webcam tile menu — anchored drop-up; must remain fully interactive on touch */

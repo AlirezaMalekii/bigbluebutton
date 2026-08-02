@@ -287,6 +287,13 @@ const TldrawV2GlobalStyle = createGlobalStyle`
       opacity: 1 !important;
     }
 
+    ${isSkyroomMobile ? `
+    /* Match desktop: tools without editable styles do not keep an empty style control. */
+    .tlui-toolbar__inner > .tlui-toolbar__tools:has(button[data-testid="mobile.styles"]:disabled) {
+      display: none !important;
+    }
+    ` : ''}
+
     #whiteboard-element .tlui-popover__content[data-state="open"],
     #whiteboard-element .tlui-menu[data-state="open"],
     #whiteboard-element [role="dialog"][data-state="open"] {

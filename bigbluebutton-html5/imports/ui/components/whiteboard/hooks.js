@@ -543,10 +543,10 @@ const clearSkyroomMobileStylePanelAnchors = () => {
 /* eslint-enable no-param-reassign */
 
 /**
- * tldraw ToolbarButton selects on touchstart and calls preventDefault to block the
- * following synthetic click. React's passive touch listeners make that a no-op, so
- * after styles show/hide shifts the bar, the click can hit a different tool.
- * Swallow that click when touch already handled the tool button.
+ * tldraw ToolbarButton selects on both touchstart and click. Its touchstart handler
+ * also calls preventDefault from React's passive listener, which warns and cannot
+ * suppress the click. Keep touch interactions on the standard click path so every
+ * toolbar action runs once; mouse and keyboard behavior remain unchanged.
  */
 const useSkyroomToolbarTouchFix = (enabled) => {
   React.useEffect(() => {
@@ -555,8 +555,6 @@ const useSkyroomToolbarTouchFix = (enabled) => {
     const root = document.getElementById('whiteboard-element');
     if (!root) return undefined;
 
-    const swallowers = new WeakMap();
-
     const onTouchStart = (event) => {
       const { target } = event;
       if (!(target instanceof Element)) return;
@@ -564,30 +562,7 @@ const useSkyroomToolbarTouchFix = (enabled) => {
         '.tlui-toolbar button[data-testid^="tools."], .tlui-toolbar button[data-testid="mobile.styles"]',
       );
       if (!button || !root.contains(button)) return;
-
-      const prev = swallowers.get(button);
-      if (prev) {
-        button.removeEventListener('click', prev, true);
-        clearTimeout(prev.timeoutId);
-      }
-
-      const swallowClick = (clickEvent) => {
-        clickEvent.preventDefault();
-        clickEvent.stopPropagation();
-        if (typeof clickEvent.stopImmediatePropagation === 'function') {
-          clickEvent.stopImmediatePropagation();
-        }
-        button.removeEventListener('click', swallowClick, true);
-        swallowers.delete(button);
-      };
-
-      swallowClick.timeoutId = window.setTimeout(() => {
-        button.removeEventListener('click', swallowClick, true);
-        swallowers.delete(button);
-      }, 450);
-
-      swallowers.set(button, swallowClick);
-      button.addEventListener('click', swallowClick, true);
+      event.stopPropagation();
     };
 
     root.addEventListener('touchstart', onTouchStart, { capture: true, passive: true });

@@ -1,4 +1,5 @@
 import type { Browser, BrowserContext, Page, TestInfo } from '@playwright/test';
+import { devices, expect } from '@playwright/test';
 
 import { elements as e } from '../core/elements';
 import { test } from '../core/setup/fixtures';
@@ -8,6 +9,8 @@ import { ShapeOptions } from './shapeOptions';
 import { ShapeTools } from './shapeTools';
 import { TextShape } from './textShape';
 import { WhiteboardResize } from './whiteboardResize';
+
+const iPhone11 = devices['iPhone 11'];
 
 async function runResizeTest(
   method: 'cameraResync' | 'cameraResyncVisual' | 'cameraResyncZoomedVisual' | 'cameraResyncAfterMinimizeRestore',
@@ -186,11 +189,65 @@ test.describe.parallel('Whiteboard tools', { tag: '@ci' }, () => {
     await runResizeTest('cameraResyncVisual', browser, context, page, testInfo);
   });
 
-  test('Camera re-sync visual regression after resize with canvas zoom', async ({ browser, context, page }, testInfo) => {
+  test('Camera re-sync visual regression after resize with canvas zoom', async ({
+    browser,
+    context,
+    page,
+  }, testInfo) => {
     await runResizeTest('cameraResyncZoomedVisual', browser, context, page, testInfo);
   });
 
-  test('Camera zoom is preserved after minimizing and restoring the presentation', async ({ browser, context, page }, testInfo) => {
+  test('Camera zoom is preserved after minimizing and restoring the presentation', async ({
+    browser,
+    context,
+    page,
+  }, testInfo) => {
     await runResizeTest('cameraResyncAfterMinimizeRestore', browser, context, page, testInfo);
+  });
+});
+
+test.describe('Mobile whiteboard toolbar', { tag: '@ci' }, () => {
+  test.beforeEach(({ browserName }) => {
+    test.skip(browserName === 'firefox', 'Touchscreen emulation is not available in Firefox');
+  });
+
+  test('selects hand and eraser and opens styles without passive-event errors', async ({ browser }, testInfo) => {
+    const context = await browser.newContext({ ...iPhone11 });
+    const page = await context.newPage();
+    const tools = new ShapeTools(browser, context);
+    const passiveEventErrors: string[] = [];
+
+    page.on('console', (message) => {
+      if (message.text().includes('Unable to preventDefault inside passive event listener invocation')) {
+        passiveEventErrors.push(message.text());
+      }
+    });
+
+    await tools.initModPage(page, { testInfo });
+    const hand = page.locator(e.wbHandButton);
+    const eraser = page.locator(e.wbEraser);
+    const draw = page.locator(e.wbPencilShape);
+    const styles = page.locator(e.whiteboardStyles);
+    const stylePanel = page.locator('.tlui-style-panel[data-ismobile="true"]');
+
+    await expect(styles).toBeVisible();
+    passiveEventErrors.length = 0;
+
+    await styles.tap();
+    await expect(stylePanel).toBeVisible();
+    await page.keyboard.press('Escape');
+
+    await eraser.tap();
+    await expect(eraser).toHaveAttribute('data-state', 'selected');
+    await expect(styles).toBeHidden();
+
+    await draw.tap();
+    await expect(draw).toHaveAttribute('data-state', 'selected');
+    await expect(styles).toBeVisible();
+
+    await hand.tap();
+    await expect(hand).toHaveAttribute('data-state', 'selected');
+    await expect(styles).toBeHidden();
+    expect(passiveEventErrors).toEqual([]);
   });
 });

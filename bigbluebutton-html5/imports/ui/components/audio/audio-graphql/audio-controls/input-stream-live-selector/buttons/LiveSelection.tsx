@@ -330,6 +330,9 @@ export const LiveSelection: React.FC<LiveSelectionProps> = ({
   const customStyles = { top: '-1rem' };
   const { isMobile } = deviceInfo;
   const noInputDevice = inputDeviceId === 'listen-only';
+  // Transparent listen-only exposes two distinct actions: configure/unmute the
+  // microphone and leave the active speaker connection.
+  const showSeparateMuteToggle = shouldTreatAsMicrophone() && (isMobile || listenOnly);
   const isRTL = typeof document !== 'undefined'
     && document.documentElement.getAttribute('dir') === 'rtl';
 
@@ -344,7 +347,7 @@ export const LiveSelection: React.FC<LiveSelectionProps> = ({
           aria-hidden="true"
         />
       ) : null}
-      {(shouldTreatAsMicrophone() && isMobile) && (
+      {showSeparateMuteToggle && (
         <MuteToggle
           talking={talking}
           muted={muted}
@@ -361,7 +364,7 @@ export const LiveSelection: React.FC<LiveSelectionProps> = ({
         overrideMobileStyles
         trigger={(
           <>
-            {shouldTreatAsMicrophone() && !isMobile
+            {shouldTreatAsMicrophone() && !isMobile && !listenOnly
               ? (
                 <MuteToggle
                   talking={talking}

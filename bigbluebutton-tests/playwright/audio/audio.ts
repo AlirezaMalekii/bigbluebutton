@@ -24,6 +24,15 @@ export class Audio extends MultiUsers {
       'should display the unmute button when user joins successfully in listen only mode',
       listenOnlyCallTimeout || ELEMENT_WAIT_LONGER_TIME,
     );
+    await this.modPage.hasElement(
+      e.leaveListenOnly,
+      'should display the speaker button when user joins successfully in listen only mode',
+    );
+    await this.modPage.waitAndClick(e.audioDropdownMenu);
+    const audioDeviceMenu = this.modPage.page.locator('#audio-selector-dropdown-menu');
+    await expect(audioDeviceMenu).toBeVisible();
+    await audioDeviceMenu.locator('.MuiBackdrop-root').click({ position: { x: 1, y: 1 } });
+    await expect(audioDeviceMenu).toHaveAttribute('aria-hidden', 'true');
     await this.modPage.waitAndClick(e.unmuteMicButton);
     await this.modPage.hasElement(
       e.audioModal,
