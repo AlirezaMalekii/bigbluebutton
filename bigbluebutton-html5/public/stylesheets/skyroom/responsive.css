@@ -2330,37 +2330,76 @@
     pointer-events: none !important;
   }
 
-  html[data-skyroom="true"] #audio-selector-dropdown-menu .MuiBackdrop-root,
-  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .MuiBackdrop-root {
+  html[data-skyroom="true"] #audio-selector-dropdown-menu[aria-hidden="true"] .MuiBackdrop-root,
+  html[data-skyroom="true"] #audio-selector-dropdown-menu[aria-hidden="true"] .MuiPaper-root,
+  html[data-skyroom="true"] #audio-selector-dropdown-menu[aria-hidden="true"] .override-mobile-styles,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu[aria-hidden="true"] .MuiBackdrop-root,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu[aria-hidden="true"] .MuiPaper-root,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu[aria-hidden="true"] .override-mobile-styles {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) .MuiBackdrop-root,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) .MuiBackdrop-root {
     background-color: transparent !important;
     pointer-events: auto !important;
   }
 
-  html[data-skyroom="true"] #audio-selector-dropdown-menu .override-mobile-styles,
-  html[data-skyroom="true"] #audio-selector-dropdown-menu .MuiPaper-root.override-mobile-styles,
-  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .override-mobile-styles,
-  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .MuiPaper-root.override-mobile-styles,
-  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-audio-settings-menu) .override-mobile-styles,
-  html[data-skyroom="true"] .MuiModal-root:has(.skyroom-audio-settings-menu) .MuiPaper-root.override-mobile-styles {
+  html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) .override-mobile-styles,
+  html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) .MuiPaper-root.override-mobile-styles,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) .override-mobile-styles,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) .MuiPaper-root.override-mobile-styles,
+  html[data-skyroom="true"] .MuiModal-root:not([aria-hidden="true"]):has(.skyroom-audio-settings-menu) .override-mobile-styles,
+  html[data-skyroom="true"] .MuiModal-root:not([aria-hidden="true"]):has(.skyroom-audio-settings-menu) .MuiPaper-root.override-mobile-styles {
     z-index: 2601 !important;
-    width: auto !important;
-    max-width: min(320px, 94vw) !important;
-    max-height: min(72dvh, 480px) !important;
-    overflow-y: auto !important;
+    width: min(360px, calc(100vw - 16px)) !important;
+    max-width: min(360px, calc(100vw - 16px)) !important;
+    max-height: none !important;
+    height: auto !important;
+    padding: 6px !important;
+    overflow: visible !important;
     opacity: 1 !important;
     visibility: visible !important;
     pointer-events: auto !important;
-    -webkit-overflow-scrolling: touch;
   }
 
-  html[data-skyroom="true"] #audio-selector-dropdown-menu .MuiList-root,
-  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .MuiList-root,
-  html[data-skyroom="true"] #audio-selector-dropdown-menu .MuiMenuItem-root,
-  html[data-skyroom="true"] #audio-selector-dropdown-menu [data-key^="menuItem-"],
-  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .MuiMenuItem-root,
-  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu [data-key^="menuItem-"] {
+  html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) .MuiList-root,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) .MuiList-root {
+    display: block !important;
+    width: 100% !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    scrollbar-width: none;
+    pointer-events: auto !important;
+  }
+
+  html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) .MuiList-root::-webkit-scrollbar,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) .MuiList-root::-webkit-scrollbar {
+    display: none;
+  }
+
+  html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) .MuiMenuItem-root,
+  html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) [data-key^="menuItem-"],
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) .MuiMenuItem-root,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) [data-key^="menuItem-"] {
+    width: 100% !important;
+    min-height: 36px !important;
+    margin: 1px 0 !important;
+    padding: 7px 10px !important;
     pointer-events: auto !important;
     touch-action: manipulation !important;
+  }
+
+  html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) .MuiMenuItem-root.Mui-disabled,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) .MuiMenuItem-root.Mui-disabled {
+    opacity: 1 !important;
+  }
+
+  html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) .MuiDivider-root,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) .MuiDivider-root {
+    margin-block: 5px !important;
   }
 
   /* Webcam tile menu — anchored drop-up; must remain fully interactive on touch */
@@ -2950,10 +2989,11 @@
     flex-direction: row !important;
     align-items: center !important;
     gap: 1px !important;
-    padding: 2px 4px !important;
+    /* Extra inline padding so the first/last tool (styles swatch) clears the radius. */
+    padding: 2px 6px !important;
     height: auto !important;
     min-height: 0 !important;
-    max-width: min(100%, calc(100vw - 32px)) !important;
+    max-width: min(100%, calc(100vw - 24px)) !important;
     overflow-x: auto !important;
     overflow-y: visible !important;
     -webkit-overflow-scrolling: touch;
@@ -2969,13 +3009,22 @@
     opacity: 1 !important;
   }
 
+  /* Styles shell is a single control — never scroll-clip the color swatch. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools:has(> button[data-testid="mobile.styles"]),
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools:has(button[data-testid="mobile.styles"]):not(:has(button[data-testid^="tools."])) {
+    overflow: visible !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
+    padding: 2px 4px !important;
+  }
+
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools::-webkit-scrollbar {
     display: none;
   }
 
   /* Override upstream mobile tool size that clips icons. */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__mobile .tlui-button__tool,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-layout__mobile .tlui-button__tool:not([data-testid="mobile.styles"]),
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-button__tool:not([data-testid="mobile.styles"]) {
     width: var(--skyroom-wb-tool-size, 16px) !important;
     height: var(--skyroom-wb-tool-size, 16px) !important;
     min-width: var(--skyroom-wb-tool-size, 16px) !important;
@@ -3010,19 +3059,35 @@
     inset: 0 !important;
   }
 
+  /*
+   * Styles trigger shows a dual-tone color swatch (+ caret). Forcing 16×16
+   * crushed that glyph; parent overflow-x then clipped the leftover. Give it
+   * enough width and never clip its contents.
+   */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element button[data-testid="mobile.styles"] {
-    width: var(--skyroom-wb-tool-size, 16px) !important;
+    width: auto !important;
+    min-width: 28px !important;
+    max-width: none !important;
     height: var(--skyroom-wb-tool-size, 16px) !important;
-    min-width: var(--skyroom-wb-tool-size, 16px) !important;
     min-height: var(--skyroom-wb-tool-size, 16px) !important;
     border-radius: 5px !important;
     flex: 0 0 auto !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
+    gap: 2px !important;
     overflow: visible !important;
-    padding: 0 !important;
+    padding: 0 4px !important;
+    box-sizing: border-box !important;
     color: #e8edf4 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element button[data-testid="mobile.styles"] .tlui-icon,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element button[data-testid="mobile.styles"] svg,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element button[data-testid="mobile.styles"] > div {
+    flex: 0 0 auto !important;
+    overflow: visible !important;
+    max-width: none !important;
   }
 
   /* Top-left: undo/redo — grid column 1, compact (same size/baseline as right chips). */

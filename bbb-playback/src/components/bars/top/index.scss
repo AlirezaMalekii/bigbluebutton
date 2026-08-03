@@ -13,7 +13,9 @@
     var(--top-bar-background-color);
   color: var(--top-bar-color);
   box-sizing: border-box;
-  display: flex;
+  direction: ltr;
+  display: grid;
+  grid-template-columns: minmax(9rem, 1fr) minmax(0, 36rem) minmax(9rem, 1fr);
   grid-area: top-bar;
   overflow: hidden;
   padding: 0 $padding-small;
@@ -30,26 +32,35 @@
   .left,
   .right {
     display: flex;
-    width: 50%;
+    width: auto;
   }
 
   .left {
+    grid-column: 3;
+    grid-row: 1;
     flex-shrink: 0;
-    justify-content: flex-start;
+    justify-content: flex-end;
+    justify-self: end;
   }
 
   .center {
     display: grid;
-    flex: 1;
+    grid-column: 2;
+    grid-row: 1;
     justify-content: center;
+    justify-self: stretch;
     min-width: 0;
-    width: auto;
+    width: 100%;
   }
 
   .right {
+    direction: rtl;
+    grid-column: 1;
+    grid-row: 1;
     flex-shrink: 0;
     gap: $margin-extra-small;
-    justify-content: flex-end;
+    justify-content: flex-start;
+    justify-self: start;
 
     .button-wrapper {
       flex-shrink: 0;
@@ -86,63 +97,38 @@
   }
 }
 
-@media (min-width: $media-min-width) {
+@media (max-width: calc(#{$media-min-width} - 1px)) {
   .top-bar {
-    align-items: center;
-    display: grid;
-    gap: $margin;
-    /* Column 2 reserves space above the side section so controls sit next to it.
-       Inherits document direction so RTL keeps gutter + controls beside the left sidebar. */
-    grid-template-columns: minmax(0, 1fr) $section-width;
-    padding-inline: $padding-small;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 48px 40px;
+    padding: $padding-extra-small $padding-small;
 
     .left,
     .right {
-      grid-column: 1;
       grid-row: 1;
-      padding: $padding-small;
-      width: auto;
+      padding-block: $padding-extra-small;
     }
 
     .left {
-      justify-self: start;
-      z-index: 1;
+      grid-column: 2;
+      justify-self: end;
     }
 
     .center {
       grid-column: 1 / -1;
-      grid-row: 1;
-      justify-self: center;
-      max-width: min(100%, 36rem);
-      padding: $padding-small;
-      pointer-events: none;
-      width: auto;
-      z-index: 0;
-
-      .title,
-      .interactive {
-        pointer-events: auto;
-      }
+      grid-row: 2;
+      padding: 0 $padding-small;
     }
 
     .right {
-      justify-self: end;
-      z-index: 1;
-    }
-  }
-
-  .player-wrapper.hidden-section .top-bar {
-    gap: 0;
-    grid-template-columns: minmax(0, 1fr) 0;
-  }
-
-  @media (max-height: $media-max-height) {
-    .top-bar {
-      grid-template-columns: minmax(0, 1fr) $section-width-small;
+      grid-column: 1;
+      justify-self: start;
     }
 
-    .player-wrapper.hidden-section .top-bar {
-      grid-template-columns: minmax(0, 1fr) 0;
+    .title {
+      font-size: .82rem;
+      line-height: 1.4;
+      padding: 0;
     }
   }
 }

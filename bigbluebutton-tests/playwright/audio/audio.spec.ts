@@ -1,6 +1,5 @@
 import { devices, expect } from '@playwright/test';
 
-import { ELEMENT_WAIT_LONGER_TIME } from '../core/constants';
 import { elements as e } from '../core/elements';
 import { initializePages } from '../core/helpers';
 import { test } from '../core/setup/fixtures';
@@ -58,26 +57,26 @@ test.describe('Mobile audio', { tag: '@ci' }, () => {
     test.skip(browserName === 'firefox', 'Touchscreen emulation is not available in Firefox');
   });
 
-  test('opens the speaker device menu above mobile meeting layers', async ({ browser }, testInfo) => {
+  test('joins silently and keeps the speaker device menu correctly layered', async ({ browser }, testInfo) => {
     const context = await browser.newContext({ ...iPhone11 });
     const page = await context.newPage();
     const mobileAudio = new Audio(browser, context);
 
-    await mobileAudio.initModPage(page, { testInfo });
-    await page.locator(e.joinAudio).tap();
-    await page.locator(e.listenOnlyButton).tap();
-    await mobileAudio.modPage.wasRemoved(
-      e.establishingAudioLabel,
-      'should establish listen-only audio on mobile',
-      ELEMENT_WAIT_LONGER_TIME,
-    );
+    await mobileAudio.initModPage(page, { shouldCloseAudioModal: false, testInfo });
+
+    await expect(page.locator('#layout')).toBeVisible();
+    await expect(page.locator(e.audioModal)).toBeHidden();
 
     const speakerButton = page.locator(e.leaveListenOnly);
     await expect(speakerButton).toBeVisible();
-    await speakerButton.tap();
+    await expect(page.locator(e.audioModal)).toBeHidden();
 
     const audioDeviceMenu = page.locator('#audio-selector-dropdown-menu');
     const audioDevicePaper = audioDeviceMenu.locator('.MuiPaper-root');
+    await expect(audioDeviceMenu).toHaveAttribute('aria-hidden', 'true');
+    await expect(audioDevicePaper).toBeHidden();
+
+    await speakerButton.tap();
     await expect(audioDeviceMenu).toBeVisible();
     await expect(audioDevicePaper).toBeVisible();
     await expect(audioDevicePaper).toBeInViewport();
@@ -85,6 +84,31 @@ test.describe('Mobile audio', { tag: '@ci' }, () => {
       .poll(async () => Number(await audioDeviceMenu.evaluate((element) => getComputedStyle(element).zIndex)))
       .toBeGreaterThan(1502);
 
+    const englishDeviceLabel = audioDeviceMenu
+      .locator('[dir="auto"]')
+      .filter({ hasText: /[A-Za-z]/ })
+      .first();
+    await expect(englishDeviceLabel).toBeVisible();
+    await expect
+      .poll(async () => englishDeviceLabel.evaluate((element) => getComputedStyle(element).direction))
+      .toBe('ltr');
+
+    const paperOverflow = await audioDevicePaper.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        overflowY: style.overflowY,
+        clientHeight: element.clientHeight,
+        scrollHeight: element.scrollHeight,
+      };
+    });
+    expect(['auto', 'scroll']).not.toContain(paperOverflow.overflowY);
+    expect(paperOverflow.scrollHeight).toBeLessThanOrEqual(paperOverflow.clientHeight + 1);
+
+    await audioDeviceMenu.locator('.MuiBackdrop-root').tap({ position: { x: 2, y: 2 } });
+    await expect(audioDeviceMenu).toHaveAttribute('aria-hidden', 'true');
+    await expect(audioDevicePaper).toBeHidden();
+
+    await speakerButton.tap();
     await audioDeviceMenu.locator(e.leaveAudio).tap();
     await expect(page.locator(e.joinAudio)).toBeVisible();
   });

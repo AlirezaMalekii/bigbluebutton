@@ -148,6 +148,7 @@ class BBBMenu extends React.Component {
   makeMenuItems() {
     const {
       actions, selectedEmoji, intl, isHorizontal, isEmoji, isMobile, roundButtons, keepOpen,
+      autoTextDirection,
     } = this.props;
 
     return actions?.map((a) => {
@@ -210,7 +211,16 @@ class BBBMenu extends React.Component {
               isEmoji={isEmoji}
             >
               {renderIcon(a.icon)}
-              <Styled.Option hasIcon={!!(a.icon)} isHorizontal={isHorizontal} isMobile={isMobile} aria-describedby={`${key}-option-desc`} $isToggle={isToggle}>{label}</Styled.Option>
+              <Styled.Option
+                hasIcon={!!(a.icon)}
+                isHorizontal={isHorizontal}
+                isMobile={isMobile}
+                aria-describedby={`${key}-option-desc`}
+                $isToggle={isToggle}
+                dir={autoTextDirection ? 'auto' : undefined}
+              >
+                {label}
+              </Styled.Option>
               {description && <div className="sr-only" id={`${key}-option-desc`}>{`${description}${selected ? ` - ${intl.formatMessage(intlMessages.active)}` : ''}`}</div>}
               {renderIcon(a.iconRight, undefined, 'iconRight', Styled.IconRight, iconStyles)}
             </Styled.MenuItemWrapper>
@@ -230,7 +240,18 @@ class BBBMenu extends React.Component {
               {!contentFunction ? (
                 <>
                   {renderIcon(a.icon, textColor)}
-                  <Styled.Option hasIcon={!!(a.icon)} isTitle={isTitle} textColor={textColor} isHorizontal={isHorizontal} isMobile={isMobile} aria-describedby={`${key}-option-desc`} $isToggle={isToggle}>{label}</Styled.Option>
+                  <Styled.Option
+                    hasIcon={!!(a.icon)}
+                    isTitle={isTitle}
+                    textColor={textColor}
+                    isHorizontal={isHorizontal}
+                    isMobile={isMobile}
+                    aria-describedby={`${key}-option-desc`}
+                    $isToggle={isToggle}
+                    dir={autoTextDirection ? 'auto' : undefined}
+                  >
+                    {label}
+                  </Styled.Option>
                   {renderIcon(a.iconRight, textColor, 'iconRight', Styled.IconRight)}
                   {(isTitle && titleActions?.length > 0) ? (
                     titleActions.map((item, index) => (
@@ -375,6 +396,7 @@ BBBMenu.defaultProps = {
   onCloseCallback: () => { },
   dataTest: '',
   minContent: false,
+  autoTextDirection: false,
 };
 
 BBBMenu.propTypes = {
@@ -394,6 +416,7 @@ BBBMenu.propTypes = {
   opts: PropTypes.shape({}),
   accessKey: PropTypes.string,
   minContent: PropTypes.bool,
+  autoTextDirection: PropTypes.bool,
 };
 
 export default injectIntl(BBBMenu);

@@ -30,19 +30,37 @@
 }
 
 .media-hidden {
+  background: transparent;
   border: 0 !important;
   box-shadow: none !important;
   grid-area: media;
   height: 0 !important;
   margin: 0 !important;
   min-height: 0 !important;
-  opacity: 0;
-  overflow: hidden;
-  pointer-events: none;
-  visibility: hidden;
+  overflow: visible !important;
 
   &::before {
     display: none;
+  }
+
+  .fullscreen-button {
+    visibility: hidden;
+  }
+
+  .webcams-wrapper,
+  [data-vjs-player],
+  .video-js {
+    background: transparent;
+    height: 0;
+    overflow: visible;
+  }
+
+  .vjs-big-play-button,
+  .vjs-control-bar,
+  .vjs-modal-dialog,
+  .vjs-text-track-display {
+    pointer-events: auto;
+    visibility: visible;
   }
 }
 

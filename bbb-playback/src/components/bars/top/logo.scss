@@ -6,7 +6,7 @@
   display: inline-flex;
   flex-shrink: 0;
   height: 38px;
-  margin-inline-end: .5rem;
+  margin: 0;
   padding: 0 .65rem;
   text-decoration: none;
   transition: background .18s ease, border-color .18s ease, transform .18s ease;
@@ -16,6 +16,12 @@
     border-color: rgba(63, 194, 184, .28);
     transform: translateY(-1px);
   }
+
+  &:focus-visible {
+    border-color: var(--skyroom-brand-200);
+    box-shadow: 0 0 0 3px rgba(63, 194, 184, .3);
+    outline: none;
+  }
 }
 
 .platform-logo-image {
@@ -24,4 +30,16 @@
   max-width: 132px;
   object-fit: contain;
   width: auto;
+}
+
+@media (max-width: 479px) {
+  .platform-logo {
+    height: 36px;
+    padding-inline: .5rem;
+  }
+
+  .platform-logo-image {
+    height: 22px;
+    max-width: 116px;
+  }
 }

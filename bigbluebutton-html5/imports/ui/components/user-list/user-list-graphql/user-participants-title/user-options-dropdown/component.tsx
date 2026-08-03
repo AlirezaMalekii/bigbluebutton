@@ -52,22 +52,6 @@ const intlMessages = defineMessages({
     id: 'app.userList.userOptions.clearAllDesc',
     description: 'Clear all description',
   },
-  usersJoinMutedEnableLabel: {
-    id: 'app.userList.userOptions.usersJoinMutedEnableLabel',
-    description: 'Mute all label',
-  },
-  usersJoinMutedEnableDesc: {
-    id: 'app.userList.userOptions.usersJoinMutedEnableDesc',
-    description: 'Enable Join muted button',
-  },
-  usersJoinMutedDisableLabel: {
-    id: 'app.userList.userOptions.usersJoinMutedDisableLabel',
-    description: 'Disable Join muted button',
-  },
-  usersJoinMutedDisableDesc: {
-    id: 'app.userList.userOptions.usersJoinMutedDisableDesc',
-    description: 'Unmute all desc',
-  },
   lockViewersLabel: {
     id: 'app.userList.userOptions.lockViewersLabel',
     description: 'Lock viewers label',
@@ -140,7 +124,6 @@ const intlMessages = defineMessages({
 
 interface UserTitleOptionsProps {
   isRTL: boolean;
-  isMeetingMuted: boolean | undefined;
   isBreakout: boolean | undefined;
   isModerator: boolean;
   hasBreakoutRooms: boolean | undefined;
@@ -163,7 +146,6 @@ interface UserOptionAction {
 
 const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
   isRTL,
-  isMeetingMuted,
   isBreakout,
   isModerator,
   hasBreakoutRooms,
@@ -174,7 +156,6 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
   const intl = useIntl();
   const { locale } = intl;
   const uuids = useRef<string[]>([
-    uid(8, 'options-'),
     uid(8, 'options-'),
     uid(8, 'options-'),
     uid(8, 'options-'),
@@ -277,17 +258,8 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
       && isBreakoutRoomsEnabled;
     return [
       {
-        allow: !isBreakout,
-        key: uuids.current[0],
-        label: intl.formatMessage(intlMessages[isMeetingMuted ? 'usersJoinMutedDisableLabel' : 'usersJoinMutedEnableLabel']),
-        description: intl.formatMessage(intlMessages[isMeetingMuted ? 'usersJoinMutedDisableDesc' : 'usersJoinMutedEnableDesc']),
-        onClick: () => callSetMuted(!isMeetingMuted, false),
-        icon: isMeetingMuted ? 'unmute' : 'mute',
-        dataTest: 'usersJoinMuted',
-      },
-      {
         allow: true,
-        key: uuids.current[1],
+        key: uuids.current[0],
         label: intl.formatMessage(intlMessages.muteAllExceptPresenterLabel),
         description: intl.formatMessage(intlMessages.muteAllExceptPresenterDesc),
         onClick: callSetMuted.bind(null, true, true),
@@ -296,7 +268,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
       },
       {
         allow: !isBreakout,
-        key: uuids.current[2],
+        key: uuids.current[1],
         label: intl.formatMessage(intlMessages.lockViewersLabel),
         description: intl.formatMessage(intlMessages.lockViewersDesc),
         onClick: () => lockViewersModal.open(),
@@ -305,7 +277,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
       },
       {
         allow: dynamicGuestPolicy && !isBreakout,
-        key: uuids.current[3],
+        key: uuids.current[2],
         icon: 'user',
         label: intl.formatMessage(intlMessages.guestPolicyLabel),
         description: intl.formatMessage(intlMessages.guestPolicyDesc),
@@ -314,7 +286,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
       },
       {
         allow: isModerator,
-        key: uuids.current[4],
+        key: uuids.current[3],
         label: intl.formatMessage(intlMessages.saveUserNames),
         onClick: () => getUsers(),
         icon: 'download',
@@ -322,7 +294,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
       },
       {
         allow: isReactionsEnabled && isModerator,
-        key: uuids.current[5],
+        key: uuids.current[4],
         label: intl.formatMessage(intlMessages.clearAllReactionsLabel),
         description: intl.formatMessage(intlMessages.clearAllReactionsDesc),
         onClick: () => clearReactions(),
@@ -336,7 +308,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
       },
       {
         allow: canCreateBreakout,
-        key: uuids.current[6],
+        key: uuids.current[5],
         icon: 'rooms',
         label: intl.formatMessage(intlMessages.createBreakoutRoom),
         description: intl.formatMessage(intlMessages.createBreakoutRoomDesc),
@@ -345,7 +317,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
       },
       {
         allow: canInviteUsers,
-        key: uuids.current[7],
+        key: uuids.current[6],
         icon: 'rooms',
         label: intl.formatMessage(intlMessages.invitationLabel),
         description: intl.formatMessage(intlMessages.invitationDesc),
@@ -364,12 +336,12 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         label: intl.formatMessage(intlMessages.learningDashboardLabel),
         description: `${intl.formatMessage(intlMessages.learningDashboardDesc)}
         ${intl.formatMessage(intlMessages.newTab)}`,
-        key: uuids.current[8],
+        key: uuids.current[7],
         onClick: () => { openLearningDashboardUrl(locale, learningDashboardToken); },
         dataTest: 'learningDashboard',
       },
     ].filter(({ allow }) => allow);
-  }, [isModerator, hasBreakoutRooms, isMeetingMuted, locale, intl, isBreakoutRoomsEnabled, isLearningDashboardEnabled]);
+  }, [isModerator, hasBreakoutRooms, locale, intl, isBreakoutRoomsEnabled, isLearningDashboardEnabled]);
 
   return (
     <Styled.OptionsGroup data-test="user-management-options">
@@ -442,7 +414,6 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
 const UserTitleOptionsContainer: React.FC = () => {
   const isRTL = layoutSelect((i: Layout) => i.isRTL);
   const { data: meetingInfo } = useMeeting((meeting) => ({
-    voiceSettings: meeting?.voiceSettings,
     isBreakout: meeting?.isBreakout,
     componentsFlags: meeting?.componentsFlags,
     name: meeting?.name,
@@ -462,7 +433,6 @@ const UserTitleOptionsContainer: React.FC = () => {
   return (
     <UserTitleOptions
       isRTL={isRTL}
-      isMeetingMuted={meetingInfo?.voiceSettings?.muteOnStart}
       isBreakout={meetingInfo?.isBreakout}
       isModerator={currentUser?.isModerator ?? false}
       hasBreakoutRooms={hasBreakoutRooms}

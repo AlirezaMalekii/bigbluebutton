@@ -1,6 +1,7 @@
 $control-bar-height: 56px;
 $media-min-width: 480px;
 $media-max-height: 400px;
+$wide-layout-min-width: 900px;
 
 $modal-max-width: 480px;
 
@@ -9,12 +10,14 @@ $webcams-width: 640px;
 
 $section-width: 360px;
 $section-width-small: 300px;
+$section-width-tablet: 280px;
 
 $bottom-content-height: 96px;
 
 $bar-height: 56px;
 
 $top-bar-height: $bar-height;
+$top-bar-height-mobile: 96px;
 $bottom-bar-height: calc(#{$bar-height} / 3);
 $modal-bar-height: $bar-height;
 

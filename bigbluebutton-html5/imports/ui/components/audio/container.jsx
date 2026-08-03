@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import Session from '/imports/ui/services/storage/in-memory';
 import { injectIntl, defineMessages } from 'react-intl';
@@ -142,6 +142,30 @@ const AudioContainer = (props) => {
     priority: 'high',
   });
 
+  const silentAutoplayCleanupRef = useRef(null);
+
+  const armSilentAutoplayRecovery = useCallback(() => {
+    if (silentAutoplayCleanupRef.current || !Service.autoplayBlocked()) return;
+
+    const recoverAutoplay = () => {
+      try {
+        if (Service.autoplayBlocked()) Service.handleAllowAutoplay();
+      } finally {
+        document.removeEventListener('click', recoverAutoplay, true);
+        document.removeEventListener('keydown', recoverAutoplay, true);
+        silentAutoplayCleanupRef.current = null;
+      }
+    };
+
+    document.addEventListener('click', recoverAutoplay, true);
+    document.addEventListener('keydown', recoverAutoplay, true);
+    silentAutoplayCleanupRef.current = () => {
+      document.removeEventListener('click', recoverAutoplay, true);
+      document.removeEventListener('keydown', recoverAutoplay, true);
+      silentAutoplayCleanupRef.current = null;
+    };
+  }, []);
+
   const meetingIsBreakout = useMeetingIsBreakout();
   const { data: meeting } = useMeeting((m) => ({
     audioBridge: m.audioBridge,
@@ -204,12 +228,10 @@ const AudioContainer = (props) => {
       if (!currentUserHasVoice && !Service.isUsingAudio()) {
         joinListenOnly()
           .then(() => {
-            // Browsers may still require a user gesture before playing remote
-            // audio. Show only the existing autoplay prompt in that case.
-            if (Service.autoplayBlocked()) {
-              Session.setItem('audioModalIsOpen', true);
-              openAudioModal();
-            }
+            // Do not block the meeting with an autoplay confirmation. Browsers
+            // that require a gesture resume the queued audio on the user's next
+            // regular interaction with the meeting UI.
+            armSilentAutoplayRecovery();
           })
           .catch(() => {
             notify(intl.formatMessage(intlMessages.genericError), 'error', 'no_audio');
@@ -269,6 +291,27 @@ const AudioContainer = (props) => {
     meeting?.voiceSettings?.muteOnStart,
     storageMuteState,
   ]);
+
+  useEffect(() => {
+    if (!silentAudioJoin) return undefined;
+
+    let isActive = true;
+    const handleAudioPlayFailed = () => {
+      // AudioManager handles this event first and updates autoplayBlocked.
+      // Check on the next microtask so listener registration order is harmless.
+      Promise.resolve().then(() => {
+        if (isActive) armSilentAutoplayRecovery();
+      });
+    };
+
+    window.addEventListener('audioPlayFailed', handleAudioPlayFailed);
+
+    return () => {
+      isActive = false;
+      window.removeEventListener('audioPlayFailed', handleAudioPlayFailed);
+      if (silentAutoplayCleanupRef.current) silentAutoplayCleanupRef.current();
+    };
+  }, [silentAudioJoin, armSilentAutoplayRecovery]);
 
   useEffect(() => {
     // Data is not loaded yet.
@@ -332,7 +375,6 @@ const AudioContainer = (props) => {
             priority: 'high',
             setIsOpen: audioModal.isOpen ? audioModal.close : audioModal.open,
             isOpen: audioModal.isOpen,
-            content: silentAudioJoin ? 'autoplayBlocked' : undefined,
           }}
         />
       ) : null}

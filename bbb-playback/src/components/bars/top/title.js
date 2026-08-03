@@ -45,11 +45,12 @@ const Title = ({ openAbout }) => {
 
   return (
     <span
-      aria={intl.formatMessage(intlMessages.about)}
+      aria-label={intl.formatMessage(intlMessages.about)}
       className={cx('title', { interactive })}
       onClick={openAbout}
       onKeyPress={event => handleOnEnterPress(event, openAbout)}
-      tabIndex="0"
+      role="button"
+      tabIndex={0}
     >
       {storage.metadata.name}
       {date.enabled ? (

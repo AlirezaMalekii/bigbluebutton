@@ -249,6 +249,20 @@ const TldrawV2GlobalStyle = createGlobalStyle`
       ${isSkyroomMobile ? 'display: inline-flex !important; align-items: center !important; justify-content: center !important; overflow: visible !important;' : ''}
     }
 
+    /* Color swatch + caret need more than the compact tool tile. */
+    ${isSkyroomMobile ? `
+    button[data-testid="mobile.styles"] {
+      width: auto !important;
+      min-width: 28px !important;
+      max-width: none !important;
+      height: 16px !important;
+      min-height: 16px !important;
+      padding: 0 4px !important;
+      overflow: visible !important;
+      flex: 0 0 auto !important;
+    }
+    ` : ''}
+
     .tlui-button__tool .tlui-icon {
       color: #e8edf4 !important;
       opacity: 1 !important;

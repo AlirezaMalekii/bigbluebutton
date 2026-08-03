@@ -362,6 +362,7 @@ export const LiveSelection: React.FC<LiveSelectionProps> = ({
       <BBBMenu
         customStyles={!isMobile ? customStyles : null}
         overrideMobileStyles
+        autoTextDirection
         trigger={(
           <>
             {shouldTreatAsMicrophone() && !isMobile && !listenOnly

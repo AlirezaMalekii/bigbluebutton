@@ -4,6 +4,10 @@
   background-repeat: no-repeat;
 }
 
+.presentation.logo {
+  background-size: clamp(10rem, 44vw, 28rem) auto;
+}
+
 .thumbnail {
   .logo {
     background-size: contain;

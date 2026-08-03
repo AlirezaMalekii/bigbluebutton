@@ -29,8 +29,8 @@
   border-radius: 999px;
   height: 4.5rem;
   line-height: 4.5rem;
-  left: 50%;
-  top: 50%;
+  left: calc(50% + var(--playback-play-center-x-offset, 0px));
+  top: var(--playback-play-center-y, 50%);
   transform: translate(-50%, -50%);
   width: 4.5rem;
 }

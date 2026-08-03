@@ -573,34 +573,71 @@ html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu[aria-hidden
   pointer-events: none !important;
 }
 
-html[data-skyroom="true"] #audio-selector-dropdown-menu .MuiBackdrop-root,
-html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .MuiBackdrop-root {
+html[data-skyroom="true"] #audio-selector-dropdown-menu[aria-hidden="true"] .MuiBackdrop-root,
+html[data-skyroom="true"] #audio-selector-dropdown-menu[aria-hidden="true"] .MuiPaper-root,
+html[data-skyroom="true"] #audio-selector-dropdown-menu[aria-hidden="true"] .override-mobile-styles,
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu[aria-hidden="true"] .MuiBackdrop-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu[aria-hidden="true"] .MuiPaper-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu[aria-hidden="true"] .override-mobile-styles {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) .MuiBackdrop-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) .MuiBackdrop-root {
   background-color: transparent !important;
   pointer-events: auto !important;
 }
 
-html[data-skyroom="true"] #audio-selector-dropdown-menu .MuiPaper-root,
-html[data-skyroom="true"] #audio-selector-dropdown-menu .override-mobile-styles,
-html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .MuiPaper-root,
-html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .override-mobile-styles {
+html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) .MuiPaper-root,
+html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) .override-mobile-styles,
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) .MuiPaper-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) .override-mobile-styles {
   z-index: 2601 !important;
   opacity: 1 !important;
+  visibility: visible !important;
   pointer-events: auto !important;
 }
 
-html[data-skyroom="true"] #audio-selector-dropdown-menu .MuiList-root,
-html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .MuiList-root {
+html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) .MuiList-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) .MuiList-root {
   display: block !important;
   width: 100% !important;
   pointer-events: auto !important;
 }
 
-html[data-skyroom="true"] #audio-selector-dropdown-menu .MuiMenuItem-root,
-html[data-skyroom="true"] #audio-selector-dropdown-menu [data-key^="menuItem-"],
-html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu .MuiMenuItem-root,
-html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu [data-key^="menuItem-"] {
+html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) .MuiMenuItem-root,
+html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) [data-key^="menuItem-"],
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) .MuiMenuItem-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) [data-key^="menuItem-"] {
   pointer-events: auto !important;
   touch-action: manipulation !important;
+}
+
+html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) [class*="MenuItemWrapper"],
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) [class*="MenuItemWrapper"] {
+  flex-direction: row !important;
+  align-items: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) [class*="Option"],
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) [class*="Option"] {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  margin-inline: 0.625rem !important;
+  overflow-wrap: anywhere !important;
+  line-height: 1.3 !important;
+  text-align: start !important;
+  white-space: normal !important;
+}
+
+html[data-skyroom="true"] #audio-selector-dropdown-menu:not([aria-hidden="true"]) [class*="IconRight"],
+html[data-skyroom="true"] .MuiModal-root.skyroom-audio-settings-menu:not([aria-hidden="true"]) [class*="IconRight"] {
+  flex: 0 0 auto !important;
+  margin-inline-start: auto !important;
 }
 
 #layout[data-skyroom-column="true"] #ActionsBar [data-test="reactionsButton"] > span:first-child > span {

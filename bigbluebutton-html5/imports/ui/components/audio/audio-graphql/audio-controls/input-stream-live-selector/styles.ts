@@ -75,18 +75,18 @@ export const DisabledLabel = {
 };
 
 export const AudioSettingsOption = {
-  paddingLeft: 12,
+  paddingInlineStart: 12,
 };
 
 export const SelectedLabel = {
   color: colorPrimary,
   backgroundColor: colorOffWhite,
   fontWeight: 'bold',
-  paddingLeft: '2.6rem',
+  paddingInlineStart: '2.6rem',
 };
 
 export const DeviceLabel = {
-  paddingLeft: '2.6rem',
+  paddingInlineStart: '2.6rem',
 };
 
 export const SelectedLabelIcon = {
@@ -96,7 +96,7 @@ export const SelectedLabelIcon = {
 
 export const DangerColor = {
   color: colorDanger,
-  paddingLeft: 12,
+  paddingInlineStart: 12,
 };
 
 // @ts-ignore - as button comes from JS, we can't provide its props
