@@ -1,3 +1,8 @@
+jest.mock('utils/data/storage', () => ({
+  __esModule: true,
+  default: { metadata: {}, slides: [] },
+}));
+
 import { search } from './actions';
 
 it('searches text in data collection', () => {

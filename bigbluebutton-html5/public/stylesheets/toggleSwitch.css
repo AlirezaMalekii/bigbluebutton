@@ -40,7 +40,7 @@
   height: 1.5rem;
   padding: 0;
   border-radius: 2rem;
-  background-color: var(--color-danger);
+  background-color: var(--skyroom-switch-off, var(--color-gray-light, #7A90A4));
   transition: all calc(var(--enableAnimation) * 0.2s) ease;
 }
 

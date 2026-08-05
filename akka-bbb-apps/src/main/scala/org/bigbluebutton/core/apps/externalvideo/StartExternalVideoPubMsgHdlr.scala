@@ -13,14 +13,19 @@ trait StartExternalVideoPubMsgHdlr extends RightsManagementTrait {
   this: ExternalVideoApp2x =>
 
   def handle(msg: StartExternalVideoPubMsg, liveMeeting: LiveMeeting, bus: MessageBus): Unit = {
-    log.info("Received StartExternalVideoPubMsgr meetingId={} url={}", liveMeeting.props.meetingProp.intId, msg.body.externalVideoUrl)
+    log.info(
+      "Received StartExternalVideoPubMsg meetingId={} urlLength={} hasSourceUrl={}",
+      liveMeeting.props.meetingProp.intId,
+      msg.body.externalVideoUrl.length,
+      msg.body.externalVideoSourceUrl.exists(_.nonEmpty)
+    )
 
     def broadcastEvent(msg: StartExternalVideoPubMsg): Unit = {
       val routing = Routing.addMsgToClientRouting(MessageTypes.DIRECT, liveMeeting.props.meetingProp.intId, "nodeJSapp")
       val envelope = BbbCoreEnvelope(StartExternalVideoEvtMsg.NAME, routing)
       val header = BbbClientMsgHeader(StartExternalVideoEvtMsg.NAME, liveMeeting.props.meetingProp.intId, msg.header.userId)
 
-      val body = StartExternalVideoEvtMsgBody(msg.body.externalVideoUrl)
+      val body = StartExternalVideoEvtMsgBody(msg.body.externalVideoUrl, msg.body.externalVideoSourceUrl)
       val event = StartExternalVideoEvtMsg(header, body)
       val msgEvent = BbbCommonEnvCoreMsg(envelope, event)
       bus.outGW.send(msgEvent)

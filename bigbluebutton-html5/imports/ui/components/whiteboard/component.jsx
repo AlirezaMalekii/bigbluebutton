@@ -702,18 +702,28 @@ const Whiteboard = React.memo((props) => {
       }
 
       tlEditorRef?.current?.setCurrentTool(initialSelectedTool);
+    } else if (isPresenter) {
+      // Presenter (including multi-user presenters): default to draw.
+      tlEditorRef?.current?.setCurrentTool('draw');
     }
-  }, [hasWBAccess]);
+  }, [hasWBAccess, isPresenter]);
 
   React.useEffect(() => {
     viewerCanPanRef.current = viewerCanPan;
   }, [viewerCanPan]);
 
   React.useEffect(() => {
+    const wasPresenter = isPresenterRef.current;
     isPresenterRef.current = isPresenter;
 
     if (!hasWBAccessRef.current && !isPresenter) {
       tlEditorRef?.current?.setCurrentTool('noop');
+      return;
+    }
+
+    // Role grant → draw. Also cover first paint if the editor is already idle.
+    if (isPresenter && (!wasPresenter || tlEditorRef?.current?.getCurrentToolId() === 'noop')) {
+      tlEditorRef?.current?.setCurrentTool('draw');
     }
   }, [isPresenter]);
 
@@ -2117,7 +2127,6 @@ const Whiteboard = React.memo((props) => {
       } else {
         const {
           initialSelectedTool: initialSelectedToolFromConfig,
-          presenterTools,
           multiUserTools,
         } = window.meetingClientSettings.public.whiteboard.toolbar;
         let initialSelectedTool = getFromUserSettings(
@@ -2136,8 +2145,8 @@ const Whiteboard = React.memo((props) => {
         }
 
         if (isPresenterRef.current) {
-          const initialPresenterTool = presenterTools.includes(initialSelectedTool) ? initialSelectedTool : 'noop';
-          editor?.setCurrentTool(initialPresenterTool);
+          // SafeMeet: presenters always start with the draw tool selected.
+          editor?.setCurrentTool('draw');
         } else if (
           allowInfiniteWhiteboardPanForViewers
           && currentPresentationPageRef.current?.infiniteWhiteboard

@@ -492,6 +492,7 @@ def emit_vars(p: dict[str, Any], primary_token: str) -> list[str]:
         f"  --skyroom-accent-active-bg: {a['activeBg']};",
         f"  --skyroom-danger-soft: {s['dangerSoft']};",
         f"  --skyroom-danger-border: {s['dangerBorder']};",
+        f"  --skyroom-switch-off: {surf['grayLight']};",
         f"  --color-primary: {primary_token};",
         f"  --color-link: {primary_token};",
         f"  --color-success: {s['success']};",

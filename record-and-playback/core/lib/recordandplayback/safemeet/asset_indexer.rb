@@ -12,6 +12,10 @@ module BigBlueButton
   module SafeMeet
   class AssetIndexer
     MIME_BY_EXT = {
+      '.aac' => 'audio/mp4',
+      '.m4a' => 'audio/mp4',
+      '.mp3' => 'audio/mpeg',
+      '.mov' => 'video/quicktime',
       '.ogg' => 'audio/ogg',
       '.webm' => 'video/webm',
       '.mp4' => 'video/mp4',
@@ -89,6 +93,7 @@ module BigBlueButton
         'metadata' => summarize_asset('metadata.xml', File.join(published_root, 'metadata.xml'), 'application/xml'),
         'webcams' => summarize_group(find_webcam_assets(published_root)),
         'deskshare' => summarize_group(find_deskshare_assets(published_root)),
+        'externalMedia' => summarize_group(find_external_media_assets(published_root)),
         'captions' => summarize_group(find_caption_assets(published_root)),
         'presentation' => summarize_group(find_presentation_assets(published_root)),
         'slides' => summarize_group(find_slide_assets(published_root))
@@ -248,6 +253,13 @@ module BigBlueButton
       files
     end
 
+    def find_external_media_assets(published_root)
+      Dir.glob(File.join(published_root, 'external-media', '*.{aac,m4a,mp3,ogg,wav,mov,mp4,webm}')).map do |path|
+        relative = path.sub("#{published_root}/", '')
+        asset_entry(relative, path, "external-media:#{File.basename(path)}")
+      end
+    end
+
     def find_presentation_assets(published_root)
       files = []
       %w[slides_new.xml layout.xml polls.json external_videos.json presentation_text.json notes.html shapes.svg panzooms.xml cursor.xml tldraw.json video.xml].each do |name|
@@ -303,7 +315,7 @@ module BigBlueButton
 
     def media_duration(path)
       return nil unless path && File.exist?(path)
-      return nil unless %w[.webm .mp4 .ogg .wav].include?(File.extname(path).downcase)
+      return nil unless %w[.aac .m4a .mp3 .mov .webm .mp4 .ogg .wav].include?(File.extname(path).downcase)
 
       command = "ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 #{Shellwords.escape(path)}"
       output = `#{command}`.strip

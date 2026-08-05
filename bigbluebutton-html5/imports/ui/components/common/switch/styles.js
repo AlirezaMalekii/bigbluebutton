@@ -2,6 +2,9 @@ import styled, { css } from 'styled-components';
 import { borderSize } from '/imports/ui/stylesheets/styled-components/general';
 import { colorDanger, colorSuccess } from '/imports/ui/stylesheets/styled-components/palette';
 
+/* Off-track: neutral gray (not danger red). Themes may override via --skyroom-switch-off. */
+const switchOff = 'var(--skyroom-switch-off, var(--color-gray-light, #7A90A4))';
+
 const Switch = styled.div`
   &:hover,
   &:focus,
@@ -49,7 +52,7 @@ const ToggleTrack = styled.div`
   height: 1.5rem;
   padding: 0;
   border-radius: 2rem;
-  background-color: ${colorDanger};
+  background-color: ${switchOff};
 
   [dir="rtl"] & {
     width: 4rem;

@@ -5,14 +5,10 @@ import {
   useIntl,
 } from 'react-intl';
 import cx from 'classnames';
-import {
-  controls as config,
-  date,
-} from 'config';
+import { controls as config } from 'config';
 import { handleOnEnterPress } from 'utils/data/handlers';
 import storage from 'utils/data/storage';
 import layout from 'utils/layout';
-import formatJalaliDate from 'utils/jalali';
 import './index.scss';
 
 const intlMessages = defineMessages({
@@ -28,17 +24,12 @@ const defaultProps = { openAbout: () => {} };
 
 const Title = ({ openAbout }) => {
   const intl = useIntl();
-  const start = formatJalaliDate(storage.metadata.start);
-
   const interactive = layout.control && config.about;
   if (!interactive) {
 
     return (
       <span className="title">
         {storage.metadata.name}
-        {date.enabled ? (
-          <> — {start}</>
-        ) : null}
       </span>
     );
   }
@@ -53,9 +44,6 @@ const Title = ({ openAbout }) => {
       tabIndex={0}
     >
       {storage.metadata.name}
-      {date.enabled ? (
-        <> — {start}</>
-      ) : null}
     </span>
   );
 };

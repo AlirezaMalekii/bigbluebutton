@@ -1281,34 +1281,18 @@ def process_poll_events(events, package_dir)
   generate_json_file(package_dir, 'polls.json', published_polls)
 end
 
-def process_external_video_events(_events, package_dir)
+def process_external_video_events(events, package_dir)
   BigBlueButton.logger.info('Processing external video events')
 
-  # Retrieve external video events
-  external_video_events = BigBlueButton::Events.match_start_and_stop_external_video_events(
-    BigBlueButton::Events.get_start_and_stop_external_video_events(@doc)
+  raw_presentation_dir = File.join(@recording_dir, 'raw', @meeting_id, 'presentation')
+  external_videos = BigBlueButton::ExternalMedia.build(
+    events,
+    recording_events: @rec_events,
+    translate_timestamp: method(:translate_timestamp),
+    raw_presentation_dir: raw_presentation_dir,
+    package_dir: package_dir,
+    logger: BigBlueButton.logger,
   )
-
-  external_videos = []
-  @rec_events.each do |re|
-    external_video_events.each do |event|
-      BigBlueButton.logger.info("Processing rec event #{re} and external video event #{event}")
-      start_timestamp = event[:start_timestamp]
-      timestamp = (translate_timestamp(start_timestamp) / 1000).to_i
-      # do not add same external_video twice
-      next if external_videos.find { |ev| ev[:timestamp] == timestamp }
-
-      re_start_timestamp = re[:start_timestamp]
-      re_stop_timestamp = re[:stop_timestamp]
-      next unless ((start_timestamp >= re_start_timestamp) && (start_timestamp <= re_stop_timestamp)) ||
-                  ((start_timestamp < re_start_timestamp) && (re_stop_timestamp >= re_start_timestamp))
-
-      external_videos << {
-        timestamp: timestamp,
-        external_video_url: event[:external_video_url],
-      }
-    end
-  end
 
   generate_json_file(package_dir, 'external_videos.json', external_videos)
 end

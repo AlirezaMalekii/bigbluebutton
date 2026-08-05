@@ -1,10 +1,89 @@
+jest.mock('utils/tldraw', () => ({
+  isTldrawWhiteboard: () => false,
+}));
+
 import {
   buildStyle,
+  buildVideos,
   getAttr,
   getId,
   getNumbers,
   mergeMessages,
 } from './builder';
+
+it('builds synchronized external media schema v2 without exposing source URLs', () => {
+  const items = buildVideos([{
+    schema_version: 2,
+    timestamp: 159.2,
+    stop_timestamp: 238.9,
+    media_url: 'external-media/asset.m4a',
+    media_type: 'audio',
+    media_name: 'صدای جلسه',
+    mime_type: 'audio/mp4',
+    provider: 'presentation',
+    available: true,
+    sync_events: [
+      { at: 159.2, media_time: 0, playing: true, rate: 1 },
+      { at: 170, media_time: 10.8, playing: false, rate: 1 },
+    ],
+  }]);
+
+  expect(items).toEqual([{
+    schemaVersion: 2,
+    timestamp: 159.2,
+    stopTimestamp: 238.9,
+    mediaUrl: 'external-media/asset.m4a',
+    mediaType: 'audio',
+    mediaName: 'صدای جلسه',
+    mimeType: 'audio/mp4',
+    provider: 'presentation',
+    available: true,
+    syncEvents: [
+      { at: 159.2, mediaTime: 0, playing: true, rate: 1 },
+      { at: 170, mediaTime: 10.8, playing: false, rate: 1 },
+    ],
+  }]);
+  expect(JSON.stringify(items)).not.toContain('sessionToken');
+  expect(JSON.stringify(items)).not.toContain('wmsAuthSign');
+});
+
+it('keeps legacy external media readable', () => {
+  const items = buildVideos([
+    { timestamp: 10, external_video_url: 'https://example.test/audio.mp3' },
+    { timestamp: 25, external_video_url: 'https://example.test/video.mp4' },
+  ]);
+
+  expect(items[0]).toMatchObject({
+    schemaVersion: 1,
+    timestamp: 10,
+    stopTimestamp: 25,
+    mediaType: 'audio',
+    available: true,
+  });
+  expect(items[1].stopTimestamp).toBe(Number.POSITIVE_INFINITY);
+});
+
+it('rejects remote URLs and invalid intervals from schema v2', () => {
+  const items = buildVideos([
+    {
+      schema_version: 2,
+      timestamp: 10,
+      stop_timestamp: 20,
+      media_url: 'https://cdn.example/video.mp4?token=secret',
+      available: true,
+    },
+    {
+      schema_version: 2,
+      timestamp: 30,
+      stop_timestamp: 29,
+      media_url: 'external-media/video.mp4',
+      available: true,
+    },
+  ]);
+
+  expect(items).toHaveLength(1);
+  expect(items[0]).toMatchObject({ mediaUrl: '', available: false });
+});
 
 it('merges and sorts messages arrays', () => {
   let chat = [

@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Title from './title';
 import PlatformLogo from './logo';
+import RecordingDate from './date';
 import SearchButton from './buttons/search';
 import SectionButton from './buttons/section';
 import SwapButton from './buttons/swap';
@@ -34,6 +35,7 @@ const Top = ({
   return (
     <div className="top-bar">
       <div className="left">
+        <RecordingDate />
         <PlatformLogo />
       </div>
       <div className="center">

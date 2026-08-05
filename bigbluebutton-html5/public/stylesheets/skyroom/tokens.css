@@ -95,6 +95,8 @@
   --skyroom-accent-active-bg: linear-gradient(145deg, rgba(13, 136, 126, 0.88), rgba(10, 111, 103, 0.92));
   --skyroom-danger-soft: rgba(223, 39, 33, 0.16);
   --skyroom-danger-border: rgba(223, 39, 33, 0.38);
+  /* Switch / toggle off-track (neutral — not danger red) */
+  --skyroom-switch-off: var(--color-gray-light, #7A90A4);
 
   /* Legacy aliases */
   --skyroom-radius-sm: var(--radius-sm);

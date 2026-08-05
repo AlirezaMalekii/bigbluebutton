@@ -605,6 +605,7 @@ class RedisRecorderActor(
     val ev = new StartExternalVideoRecordEvent()
     ev.setMeetingId(msg.header.meetingId)
     ev.setExternalVideoUrl(msg.body.externalVideoUrl)
+    msg.body.externalVideoSourceUrl.filter(_.nonEmpty).foreach(ev.setExternalVideoSourceUrl)
 
     record(msg.header.meetingId, ev.toMap.asJava)
   }

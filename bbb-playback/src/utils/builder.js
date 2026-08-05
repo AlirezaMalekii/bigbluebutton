@@ -108,16 +108,65 @@ const buildPolls = result => {
 };
 
 const buildVideos = result => {
-  if (!result) return [];
+  if (!Array.isArray(result)) return [];
+  const sorted = result
+    .filter(item => item && typeof item === 'object')
+    .sort((left, right) => parseFloat(left.timestamp) - parseFloat(right.timestamp));
 
-  const data = result.map(r => {
+  return sorted.map((item, index) => {
+    const timestamp = parseFloat(item.timestamp);
+    const nextTimestamp = parseFloat(sorted[index + 1]?.timestamp);
+    const schemaVersion = parseInt(item.schema_version ?? item.schemaVersion ?? 1, 10);
+
+    if (schemaVersion >= 2) {
+      const stopTimestamp = parseFloat(item.stop_timestamp);
+      const mediaUrl = typeof item.media_url === 'string'
+        && /^external-media\/[A-Za-z0-9._-]+$/.test(item.media_url)
+        ? item.media_url
+        : '';
+
+      return {
+        schemaVersion,
+        timestamp,
+        stopTimestamp,
+        mediaUrl,
+        mediaType: item.media_type === 'audio' ? 'audio' : 'video',
+        mediaName: item.media_name ?? '',
+        mimeType: item.mime_type ?? '',
+        provider: item.provider ?? 'external',
+        available: item.available === true && mediaUrl.length > 0,
+        syncEvents: Array.isArray(item.sync_events)
+          ? item.sync_events.map(event => ({
+            at: parseFloat(event.at),
+            mediaTime: parseFloat(event.media_time),
+            playing: event.playing === true,
+            rate: parseFloat(event.rate) || 1,
+          })).filter(event => Number.isFinite(event.at) && Number.isFinite(event.mediaTime))
+          : [],
+      };
+    }
+
     return {
-      timestamp: r.timestamp,
-      url: r.external_video_url,
+      schemaVersion: 1,
+      timestamp,
+      stopTimestamp: Number.isFinite(nextTimestamp) ? nextTimestamp : Number.POSITIVE_INFINITY,
+      mediaUrl: item.external_video_url ?? '',
+      mediaType: /\.(mp3|m4a|aac|ogg|wav)(?:[?#]|$)/i.test(item.external_video_url ?? '') ? 'audio' : 'video',
+      mediaName: '',
+      mimeType: '',
+      provider: 'legacy',
+      available: typeof item.external_video_url === 'string' && item.external_video_url.length > 0,
+      syncEvents: [{
+        at: timestamp,
+        mediaTime: 0,
+        playing: true,
+        rate: 1,
+      }],
     };
-  });
-
-  return data;
+  }).filter(item => (
+    Number.isFinite(item.timestamp)
+    && item.stopTimestamp > item.timestamp
+  )).sort((a, b) => a.timestamp - b.timestamp);
 };
 
 const buildMetadata = result => {
@@ -644,6 +693,7 @@ const mergeMessages = (chat = [], polls = [], videos = []) => {
 export {
   addAlternatesToThumbnails,
   build,
+  buildVideos,
   buildStyle,
   getAttr,
   getId,

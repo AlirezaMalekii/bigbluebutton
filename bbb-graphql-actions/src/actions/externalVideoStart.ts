@@ -26,10 +26,14 @@ export default async function buildRedisMessage(
   };
 
   let externalVideoUrl = String(input.externalVideoUrl || '');
+  // Keep the property present for Akka's strict creator-property deserializer.
+  let externalVideoSourceUrl = '';
 
   // Aparat iframe cannot be synced — resolve to CDN MP4 for BBB external-video sync.
-  if (extractAparatHash(externalVideoUrl)) {
+  const aparatHash = extractAparatHash(externalVideoUrl);
+  if (aparatHash) {
     try {
+      externalVideoSourceUrl = `https://www.aparat.com/v/${encodeURIComponent(aparatHash)}`;
       externalVideoUrl = await resolveAparatPlaybackUrl(externalVideoUrl);
       console.info(`[externalVideoStart] Resolved Aparat embed to MP4 (${externalVideoUrl.length} chars)`);
     } catch (error) {
@@ -44,6 +48,7 @@ export default async function buildRedisMessage(
 
   const body = {
     externalVideoUrl,
+    externalVideoSourceUrl,
   };
 
   return { eventName, routing, header, body };

@@ -8,6 +8,7 @@ import { useCurrentInterval, useLayoutSwap } from 'components/utils/hooks';
 import Screenshare from 'components/screenshare';
 import Thumbnails from 'components/thumbnails';
 import FullscreenButton from 'components/player/buttons/fullscreen';
+import ExternalMedia from 'components/external-media';
 import { LAYOUT } from 'utils/constants';
 import { isEqual } from 'utils/data/validators';
 import layout from 'utils/layout';
@@ -72,6 +73,7 @@ const Content = ({
             <Screenshare />
           </span>
         ) : null}
+        <ExternalMedia />
       </div>
       <div className={cx('bottom-content', { 'inactive': fullscreen })}>
         <Thumbnails

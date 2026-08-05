@@ -82,3 +82,20 @@ export const buildThumbnailItems = (thumbnails, layoutSwap = [], screenshare = [
     id: index + 1,
   }));
 };
+
+export const getThumbnailScrollState = ({
+  clientWidth = 0,
+  scrollLeft = 0,
+  scrollWidth = 0,
+} = {}) => {
+  const maxScrollLeft = Math.max(scrollWidth - clientWidth, 0);
+
+  return {
+    canScrollLeft: scrollLeft > 1,
+    canScrollRight: scrollLeft < maxScrollLeft - 1,
+  };
+};
+
+export const getThumbnailScrollAmount = (clientWidth = 0) => (
+  Math.max(clientWidth * .75, 220)
+);

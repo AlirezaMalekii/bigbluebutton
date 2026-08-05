@@ -237,7 +237,7 @@
 }
 
 #fsmodal .react-toggle-track {
-  background-color: rgba(223, 39, 33, 0.55) !important;
+  background-color: var(--skyroom-switch-off, var(--color-gray-light, #7A90A4)) !important;
 }
 
 #fsmodal .react-toggle--checked .react-toggle-track {

@@ -34,6 +34,8 @@ const DATA = {};
 
 let FALLBACK = false;
 
+const buildChatMessages = (chat = [], polls = []) => mergeMessages(chat, polls);
+
 const hasFetched = () => {
   if (STATUS !== STATE.WAITING) return true;
 
@@ -205,11 +207,7 @@ const storage = {
   },
   get messages() {
     if (!hasProperty(DATA, ID.MESSAGES)) {
-      DATA[ID.MESSAGES] = mergeMessages(
-        this.chat,
-        this.polls,
-        this.videos,
-      );
+      DATA[ID.MESSAGES] = buildChatMessages(this.chat, this.polls);
     }
 
     return DATA[ID.MESSAGES];
@@ -259,4 +257,5 @@ const storage = {
   },
 };
 
+export { buildChatMessages };
 export default storage;

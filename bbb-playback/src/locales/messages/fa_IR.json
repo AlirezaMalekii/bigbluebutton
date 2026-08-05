@@ -32,6 +32,12 @@
   "player.chat.message.poll.option.true": "درست",
   "player.chat.message.poll.option.false": "غلط",
   "player.chat.message.video.name": "ویدیوی خارجی",
+  "player.externalMedia.audio.aria": "صدای همگام‌شده جلسه",
+  "player.externalMedia.video.aria": "ویدیوی همگام‌شده جلسه",
+  "player.externalMedia.audio.title": "صدای پخش‌شده در جلسه",
+  "player.externalMedia.video.title": "ویدیوی پخش‌شده در جلسه",
+  "player.externalMedia.loading": "در حال بارگذاری رسانه…",
+  "player.externalMedia.unavailable": "این رسانه در فایل بازپخش در دسترس نیست.",
   "player.chat.wrapper.aria": "محدوده گفتگو",
   "player.notes.wrapper.aria": "محدوده یادداشت‌ها",
   "player.presentation.wrapper.aria": "محدوده فایل ارائه",
@@ -43,5 +49,7 @@
   "player.search.modal.noResults": "نتیجه‌ای یافت نشد",
   "player.search.modal.submit": "اعمال جستجو",
   "player.thumbnails.wrapper.aria": "محدوده تصاویر بندانگشتی",
+  "player.thumbnails.scroll.left.aria": "پیمایش تصاویر بندانگشتی به چپ",
+  "player.thumbnails.scroll.right.aria": "پیمایش تصاویر بندانگشتی به راست",
   "player.webcams.wrapper.aria": "ناحیه وب‌کم"
 }

@@ -969,7 +969,7 @@ The sections that follow cover the types of events you will encounter in `events
 
 | Event                         | Attributes                                                                   |
 | :---------------------------- | :--------------------------------------------------------------------------- |
-| StartExternalVideoRecordEvent | - timestampUTC<br/>- date<br/> - externalVideoURL                            |
+| StartExternalVideoRecordEvent | - timestampUTC<br/>- date<br/> - externalVideoUrl<br/> - externalVideoSourceUrl (optional, canonical provider URL for recording publication) |
 | UpdateExternalVideoRecordEvent| - rate<br/>- timestampUTC<br/> - state<br/> - date<br/> - status<br/> - time |
 | StopExternalVideoRecordEvent  |                                                                              |
 

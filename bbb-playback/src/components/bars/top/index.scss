@@ -36,6 +36,8 @@
   }
 
   .left {
+    direction: ltr;
+    gap: $margin-small;
     grid-column: 3;
     grid-row: 1;
     flex-shrink: 0;
@@ -82,6 +84,15 @@
     white-space: nowrap;
   }
 
+  .recording-date {
+    color: var(--skyroom-text-secondary);
+    direction: rtl;
+    flex-shrink: 0;
+    font-size: .78rem;
+    font-weight: var(--font-weight-semi-bold);
+    white-space: nowrap;
+  }
+
   .interactive {
     border-radius: 999px;
     cursor: pointer;
@@ -112,6 +123,7 @@
     .left {
       grid-column: 2;
       justify-self: end;
+      min-width: 0;
     }
 
     .center {
@@ -129,6 +141,44 @@
       font-size: .82rem;
       line-height: 1.4;
       padding: 0;
+    }
+
+    .recording-date {
+      font-size: .7rem;
+    }
+  }
+}
+
+@media (max-width: 359px) {
+  .top-bar {
+    padding-inline: $padding-extra-small;
+
+    .left,
+    .right {
+      padding-inline: 0;
+    }
+
+    .left {
+      gap: $margin-extra-small;
+    }
+
+    .right .button-wrapper {
+      height: 2rem;
+      width: 2rem;
+    }
+
+    .recording-date {
+      font-size: .64rem;
+    }
+
+    .platform-logo {
+      height: 30px;
+      padding-inline: .35rem;
+    }
+
+    .platform-logo-image {
+      height: 18px;
+      max-width: 64px;
     }
   }
 }

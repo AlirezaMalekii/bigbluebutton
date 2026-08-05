@@ -1,3 +1,8 @@
+jest.mock('utils/data/storage', () => ({
+  __esModule: true,
+  default: { metadata: {} },
+}));
+
 import {
   getBar,
 //  getCurrentContent,

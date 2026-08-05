@@ -3,7 +3,7 @@ package org.bigbluebutton.common2.msgs
 // In messages
 object StartExternalVideoPubMsg { val NAME = "StartExternalVideoPubMsg" }
 case class StartExternalVideoPubMsg(header: BbbClientMsgHeader, body: StartExternalVideoPubMsgBody) extends StandardMsg
-case class StartExternalVideoPubMsgBody(externalVideoUrl: String)
+case class StartExternalVideoPubMsgBody(externalVideoUrl: String, externalVideoSourceUrl: Option[String] = None)
 
 object UpdateExternalVideoPubMsg { val NAME = "UpdateExternalVideoPubMsg" }
 case class UpdateExternalVideoPubMsg(header: BbbClientMsgHeader, body: UpdateExternalVideoPubMsgBody) extends StandardMsg
@@ -16,7 +16,7 @@ case class StopExternalVideoPubMsgBody()
 // Out messages
 object StartExternalVideoEvtMsg { val NAME = "StartExternalVideoEvtMsg" }
 case class StartExternalVideoEvtMsg(header: BbbClientMsgHeader, body: StartExternalVideoEvtMsgBody) extends BbbCoreMsg
-case class StartExternalVideoEvtMsgBody(externalVideoUrl: String)
+case class StartExternalVideoEvtMsgBody(externalVideoUrl: String, externalVideoSourceUrl: Option[String] = None)
 
 object UpdateExternalVideoEvtMsg { val NAME = "UpdateExternalVideoEvtMsg" }
 case class UpdateExternalVideoEvtMsg(header: BbbClientMsgHeader, body: UpdateExternalVideoEvtMsgBody) extends BbbCoreMsg

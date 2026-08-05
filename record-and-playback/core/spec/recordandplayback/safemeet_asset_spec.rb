@@ -1,8 +1,10 @@
 # encoding: UTF-8
 
 require 'spec_helper'
+require 'tmpdir'
 require File.expand_path('../../lib/recordandplayback/safemeet/event_parser', __dir__)
 require File.expand_path('../../lib/recordandplayback/safemeet/manifest_store', __dir__)
+require File.expand_path('../../lib/recordandplayback/safemeet/asset_indexer', __dir__)
 
 module BigBlueButton
   module SafeMeet
@@ -66,6 +68,29 @@ module BigBlueButton
         expect(merged['assets']['presentation']).not_to be_nil
         expect(merged['assets']['audio']).not_to be_nil
         expect(merged['assets']['thumbnails']).to be_nil
+      end
+    end
+
+    describe AssetIndexer do
+      it 'indexes durable external media assets with their browser MIME types' do
+        Dir.mktmpdir do |root|
+          media_dir = File.join(root, 'external-media')
+          FileUtils.mkdir_p(media_dir)
+          File.binwrite(File.join(media_dir, 'audio.m4a'), 'audio')
+          File.binwrite(File.join(media_dir, 'video.mp4'), 'video')
+          indexer = described_class.new
+
+          assets = indexer.send(:find_external_media_assets, root)
+
+          expect(assets.map { |asset| asset[:relativePath] }).to eq([
+            'external-media/audio.m4a',
+            'external-media/video.mp4',
+          ])
+          expect(assets.map { |asset| indexer.send(:mime_for, asset[:absolutePath]) }).to eq([
+            'audio/mp4',
+            'video/mp4',
+          ])
+        end
       end
     end
   end
