@@ -1,3 +1,35 @@
-These wav files enable the administrator to shorten the FreeSWITCH audio prompts "you have been muted" and "you have been unmuted" to "muted" and "unmuted" versions.
+These wav files customize FreeSWITCH conference prompts under
+`en/us/callie/conference/`:
 
+## Mute / unmute (SafeMeet)
+
+Mute and unmute alerts are played by the HTML5 client from:
+
+- `bigbluebutton-html5/public/resources/sounds/conf-muted.mp3`
+- `bigbluebutton-html5/public/resources/sounds/conf-unmuted.mp3`
+
+FreeSWITCH `muted-sound` / `unmuted-sound` are disabled in
+`bbb-voice-conference/.../conference.conf.xml` (and re-applied on package
+install by `bbb-freeswitch-core` after-install) so those English conference
+wavs are not mixed into the voice channel.
+
+The short `conf-muted.wav` / `conf-unmuted.wav` files under `48000/` remain
+available as optional FreeSWITCH overrides if an admin re-enables those
+params manually.
+
+## Alone in conference
+
+- `conf-alone.wav` — SafeMeet prompt when you are alone in the conference
+  (replaces the English FreeSWITCH default; shipped at
+  8000 / 16000 / 32000 / 48000 Hz)
+
+Package builds install `conf-alone.wav` via `bbb-freeswitch-sounds`.
+
+For a live server that already has FreeSWITCH sounds installed, you can also
+apply the overrides with:
+
+```
 cp -r /etc/bigbluebutton/bbb-conf/sounds /opt/freeswitch/share/freeswitch
+```
+
+(after packaging/copying this directory to `/etc/bigbluebutton/bbb-conf/sounds`).

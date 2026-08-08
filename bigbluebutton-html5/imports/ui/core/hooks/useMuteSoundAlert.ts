@@ -18,9 +18,11 @@ const useMuteSoundAlert = () => {
   useEffect(() => {
     const Settings = getSettingsSingletonInstance();
     const playAudio = Settings?.application?.muteUnmuteAudioAlerts;
-    const isLiveKitBridge = AudioManager.bridge?.bridgeName === 'livekit';
 
-    if (!isLiveKitBridge || !playAudio) {
+    // SafeMeet: play client-side mute/unmute MP3s for all audio bridges
+    // (fullaudio/FreeSWITCH + LiveKit). FreeSWITCH conference muted/unmuted
+    // wavs are disabled so these HTML5 sounds remain the single source.
+    if (!playAudio) {
       prevMutedStateRef.current = isMuted;
       return;
     }

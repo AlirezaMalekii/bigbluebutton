@@ -39,6 +39,11 @@ mkdir -p staging/etc/bigbluebutton/bbb-conf
 mkdir -p staging/usr/lib/bbb-conf
 cp bin/apply-lib.sh staging/usr/lib/bbb-conf
 
+# SafeMeet / BBB custom FreeSWITCH conference prompts (alone, shortened mute/unmute)
+if [ -d sounds ]; then
+  cp -a sounds staging/etc/bigbluebutton/bbb-conf/
+fi
+
 mkdir -p staging/etc/cron.daily
 cp cron.daily/* staging/etc/cron.daily
 

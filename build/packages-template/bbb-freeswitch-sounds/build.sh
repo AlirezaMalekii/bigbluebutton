@@ -48,6 +48,21 @@ pushd mute-and-unmute-sounds-master/sounds
  find . -name "*.wav" -exec /bin/bash -c "sox -v 0.3  {} /tmp/tmp.wav; cp /tmp/tmp.wav ../../$DESTDIR/opt/freeswitch/share/freeswitch/sounds/en/us/callie/conference/{}" \;
 popd
 
+#
+# SafeMeet: replace FreeSWITCH "you are the only person in this conference"
+# prompt with the custom prompt shipped in this package (all conference rates).
+#
+for rate in 8000 16000 32000 48000; do
+  ALONE_SRC="sounds/en/us/callie/conference/${rate}/conf-alone.wav"
+  ALONE_DST="$DESTDIR/opt/freeswitch/share/freeswitch/sounds/en/us/callie/conference/${rate}/conf-alone.wav"
+  if [ -f "$ALONE_SRC" ]; then
+    install -D -m 644 "$ALONE_SRC" "$ALONE_DST"
+  else
+    echo "ERROR: missing SafeMeet alone-sound override: $ALONE_SRC" >&2
+    exit 1
+  fi
+done
+
 . ./opts-$DISTRO.sh
 
 fpm -s dir -C $DESTDIR -n $PACKAGE \

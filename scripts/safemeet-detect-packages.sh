@@ -148,6 +148,12 @@ path_to_packages() {
     bbb-livekit/*) add_package bbb-livekit ;;
     freeswitch/*|bbb-voice-conference/*) add_package bbb-freeswitch-core ;;
     bbb-libreoffice/*) add_package bbb-libreoffice-docker ;;
+    bigbluebutton-config/sounds/*)
+      # Custom FreeSWITCH prompts (alone/mute) ship via bbb-freeswitch-sounds;
+      # keep bbb-config in sync for apply-config /admin sound overrides.
+      add_package bbb-config
+      add_package bbb-freeswitch-sounds
+      ;;
     bigbluebutton-config/*) add_package bbb-config ;;
     record-and-playback/core/*) add_package bbb-record-core ;;
     record-and-playback/notes/*) add_package bbb-playback-notes ;;

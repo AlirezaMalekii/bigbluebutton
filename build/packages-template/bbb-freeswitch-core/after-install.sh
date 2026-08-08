@@ -48,7 +48,17 @@ case "$1" in
       mv -f /tmp/event_socket.conf.xml /tmp/event_socket.conf.xml_
     fi
 
-
+    # SafeMeet: mute/unmute tones are played by the HTML5 client
+    # (conf-muted.mp3 / conf-unmuted.mp3). Disable FreeSWITCH conference
+    # prompts so apt upgrades and older leftover configs do not keep the
+    # English "you are now muted" wavs.
+    CONFERENCE_CONF=/opt/freeswitch/etc/freeswitch/autoload_configs/conference.conf.xml
+    if [ -f "$CONFERENCE_CONF" ]; then
+      sed -i \
+        -e 's@^\([[:space:]]*\)<param name="muted-sound" value="conference/conf-muted.wav"/>@\1<!-- SafeMeet: mute via HTML5 --><!-- <param name="muted-sound" value="conference/conf-muted.wav"/> -->@' \
+        -e 's@^\([[:space:]]*\)<param name="unmuted-sound" value="conference/conf-unmuted.wav"/>@\1<!-- SafeMeet: unmute via HTML5 --><!-- <param name="unmuted-sound" value="conference/conf-unmuted.wav"/> -->@' \
+        "$CONFERENCE_CONF"
+    fi
 
     chown freeswitch:daemon /var/freeswitch/meetings
     chown -R freeswitch:daemon /opt/freeswitch/var
