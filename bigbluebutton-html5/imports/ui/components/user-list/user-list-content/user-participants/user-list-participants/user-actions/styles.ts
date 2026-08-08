@@ -73,7 +73,51 @@ const ActionMenuWrap = styled.div`
   display: flex;
   flex-shrink: 0;
   align-items: center;
+  margin-inline-start: 0;
+`;
+
+const LeftActionsCluster = styled.div`
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
   margin-inline-start: 4px;
+`;
+
+const StatusIconBar = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 1px;
+`;
+
+const StatusIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: var(--skyroom-panel-text-muted, #9aa8bc);
+  background: transparent;
+  border-radius: 4px;
+
+  i,
+  [class^="icon-bbb-"] {
+    font-size: 0.7rem;
+    line-height: 1;
+  }
+`;
+
+const StatusReaction = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  font-size: 0.78rem;
+  line-height: 1;
 `;
 
 const SkyroomActionsTrigger = styled(PanelOptionsButton)`
@@ -129,6 +173,10 @@ export default {
   UserRow,
   UserRowMain,
   ActionMenuWrap,
+  LeftActionsCluster,
+  StatusIconBar,
+  StatusIcon,
+  StatusReaction,
   SkyroomActionsTrigger,
   ActionIconBar,
   ActionIconButton,

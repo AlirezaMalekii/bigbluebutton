@@ -129,8 +129,51 @@ module BigBlueButton
         mime_type: asset[:mime_type],
         provider: asset[:provider],
         available: asset[:available],
-        sync_events: sync_events
+        sync_events: sanitize_sync_events(sync_events)
       }.compact
+    end
+
+    # Drop buffer/remount "play at t=0" anchors that restart media mid-share and
+    # shift later anchors that were recorded relative to that false restart.
+    def sanitize_sync_events(events)
+      return [] if events.nil? || events.empty?
+
+      sorted = events.sort_by { |event| event[:at].to_f }
+      result = []
+      time_offset = 0.0
+
+      sorted.each do |event|
+        adjusted_media_time = [event[:media_time].to_f + time_offset, 0.0].max
+        candidate = event.merge(media_time: rounded(adjusted_media_time))
+
+        if result.empty?
+          result << candidate
+          next
+        end
+
+        previous = result.last
+        expected = if previous[:playing]
+                     previous[:media_time].to_f +
+                       [candidate[:at].to_f - previous[:at].to_f, 0.0].max * previous[:rate].to_f
+                   else
+                     previous[:media_time].to_f
+                   end
+
+        spurious_zero_reset = candidate[:playing] &&
+                              previous[:playing] &&
+                              candidate[:media_time].to_f < 0.5 &&
+                              expected > 1.5 &&
+                              (expected - candidate[:media_time].to_f) > 1.5
+
+        if spurious_zero_reset
+          time_offset += expected - event[:media_time].to_f
+          next
+        end
+
+        result << candidate
+      end
+
+      result
     end
 
     def state_at(segment, raw_timestamp)

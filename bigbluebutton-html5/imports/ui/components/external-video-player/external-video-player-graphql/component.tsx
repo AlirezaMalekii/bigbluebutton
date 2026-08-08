@@ -604,9 +604,19 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
       ) {
         presentationMediaAnchoredRef.current = true;
         getPlayerCurrentTime(playerRef.current as ReactPlayer).then((time) => {
+          const serverTime = getServerCurrentTime();
+          const playerTime = Number.isFinite(time) ? time : 0;
+          // After buffering, the element can still report t≈0 while the share
+          // clock has already advanced. Publishing that zero restarts recordings.
+          const anchoredTime = (playerTime < 0.5 && serverTime > 1)
+            ? serverTime
+            : Math.max(playerTime, 0);
+          if (Math.abs(anchoredTime - playerTime) > 1) {
+            playerRef.current?.seekTo(truncateTime(anchoredTime), 'seconds');
+          }
           sendMessage('play', {
             rate: playerPlaybackRate || 1,
-            time: Number.isFinite(time) ? time : 0,
+            time: anchoredTime,
             state: 'playing',
           });
         });
@@ -682,11 +692,14 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
         && Date.now() - lastCursorRef.current.updateAt < TWITCH_VIDEO_SEEK_TIME_WINDOW * 1000
         ? lastCursorRef.current.position
         : playerCurrentTime;
+      // Prefer the share clock when the player briefly reports t≈0 after a remount
+      // or buffer stall — otherwise recordings loop back to the start.
+      const playTime = (currentTime > playerSeekTime + 0.75)
+        ? currentTime
+        : playerSeekTime;
       sendMessage('play', {
         rate,
-        // if currentTime is greater than playerCurrentTime, means the video was already played
-        // and the presenter refreshed his client
-        time: (currentTime > playerCurrentTime) && firstPlayRef.current ? currentTime : playerSeekTime,
+        time: playTime,
         state: 'playing',
       });
     }

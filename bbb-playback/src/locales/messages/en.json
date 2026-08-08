@@ -11,6 +11,7 @@
   "error.wrapper.aria": "Error area",
   "loader.wrapper.aria": "Loader area",
   "player.wrapper.aria": "Player area",
+  "player.document.title": "Playback {meetingName} - {recordingDate}",
   "player.about.modal.shortcuts.title": "Shortcuts",
   "player.about.modal.shortcuts.alt": "Alt",
   "player.about.modal.shortcuts.shift": "Shift",

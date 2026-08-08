@@ -5,7 +5,6 @@ import OverlayChatForm from './overlay-chat-form';
 import OverlayHeaderBar from './overlay-header';
 import OverlaySelfWebcam from './overlay-self-webcam';
 import OverlayUsersPanel from './overlay-users-panel';
-import ScreenShareChatReactionOverlay from './reaction-overlay';
 import {
   overlayVisibilityVar,
   overlaySelfWebcamEnabledVar,
@@ -72,7 +71,6 @@ const ScreenShareChatOverlayPanel: React.FC<ScreenShareChatOverlayPanelProps> = 
             >
               <OverlayChatMessages compact={compact} />
               {!compact && <OverlayChatForm isRTL={isRTL} />}
-              <ScreenShareChatReactionOverlay />
             </OverlayChatPanel>
             {usersTabVisited && (
               <div

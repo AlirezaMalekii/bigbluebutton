@@ -76,7 +76,12 @@ const Thumbnails = ({
   }
 
   const items = useMemo(() => {
-    return buildThumbnailItems(storage.thumbnails, storage.layoutSwap, storage.screenshare);
+    return buildThumbnailItems(
+      storage.thumbnails,
+      storage.layoutSwap,
+      storage.screenshare,
+      storage.videos,
+    );
   }, []);
 
   const currentIndex = useCurrentIndex(items);

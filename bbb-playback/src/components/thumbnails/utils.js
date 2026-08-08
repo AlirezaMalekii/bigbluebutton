@@ -1,7 +1,38 @@
 import { ID } from 'utils/constants';
 import { isEnabled } from 'utils/data/validators';
 
+const MEDIA_THUMBNAIL_LEAD_SECONDS = 1.5;
+
 const isLayoutEvent = item => item && Object.hasOwn(item, 'showScreenshare');
+
+const isMediaThumbnailSrc = src => (
+  src === ID.EXTERNAL_AUDIO || src === ID.EXTERNAL_VIDEO || src === ID.SCREENSHARE
+);
+
+const findExternalMediaForThumbnail = (item, videos = []) => {
+  if (!item || !Array.isArray(videos) || videos.length === 0) return null;
+
+  return videos.find(video => (
+    Number.isFinite(video?.timestamp)
+    && Number.isFinite(video?.stopTimestamp)
+    && item.timestamp + 0.05 >= video.timestamp - MEDIA_THUMBNAIL_LEAD_SECONDS
+    && item.timestamp < video.stopTimestamp
+  )) ?? null;
+};
+
+const annotateThumbnailWithExternalMedia = (item, videos = []) => {
+  if (!item || isLayoutEvent(item) || isMediaThumbnailSrc(item.src)) return item;
+
+  const media = findExternalMediaForThumbnail(item, videos);
+  if (!media) return item;
+
+  const src = media.mediaType === 'audio' ? ID.EXTERNAL_AUDIO : ID.EXTERNAL_VIDEO;
+  return {
+    ...item,
+    alt: media.mediaName || src,
+    src,
+  };
+};
 
 const buildSwapThumbnail = (item, index, arr, screenshare) => {
   const previousItem = arr[index - 1];
@@ -62,7 +93,12 @@ const buildSwapThumbnail = (item, index, arr, screenshare) => {
   return null;
 };
 
-export const buildThumbnailItems = (thumbnails, layoutSwap = [], screenshare = []) => {
+export const buildThumbnailItems = (
+  thumbnails,
+  layoutSwap = [],
+  screenshare = [],
+  videos = [],
+) => {
   const layoutEvents = (layoutSwap ?? []).filter(isLayoutEvent);
   const merged = [...thumbnails, ...layoutEvents];
   const sorted = merged.sort((a, b) => a.timestamp - b.timestamp);
@@ -70,7 +106,7 @@ export const buildThumbnailItems = (thumbnails, layoutSwap = [], screenshare = [
   const addThumbsForSwap = sorted.map((item, index, arr) => {
     // If the item is a standard thumbnail (not a layout event), preserve it.
     if (!isLayoutEvent(item)) {
-      return item;
+      return annotateThumbnailWithExternalMedia(item, videos);
     }
 
     return buildSwapThumbnail(item, index, arr, screenshare);

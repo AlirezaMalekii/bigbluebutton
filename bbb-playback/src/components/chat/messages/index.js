@@ -6,6 +6,7 @@ import VideoMessage from './system/video';
 import { ID } from 'utils/constants';
 import { getMessageType } from 'utils/data';
 import storage from 'utils/data/storage';
+import { getVisibleMessages } from './utils';
 import './index.scss';
 
 const propTypes = {
@@ -23,14 +24,15 @@ const Messages = ({
   scrollTo,
   setRef,
 }) => {
+  const visibleMessages = getVisibleMessages(storage.messages, currentIndex);
 
   return (
     <div className="list">
       <div className="message-wrapper">
-        {storage.messages.map((item, index) => {
-          const active = index <= currentIndex;
+        {visibleMessages.map((item, index) => {
           const { timestamp } = item;
           const type = getMessageType(item);
+          const key = item.id || `${type}-${timestamp}-${index}`;
           switch (type) {
             case ID.USERS:
 
@@ -41,14 +43,14 @@ const Messages = ({
                 : null;
               return (
                 <span
-                  key={item.id}
+                  key={key}
                   id={item.id}
                   className='user-message-wrapper'
                   ref={node => setRef(node, index)}>
                   <UserMessage
                     edited={!!item.lastEditedTimestamp}
                     reactions={item.reactions}
-                    active={active}
+                    active
                     emphasized={item.emphasized}
                     initials={item.initials}
                     moderator={item.moderator}
@@ -63,9 +65,9 @@ const Messages = ({
             case ID.POLLS:
 
               return (
-                <span ref={node => setRef(node, index)}>
+                <span key={key} ref={node => setRef(node, index)}>
                   <PollMessage
-                    active={active}
+                    active
                     answers={item.answers}
                     question={item.question}
                     responders={item.responders}
@@ -79,9 +81,9 @@ const Messages = ({
             case ID.VIDEOS:
 
               return (
-                <span ref={node => setRef(node, index)}>
+                <span key={key} ref={node => setRef(node, index)}>
                   <VideoMessage
-                    active={active}
+                    active
                     url={item.url}
                     timestamp={timestamp}
                     type={item.type}
@@ -89,7 +91,7 @@ const Messages = ({
                 </span>
               );
             default:
-              return <span ref={node => setRef(node, index)} />;
+              return <span key={key} ref={node => setRef(node, index)} />;
           }
         })}
       </div>

@@ -11,6 +11,7 @@
   "error.wrapper.aria": "محدوده خطا",
   "loader.wrapper.aria": "محدوده بارگذارنده",
   "player.wrapper.aria": "محدوده پخش‌کننده",
+  "player.document.title": "بازپخش {meetingName} - {recordingDate}",
   "player.about.modal.shortcuts.title": "میانبر‌ها",
   "player.about.modal.shortcuts.alt": "Alt",
   "player.about.modal.shortcuts.shift": "Shift",

@@ -28,7 +28,7 @@ import {
   isVoiceOnlyUser,
 } from './service';
 
-import { useIsChatEnabled, useIsPrivateChatEnabled } from '/imports/ui/services/features';
+import { useIsChatEnabled, useIsPrivateChatEnabled, useIsReactionsEnabled } from '/imports/ui/services/features';
 import { layoutDispatch } from '/imports/ui/components/layout/context';
 
 import ConfirmationModal from '/imports/ui/components/common/modal/confirmation/component';
@@ -687,6 +687,13 @@ const UserActions: React.FC<UserActionsProps> = ({
 
   const isRTL = document.documentElement.getAttribute('dir') === 'rtl';
   const useSkyroomActionsMenu = isSkyroomColumnLayout();
+  const reactionsEnabled = useIsReactionsEnabled();
+  const voiceJoined = Boolean(user.voice?.joined) && !user.voice?.deafened;
+  const showPresenterStatus = Boolean(user.presenter);
+  const showReactionStatus = reactionsEnabled
+    && Boolean(user.reactionEmoji)
+    && user.reactionEmoji !== 'none'
+    && !user.away;
   const existingPrivateChat = chats?.find(
     (chat) => chat.participant?.userId === user.userId,
   );
@@ -700,6 +707,68 @@ const UserActions: React.FC<UserActionsProps> = ({
     openPrivateChatConversation(layoutContextDispatch, existingPrivateChat.chatId);
   };
 
+  const skyroomStatusCluster = useSkyroomActionsMenu ? (
+    <Styled.LeftActionsCluster dir="ltr" data-test="userRowStatusCluster">
+      <Styled.ActionMenuWrap onClick={(e) => e.stopPropagation()}>
+        <BBBMenu
+          dataTest={`userActionsMenu-${user.userId}`}
+          overrideMobileStyles
+          trigger={(
+            <Styled.SkyroomActionsTrigger
+              size="sm"
+              color="light"
+              hideLabel
+              icon="more"
+              label={intl.formatMessage(messages.userActionsMenu)}
+              aria-label={intl.formatMessage(messages.userActionsMenu)}
+              data-test="userActionsMenuTrigger"
+              className="skyroom-user-actions-trigger"
+            />
+          )}
+          actions={skyroomMenuActions}
+          customStyles={{ zIndex: 1010 }}
+          opts={{
+            id: `user-actions-menu-${user.userId}`,
+            keepMounted: false,
+            transitionDuration: 0,
+            elevation: 8,
+            disableScrollLock: true,
+            className: 'skyroom-user-actions-menu',
+            BackdropProps: { invisible: true },
+            anchorOrigin: {
+              vertical: 'bottom',
+              horizontal: isRTL ? 'left' : 'right',
+            },
+            transformOrigin: {
+              vertical: 'top',
+              horizontal: isRTL ? 'left' : 'right',
+            },
+          }}
+        />
+      </Styled.ActionMenuWrap>
+      <Styled.StatusIconBar aria-hidden>
+        {voiceJoined ? (
+          <Styled.StatusIcon
+            data-test={isMuted ? 'userRowMuted' : 'userRowUnmuted'}
+            title={isMuted ? 'muted' : 'unmuted'}
+          >
+            <Icon iconName={isMuted ? 'mute' : 'unmute'} />
+          </Styled.StatusIcon>
+        ) : null}
+        {showPresenterStatus ? (
+          <Styled.StatusIcon data-test="userRowPresenter" title="presenter">
+            <Icon iconName="presentation" />
+          </Styled.StatusIcon>
+        ) : null}
+        {showReactionStatus ? (
+          <Styled.StatusReaction data-test="userRowReaction" title={user.reactionEmoji}>
+            {user.reactionEmoji}
+          </Styled.StatusReaction>
+        ) : null}
+      </Styled.StatusIconBar>
+    </Styled.LeftActionsCluster>
+  ) : null;
+
   return (
     <Styled.UserRow>
       <Styled.UserRowMain
@@ -709,45 +778,7 @@ const UserActions: React.FC<UserActionsProps> = ({
       >
         {children}
       </Styled.UserRowMain>
-      {useSkyroomActionsMenu ? (
-        <Styled.ActionMenuWrap onClick={(e) => e.stopPropagation()}>
-          <BBBMenu
-            dataTest={`userActionsMenu-${user.userId}`}
-            overrideMobileStyles
-            trigger={(
-              <Styled.SkyroomActionsTrigger
-                size="sm"
-                color="light"
-                hideLabel
-                icon="more"
-                label={intl.formatMessage(messages.userActionsMenu)}
-                aria-label={intl.formatMessage(messages.userActionsMenu)}
-                data-test="userActionsMenuTrigger"
-                className="skyroom-user-actions-trigger"
-              />
-            )}
-            actions={skyroomMenuActions}
-            customStyles={{ zIndex: 1010 }}
-            opts={{
-              id: `user-actions-menu-${user.userId}`,
-              keepMounted: false,
-              transitionDuration: 0,
-              elevation: 8,
-              disableScrollLock: true,
-              className: 'skyroom-user-actions-menu',
-              BackdropProps: { invisible: true },
-              anchorOrigin: {
-                vertical: 'bottom',
-                horizontal: isRTL ? 'left' : 'right',
-              },
-              transformOrigin: {
-                vertical: 'top',
-                horizontal: isRTL ? 'left' : 'right',
-              },
-            }}
-          />
-        </Styled.ActionMenuWrap>
-      ) : (
+      {useSkyroomActionsMenu ? skyroomStatusCluster : (
         <Styled.ActionIconBar
           aria-hidden={!open}
           onClick={(e) => e.stopPropagation()}

@@ -124,6 +124,33 @@ $thumbnail-height: calc(#{$bottom-content-height} - 3.5rem);
       font-size: xxx-large;
       font-weight: var(--font-weight-semi-bold);
     }
+
+    .media-thumb {
+      align-items: center;
+      aspect-ratio: 4 / 3;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(20, 169, 158, .28), transparent 55%),
+        rgba(8, 14, 25, .96);
+      color: var(--skyroom-brand-200);
+      display: flex;
+      height: $thumbnail-height;
+      justify-content: center;
+      min-width: calc(#{$thumbnail-height} * 1.25);
+      width: calc(#{$thumbnail-height} * 1.35);
+
+      .thumbnail-media-glyph {
+        height: 1.75rem;
+        width: 1.75rem;
+      }
+
+      &.audio {
+        color: #7dd3fc;
+      }
+
+      &.video {
+        color: var(--skyroom-brand-200);
+      }
+    }
   }
 }
 

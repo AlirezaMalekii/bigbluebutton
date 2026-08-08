@@ -11,7 +11,7 @@ import {
 } from './reaction-stream';
 import useDeduplicatedSubscription from '../../core/hooks/useDeduplicatedSubscription';
 
-const DUPLICATE_WINDOW_MS = 1500;
+const DUPLICATE_WINDOW_MS = 3000;
 const MAX_FALLBACK_REACTIONS = 20;
 const EMPTY_STREAM = [];
 
@@ -42,19 +42,32 @@ const dedupeReactions = (reactions) => {
 
 /**
  * Stream rows and user-state fallback use different eventIds for the same
- * send. Collapse same user+emoji within a short window, preferring stream.
+ * send. Prefer stream; drop fallback when a fresh stream event covers the key.
  */
 const mergeStreamAndFallback = (streamReactions, fallbackReactions) => {
   const merged = [];
   const recentByUserEmoji = new Map();
+  const freshStreamUserEmojiKeys = new Set();
+  const now = Date.now();
 
-  const pushUnique = (reaction) => {
+  dedupeReactions(streamReactions).forEach((reaction) => {
+    if (!reaction?.reaction || reaction.reaction === 'none') return;
+    if (isFreshReaction(reaction.creationDate, now)) {
+      freshStreamUserEmojiKeys.add(getUserEmojiKey(reaction));
+    }
+  });
+
+  const pushUnique = (reaction, { fromFallback = false } = {}) => {
     if (!reaction?.reaction || reaction.reaction === 'none') return;
 
     const userEmojiKey = getUserEmojiKey(reaction);
     const createdAt = reaction.creationDate?.getTime?.() || 0;
-    const lastSeenAt = recentByUserEmoji.get(userEmojiKey);
 
+    if (fromFallback && freshStreamUserEmojiKeys.has(userEmojiKey)) {
+      return;
+    }
+
+    const lastSeenAt = recentByUserEmoji.get(userEmojiKey);
     if (
       lastSeenAt != null
       && Math.abs(createdAt - lastSeenAt) < DUPLICATE_WINDOW_MS
@@ -70,8 +83,12 @@ const mergeStreamAndFallback = (streamReactions, fallbackReactions) => {
   };
 
   // Prefer canonical stream events first, then fill gaps via fallback.
-  dedupeReactions(streamReactions).forEach(pushUnique);
-  dedupeReactions(fallbackReactions).forEach(pushUnique);
+  dedupeReactions(streamReactions).forEach((reaction) => {
+    pushUnique(reaction, { fromFallback: false });
+  });
+  dedupeReactions(fallbackReactions).forEach((reaction) => {
+    pushUnique(reaction, { fromFallback: true });
+  });
 
   return merged;
 };

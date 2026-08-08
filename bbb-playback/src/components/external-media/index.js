@@ -50,15 +50,30 @@ const intlMessages = defineMessages({
 const DRIFT_TOLERANCE_SECONDS = 0.35;
 const MIN_PLAYBACK_RATE = 0.25;
 const MAX_PLAYBACK_RATE = 4;
+const UNAVAILABLE_NOTICE_SECONDS = 8;
 
 const ExternalMedia = () => {
   const intl = useIntl();
   const element = useRef(null);
   const activeItem = useRef(null);
+  const failedItem = useRef(false);
   const lastTimelineTime = useRef(0);
+  const noticeUntil = useRef(0);
   const [item, setItem] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [noticeVisible, setNoticeVisible] = useState(false);
+
+  const markFailed = useCallback((errorName) => {
+    if (errorName && errorName !== 'AbortError') {
+      logger.warn('external media failed', errorName);
+    }
+
+    failedItem.current = true;
+    noticeUntil.current = lastTimelineTime.current + UNAVAILABLE_NOTICE_SECONDS;
+    setFailed(true);
+    setNoticeVisible(true);
+  }, []);
 
   const sync = useCallback((timelineTime = lastTimelineTime.current) => {
     const media = element.current;
@@ -88,16 +103,13 @@ const ExternalMedia = () => {
       const promise = media.play();
       if (promise) {
         promise.catch((error) => {
-          if (error.name !== 'AbortError') {
-            logger.warn('external media play failed', error.name);
-            setFailed(true);
-          }
+          if (error.name !== 'AbortError') markFailed(error.name);
         });
       }
     } else if (!shouldPlay && !media.paused) {
       media.pause();
     }
-  }, []);
+  }, [markFailed]);
 
   useEffect(() => {
     const handleTimeUpdate = (event) => {
@@ -107,11 +119,20 @@ const ExternalMedia = () => {
 
       if (activeItem.current !== nextItem) {
         activeItem.current = nextItem;
+        failedItem.current = false;
         setItem(nextItem);
         setLoaded(false);
         setFailed(false);
+
+        const unavailable = nextItem && (!nextItem.available || !nextItem.mediaUrl);
+        noticeUntil.current = unavailable ? time + UNAVAILABLE_NOTICE_SECONDS : 0;
+        setNoticeVisible(Boolean(unavailable));
         return;
       }
+
+      const unavailable = nextItem
+        && (!nextItem.available || !nextItem.mediaUrl || failedItem.current);
+      setNoticeVisible(Boolean(unavailable && time < noticeUntil.current));
 
       sync(time);
     };
@@ -144,11 +165,15 @@ const ExternalMedia = () => {
   const unavailable = !item.available || !item.mediaUrl || failed;
 
   if (unavailable) {
+    if (!noticeVisible) return null;
+
     return (
-      <div aria-label={aria} className="external-media-wrapper external-media-status" role="status">
-        <span className="external-media-status-icon"><Icon name="videos" /></span>
-        <strong>{title}</strong>
-        <span>{intl.formatMessage(intlMessages.unavailable)}</span>
+      <div aria-label={aria} aria-live="polite" className="external-media-notice" role="status">
+        <span aria-hidden="true" className="external-media-notice-icon"><Icon name="videos" /></span>
+        <span className="external-media-notice-copy">
+          <strong>{title}</strong>
+          <span>{intl.formatMessage(intlMessages.unavailable)}</span>
+        </span>
       </div>
     );
   }
@@ -160,7 +185,7 @@ const ExternalMedia = () => {
       setLoaded(true);
       sync();
     },
-    onError: () => setFailed(true),
+    onError: () => markFailed('MediaError'),
     onLoadedMetadata: () => sync(),
     playsInline: true,
     preload: 'metadata',
@@ -172,7 +197,11 @@ const ExternalMedia = () => {
     <div aria-label={aria} className="external-media-wrapper">
       {isAudio ? (
         <>
-          <audio {...mediaProps} className="external-media-element external-media-audio-element" />
+          <audio
+            key={`${item.mediaUrl}-${item.timestamp}`}
+            {...mediaProps}
+            className="external-media-element external-media-audio-element"
+          />
           <div className="external-media-audio-card">
             <span className="external-media-audio-icon"><Icon name="videos" /></span>
             <div className="external-media-audio-copy">
@@ -182,7 +211,7 @@ const ExternalMedia = () => {
           </div>
         </>
       ) : (
-        <video {...mediaProps} />
+        <video key={`${item.mediaUrl}-${item.timestamp}`} {...mediaProps} />
       )}
       {!loaded ? (
         <div className="external-media-loading" role="status">

@@ -65,7 +65,10 @@ const Presentation = () => {
   return (
     <div
       aria-label={intl.formatMessage(intlMessages.aria)}
-      className={cx('presentation-wrapper', { inactive: (currentContent !== ID.PRESENTATION && showScreenshare) })}
+      className={cx('presentation-wrapper', {
+        inactive: (currentContent !== ID.PRESENTATION && showScreenshare)
+          || currentContent === ID.VIDEOS,
+      })}
       id={ID.PRESENTATION}
     >
       <div className={cx('presentation', { logo: !started })}>

@@ -88,11 +88,19 @@ const getCurrentContent = (time) => {
   const {
     SCREENSHARE,
     PRESENTATION,
+    VIDEOS,
   } = ID;
 
-  const content = isEnabled(storage.screenshare, time) ? SCREENSHARE : PRESENTATION;
+  if (isEnabled(storage.screenshare, time)) return SCREENSHARE;
 
-  return content;
+  const hasExternalMedia = (storage.videos || []).some(item => (
+    Number.isFinite(item?.timestamp)
+    && Number.isFinite(item?.stopTimestamp)
+    && time >= item.timestamp
+    && time < item.stopTimestamp
+  ));
+
+  return hasExternalMedia ? VIDEOS : PRESENTATION;
 };
 
 const getCurrentDataIndex = (data, time) => {

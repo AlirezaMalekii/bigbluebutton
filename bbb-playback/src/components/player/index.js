@@ -17,8 +17,10 @@ import {
   skip,
 } from 'utils/actions';
 import { ID } from 'utils/constants';
+import formatJalaliDate from 'utils/jalali';
 import layout from 'utils/layout';
 import Shortcuts from 'utils/shortcuts';
+import storage from 'utils/data/storage';
 import { useLayoutSwap, useWebcamVisibility } from 'components/utils/hooks';
 import './index.scss';
 
@@ -26,6 +28,10 @@ const intlMessages = defineMessages({
   aria: {
     id: 'player.wrapper.aria',
     description: 'Aria label for the player wrapper',
+  },
+  documentTitle: {
+    id: 'player.document.title',
+    description: 'Browser document title for a recording',
   },
 });
 
@@ -43,6 +49,22 @@ const Player = () => {
   const { showPresentation } = useLayoutSwap();
   const hidePresentation = showPresentation === false;
   const showWebcam = useWebcamVisibility();
+
+  useEffect(() => {
+    const meetingName = storage.metadata.name?.trim();
+    const recordingDate = formatJalaliDate(storage.metadata.start);
+    if (!meetingName || !recordingDate) return undefined;
+
+    const previousTitle = document.title;
+    document.title = intl.formatMessage(intlMessages.documentTitle, {
+      meetingName,
+      recordingDate,
+    });
+
+    return () => {
+      document.title = previousTitle;
+    };
+  }, [intl]);
 
   useEffect(() => {
     if (showPresentation === false) {

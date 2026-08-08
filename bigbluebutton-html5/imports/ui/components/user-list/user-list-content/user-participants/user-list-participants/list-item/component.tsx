@@ -25,7 +25,6 @@ import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import SkyroomModeratorBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomModeratorBadge';
 import SkyroomViewerBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomViewerBadge';
-import SkyroomPresenterBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomPresenterBadge';
 import useUnreadPrivateChatsBySender from '/imports/ui/core/hooks/useUnreadPrivateChatsBySender';
 
 const messages = defineMessages({
@@ -247,8 +246,9 @@ const UserListItem: React.FC<UserListItemProps> = ({
   });
 
   const reactionsEnabled = useIsReactionsEnabled();
+  const skyroomColumn = isSkyroomColumnLayout();
 
-  const userAvatarFiltered = (user.away === true || (user.reactionEmoji && user.reactionEmoji !== 'none')) ? '' : user.avatar;
+  const userAvatarFiltered = (user.away === true) ? '' : user.avatar;
 
   const emojiIcons = [
     {
@@ -268,19 +268,17 @@ const UserListItem: React.FC<UserListItemProps> = ({
         ? <Emoji key="away" emoji={emojiIcons[0]} native={emojiIcons[0].native} size={emojiSize} />
         : <Icon iconName="time" />;
     }
-    if (user.reactionEmoji && user.reactionEmoji !== 'none') {
+    // Skyroom: reaction lives in the left status cluster, not on the avatar.
+    if (!skyroomColumn && user.reactionEmoji && user.reactionEmoji !== 'none') {
       return user.reactionEmoji;
     }
     if (user.name && userAvatarFiltered.length === 0) {
-      if (isSkyroomColumnLayout()) {
+      if (skyroomColumn) {
         if (user.isModerator || user.role === 'MODERATOR') {
-          return <SkyroomModeratorBadge color={user.color} />;
+          return <SkyroomModeratorBadge />;
         }
-        if (user.presenter && !user.bot) {
-          return <SkyroomPresenterBadge color={user.color} />;
-        }
-        if (!user.presenter && !user.bot) {
-          return <SkyroomViewerBadge color={user.color} />;
+        if (!user.bot) {
+          return <SkyroomViewerBadge />;
         }
       }
       if (user.isModerator || user.role === 'MODERATOR') {
@@ -300,6 +298,8 @@ const UserListItem: React.FC<UserListItemProps> = ({
   const avatarContent = getIconUser();
 
   const hasWhiteboardAccess = user?.whiteboardWriteAccess === true;
+  // Skyroom moves mic/presenter off the avatar circle into the left status cluster.
+  const showAvatarStatusBadges = !skyroomColumn;
 
   function addSeparator(elements: (string | JSX.Element)[]) {
     const modifiedElements: (string | JSX.Element)[] = [];
@@ -346,14 +346,14 @@ const UserListItem: React.FC<UserListItemProps> = ({
         data-test-presenter={user.presenter ? '' : undefined}
         data-test-avatar="userAvatar"
         moderator={user.isModerator}
-        presenter={user.presenter}
+        presenter={showAvatarStatusBadges && user.presenter}
         talking={voiceUser?.talking}
-        muted={voiceUser?.muted}
-        listenOnly={voiceUser?.listenOnly || voiceUser?.listenOnlyInputDevice}
-        voice={voiceUser?.joined && !voiceUser?.deafened}
-        noVoice={!voiceUser?.joined || voiceUser?.deafened}
+        muted={showAvatarStatusBadges && voiceUser?.muted}
+        listenOnly={showAvatarStatusBadges && (voiceUser?.listenOnly || voiceUser?.listenOnlyInputDevice)}
+        voice={showAvatarStatusBadges && voiceUser?.joined && !voiceUser?.deafened}
+        noVoice={showAvatarStatusBadges && (!voiceUser?.joined || voiceUser?.deafened)}
         color={user.color}
-        whiteboardAccess={hasWhiteboardAccess}
+        whiteboardAccess={showAvatarStatusBadges && hasWhiteboardAccess}
         animations={animations}
         avatar={userAvatarFiltered}
         isChrome={isChrome}

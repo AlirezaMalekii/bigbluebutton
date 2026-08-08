@@ -8,19 +8,20 @@ import React, {
 import PropTypes from 'prop-types';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import { isFreshReaction } from './reaction-stream';
-import { hasUsableStageBounds, resolveStageDomBounds } from './resolve-stage-bounds';
+import {
+  hasUsableChatBounds,
+  resolveChatColumnDomBounds,
+} from './resolve-chat-column-bounds';
 import { layoutSelectOutput } from '../layout/context';
 import Styled from './stage-reaction-overlay-styles';
 
 const MAX_VISIBLE_REACTIONS = 10;
 const REACTION_TTL_MS = 7600;
-const DUPLICATE_WINDOW_MS = 1500;
+const DUPLICATE_WINDOW_MS = 3000;
 /**
- * Default: above stage media (6) and webcam strip (8–9), below ActionsBar (20)
- * and BBBMenu (~999) so the footer reaction picker stays clickable.
- * Webcam-fullscreen bump lives in skyroom CSS (above ~1502).
+ * Above chat panel content; below ActionsBar (20) and BBBMenu (~999).
  */
-const STAGE_REACTION_Z_INDEX = 15;
+const CHAT_REACTION_Z_INDEX = 15;
 
 const buildFixedStyle = (bounds) => ({
   top: `${bounds.top}px`,
@@ -39,47 +40,32 @@ const StageReactionOverlay = ({ reactions }) => {
   const Settings = getSettingsSingletonInstance();
   const { animations } = Settings.application;
   const [floatingReactions, setFloatingReactions] = useState([]);
-  const [stageBounds, setStageBounds] = useState(null);
+  const [chatBounds, setChatBounds] = useState(null);
   const seenReactionsRef = useRef(new Set());
   const recentReactionRef = useRef(new Map());
   const expireTimersRef = useRef(new Map());
   const reactionsRef = useRef(reactions);
   reactionsRef.current = reactions;
 
-  // Layout output changes are a signal to re-measure the painted stage DOM.
-  const screenShare = layoutSelectOutput((i) => i.screenShare);
-  const externalVideo = layoutSelectOutput((i) => i.externalVideo);
-  const genericMainContent = layoutSelectOutput((i) => i.genericMainContent);
-  const sharedNotes = layoutSelectOutput((i) => i.sharedNotes);
-  const presentation = layoutSelectOutput((i) => i.presentation);
+  const sidebarContent = layoutSelectOutput((i) => i.sidebarContent);
+  const sidebarNavigation = layoutSelectOutput((i) => i.sidebarNavigation);
 
   const layoutSignal = useMemo(() => ([
-    screenShare?.display,
-    screenShare?.width,
-    screenShare?.height,
-    screenShare?.top,
-    screenShare?.left,
-    externalVideo?.display,
-    externalVideo?.width,
-    externalVideo?.height,
-    externalVideo?.top,
-    externalVideo?.left,
-    genericMainContent?.width,
-    genericMainContent?.height,
-    sharedNotes?.width,
-    sharedNotes?.height,
-    presentation?.display,
-    presentation?.width,
-    presentation?.height,
-    presentation?.top,
-    presentation?.left,
-    presentation?.right,
+    sidebarContent?.display,
+    sidebarContent?.width,
+    sidebarContent?.height,
+    sidebarContent?.top,
+    sidebarContent?.left,
+    sidebarContent?.right,
+    sidebarNavigation?.display,
+    sidebarNavigation?.width,
+    sidebarNavigation?.height,
+    sidebarNavigation?.top,
+    sidebarNavigation?.left,
+    sidebarNavigation?.right,
   ].join('|')), [
-    screenShare,
-    externalVideo,
-    genericMainContent,
-    sharedNotes,
-    presentation,
+    sidebarContent,
+    sidebarNavigation,
   ]);
 
   useLayoutEffect(() => {
@@ -89,9 +75,9 @@ const StageReactionOverlay = ({ reactions }) => {
     let layoutObserver = null;
 
     const measure = () => {
-      const resolved = resolveStageDomBounds();
+      const resolved = resolveChatColumnDomBounds();
       const next = resolved?.bounds || null;
-      setStageBounds((current) => {
+      setChatBounds((current) => {
         if (!next && !current) return current;
         if (!next) return null;
         if (
@@ -134,25 +120,22 @@ const StageReactionOverlay = ({ reactions }) => {
       }
     }
 
-    // Whiteboard/tldraw can mount slightly after layout output updates.
     const retryTimers = [100, 350, 800].map((ms) => window.setTimeout(scheduleMeasure, ms));
 
     window.addEventListener('resize', scheduleMeasure);
     window.addEventListener('orientationchange', scheduleMeasure);
 
-    // Presentation minimize / webcam fullscreen swap stage targets without
-    // always changing layout output dimensions.
     const layoutEl = document.getElementById('layout');
     if (layoutEl && typeof MutationObserver !== 'undefined') {
       layoutObserver = new MutationObserver(scheduleMeasure);
       layoutObserver.observe(layoutEl, {
         attributes: true,
         attributeFilter: [
-          'data-skyroom-presentation-minimized',
-          'data-skyroom-webcam-fullscreen',
-          'data-skyroom-stage-webcams',
-          'data-skyroom-stage-full',
-          'data-skyroom-screen-share',
+          'data-skyroom-content-visible',
+          'data-skyroom-users-visible',
+          'data-skyroom-chat-visible',
+          'data-skyroom-mobile',
+          'data-skyroom-column',
         ],
       });
     }
@@ -167,7 +150,7 @@ const StageReactionOverlay = ({ reactions }) => {
     };
   }, [layoutSignal]);
 
-  const boundsVisible = hasUsableStageBounds(stageBounds);
+  const boundsVisible = hasUsableChatBounds(chatBounds);
 
   const reactionSignature = useMemo(
     () => reactions.map(getReactionKey).join('|'),
@@ -223,9 +206,9 @@ const StageReactionOverlay = ({ reactions }) => {
       seenReactionsRef.current.add(key);
       recentReactionRef.current.set(duplicateKey, createdAt);
 
-      const lane = 12 + Math.random() * 76;
-      const drift = Math.round((Math.random() * 72) - 36);
-      const duration = Math.round(6200 + Math.random() * 900);
+      const lane = 18 + Math.random() * 64;
+      const drift = Math.round((Math.random() * 40) - 20);
+      const duration = Math.round(5200 + Math.random() * 800);
 
       acc.push({
         id: key,
@@ -234,7 +217,7 @@ const StageReactionOverlay = ({ reactions }) => {
         left: lane,
         drift,
         duration,
-        delay: Math.round(Math.random() * 180),
+        delay: Math.round(Math.random() * 120),
       });
 
       return acc;
@@ -252,15 +235,14 @@ const StageReactionOverlay = ({ reactions }) => {
 
   if (!animations || !boundsVisible) return null;
 
-  // Keep rise distance proportional to the painted stage so video/pdf/whiteboard
-  // share the same perceived speed (fixed duration × relative travel).
-  const travel = Math.max(Math.round(Number(stageBounds.height) * 0.72), 160);
+  const travel = Math.max(Math.round(Number(chatBounds.height) * 0.68), 100);
 
   return (
     <Styled.Stage
-      style={buildFixedStyle(stageBounds)}
-      $zIndex={STAGE_REACTION_Z_INDEX}
+      style={buildFixedStyle(chatBounds)}
+      $zIndex={CHAT_REACTION_Z_INDEX}
       data-test="stageReactionOverlay"
+      data-skyroom-chat-reaction-overlay="true"
     >
       {floatingReactions.map((reaction) => (
         <Styled.Bubble

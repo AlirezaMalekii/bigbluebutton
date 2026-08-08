@@ -41,6 +41,8 @@ const ID = {
   POLLS: 'polls',
   PRESENTATION: 'presentation',
   SCREENSHARE: 'screenshare',
+  EXTERNAL_AUDIO: 'external-audio',
+  EXTERNAL_VIDEO: 'external-video',
   SEARCH: 'search',
   SETTINGS: 'settings',
   SHAPES: 'shapes',

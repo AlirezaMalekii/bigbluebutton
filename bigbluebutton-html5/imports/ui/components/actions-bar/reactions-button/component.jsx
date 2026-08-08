@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { defineMessages } from 'react-intl';
 import PropTypes from 'prop-types';
 import BBBMenu from '/imports/ui/components/common/menu/component';
@@ -27,6 +27,8 @@ const ReactionsButton = (props) => {
 
   const [setReactionEmoji] = useMutation(SET_REACTION_EMOJI);
   const pendingRef = useRef(false);
+  const sendLockTimerRef = useRef(null);
+  const SEND_LOCK_MS = 400;
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
@@ -59,8 +61,27 @@ const ReactionsButton = (props) => {
     }, 0);
   };
 
+  const releaseSendLock = () => {
+    if (sendLockTimerRef.current) {
+      clearTimeout(sendLockTimerRef.current);
+    }
+    sendLockTimerRef.current = setTimeout(() => {
+      pendingRef.current = false;
+      sendLockTimerRef.current = null;
+    }, SEND_LOCK_MS);
+  };
+
+  useEffect(() => () => {
+    if (sendLockTimerRef.current) {
+      clearTimeout(sendLockTimerRef.current);
+    }
+  }, []);
+
   const handleReactionSelect = (reaction) => {
     if (pendingRef.current) return;
+
+    // Same emoji already active — server skips; avoid a second floating bubble.
+    if (reaction !== 'none' && reaction === currentUserReaction) return;
 
     // Clearing status should not consume the send budget.
     if (reaction !== 'none' && !isModerator) {
@@ -84,13 +105,17 @@ const ReactionsButton = (props) => {
     setReactionEmoji({
       variables: { reactionEmoji: reaction },
       onCompleted: () => {
-        pendingRef.current = false;
         if (reaction !== 'none' && !isModerator) {
           consumeReactionRateLimit();
         }
+        releaseSendLock();
       },
       onError: () => {
         pendingRef.current = false;
+        if (sendLockTimerRef.current) {
+          clearTimeout(sendLockTimerRef.current);
+          sendLockTimerRef.current = null;
+        }
         notify(
           intl.formatMessage(intlMessages.sendErrorLabel),
           'error',

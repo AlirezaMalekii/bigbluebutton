@@ -59,6 +59,26 @@ module BigBlueButton
                                            ])
     end
 
+    it 'drops spurious play-at-zero restarts caused by buffering remounts' do
+      doc = external_media_events([
+                                    { name: 'StartExternalVideoRecordEvent', timestamp: 42_110,
+                                      fields: { externalVideoUrl: 'https://example.test/audio.mp3' } },
+                                    { name: 'UpdateExternalVideoRecordEvent', timestamp: 49_265,
+                                      fields: { status: 'play', rate: 1, time: 0, state: 1 } },
+                                    { name: 'UpdateExternalVideoRecordEvent', timestamp: 66_783,
+                                      fields: { status: 'stop', rate: 1, time: 17.395, state: 0 } },
+                                    { name: 'StopExternalVideoRecordEvent', timestamp: 85_365 }
+                                  ])
+
+      segment = described_class.parse_segments(doc).first
+      interval = described_class.build_interval(segment, available_asset, 42_110, 85_365, ->(time) { time })
+
+      expect(interval[:sync_events]).to eq([
+                                             { at: 42.11, media_time: 0.0, playing: true, rate: 1.0 },
+                                             { at: 66.783, media_time: 24.55, playing: false, rate: 1.0 }
+                                           ])
+    end
+
     it 'splits playback across recording gaps and restores the correct media state' do
       doc = external_media_events([
                                     { name: 'StartExternalVideoRecordEvent', timestamp: 1_000,

@@ -6,6 +6,7 @@ import {
   getCurrentExternalMedia,
   getExternalMediaState,
   isWithinInterval,
+  sanitizeSyncEvents,
 } from './utils';
 
 const item = {
@@ -31,4 +32,31 @@ it('calculates play, pause, seek and playback-rate positions from sync anchors',
   expect(getExternalMediaState(item, 12)).toEqual({ mediaTime: 6, playing: true, rate: 1 });
   expect(getExternalMediaState(item, 18)).toEqual({ mediaTime: 9, playing: false, rate: 1 });
   expect(getExternalMediaState(item, 22.5)).toEqual({ mediaTime: 17, playing: true, rate: 2 });
+});
+
+it('ignores spurious play-at-zero restarts and keeps a continuous timeline', () => {
+  const recording = {
+    timestamp: 42.11,
+    stopTimestamp: 85.365,
+    syncEvents: [
+      { at: 42.11, mediaTime: 0, playing: true, rate: 1 },
+      { at: 49.265, mediaTime: 0, playing: true, rate: 1 },
+      { at: 66.783, mediaTime: 17.395, playing: false, rate: 1 },
+    ],
+  };
+
+  expect(sanitizeSyncEvents(recording.syncEvents)).toEqual([
+    { at: 42.11, mediaTime: 0, playing: true, rate: 1 },
+    { at: 66.783, mediaTime: 24.55, playing: false, rate: 1 },
+  ]);
+  expect(getExternalMediaState(recording, 52)).toEqual({
+    mediaTime: 9.89,
+    playing: true,
+    rate: 1,
+  });
+  expect(getExternalMediaState(recording, 70)).toEqual({
+    mediaTime: 24.55,
+    playing: false,
+    rate: 1,
+  });
 });

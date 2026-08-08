@@ -320,22 +320,34 @@
   height: 74% !important;
 }
 
-#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::after,
-#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::after,
-#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::before,
-#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::before {
-  width: 15px !important;
-  height: 15px !important;
-  min-width: 15px !important;
-  max-width: 15px !important;
-  max-height: 15px !important;
-  font-size: 9px !important;
-  letter-spacing: 0 !important;
-  padding: 0 !important;
-  line-height: 1 !important;
-  border-width: 1px !important;
-  z-index: 2 !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35) !important;
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="LeftActionsCluster"],
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="userRowStatusCluster"] {
+  flex-shrink: 0 !important;
+  align-self: center !important;
+  gap: 2px !important;
+  max-height: 100% !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="StatusIconBar"] {
+  gap: 1px !important;
+  max-height: 100% !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="StatusIcon"],
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="StatusReaction"] {
+  width: 16px !important;
+  min-width: 16px !important;
+  height: 16px !important;
+  color: var(--skyroom-panel-text-muted, #9aa8bc) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="StatusReaction"] {
+  font-size: 0.72rem !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="StatusIcon"] i,
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="StatusIcon"] [class^="icon-bbb-"] {
+  font-size: 0.65rem !important;
 }
 
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [data-test="moderatorAvatar"],
@@ -367,118 +379,19 @@
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.28));
 }
 
-/* Presenter / mic badges — kept inside avatar bounds (no spill into next row) */
+/* Presenter / mic badges moved to left status cluster — hide avatar overlays */
 #layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::after,
-#layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::after {
-  top: auto !important;
-  left: auto !important;
-  bottom: 0 !important;
-  right: 0 !important;
-  width: 9px !important;
-  height: 9px !important;
-  min-width: 9px !important;
-  max-width: 9px !important;
-  max-height: 9px !important;
-  font-size: 6px !important;
-  letter-spacing: 0 !important;
-  padding: 0 !important;
-  line-height: 1 !important;
-  border-width: 1px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-  box-sizing: border-box !important;
-}
-
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::after,
 #layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::before,
 #layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::before {
-  top: 0 !important;
-  left: auto !important;
-  bottom: auto !important;
-  right: 0 !important;
-  width: 9px !important;
-  height: 9px !important;
-  min-width: 9px !important;
-  max-width: 9px !important;
-  max-height: 9px !important;
-  font-size: 6px !important;
-  letter-spacing: 0 !important;
+  content: none !important;
+  display: none !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  border: none !important;
+  background: transparent !important;
   padding: 0 !important;
-  line-height: 1 !important;
-  border-width: 1px !important;
-  border-radius: 2px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-  box-sizing: border-box !important;
-}
-
-#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [data-test="moderatorAvatar"]::after,
-#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [data-test="viewerAvatar"]::after,
-#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [data-test="moderatorAvatar"]::before,
-#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [data-test="viewerAvatar"]::before {
-  width: 12px !important;
-  height: 12px !important;
-  min-width: 12px !important;
-  max-width: 12px !important;
-  max-height: 12px !important;
-  font-size: 9px !important;
-  letter-spacing: -0.32rem !important;
-  padding: 0 !important;
-  padding-top: 0 !important;
-  line-height: 10px !important;
-  border-width: 1px !important;
-  z-index: 2 !important;
-}
-
-#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [data-test="moderatorAvatar"]::before,
-#layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [data-test="viewerAvatar"]::before {
-  border-radius: 3px !important;
-}
-
-[dir="rtl"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [data-test="moderatorAvatar"]::after,
-[dir="rtl"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [data-test="viewerAvatar"]::after {
-  letter-spacing: -0.32rem !important;
-  padding-right: 0.32rem !important;
-  padding-left: 0 !important;
-}
-
-[dir="rtl"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [data-test="moderatorAvatar"]::before,
-[dir="rtl"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [data-test="viewerAvatar"]::before {
-  letter-spacing: -0.28rem !important;
-  padding-right: 0.28rem !important;
-  padding-left: 0 !important;
-}
-
-[dir="rtl"] #layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::after,
-[dir="rtl"] #layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::after {
-  right: auto !important;
-  left: 0 !important;
-  padding-right: 0 !important;
-  padding-left: 0 !important;
-}
-
-[dir="rtl"] #layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::before,
-[dir="rtl"] #layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::before {
-  right: auto !important;
-  left: 0 !important;
-  padding-right: 0 !important;
-  padding-left: 0 !important;
-}
-
-#layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::before,
-#layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="moderatorAvatar"]::after,
-#layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::before,
-#layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="viewerAvatar"]::after {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
-  letter-spacing: 0 !important;
-  line-height: 1 !important;
-  box-sizing: border-box !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="UserName"],
