@@ -37,8 +37,6 @@ const getReactionKey = (reaction) => {
 };
 
 const StageReactionOverlay = ({ reactions }) => {
-  const Settings = getSettingsSingletonInstance();
-  const { animations } = Settings.application;
   const [floatingReactions, setFloatingReactions] = useState([]);
   const [chatBounds, setChatBounds] = useState(null);
   const seenReactionsRef = useRef(new Set());
@@ -49,6 +47,9 @@ const StageReactionOverlay = ({ reactions }) => {
 
   const sidebarContent = layoutSelectOutput((i) => i.sidebarContent);
   const sidebarNavigation = layoutSelectOutput((i) => i.sidebarNavigation);
+
+  const Settings = getSettingsSingletonInstance();
+  const animations = Settings?.application?.animations;
 
   const layoutSignal = useMemo(() => ([
     sidebarContent?.display,

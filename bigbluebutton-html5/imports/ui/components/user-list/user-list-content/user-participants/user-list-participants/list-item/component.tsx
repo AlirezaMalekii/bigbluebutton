@@ -156,6 +156,9 @@ const UserListItem: React.FC<UserListItemProps> = ({
   const privateChatUnread = unreadPrivateChatsBySender.get(user.userId)?.unread ?? 0;
   const { data: talkingUsers } = useWhoIsTalking();
   const { data: unmutedUsers } = useWhoIsUnmuted();
+  const raiseHandEnabled = useIsRaiseHandEnabled();
+  const reactionsEnabled = useIsReactionsEnabled();
+  const skyroomColumn = isSkyroomColumnLayout();
   const voiceUser = {
     ...user.voice,
     talking: talkingUsers[user.userId],
@@ -163,7 +166,7 @@ const UserListItem: React.FC<UserListItemProps> = ({
   };
   const subs = [];
 
-  const LABEL = window.meetingClientSettings.public.user.label;
+  const LABEL = window.meetingClientSettings?.public?.user?.label || {};
 
   if (user.isModerator && LABEL.moderator) {
     subs.push(intl.formatMessage(messages.moderator));
@@ -205,8 +208,7 @@ const UserListItem: React.FC<UserListItemProps> = ({
       </span>,
     );
   }
-  const raiseHandEnabled = useIsRaiseHandEnabled();
-  if (raiseHandEnabled && user.raiseHand && isSkyroomColumnLayout()) {
+  if (raiseHandEnabled && user.raiseHand && skyroomColumn) {
     subs.push(
       <span
         key="raise-hand"
@@ -244,9 +246,6 @@ const UserListItem: React.FC<UserListItemProps> = ({
       </span>,
     );
   });
-
-  const reactionsEnabled = useIsReactionsEnabled();
-  const skyroomColumn = isSkyroomColumnLayout();
 
   const userAvatarFiltered = (user.away === true) ? '' : user.avatar;
 

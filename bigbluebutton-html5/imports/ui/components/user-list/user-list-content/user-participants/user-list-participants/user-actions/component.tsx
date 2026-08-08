@@ -264,6 +264,7 @@ const UserActions: React.FC<UserActionsProps> = ({
   const voiceToggle = useToggleVoice();
   const isChatEnabled = useIsChatEnabled();
   const isPrivateChatEnabled = useIsPrivateChatEnabled();
+  const reactionsEnabled = useIsReactionsEnabled();
 
   const handleWhiteboardAccessChange = async (newWhiteboardWriteAccess: boolean) => {
     // There is no presentation available, so access cannot be granted.
@@ -687,7 +688,6 @@ const UserActions: React.FC<UserActionsProps> = ({
 
   const isRTL = document.documentElement.getAttribute('dir') === 'rtl';
   const useSkyroomActionsMenu = isSkyroomColumnLayout();
-  const reactionsEnabled = useIsReactionsEnabled();
   const voiceJoined = Boolean(user.voice?.joined) && !user.voice?.deafened;
   const showPresenterStatus = Boolean(user.presenter);
   const showReactionStatus = reactionsEnabled

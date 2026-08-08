@@ -85,9 +85,11 @@ export function useIsImportSharedNotesFromBreakoutRoomsEnabled() {
 }
 
 export function useIsReactionsEnabled() {
-  const USER_REACTIONS_ENABLED = window.meetingClientSettings.public.userReaction.enabled;
+  // Call hooks before reading settings — settings may be unset on first paint.
+  const disabledFeatures = useDisabledFeatures();
+  const USER_REACTIONS_ENABLED = window.meetingClientSettings?.public?.userReaction?.enabled;
 
-  return useDisabledFeatures().indexOf('reactions') === -1 && USER_REACTIONS_ENABLED;
+  return disabledFeatures.indexOf('reactions') === -1 && Boolean(USER_REACTIONS_ENABLED);
 }
 
 export function useIsTimerFeatureEnabled() {
