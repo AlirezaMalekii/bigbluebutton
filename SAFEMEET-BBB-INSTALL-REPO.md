@@ -53,6 +53,7 @@ wget -qO- https://new-bbb-install.roomeet.ir/bbb-install-safemeet-3.0.sh | bash 
   -w -v jammy-300 -s live71.roomeet.ir -e cert@roomeet.ir \
   --default-pdf-url "https://example.com/default.pdf" \
   --logo-url "https://example.com/logo.svg" \
+  --logo-link-url "https://roomeet.ir" \
   --theme-id roomeet
 ```
 
@@ -106,7 +107,8 @@ For changing only the default PDF/logo without upgrading BBB packages:
 wget -qO- https://new-bbb-install.roomeet.ir/bbb-install-safemeet-3.0.sh | bash -s -- \
   -s live71.roomeet.ir --config-only \
   --default-pdf-url "https://example.com/default.pdf" \
-  --logo-url "https://example.com/logo.svg"
+  --logo-url "https://example.com/logo.svg" \
+  --logo-link-url "https://roomeet.ir"
 ```
 
 ## Dry Run
@@ -115,7 +117,8 @@ wget -qO- https://new-bbb-install.roomeet.ir/bbb-install-safemeet-3.0.sh | bash 
 wget -qO- https://new-bbb-install.roomeet.ir/bbb-install-safemeet-3.0.sh | bash -s -- \
   -v jammy-300 -s live71.roomeet.ir --dry-run \
   --default-pdf-url "https://example.com/default.pdf" \
-  --logo-url "https://example.com/logo.svg"
+  --logo-url "https://example.com/logo.svg" \
+  --logo-link-url "https://roomeet.ir"
 ```
 
 ## Persistent Overrides
@@ -143,6 +146,21 @@ useDefaultLogo=true
 defaultLogoURL=https://<bbb-host>/safemeet/logo.<ext>
 useDefaultDarkLogo=true
 defaultDarkLogoURL=https://<bbb-host>/safemeet/logo.<ext>
+```
+
+`--logo-url` sets both light and dark logo defaults to the same asset (SafeMeet uses one dark meeting theme).
+
+`--logo-link-url` writes the meeting-logo click target into:
+
+```text
+/etc/bigbluebutton/bbb-html5.yml
+```
+
+```yaml
+public:
+  app:
+    branding:
+      logoLinkUrl: https://roomeet.ir
 ```
 
 Meeting theme JSON is also stored at `/etc/safemeet-bbb/theme.json`. The HTML5

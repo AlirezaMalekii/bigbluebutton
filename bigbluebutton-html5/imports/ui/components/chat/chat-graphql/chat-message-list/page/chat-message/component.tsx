@@ -54,6 +54,11 @@ import { isMobile } from '/imports/utils/deviceInfo';
 import { layoutSelect } from '/imports/ui/components/layout/context';
 import { Layout } from '/imports/ui/components/layout/layoutTypes';
 import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
+import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import SkyroomModeratorBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomModeratorBadge';
+import SkyroomViewerBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomViewerBadge';
+import SkyroomPresenterBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomPresenterBadge';
+import SkyroomGuestBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomGuestBadge';
 
 interface ChatMessageProps {
   message: Message;
@@ -722,11 +727,24 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
     return 'icon-bbb-user';
   };
 
+  const getSkyroomChatAvatar = () => {
+    const { user: messageUser } = message;
+    const isMod = Boolean(
+      messageContent.isModerator || messageUser?.isModerator || messageUser?.role === 'MODERATOR',
+    );
+    if (isMod) return <SkyroomModeratorBadge />;
+    if (messageUser?.presenter) return <SkyroomPresenterBadge />;
+    if (messageUser?.guest) return <SkyroomGuestBadge />;
+    return <SkyroomViewerBadge />;
+  };
+
   let avatarDisplay;
 
   if (!messageContent.avatarIcon) {
     if (!message.user || message.user?.avatar.length === 0) {
-      avatarDisplay = <i className={getDefaultAvatarIconClass()} aria-hidden />;
+      avatarDisplay = isSkyroomColumnLayout()
+        ? getSkyroomChatAvatar()
+        : <i className={getDefaultAvatarIconClass()} aria-hidden />;
     } else {
       avatarDisplay = '';
     }
@@ -735,6 +753,40 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
   }
 
   const showPluginMetadataFooter = !deleteTime && isCustomMessageFromPlugin && currentUserIsModerator;
+
+  const skyroomColumn = isSkyroomColumnLayout();
+
+  const headingElement = (shouldRenderAvatar || shouldRenderHeader) ? (
+    <ChatHeading data-skyroom-chat-heading="true">
+      {shouldRenderAvatar && (
+        <ChatAvatar
+          className={skyroomColumn && !messageContent.avatarIcon
+            ? 'skyroom-chat-person-avatar'
+            : undefined}
+          avatar={message.user?.avatar || ''}
+          color={skyroomColumn && !messageContent.avatarIcon
+            ? 'transparent'
+            : messageContent.color}
+          moderator={skyroomColumn && !messageContent.avatarIcon
+            ? false
+            : messageContent.isModerator}
+        >
+          {avatarDisplay}
+        </ChatAvatar>
+      )}
+      {shouldRenderHeader && (
+        <ChatMessageHeader
+          sameSender={message?.user ? sameSender : false}
+          name={messageContent.name}
+          currentlyInMeeting={message.user?.currentlyInMeeting ?? true}
+          dateTime={dateTime}
+          deleteTime={deleteTime}
+          editTime={editTime}
+          role="listitem"
+        />
+      )}
+    </ChatHeading>
+  ) : null;
 
   const contentElement = (
     <ChatMessageContentWrapper
@@ -751,6 +803,7 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
       $emphasizedMessage={message.chatEmphasizedText}
       role="listitem"
     >
+      {skyroomColumn && headingElement}
       <ChatMessageToolbar
         isCustomPluginMessage={isCustomPluginMessage}
         hasToolbar={hasToolbar && messageContent.showToolbar}
@@ -881,6 +934,7 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
       data-sequence={message.messageSequence}
       data-message-type={message.messageType}
       data-focusable={focusable}
+      data-skyroom-has-meta={headingElement ? 'true' : 'false'}
       onKeyDown={(e) => {
         const isTargetElement = e.target === e.currentTarget;
         if (e.keyCode === KEY_CODES.TAB && isTargetElement) {
@@ -896,30 +950,7 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
         isPresentationUpload={messageContent.isPresentationUpload}
         isCustomPluginMessage={isCustomPluginMessage}
       >
-        {(shouldRenderAvatar || shouldRenderHeader) && (
-          <ChatHeading>
-            {shouldRenderAvatar && (
-              <ChatAvatar
-                avatar={message.user?.avatar || ''}
-                color={messageContent.color}
-                moderator={messageContent.isModerator}
-              >
-                {avatarDisplay}
-              </ChatAvatar>
-            )}
-            {shouldRenderHeader && (
-              <ChatMessageHeader
-                sameSender={message?.user ? sameSender : false}
-                name={messageContent.name}
-                currentlyInMeeting={message.user?.currentlyInMeeting ?? true}
-                dateTime={dateTime}
-                deleteTime={deleteTime}
-                editTime={editTime}
-                role="listitem"
-              />
-            )}
-          </ChatHeading>
-        )}
+        {!skyroomColumn && headingElement}
         {
           isToolbarReactionPopoverOpen && reactionsPopover
         }

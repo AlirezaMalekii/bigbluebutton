@@ -124,6 +124,7 @@ package_template_from_path() {
 path_to_packages() {
   local path="$1"
   case "$path" in
+    SAFEMEET_VERSION) add_package bbb-html5 ;;
     bigbluebutton-html5/*) add_package bbb-html5 ;;
     bigbluebutton-web/*) add_package bbb-web ;;
     bbb-common-web/*|bbb-common-message/*)

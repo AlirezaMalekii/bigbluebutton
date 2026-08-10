@@ -28,9 +28,15 @@ cp bbb-html5.nginx.dev staging/usr/share/bigbluebutton/nginx
 cp bbb-html5.nginx.static staging/usr/share/bigbluebutton/nginx
 cp sip.nginx staging/usr/share/bigbluebutton/nginx
 
-# New format
+# SafeMeet product version for About modal (not Debian $BUILD — that showed as "1").
+# Canonical: SAFEMEET_VERSION (copied into package build dir by setup-inside-docker).
 if [ -f private/config/settings.yml ]; then
-  sed -i "s/HTML5_CLIENT_VERSION/$(($BUILD))/g" private/config/settings.yml
+  if [ -f SAFEMEET_VERSION ]; then
+    CLIENT_VERSION="$(tr -d '[:space:]' < SAFEMEET_VERSION)"
+    sed -i -E "s|^([[:space:]]*html5ClientBuild:).*|\1 ${CLIENT_VERSION}|" private/config/settings.yml
+  elif grep -q 'HTML5_CLIENT_VERSION' private/config/settings.yml; then
+    sed -i "s/HTML5_CLIENT_VERSION/$(($BUILD))/g" private/config/settings.yml
+  fi
 fi
 
 echo "Npm version:"

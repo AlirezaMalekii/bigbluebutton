@@ -11,6 +11,7 @@
 #     -w -v jammy-300 -s live71.roomeet.ir -e cert@roomeet.ir \
 #     --default-pdf-url https://example.com/default.pdf \
 #     --logo-url https://example.com/logo.svg \
+#     --logo-link-url https://roomeet.ir \
 #     --theme-config-url https://cdn.example.com/safemeet/themes/roomeet.json
 set -euo pipefail
 
@@ -28,13 +29,14 @@ THEME_CSS_ASSET="${ASSET_DIR}/theme-override.css"
 THEME_JSON_ASSET="${ASSET_DIR}/theme.json"
 THEME_COMPILE_URL="${THEME_COMPILE_URL:-${SAFE_THEMES_URL}/safemeet-theme-compile.py}"
 BBB_WEB_PROPS="/etc/bigbluebutton/bbb-web.properties"
+BBB_HTML5_YML="/etc/bigbluebutton/bbb-html5.yml"
 APT_LIST="/etc/apt/sources.list.d/bigbluebutton.list"
 SAFE_APT_LIST="/etc/apt/sources.list.d/safemeet-bigbluebutton.list"
 APT_PIN="/etc/apt/preferences.d/safemeet-bbb"
 
 DEFAULT_PDF_URL=""
 LOGO_URL=""
-DARK_LOGO_URL=""
+LOGO_LINK_URL=""
 THEME_CONFIG_URL=""
 THEME_ID=""
 THEME_RESET=0
@@ -63,8 +65,8 @@ Usage:
 
 SafeMeet options:
   --default-pdf-url URL   Download and set the default whiteboard PDF.
-  --logo-url URL          Download and set the default meeting logo.
-  --dark-logo-url URL     Download and set the dark-mode meeting logo.
+  --logo-url URL          Download and set the default meeting logo (also used as dark logo).
+  --logo-link-url URL     Set the URL opened when users click the meeting logo.
   --theme-config-url URL  Download a theme JSON and apply meeting palette override.
   --theme-id ID           Shortcut for built-in themes hosted at ${SAFE_THEMES_URL}/<id>.json
                           (examples: safemeet, roomeet).
@@ -140,12 +142,58 @@ SAFE_REPO_URL=${SAFE_REPO_URL}
 HOST=${host}
 DEFAULT_PDF_URL=${DEFAULT_PDF_URL}
 LOGO_URL=${LOGO_URL}
-DARK_LOGO_URL=${DARK_LOGO_URL}
+LOGO_LINK_URL=${LOGO_LINK_URL}
 THEME_CONFIG_URL=${theme_url}
 THEME_ID=${theme_id_value}
 UPDATED_AT=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
 EOF
   chmod 600 "$STATE_FILE"
+}
+
+upsert_html5_yaml_string() {
+  local key_path="$1"
+  local value="$2"
+  local file="$BBB_HTML5_YML"
+
+  touch "$file"
+  if command -v yq >/dev/null 2>&1; then
+    yq e -i "${key_path} = \"${value}\"" "$file"
+    return 0
+  fi
+
+  python3 - "$file" "$key_path" "$value" <<'PY'
+import sys
+
+path, key_path, value = sys.argv[1], sys.argv[2], sys.argv[3]
+keys = [k for k in key_path.lstrip('.').split('.') if k]
+
+try:
+    import yaml  # type: ignore
+except ImportError as exc:
+    raise SystemExit(
+        "Need yq or PyYAML to update /etc/bigbluebutton/bbb-html5.yml safely."
+    ) from exc
+
+with open(path, "r", encoding="utf-8") as handle:
+    raw = handle.read().strip()
+data = yaml.safe_load(raw) if raw else {}
+if data is None:
+    data = {}
+if not isinstance(data, dict):
+    raise SystemExit(f"{path} must contain a YAML mapping")
+
+cursor = data
+for key in keys[:-1]:
+    nxt = cursor.get(key)
+    if not isinstance(nxt, dict):
+        nxt = {}
+        cursor[key] = nxt
+    cursor = nxt
+cursor[keys[-1]] = value
+
+with open(path, "w", encoding="utf-8") as handle:
+    yaml.safe_dump(data, handle, default_flow_style=False, allow_unicode=True, sort_keys=False)
+PY
 }
 
 resolve_theme_config_url() {
@@ -464,14 +512,16 @@ apply_safemeet_config() {
   local changed=0
 
   if [[ "$DRY_RUN" == "1" ]]; then
-    log "DRY RUN: would backup ${BBB_WEB_PROPS}, ${APT_LIST}, ${SAFE_APT_LIST}, and ${APT_PIN}"
+    log "DRY RUN: would backup ${BBB_WEB_PROPS}, ${BBB_HTML5_YML}, ${APT_LIST}, ${SAFE_APT_LIST}, and ${APT_PIN}"
     log "DRY RUN: would cache assets in ${ASSET_DIR}"
+    [[ -n "$LOGO_LINK_URL" ]] && log "DRY RUN: would set branding.logoLinkUrl=${LOGO_LINK_URL}"
     apply_theme_config "$host" "$stamp"
     return 0
   fi
 
   mkdir -p "$ASSET_DIR"
   backup_file "$BBB_WEB_PROPS" "$stamp"
+  backup_file "$BBB_HTML5_YML" "$stamp"
   backup_file "$APT_LIST" "$stamp"
   backup_file "$SAFE_APT_LIST" "$stamp"
   backup_file "$APT_PIN" "$stamp"
@@ -491,22 +541,14 @@ apply_safemeet_config() {
     download_asset "$LOGO_URL" "$logo_dest" "logo"
     upsert_property "$BBB_WEB_PROPS" "useDefaultLogo" "true"
     upsert_property "$BBB_WEB_PROPS" "defaultLogoURL" "$logo_public"
+    # SafeMeet ships a single dark meeting theme; reuse the same logo asset.
+    upsert_property "$BBB_WEB_PROPS" "useDefaultDarkLogo" "true"
+    upsert_property "$BBB_WEB_PROPS" "defaultDarkLogoURL" "$logo_public"
     changed=1
-
-    if [[ -z "$DARK_LOGO_URL" ]]; then
-      upsert_property "$BBB_WEB_PROPS" "useDefaultDarkLogo" "true"
-      upsert_property "$BBB_WEB_PROPS" "defaultDarkLogoURL" "$logo_public"
-    fi
   fi
 
-  if [[ -n "$DARK_LOGO_URL" ]]; then
-    local dark_ext dark_dest dark_public
-    dark_ext="$(asset_ext_from_url "$DARK_LOGO_URL" "svg")"
-    dark_dest="${ASSET_DIR}/dark-logo.${dark_ext}"
-    dark_public="https://${host}/safemeet/dark-logo.${dark_ext}"
-    download_asset "$DARK_LOGO_URL" "$dark_dest" "dark logo"
-    upsert_property "$BBB_WEB_PROPS" "useDefaultDarkLogo" "true"
-    upsert_property "$BBB_WEB_PROPS" "defaultDarkLogoURL" "$dark_public"
+  if [[ -n "$LOGO_LINK_URL" ]]; then
+    upsert_html5_yaml_string ".public.app.branding.logoLinkUrl" "$LOGO_LINK_URL"
     changed=1
   fi
 
@@ -520,9 +562,12 @@ apply_safemeet_config() {
   write_state "$host"
 
   if [[ "$changed" == "1" ]]; then
-    log "Restarting services that read BBB web defaults"
+    log "Restarting services that read BBB web / HTML5 defaults"
     systemctl reload nginx || true
     systemctl restart bbb-web || true
+    if [[ -n "$LOGO_LINK_URL" ]]; then
+      systemctl restart bbb-apps-akka || true
+    fi
   fi
 }
 
@@ -531,7 +576,7 @@ health_check() {
   [[ "$SKIP_HEALTH_CHECK" == "1" ]] && return 0
   [[ "$DRY_RUN" == "1" ]] && return 0
 
-  if [[ "$PACKAGES_UPGRADED" -eq 0 && -z "$DEFAULT_PDF_URL" && -z "$LOGO_URL" && -z "$DARK_LOGO_URL" && -z "$THEME_CONFIG_URL" && -z "$THEME_ID" && "$THEME_RESET" != "1" && "$THEME_CHANGED" != "1" ]]; then
+  if [[ "$PACKAGES_UPGRADED" -eq 0 && -z "$DEFAULT_PDF_URL" && -z "$LOGO_URL" && -z "$LOGO_LINK_URL" && -z "$THEME_CONFIG_URL" && -z "$THEME_ID" && "$THEME_RESET" != "1" && "$THEME_CHANGED" != "1" ]]; then
     log "No package or config changes applied; skipping health checks"
     return 0
   fi
@@ -551,6 +596,10 @@ health_check() {
     logo_path="$(grep -E '^defaultLogoURL=' "$BBB_WEB_PROPS" | tail -n 1 | cut -d= -f2-)"
     [[ -n "$logo_path" ]] && curl -fsSL "$logo_path" -o /dev/null \
       || die "Logo is not reachable at ${logo_path}"
+  fi
+  if [[ -n "$LOGO_LINK_URL" ]]; then
+    grep -qE 'logoLinkUrl:' "$BBB_HTML5_YML" \
+      || die "logoLinkUrl was not written to ${BBB_HTML5_YML}"
   fi
   if [[ "$THEME_CHANGED" == "1" && "$THEME_RESET" != "1" ]]; then
     curl -fsSL "https://${host}/safemeet/theme-override.css" -o /dev/null \
@@ -575,12 +624,12 @@ parse_args() {
       --logo-url=*)
         LOGO_URL="${1#--logo-url=}"
         ;;
-      --dark-logo-url)
+      --logo-link-url)
         shift
-        DARK_LOGO_URL="${1:-}"
+        LOGO_LINK_URL="${1:-}"
         ;;
-      --dark-logo-url=*)
-        DARK_LOGO_URL="${1#--dark-logo-url=}"
+      --logo-link-url=*)
+        LOGO_LINK_URL="${1#--logo-link-url=}"
         ;;
       --theme-config-url)
         shift
@@ -612,6 +661,9 @@ parse_args() {
         usage
         exit 0
         ;;
+      --dark-logo-url|--dark-logo-url=*)
+        die "--dark-logo-url was removed; pass a single --logo-url (also used as the dark logo)."
+        ;;
       *)
         INSTALL_ARGS+=("$1")
         ;;
@@ -626,7 +678,7 @@ main() {
 
   [[ -n "$DEFAULT_PDF_URL" ]] && validate_url "$DEFAULT_PDF_URL" "--default-pdf-url"
   [[ -n "$LOGO_URL" ]] && validate_url "$LOGO_URL" "--logo-url"
-  [[ -n "$DARK_LOGO_URL" ]] && validate_url "$DARK_LOGO_URL" "--dark-logo-url"
+  [[ -n "$LOGO_LINK_URL" ]] && validate_url "$LOGO_LINK_URL" "--logo-link-url"
   [[ -n "$THEME_CONFIG_URL" ]] && validate_url "$THEME_CONFIG_URL" "--theme-config-url"
   if [[ -n "$THEME_CONFIG_URL" && -n "$THEME_ID" ]]; then
     die "Use either --theme-config-url or --theme-id, not both."

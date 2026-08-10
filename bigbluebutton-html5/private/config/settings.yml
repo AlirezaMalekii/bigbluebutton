@@ -34,7 +34,9 @@ public:
     bbbServerVersion: HTML5_FULL_BBB_VERSION
     displayBbbServerVersion: false
     copyright: ''
-    html5ClientBuild: HTML5_CLIENT_VERSION
+    # SafeMeet product version (canonical: repo-root SAFEMEET_VERSION).
+    # Auto-bumped on each push to safemeet; milestones via scripts/safemeet-bump-version.sh --set X.Y
+    html5ClientBuild: 0.8
     helpLink: ''
     delayForUnmountOfSharedNote: 120000
     bbbTabletApp:
@@ -291,6 +293,9 @@ public:
         descId: openDebugWindow
     branding:
       displayBrandingArea: true
+      # Server-wide URL opened when users click the custom meeting logo.
+      # Override via /etc/bigbluebutton/bbb-html5.yml or install --logo-link-url.
+      logoLinkUrl: ""
     connectionTimeout: 60000
     showHelpButton: false
     # Whether the fallback mechanism should be used

@@ -1,28 +1,35 @@
 ---
-description: Never patch BBB production directly — git first, then update the server from the repository
+description: Git-first delivery with an explicit live51 HTML5 hot-fix exception for SafeMeet test iteration
 alwaysApply: true
 ---
 
 # BBB Server Change Discipline (Git First)
 
-Do **not** put code, jars, configs, or test media directly onto the BBB server as a fix path.
+Prefer git → remote repo → server update. Do **not** treat ad-hoc server file drops as the long-term delivery path.
 
-## Required order
+## Required order (default)
 
 1. Change code in this git repo locally.
-2. Commit (only when the user asks) and **push** so the remote repository is updated.
-3. On the BBB server, update from that repository with the project’s approved commands (pull/checkout + install/restart as documented) — not ad-hoc `scp`/`rsync` of random files into `/usr/share/...`.
+2. Commit/push **only when the user asks**.
+3. Update the BBB server from the approved flow (CI packages, or documented `deploy.sh` / pull).
 
 ## Forbidden without explicit user request
 
-- `scp` / `rsync` of source, jars, or patches straight into live BBB paths to “hot-fix” production
-- Editing files under `/usr/share/bbb-web`, `/usr/share/bigbluebutton`, etc. by hand as the delivery method
-- Dropping one-off jars (e.g. alternate `bbb-common-web-*.jar`) beside the packaged version
+- Hot-patching **non-test** / production package trees as the primary fix
+- Dropping jars beside packaged `bbb-web` / Akka / GraphQL artifacts
+- Hand-editing `/usr/share/bbb-web`, recording pipelines, or mediasoup as delivery
 
-## Allowed
+## Allowed — live51 HTML5 hot-fix (SafeMeet test)
 
-- **Read-only** SSH inspection (logs, `journalctl`, package versions, file listing) when diagnosing
-- Running the **documented** deploy/update flow the user asks for (e.g. after push: server pull + package/deploy scripts)
-- Local/staging workflows described in `DEPLOY-FA.md` / `.cursor/rules/bbb-deploy-pipeline.mdc` only when the user requests them — and still prefer git-backed delivery over one-off file drops
+**live51** (host from gitignored `.deploy.env`, typically `live51.roomeet.ir` / `78.157.39.51`) is the SafeMeet **test** BBB for UI iteration.
 
-If a fix was applied out-of-band on the server, surface it and reconcile via git before considering the work done.
+When the user wants quick feedback and full CI would be wasteful:
+
+- Use skill [hotfix-live51-html5](.cursor/skills/hotfix-live51-html5/SKILL.md)
+- Scope: `bigbluebutton-html5` client assets (JS/TS/CSS/skyroom) only
+- CSS-only → rsync stylesheets to live html5-client; JS → remote `npm run build` + sync `dist/`
+- Do **not** commit/push unless asked; user batches to git + CI/CD later
+
+Still allowed anytime: read-only SSH inspection; documented `./deploy.sh --only html5` when requested.
+
+If an out-of-band hot-fix was applied, remind the user it is not on the remote repository until they push.

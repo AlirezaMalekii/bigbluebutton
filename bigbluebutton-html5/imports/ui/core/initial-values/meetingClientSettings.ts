@@ -18,7 +18,7 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
       bbbServerVersion: 'HTML5_FULL_BBB_VERSION',
       displayBbbServerVersion: false,
       copyright: '',
-      html5ClientBuild: 'HTML5_CLIENT_VERSION',
+      html5ClientBuild: '0.8',
       helpLink: '',
       delayForUnmountOfSharedNote: 120000,
       enableApolloDevTools: false,
@@ -198,6 +198,7 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
       },
       branding: {
         displayBrandingArea: true,
+        logoLinkUrl: '',
       },
       connectionTimeout: 60000,
       showHelpButton: false,

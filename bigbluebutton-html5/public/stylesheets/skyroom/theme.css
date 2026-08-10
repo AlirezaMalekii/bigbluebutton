@@ -1052,7 +1052,7 @@ select:focus {
 
 [data-test="chatTitle"],
 [data-test="userListContent"] h2,
-[data-test="userListContent"] span,
+[data-test="userListContent"] span:not([data-skyroom-avatar="true"]),
 .skyroom-drawer__body label,
 .skyroom-drawer__body p {
   color: var(--skyroom-text-primary);
@@ -1101,8 +1101,8 @@ select:focus {
   background-color: transparent !important;
 }
 
-:root[data-theme="dark"] [data-test="userListContent"] [role="button"] span,
-:root[data-theme="dark"] [data-test="userListContent"] li span {
+:root[data-theme="dark"] [data-test="userListContent"] [role="button"] span:not([data-skyroom-avatar="true"]),
+:root[data-theme="dark"] [data-test="userListContent"] li span:not([data-skyroom-avatar="true"]) {
   color: var(--skyroom-text-secondary) !important;
 }
 

@@ -10,6 +10,9 @@ export const CHAT_MESSAGE_PUBLIC_SUBSCRIPTION = gql`
         avatar
         currentlyInMeeting
         isModerator
+        presenter
+        guest
+        role
         color
       }
       messageSequence
@@ -68,6 +71,9 @@ export const CHAT_MESSAGE_PRIVATE_SUBSCRIPTION = gql`
         avatar
         currentlyInMeeting
         isModerator
+        presenter
+        guest
+        role
         color
       }
       messageSequence

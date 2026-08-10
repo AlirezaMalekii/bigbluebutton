@@ -74,6 +74,11 @@ build_package() {
         fi
     fi
 
+    # SafeMeet product version for bbb-html5 About modal
+    if [[ "$PACKAGE" == "bbb-html5" && -f "${SOURCE}/SAFEMEET_VERSION" ]]; then
+        cp "${SOURCE}/SAFEMEET_VERSION" "${TMP}/${TARGET}/SAFEMEET_VERSION"
+    fi
+
     # global fpm options for all packages
     cp opts-global.sh "$TMP/$TARGET"
 

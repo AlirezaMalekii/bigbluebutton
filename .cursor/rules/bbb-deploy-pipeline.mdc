@@ -6,16 +6,17 @@ alwaysApply: false
 
 # Deploy and Package Pipeline
 
-There are two distinct workflows:
+There are three distinct workflows:
 
-1. Local/staging iteration: `./deploy.sh --only html5` syncs/builds against a configured BBB server using gitignored `.deploy.env`.
-2. Branch CI: `.github/workflows/safemeet-ci-cd.yml` builds selected Debian packages and publishes the apt repository. It does not rsync source or run `deploy.sh` on the old BBB server.
+1. **live51 HTML5 hot-fix** (fastest UI iteration): skill `.cursor/skills/hotfix-live51-html5/` — rsync CSS or rebuild html5 on the test host without GitHub CI. Prefer this when the user wants quick feedback on SafeMeet meeting UI.
+2. Local/staging deploy script: `./deploy.sh --only html5` syncs/builds against `.deploy.env` (broader than a surgical hot-fix).
+3. Branch CI: `.github/workflows/safemeet-ci-cd.yml` builds Debian packages and publishes the apt repository. It does not rsync source to the old BBB server.
 
-**Git-first law** (always): see `.cursor/rules/bbb-git-first-deploy.mdc`. Push the repo first; update the BBB server from git/commands. Do not drop jars or source directly onto live BBB paths to hot-fix.
+**Delivery law**: see `.cursor/rules/bbb-git-first-deploy.mdc`. Lasting delivery is git → CI/packages; live51 hot-fix is an explicit test-server exception for html5 client assets only.
 
 - Treat `SAFEMEET-BBB-INSTALL-REPO.md` and the active workflow as CI sources of truth.
 - Never commit `.deploy.env`, known-host files, SSH keys, API keys, or server secrets.
-- UI-only local deploy should remain `--only html5`; do not rebuild core services without a dependency reason.
+- UI-only local deploy should remain html5-scoped; do not rebuild core services without a dependency reason.
 - A package/workflow change must identify affected Debian package names and publish/install verification.
 - GraphQL schema, Akka, recording steps, and settings changes need explicit service/migration/restart notes.
 - After UI deployment, hard-refresh and create a new meeting to avoid cached settings/assets.

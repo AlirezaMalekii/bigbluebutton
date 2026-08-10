@@ -18,7 +18,56 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Patch-bump SafeMeet product version on every push to safemeet (0.8 → 0.8.1 → …).
+  # Milestones (0.9, 1.0, …) are set manually via scripts/safemeet-bump-version.sh --set
+  bump-version:
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/safemeet' &&
+      !contains(github.event.head_commit.message, '[skip version]') &&
+      !contains(github.event.head_commit.message, '[skip ci]')
+    runs-on: ubuntu-latest
+    name: Bump SafeMeet version
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bump patch version
+        id: bump
+        run: |
+          set -euo pipefail
+          NEW_VERSION="$(bash scripts/safemeet-bump-version.sh --bump)"
+          echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "SafeMeet version → ${NEW_VERSION}"
+
+      - name: Commit and push version bump
+        run: |
+          set -euo pipefail
+          VERSION="$(bash scripts/safemeet-bump-version.sh --get)"
+          git config user.name "safemeet-ci"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add SAFEMEET_VERSION \
+            bigbluebutton-html5/private/config/settings.yml \
+            bigbluebutton-html5/imports/ui/core/initial-values/meetingClientSettings.ts
+          if git diff --cached --quiet; then
+            echo "Version files unchanged; nothing to commit"
+            exit 0
+          fi
+          git commit -m "$(cat <<EOF
+chore(version): bump SafeMeet to ${VERSION} [skip version] [skip ci]
+EOF
+)"
+          git push origin HEAD:safemeet
+
   changes:
+    needs: [bump-version]
+    if: always() && (needs.bump-version.result == 'success' || needs.bump-version.result == 'skipped')
     runs-on: ubuntu-latest
     name: Detect changed areas
     outputs:
@@ -45,7 +94,7 @@ jobs:
           echo "Changed files in this push:"
           echo "$FILES"
           has() { grep -qE "$1" <<< "$FILES"; }
-          if has '^bigbluebutton-html5/'; then echo "html5=true" >> "$GITHUB_OUTPUT"; else echo "html5=false" >> "$GITHUB_OUTPUT"; fi
+          if has '^bigbluebutton-html5/' || has '^SAFEMEET_VERSION$'; then echo "html5=true" >> "$GITHUB_OUTPUT"; else echo "html5=false" >> "$GITHUB_OUTPUT"; fi
           if has '^(record-and-playback/|bbb-common-web/.*/RecordingAsset|bigbluebutton-web/grails-app/(controllers/org/bigbluebutton/web/controllers/RecordingController\.groovy|controllers/org/bigbluebutton/web/UrlMappings\.groovy|conf/))'; then
             echo "recording=true" >> "$GITHUB_OUTPUT"
           else
@@ -125,7 +174,7 @@ jobs:
         run: bundle exec rspec spec/recordandplayback/safemeet_asset_spec.rb
 
   publish-packages:
-    needs: [changes, shellcheck, html5-checks, safemeet-recording-specs]
+    needs: [bump-version, changes, shellcheck, html5-checks, safemeet-recording-specs]
     if: |
       always() &&
       (
@@ -133,6 +182,7 @@ jobs:
         (github.event_name == 'workflow_dispatch' && inputs.force_full_publish)
       ) &&
       github.ref == 'refs/heads/safemeet' &&
+      (needs.bump-version.result == 'success' || needs.bump-version.result == 'skipped') &&
       needs.changes.result == 'success' &&
       (needs.shellcheck.result == 'success' || needs.shellcheck.result == 'skipped') &&
       (needs.html5-checks.result == 'success' || needs.html5-checks.result == 'skipped') &&
@@ -144,6 +194,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          # Tip of safemeet includes the version-bump commit from bump-version
+          ref: safemeet
           fetch-depth: 0
 
       - name: Setup SSH
@@ -301,6 +353,7 @@ jobs:
           echo "### BigBlueButton package publish" >> "$GITHUB_STEP_SUMMARY"
           echo "- Branch: \`${{ github.ref_name }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Commit: \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- SafeMeet version: \`$(tr -d '[:space:]' < SAFEMEET_VERSION 2>/dev/null || echo n/a)\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Mode: ${{ steps.package_plan.outputs.mode }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Packages: ${{ steps.package_plan.outputs.packages || 'none; installer only' }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- Repository: https://new-bbb-install.roomeet.ir/jammy-300" >> "$GITHUB_STEP_SUMMARY"
@@ -309,12 +362,13 @@ jobs:
 
   auto-repair:
     name: CI Auto-Repair
-    needs: [changes, shellcheck, html5-checks, safemeet-recording-specs, publish-packages]
+    needs: [bump-version, changes, shellcheck, html5-checks, safemeet-recording-specs, publish-packages]
     if: >-
       always() &&
       github.event_name == 'push' &&
       github.ref == 'refs/heads/safemeet' &&
       (
+        needs.bump-version.result == 'failure' ||
         needs.changes.result == 'failure' ||
         needs.shellcheck.result == 'failure' ||
         needs.html5-checks.result == 'failure' ||

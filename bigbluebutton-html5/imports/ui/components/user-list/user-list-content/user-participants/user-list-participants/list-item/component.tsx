@@ -25,6 +25,8 @@ import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import SkyroomModeratorBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomModeratorBadge';
 import SkyroomViewerBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomViewerBadge';
+import SkyroomPresenterBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomPresenterBadge';
+import SkyroomGuestBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomGuestBadge';
 import useUnreadPrivateChatsBySender from '/imports/ui/core/hooks/useUnreadPrivateChatsBySender';
 
 const messages = defineMessages({
@@ -275,6 +277,12 @@ const UserListItem: React.FC<UserListItemProps> = ({
       if (skyroomColumn) {
         if (user.isModerator || user.role === 'MODERATOR') {
           return <SkyroomModeratorBadge />;
+        }
+        if (user.presenter && !user.bot) {
+          return <SkyroomPresenterBadge />;
+        }
+        if (user.guest && !user.bot) {
+          return <SkyroomGuestBadge />;
         }
         if (!user.bot) {
           return <SkyroomViewerBadge />;

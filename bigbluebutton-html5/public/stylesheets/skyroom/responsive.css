@@ -1534,10 +1534,14 @@
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="publicChatPanel"] [class*="TypingIndicatorWrapper"] {
     flex-shrink: 0 !important;
     height: auto !important;
-    max-height: 1.1rem !important;
-    min-height: 0 !important;
-    padding: 0 10px 0 !important;
+    max-height: none !important;
+    min-height: 1.35rem !important;
+    padding: 4px 10px 6px !important;
+    line-height: 1.35 !important;
+    overflow: visible !important;
+    overflow-y: visible !important;
     margin: 0 !important;
+    box-sizing: content-box !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="publicChatPanel"] [data-test="chatReplyIntentionContainer"] {

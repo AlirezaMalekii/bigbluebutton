@@ -1,19 +1,28 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
-type AvatarRole = 'moderator' | 'viewer';
+type AvatarRole = 'moderator' | 'viewer' | 'presenter' | 'guest';
 
 interface BadgeProps {
   $role: AvatarRole;
-  $accent?: string;
 }
 
-const moderatorAccent = 'var(--color-primary, var(--skyroom-accent, #20c7bb))';
-const viewerAccent = 'rgba(148, 163, 184, 0.92)';
+const roleColor = (role: AvatarRole) => {
+  switch (role) {
+    case 'moderator':
+      return 'var(--color-primary, var(--skyroom-accent, #20c7bb))';
+    case 'presenter':
+      return 'var(--skyroom-presenter-icon, #e8b84a)';
+    case 'guest':
+      return 'rgba(125, 211, 252, 0.92)';
+    case 'viewer':
+    default:
+      return 'rgba(148, 163, 184, 0.95)';
+  }
+};
 
+/** Flat filled person icon — no circle chrome around the glyph. */
 const Badge = styled.span<BadgeProps>`
-  --skyroom-user-avatar-accent: ${({ $role }) => (
-    $role === 'moderator' ? moderatorAccent : viewerAccent
-  )};
+  --skyroom-user-avatar-accent: ${({ $role }) => roleColor($role)};
 
   position: relative;
   display: inline-flex;
@@ -21,31 +30,18 @@ const Badge = styled.span<BadgeProps>`
   justify-content: center;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
   box-sizing: border-box;
-  overflow: hidden;
-  isolation: isolate;
-  background: ${({ $role }) => (
-    $role === 'moderator'
-      ? 'rgba(13, 136, 126, 0.12)'
-      : 'rgba(148, 163, 184, 0.12)'
-  )};
-  border: 1px solid ${({ $role }) => (
-    $role === 'moderator'
-      ? 'rgba(32, 199, 187, 0.28)'
-      : 'rgba(148, 163, 184, 0.22)'
-  )};
-
-  ${({ $role }) => $role === 'moderator' && css`
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  `}
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: var(--skyroom-user-avatar-accent);
+  box-shadow: none;
+  overflow: visible;
 
   svg {
-    position: relative;
-    z-index: 1;
     display: block;
-    width: 76%;
-    height: 76%;
+    width: 92%;
+    height: 92%;
     flex-shrink: 0;
   }
 `;

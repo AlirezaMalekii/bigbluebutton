@@ -15,6 +15,10 @@ const intlMessages = defineMessages({
   },
 });
 
+const getConfiguredLogoLinkUrl = () => (
+  window.meetingClientSettings?.public?.app?.branding?.logoLinkUrl?.trim() ?? ''
+);
+
 const SkyroomHeaderLogo: React.FC = () => {
   const intl = useIntl();
   const [darkMode, setDarkMode] = useState(isDarkThemeEnabled());
@@ -38,6 +42,7 @@ const SkyroomHeaderLogo: React.FC = () => {
   const customLogoUrl = meeting?.customLogoUrl?.trim() ?? '';
   const customDarkLogoUrl = meeting?.customDarkLogoUrl?.trim() ?? '';
   const loginUrl = meeting?.loginUrl?.trim() ?? '';
+  const logoLinkUrl = getConfiguredLogoLinkUrl() || loginUrl;
 
   const logoUrl = darkMode && customDarkLogoUrl ? customDarkLogoUrl : customLogoUrl;
   if (!logoUrl) return null;
@@ -50,11 +55,11 @@ const SkyroomHeaderLogo: React.FC = () => {
     />
   );
 
-  if (loginUrl) {
+  if (logoLinkUrl) {
     return (
       <Styled.Wrap data-test="skyroomHeaderLogo">
         <Styled.Link
-          href={loginUrl}
+          href={logoLinkUrl}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={intl.formatMessage(intlMessages.logoLinkAria)}

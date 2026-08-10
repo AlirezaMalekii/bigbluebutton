@@ -289,6 +289,7 @@ export interface OpenDebugWindow {
 
 export interface Branding {
   displayBrandingArea: boolean
+  logoLinkUrl: string
 }
 
 export interface ExternalVideoPlayer {
