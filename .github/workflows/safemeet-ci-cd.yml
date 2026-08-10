@@ -59,10 +59,8 @@ jobs:
             echo "Version files unchanged; nothing to commit"
             exit 0
           fi
-          git commit -m "$(cat <<EOF
-chore(version): bump SafeMeet to ${VERSION} [skip version] [skip ci]
-EOF
-)"
+          # Keep the message on one indented line: a zero-indent heredoc breaks YAML `|` blocks.
+          git commit -m "chore(version): bump SafeMeet to ${VERSION} [skip version] [skip ci]"
           git push origin HEAD:safemeet
 
   changes:
