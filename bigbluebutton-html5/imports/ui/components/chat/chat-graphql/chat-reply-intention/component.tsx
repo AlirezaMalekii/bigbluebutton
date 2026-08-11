@@ -72,9 +72,11 @@ const ChatReplyIntention = () => {
   return (
     <Styled.Container
       data-test="chatReplyIntentionContainer"
+      data-hidden={hidden ? 'true' : 'false'}
       $hidden={hidden}
       $animations={animations}
       onClick={() => {
+        if (hidden) return;
         window.dispatchEvent(
           new CustomEvent(ChatEvents.CHAT_FOCUS_MESSAGE_REQUEST, {
             detail: {
@@ -84,33 +86,35 @@ const ChatReplyIntention = () => {
         );
       }}
     >
-      <Styled.Message>
-        {username && (
-          <Styled.Username>
-            @
-            {username}
-          </Styled.Username>
-        )}
-        <Styled.HtmlContent
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: getFirstVisibleLineHtml(message || '') }}
-        />
-      </Styled.Message>
-      <Tooltip title={intl.formatMessage(intlMessages.cancel, { cancelKey: CANCEL_KEY })}>
-        <Styled.CloseBtn
-          onClick={(e) => {
-            e.stopPropagation();
-            window.dispatchEvent(
-              new CustomEvent(ChatEvents.CHAT_CANCEL_REPLY_INTENTION),
-            );
-          }}
-          icon="close"
-          tabIndex={hidden ? -1 : 0}
-          aria-hidden={hidden}
-          aria-label={intl.formatMessage(intlMessages.cancel, { cancelKey: CANCEL_KEY })}
-          data-test="closeChatReplyIntentionButton"
-        />
-      </Tooltip>
+      {!hidden && (
+        <>
+          <Styled.Message>
+            {username && (
+              <Styled.Username>
+                @
+                {username}
+              </Styled.Username>
+            )}
+            <Styled.HtmlContent
+              // eslint-disable-next-line react/no-danger
+              dangerouslySetInnerHTML={{ __html: getFirstVisibleLineHtml(message || '') }}
+            />
+          </Styled.Message>
+          <Tooltip title={intl.formatMessage(intlMessages.cancel, { cancelKey: CANCEL_KEY })}>
+            <Styled.CloseBtn
+              onClick={(e) => {
+                e.stopPropagation();
+                window.dispatchEvent(
+                  new CustomEvent(ChatEvents.CHAT_CANCEL_REPLY_INTENTION),
+                );
+              }}
+              icon="close"
+              aria-label={intl.formatMessage(intlMessages.cancel, { cancelKey: CANCEL_KEY })}
+              data-test="closeChatReplyIntentionButton"
+            />
+          </Tooltip>
+        </>
+      )}
     </Styled.Container>
   );
 };

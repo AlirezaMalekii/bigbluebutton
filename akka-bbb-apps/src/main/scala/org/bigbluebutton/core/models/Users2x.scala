@@ -4,6 +4,16 @@ import com.softwaremill.quicklens._
 import org.bigbluebutton.core.db.{ UserLockSettingsDAO, UserReactionDAO, UserStateDAO }
 
 object Users2x {
+  // Desktop GraphQL drop: mark disconnected immediately, remove after 10s (upstream).
+  // Mobile / hidden-tab drops are deferred so a brief gallery/app switch does not
+  // steal presenter or expire the user. After this grace the left flag is set.
+  val DefaultUserLeftFlagExpireMs = 10000L
+  val GraphqlDisconnectGraceMs = 180000L
+
+  def shouldDeferGraphqlDisconnectLeave(user: UserState): Boolean = {
+    user.mobile || user.lastClientIsHidden
+  }
+
   def findWithIntId(users: Users2x, intId: String): Option[UserState] = {
     users.toVector find (u => u.intId == intId)
   }
@@ -32,6 +42,17 @@ object Users2x {
     }
   }
 
+  def setLastClientIsHidden(users: Users2x, intId: String, hidden: Boolean): Option[UserState] = {
+    for {
+      u <- findWithIntId(users, intId)
+      if u.lastClientIsHidden != hidden
+    } yield {
+      val newUser = u.copy(lastClientIsHidden = hidden)
+      users.save(newUser)
+      newUser
+    }
+  }
+
   def resetUserLeftFlag(users: Users2x, intId: String): Option[UserState] = {
     for {
       u <- findWithIntId(users, intId)
@@ -47,7 +68,7 @@ object Users2x {
   def findAllExpiredUserLeftFlags(users: Users2x, meetingExpireWhenLastUserLeftInMs: Long): Vector[UserState] = {
     if (meetingExpireWhenLastUserLeftInMs > 0) {
       users.toVector filter (u => u.userLeftFlag.left && u.userLeftFlag.leftOn != 0 &&
-        System.currentTimeMillis() - u.userLeftFlag.leftOn > 10000)
+        System.currentTimeMillis() - u.userLeftFlag.leftOn > DefaultUserLeftFlagExpireMs)
     } else {
       // When meetingExpireWhenLastUserLeftInMs is set zero we need to
       // remove user right away to end the meeting as soon as possible.
@@ -462,7 +483,8 @@ case class UserState(
     captionLocale:         String              = "",
     joinRequestMetadata:   Map[String, String] = Map.empty,
     userMetadata:          Map[String, String] = Map.empty,
-    userLockSettings:      UserLockSettings    = UserLockSettings()
+    userLockSettings:      UserLockSettings    = UserLockSettings(),
+    lastClientIsHidden:    Boolean             = false
 )
 
 case class UserIdAndName(id: String, name: String)

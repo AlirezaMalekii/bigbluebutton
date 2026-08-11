@@ -13,6 +13,7 @@ import {
 } from './notes-panel-state';
 import { broadcastSkyroomNotesGlobalOpen } from './notes-panel-sync/useSkyroomNotesPanelSync';
 import { setSkyroomMobileActiveBox } from './mobile-bottom-state';
+import { notifyIfLeavingWebcamTab } from './webcam-tab-minimize-notify';
 import { dispatchSkyroomLayoutResize, dispatchSkyroomLayoutResizeNextFrame } from './layout-resize';
 import {
   cleanupWebcamMenuOverlayArtifacts,
@@ -252,6 +253,7 @@ const isSkyroomContentSidebarBox = (box) => box === 'chat' || box === 'breakout'
 
 /** Show one box in the mobile bottom zone; `null` closes everything. */
 export const openSkyroomMobileBox = (layoutContextDispatch, box) => {
+  notifyIfLeavingWebcamTab(box);
   // Explicit single source of truth — set first so the resolver/tab bar reflect the
   // choice immediately, before the per-panel state settles.
   setSkyroomMobileActiveBox(box);
@@ -301,6 +303,7 @@ export const openSkyroomMobileBox = (layoutContextDispatch, box) => {
  * dispatching the CHAT panel from the user menu was not enough to leave the users tab.
  */
 export const openSkyroomPrivateChat = (layoutContextDispatch, chatId = '') => {
+  notifyIfLeavingWebcamTab('chat');
   setSkyroomMobileActiveBox('chat');
   syncSkyroomMobileWebcamDockVisibility('chat');
   syncWebcamFullscreenAttribute();

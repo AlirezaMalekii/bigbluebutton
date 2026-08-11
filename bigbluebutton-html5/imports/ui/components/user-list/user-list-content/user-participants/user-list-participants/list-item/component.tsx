@@ -27,6 +27,7 @@ import SkyroomModeratorBadge from '/imports/ui/components/skyroom-layout/user-av
 import SkyroomViewerBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomViewerBadge';
 import SkyroomPresenterBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomPresenterBadge';
 import SkyroomGuestBadge from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomGuestBadge';
+import SkyroomMobileUserIcon from '/imports/ui/components/skyroom-layout/user-avatars/SkyroomMobileUserIcon';
 import useUnreadPrivateChatsBySender from '/imports/ui/core/hooks/useUnreadPrivateChatsBySender';
 
 const messages = defineMessages({
@@ -170,37 +171,53 @@ const UserListItem: React.FC<UserListItemProps> = ({
 
   const LABEL = window.meetingClientSettings?.public?.user?.label || {};
 
-  if (user.isModerator && LABEL.moderator) {
+  if (!skyroomColumn && user.isModerator && LABEL.moderator) {
     subs.push(intl.formatMessage(messages.moderator));
   }
-  if (user.guest && LABEL.guest) {
+  if (!skyroomColumn && user.guest && LABEL.guest) {
     subs.push(intl.formatMessage(messages.guest));
   }
-  if (user.mobile && LABEL.mobile) {
+  if (!skyroomColumn && user.mobile && LABEL.mobile) {
     subs.push(intl.formatMessage(messages.mobile));
   }
   if ((user.locked || user.userLockSettings?.disablePublicChat)
       && (user.userLockSettings?.disablePublicChat || lockSettings?.hasActiveLockSetting) && !user.isModerator) {
+    const lockedLabel = intl.formatMessage(messages.locked);
     subs.push(
-      <span key={uniqueId('lock-')} className="skyroom-user-sub-item">
-        <Icon iconName="lock" />
-        <span className="skyroom-user-sub-text">{intl.formatMessage(messages.locked)}</span>
-      </span>,
+      skyroomColumn ? (
+        <TooltipContainer key="lock" title={lockedLabel}>
+          <span className="skyroom-user-sub-item" aria-label={lockedLabel}>
+            <Icon iconName="lock" />
+          </span>
+        </TooltipContainer>
+      ) : (
+        <span key={uniqueId('lock-')} className="skyroom-user-sub-item">
+          <Icon iconName="lock" />
+          <span className="skyroom-user-sub-text">{lockedLabel}</span>
+        </span>
+      ),
     );
   }
   if (user.lastBreakoutRoom?.isUserCurrentlyInRoom) {
+    const breakoutLabel = user.lastBreakoutRoom?.isDefaultName
+      ? intl.formatMessage(messages.breakoutRoom, { roomNumber: user.lastBreakoutRoom?.sequence })
+      : user.lastBreakoutRoom?.shortName;
     subs.push(
-      <span key={uniqueId('breakout-')} className="skyroom-user-sub-item">
-        <Icon iconName="rooms" />
-        <span className="skyroom-user-sub-text">
-          {user.lastBreakoutRoom?.isDefaultName
-            ? intl.formatMessage(messages.breakoutRoom, { roomNumber: user.lastBreakoutRoom?.sequence })
-            : user.lastBreakoutRoom?.shortName}
+      skyroomColumn ? (
+        <TooltipContainer key="breakout" title={breakoutLabel}>
+          <span className="skyroom-user-sub-item" aria-label={breakoutLabel}>
+            <Icon iconName="rooms" />
+          </span>
+        </TooltipContainer>
+      ) : (
+        <span key={uniqueId('breakout-')} className="skyroom-user-sub-item">
+          <Icon iconName="rooms" />
+          <span className="skyroom-user-sub-text">{breakoutLabel}</span>
         </span>
-      </span>,
+      ),
     );
   }
-  if (user?.cameras?.length > 0 && LABEL.sharingWebcam) {
+  if (!skyroomColumn && user?.cameras?.length > 0 && LABEL.sharingWebcam) {
     subs.push(
       <span key={uniqueId('webcam-')} className="skyroom-user-sub-item">
         {user?.pinned === true
@@ -211,35 +228,59 @@ const UserListItem: React.FC<UserListItemProps> = ({
     );
   }
   if (raiseHandEnabled && user.raiseHand && skyroomColumn) {
+    const raisedHandLabel = intl.formatMessage(messages.raisedHand);
     subs.push(
-      <span
-        key="raise-hand"
-        className="skyroom-user-sub-item skyroom-user-raise-hand"
-        data-test="raiseHandUserIndicator"
-      >
-        <Icon iconName="hand" />
-        <span className="skyroom-user-sub-text">{intl.formatMessage(messages.raisedHand)}</span>
-      </span>,
+      <TooltipContainer key="raise-hand" title={raisedHandLabel}>
+        <span
+          className="skyroom-user-sub-item skyroom-user-raise-hand"
+          data-test="raiseHandUserIndicator"
+          aria-label={raisedHandLabel}
+        >
+          <Icon iconName="hand" />
+        </span>
+      </TooltipContainer>
     );
   }
   if (privateChatUnread > 0) {
+    const unreadLabel = intl.formatMessage(messages.privateMessageUnread, { count: privateChatUnread });
     subs.push(
-      <span
-        key="private-message-unread"
-        className="skyroom-user-sub-item skyroom-user-private-message"
-        data-test="privateMessageUnreadIndicator"
-      >
-        <Icon iconName="chat" />
-        <span className="skyroom-user-sub-text">
-          {intl.formatMessage(messages.privateMessageUnread, { count: privateChatUnread })}
+      skyroomColumn ? (
+        <TooltipContainer key="private-message-unread" title={unreadLabel}>
+          <span
+            className="skyroom-user-sub-item skyroom-user-private-message"
+            data-test="privateMessageUnreadIndicator"
+            aria-label={unreadLabel}
+          >
+            <Icon iconName="chat" />
+          </span>
+        </TooltipContainer>
+      ) : (
+        <span
+          key="private-message-unread"
+          className="skyroom-user-sub-item skyroom-user-private-message"
+          data-test="privateMessageUnreadIndicator"
+        >
+          <Icon iconName="chat" />
+          <span className="skyroom-user-sub-text">{unreadLabel}</span>
         </span>
-      </span>,
+      ),
     );
   }
   userItemsFromPlugin.filter(
     (item) => item.type === UserListItemAdditionalInformationType.LABEL,
   ).forEach((item) => {
     const itemToRender = item as PluginSdk.UserListItemLabel;
+    if (skyroomColumn) {
+      if (!itemToRender.icon) return;
+      subs.push(
+        <TooltipContainer key={itemToRender.id} title={itemToRender.label}>
+          <span data-test={itemToRender.dataTest} className="skyroom-user-sub-item" aria-label={itemToRender.label}>
+            {getIconComponent(itemToRender.icon, true)}
+          </span>
+        </TooltipContainer>,
+      );
+      return;
+    }
     subs.push(
       <span key={itemToRender.id} data-test={itemToRender.dataTest} className="skyroom-user-sub-item">
         { itemToRender.icon
@@ -317,13 +358,6 @@ const UserListItem: React.FC<UserListItemProps> = ({
         modifiedElements.push(
           <span key={uniqueId('sub-')} className="skyroom-user-sub-item skyroom-user-sub-label">{element}</span>,
         );
-      } else if (skyroomCompact && React.isValidElement(element)) {
-        const existingClass = (element.props as { className?: string }).className || '';
-        modifiedElements.push(
-          React.cloneElement(element, {
-            className: `skyroom-user-sub-item ${existingClass}`.trim(),
-          } as { className: string }),
-        );
       } else {
         modifiedElements.push(element);
       }
@@ -376,8 +410,20 @@ const UserListItem: React.FC<UserListItemProps> = ({
           </TooltipContainer>
           &nbsp;
           {(user.userId === Auth.userID) ? `(${intl.formatMessage(messages.you)})` : ''}
+          {skyroomColumn && user.mobile ? (
+            <TooltipContainer title={intl.formatMessage(messages.mobile)}>
+              <span
+                className="skyroom-user-mobile-icon"
+                data-test="mobileUser"
+                role="img"
+                aria-label={intl.formatMessage(messages.mobile)}
+              >
+                <SkyroomMobileUserIcon />
+              </span>
+            </TooltipContainer>
+          ) : null}
         </Styled.UserName>
-        <Styled.UserNameSub data-test={user.mobile ? 'mobileUser' : undefined}>
+        <Styled.UserNameSub data-test={!skyroomColumn && user.mobile ? 'mobileUser' : undefined}>
           {subs.length ? addSeparator(subs) : null}
         </Styled.UserNameSub>
       </Styled.UserNameContainer>

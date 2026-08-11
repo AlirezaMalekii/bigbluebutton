@@ -115,3 +115,66 @@
   border-radius: 3px;
 }
 
+/* ---------------------------------------------------------------------
+   Telegram-like bubbles: fit-content, own vs others alignment
+   RTL: own = physical left (align-items: end), others = physical right
+   --------------------------------------------------------------------- */
+#layout[data-skyroom-column="true"] .chat-message-container [class*="ChatWrapper"] {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container[data-own="true"]:not([data-system-sender="true"]) [class*="ChatWrapper"],
+#layout[data-skyroom-column="true"] .chat-message-container[data-own="true"]:not([data-system-sender="true"]) [class*="FlexColumn"] {
+  align-items: end !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container[data-own="false"]:not([data-system-sender="true"]) [class*="ChatWrapper"],
+#layout[data-skyroom-column="true"] .chat-message-container[data-own="false"]:not([data-system-sender="true"]) [class*="FlexColumn"] {
+  align-items: start !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container[data-system-sender="true"] [class*="ChatWrapper"],
+#layout[data-skyroom-column="true"] .chat-message-container[data-system-sender="true"] [class*="FlexColumn"] {
+  align-items: center !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container [class*="ChatMessageContentWrapper"],
+#layout[data-skyroom-column="true"] .chat-message-container .chat-message-content {
+  width: fit-content !important;
+  max-width: 80% !important;
+  min-width: 0 !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container[data-own="true"]:not([data-system-sender="true"]) [class*="ChatMessageContentWrapper"],
+#layout[data-skyroom-column="true"] .chat-message-container[data-own="true"]:not([data-system-sender="true"]) .chat-message-content {
+  background: var(--skyroom-bubble-own-bg) !important;
+  background-color: var(--skyroom-bubble-own-bg) !important;
+  border-color: rgba(32, 199, 187, 0.28) !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container[data-message-type="poll"] [class*="ChatMessageContentWrapper"],
+#layout[data-skyroom-column="true"] .chat-message-container[data-message-type="poll"] .chat-message-content,
+#layout[data-skyroom-column="true"] .chat-message-container[data-message-type="presentation"] [class*="ChatMessageContentWrapper"],
+#layout[data-skyroom-column="true"] .chat-message-container[data-message-type="presentation"] .chat-message-content {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container [class*="HeaderContent"],
+#layout[data-skyroom-column="true"] .chat-message-container [class*="ChatHeaderText"] {
+  width: auto !important;
+  max-width: 100% !important;
+}
+
+#layout[data-skyroom-column="true"] .chat-message-container [class*="MessageItemWrapper"] [class*="ChatMessage"],
+#layout[data-skyroom-column="true"] .chat-message-container [data-test="messageContent"] {
+  flex: 0 1 auto !important;
+  width: auto !important;
+  max-width: 100% !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="chatReplyIntentionContainer"][data-hidden="true"] {
+  display: none !important;
+}
+

@@ -275,6 +275,7 @@
 /* Audio mic + device chevron — one tight unit inside media cluster */
 #layout[data-skyroom-column="true"] #ActionsBar > div > div:nth-child(2) > span:has([data-test="muteMicButton"]),
 #layout[data-skyroom-column="true"] #ActionsBar > div > div:nth-child(2) > span:has([data-test="unmuteMicButton"]),
+#layout[data-skyroom-column="true"] #ActionsBar > div > div:nth-child(2) > span:has([data-test="joinAudio"]),
 #layout[data-skyroom-column="true"] #ActionsBar > div > div:nth-child(2) > span:has([data-test="leaveListenOnly"]) {
   display: inline-flex !important;
   align-items: center !important;
@@ -329,8 +330,13 @@
     box-shadow 140ms ease !important;
 }
 
-/* Hover — teal wash */
-#layout[data-skyroom-column="true"] #ActionsBar button:not([aria-disabled="true"]):hover > span:first-child {
+/*
+ * Hover — teal wash on idle/off controls only.
+ * Selected/on buttons (primary fill) must keep the theme color while hovered
+ * or sticky-hovered on mobile; otherwise the wash looks paler than the theme
+ * until the user taps elsewhere.
+ */
+#layout[data-skyroom-column="true"] #ActionsBar button:not([aria-disabled="true"]):not([data-test="muteMicButton"]):not([data-test="leaveListenOnly"]):not([data-test="leaveVideo"]):not([data-test="lowerHandBtn"]):not([data-test="stopScreenShare"]):not([data-test="minimizePresentation"]):hover > span:first-child {
   background-color: var(--skyroom-accent-hover-bg, rgba(32, 199, 187, 0.14)) !important;
   border-color: var(--skyroom-accent-border, rgba(32, 199, 187, 0.36)) !important;
   box-shadow:
@@ -338,8 +344,8 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
-/* Active (pressed) — slight scale-down feel */
-#layout[data-skyroom-column="true"] #ActionsBar button:not([aria-disabled="true"]):active > span:first-child {
+/* Active (pressed) — slight scale-down feel on idle/off controls only */
+#layout[data-skyroom-column="true"] #ActionsBar button:not([aria-disabled="true"]):not([data-test="muteMicButton"]):not([data-test="leaveListenOnly"]):not([data-test="leaveVideo"]):not([data-test="lowerHandBtn"]):not([data-test="stopScreenShare"]):not([data-test="minimizePresentation"]):active > span:first-child {
   background-color: rgba(32, 199, 187, 0.20) !important;
   border-color: rgba(32, 199, 187, 0.50) !important;
   transform: scale(0.96) !important;
@@ -354,133 +360,86 @@
 }
 
 /* -----------------------------------------------------------------------
-   Enabled / active states (camera on, screenshare running, etc.)
-   Target: buttons where BBB applies a primary/success color
+   Enabled / active states — theme fill, including hover/focus/active
+   so selected controls do not wash to a paler accent while the pointer
+   stays on the button (desktop hover + mobile sticky :hover).
    ----------------------------------------------------------------------- */
-
-/* Primary-colored spans (camera active, joined audio) → teal fill */
-#layout[data-skyroom-column="true"] #ActionsBar button[class*="primary"] > span:first-child,
-#layout[data-skyroom-column="true"] #ActionsBar button[class*="success"] > span:first-child {
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="muteMicButton"] > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="muteMicButton"]:hover > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="muteMicButton"]:focus > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="muteMicButton"]:active > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="leaveListenOnly"] > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="leaveListenOnly"]:hover > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="leaveListenOnly"]:focus > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="leaveListenOnly"]:active > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="leaveVideo"] > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="leaveVideo"]:hover > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="leaveVideo"]:focus > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="leaveVideo"]:active > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="lowerHandBtn"] > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="lowerHandBtn"]:hover > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="lowerHandBtn"]:focus > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="lowerHandBtn"]:active > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="stopScreenShare"]:not([aria-disabled="true"]) > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="stopScreenShare"]:not([aria-disabled="true"]):hover > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="stopScreenShare"]:not([aria-disabled="true"]):focus > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="stopScreenShare"]:not([aria-disabled="true"]):active > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="minimizePresentation"]:not([aria-disabled="true"]) > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="minimizePresentation"]:not([aria-disabled="true"]):hover > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="minimizePresentation"]:not([aria-disabled="true"]):focus > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="minimizePresentation"]:not([aria-disabled="true"]):active > span:first-child {
   background: var(--skyroom-accent-active-bg,
-    linear-gradient(145deg, rgba(13, 136, 126, 0.88), rgba(10, 111, 103, 0.92))) !important;
-  border-color: rgba(32, 199, 187, 0.48) !important;
+    linear-gradient(145deg, var(--skyroom-brand-500, #0d887e), var(--skyroom-brand-600, #0a6f67))) !important;
+  border-color: var(--skyroom-accent-border, rgba(32, 199, 187, 0.48)) !important;
+  filter: none !important;
   box-shadow:
     0 2px 10px rgba(13, 136, 126, 0.28),
     0 0 0 1px rgba(32, 199, 187, 0.14) inset !important;
 }
 
-#layout[data-skyroom-column="true"] #ActionsBar button[class*="primary"] > span:first-child i,
-#layout[data-skyroom-column="true"] #ActionsBar button[class*="success"] > span:first-child i,
-#layout[data-skyroom-column="true"] #ActionsBar button[class*="primary"] > span:first-child [class^="icon-bbb-"],
-#layout[data-skyroom-column="true"] #ActionsBar button[class*="success"] > span:first-child [class^="icon-bbb-"] {
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="muteMicButton"] > span:first-child i,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="muteMicButton"] > span:first-child [class^="icon-bbb-"],
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="leaveListenOnly"] > span:first-child i,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="leaveListenOnly"] > span:first-child [class^="icon-bbb-"],
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="leaveVideo"] > span:first-child i,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="leaveVideo"] > span:first-child [class^="icon-bbb-"],
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="lowerHandBtn"] > span:first-child i,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="lowerHandBtn"] > span:first-child [class^="icon-bbb-"],
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="stopScreenShare"]:not([aria-disabled="true"]) > span:first-child i,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="stopScreenShare"]:not([aria-disabled="true"]) > span:first-child [class^="icon-bbb-"],
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="minimizePresentation"]:not([aria-disabled="true"]) > span:first-child i,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="minimizePresentation"]:not([aria-disabled="true"]) > span:first-child [class^="icon-bbb-"] {
   color: #ffffff !important;
   fill: #ffffff !important;
 }
 
-/* Danger-colored spans (muted mic indicator, etc.) → soft red */
-#layout[data-skyroom-column="true"] #ActionsBar button[class*="danger"] > span:first-child {
-  background: var(--skyroom-danger-soft, rgba(223, 39, 33, 0.16)) !important;
-  border-color: var(--skyroom-danger-border, rgba(223, 39, 33, 0.38)) !important;
-  box-shadow:
-    0 2px 8px rgba(223, 39, 33, 0.16) !important;
-}
-
-#layout[data-skyroom-column="true"] #ActionsBar button[class*="danger"] > span:first-child i,
-#layout[data-skyroom-column="true"] #ActionsBar button[class*="danger"] > span:first-child [class^="icon-bbb-"] {
-  color: #ffb4b4 !important;
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="muteMicButton"]:active > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="leaveListenOnly"]:active > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="leaveVideo"]:active > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="lowerHandBtn"]:active > span:first-child {
+  transform: scale(0.96) !important;
 }
 
 /* -----------------------------------------------------------------------
-   Mic / webcam ON-OFF — explicit data-test targeting
+   Mic / speaker / webcam OFF — same muted gray as webcam-off
    ----------------------------------------------------------------------- */
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="muteMicButton"] > span:first-child {
-  background: var(--skyroom-accent-active-bg,
-    linear-gradient(145deg, rgba(13, 136, 126, 0.88), rgba(10, 111, 103, 0.92))) !important;
-  border-color: rgba(32, 199, 187, 0.48) !important;
-  box-shadow:
-    0 2px 10px rgba(13, 136, 126, 0.28),
-    0 0 0 1px rgba(32, 199, 187, 0.14) inset !important;
-}
-
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="muteMicButton"] > span:first-child i,
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="muteMicButton"] > span:first-child [class^="icon-bbb-"] {
-  color: #ffffff !important;
-  fill: #ffffff !important;
-}
-
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="unmuteMicButton"] > span:first-child {
-  background: var(--skyroom-danger-soft, rgba(223, 39, 33, 0.16)) !important;
-  border-color: var(--skyroom-danger-border, rgba(223, 39, 33, 0.38)) !important;
-  box-shadow: 0 2px 8px rgba(223, 39, 33, 0.16) !important;
-}
-
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="unmuteMicButton"] > span:first-child i,
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="unmuteMicButton"] > span:first-child [class^="icon-bbb-"] {
-  color: #ffb4b4 !important;
-  fill: #ffb4b4 !important;
-}
-
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="leaveVideo"] > span:first-child {
-  background: var(--skyroom-accent-active-bg,
-    linear-gradient(145deg, rgba(13, 136, 126, 0.88), rgba(10, 111, 103, 0.92))) !important;
-  border-color: rgba(32, 199, 187, 0.48) !important;
-  box-shadow:
-    0 2px 10px rgba(13, 136, 126, 0.28),
-    0 0 0 1px rgba(32, 199, 187, 0.14) inset !important;
-}
-
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="leaveVideo"] > span:first-child i,
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="leaveVideo"] > span:first-child [class^="icon-bbb-"] {
-  color: #ffffff !important;
-  fill: #ffffff !important;
-}
-
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="joinVideo"] > span:first-child {
-  background: rgba(148, 163, 184, 0.12) !important;
-  border-color: rgba(148, 163, 184, 0.28) !important;
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="unmuteMicButton"] > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="joinAudio"] > span:first-child,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="joinVideo"] > span:first-child {
+  background: var(--skyroom-action-off-bg, rgba(148, 163, 184, 0.12)) !important;
+  border-color: var(--skyroom-action-off-border, rgba(148, 163, 184, 0.28)) !important;
+  filter: none !important;
   box-shadow: none !important;
 }
 
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="joinVideo"] > span:first-child i,
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="joinVideo"] > span:first-child [class^="icon-bbb-"] {
-  color: rgba(170, 182, 199, 0.72) !important;
-  fill: rgba(170, 182, 199, 0.72) !important;
-}
-
-/* -----------------------------------------------------------------------
-   Screen share — active while the local presenter is sharing their screen
-   ----------------------------------------------------------------------- */
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="stopScreenShare"]:not([aria-disabled="true"]) > span:first-child {
-  background: var(--skyroom-accent-active-bg,
-    linear-gradient(145deg, rgba(13, 136, 126, 0.88), rgba(10, 111, 103, 0.92))) !important;
-  border-color: rgba(32, 199, 187, 0.48) !important;
-  box-shadow:
-    0 2px 10px rgba(13, 136, 126, 0.28),
-    0 0 0 1px rgba(32, 199, 187, 0.14) inset !important;
-}
-
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="stopScreenShare"]:not([aria-disabled="true"]) > span:first-child i,
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="stopScreenShare"]:not([aria-disabled="true"]) > span:first-child [class^="icon-bbb-"] {
-  color: #ffffff !important;
-  fill: #ffffff !important;
-}
-
-/* -----------------------------------------------------------------------
-   Presentation visibility — active while stage content is shown
-   ----------------------------------------------------------------------- */
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="minimizePresentation"]:not([aria-disabled="true"]) > span:first-child {
-  background: var(--skyroom-accent-active-bg,
-    linear-gradient(145deg, rgba(13, 136, 126, 0.88), rgba(10, 111, 103, 0.92))) !important;
-  border-color: rgba(32, 199, 187, 0.48) !important;
-  box-shadow:
-    0 2px 10px rgba(13, 136, 126, 0.28),
-    0 0 0 1px rgba(32, 199, 187, 0.14) inset !important;
-}
-
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="minimizePresentation"]:not([aria-disabled="true"]) > span:first-child i,
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="minimizePresentation"]:not([aria-disabled="true"]) > span:first-child [class^="icon-bbb-"] {
-  color: #ffffff !important;
-  fill: #ffffff !important;
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="unmuteMicButton"] > span:first-child i,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="unmuteMicButton"] > span:first-child [class^="icon-bbb-"],
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="joinAudio"] > span:first-child i,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="joinAudio"] > span:first-child [class^="icon-bbb-"],
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="joinVideo"] > span:first-child i,
+#layout[data-skyroom-column="true"] #ActionsBar button[data-test="joinVideo"] > span:first-child [class^="icon-bbb-"] {
+  color: var(--skyroom-action-off-icon, rgba(170, 182, 199, 0.72)) !important;
+  fill: var(--skyroom-action-off-icon, rgba(170, 182, 199, 0.72)) !important;
 }
 
 /* -----------------------------------------------------------------------
@@ -492,27 +451,12 @@
 }
 
 /* -----------------------------------------------------------------------
-   Raise-hand button — ghost variant in BBB, needs visible border
+   Raise-hand button — idle (unraised). Selected fill is in the ON group above.
    ----------------------------------------------------------------------- */
 #layout[data-skyroom-column="true"] #ActionsBar [class*="RaiseHandButton"] > span:first-child,
 #layout[data-skyroom-column="true"] #ActionsBar [data-test="raiseHandBtn"] > span:first-child {
   background-color: rgba(255, 255, 255, 0.055) !important;
   border-color: rgba(218, 230, 245, 0.16) !important;
-}
-
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="lowerHandBtn"] > span:first-child {
-  background: var(--skyroom-accent-active-bg,
-    linear-gradient(145deg, rgba(13, 136, 126, 0.88), rgba(10, 111, 103, 0.92))) !important;
-  border-color: rgba(32, 199, 187, 0.52) !important;
-  box-shadow:
-    0 2px 10px rgba(13, 136, 126, 0.28),
-    0 0 0 1px rgba(32, 199, 187, 0.16) inset !important;
-}
-
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="lowerHandBtn"] > span:first-child i,
-#layout[data-skyroom-column="true"] #ActionsBar [data-test="lowerHandBtn"] > span:first-child [class^="icon-bbb-"] {
-  color: #ffffff !important;
-  fill: #ffffff !important;
 }
 
 /* -----------------------------------------------------------------------

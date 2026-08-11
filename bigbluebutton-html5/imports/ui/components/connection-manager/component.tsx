@@ -112,6 +112,9 @@ const ConnectionManager: React.FC<ConnectionManagerProps> = ({ children }): Reac
   const terminateAndRetry = MeetingSettings.public.app.terminateAndRetryConnection ?? 30_000; // Default to 30 seconds
   const hasEverConnectedRef = useRef(false);
   const tsCurrentConnectingRef = useRef<number>(0);
+  const backgroundedRef = useRef(
+    typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden'),
+  );
 
   useEffect(() => {
     BBBWeb.index().then(({ data }) => {
@@ -130,7 +133,74 @@ const ConnectionManager: React.FC<ConnectionManagerProps> = ({ children }): Reac
   }, []);
 
   useEffect(() => {
+    const isBackgrounded = () => document.hidden || document.visibilityState === 'hidden';
+
+    const pauseWatchdogForBackground = () => {
+      backgroundedRef.current = true;
+      if (terminateTimeoutRef.current !== undefined) {
+        clearTimeout(terminateTimeoutRef.current);
+        terminateTimeoutRef.current = undefined;
+      }
+    };
+
+    const resumeWatchdogFromBackground = () => {
+      backgroundedRef.current = false;
+      const now = Date.now();
+      // Frozen-tab elapsed time is not a dead socket. Reset so resume does not
+      // immediately mark the server unresponsive and terminate GraphQL.
+      if (tsLastMessageRef.current !== 0) {
+        tsLastMessageRef.current = now;
+      }
+      if (tsLastPingMessageRef.current !== 0) {
+        tsLastPingMessageRef.current = now;
+      }
+      if (connectionStatus.getConnectedStatus()) {
+        connectionStatus.setServerIsResponding(true);
+        connectionStatus.setPingIsComing(true);
+      } else if (hasEverConnectedRef.current) {
+        try {
+          // Force graphql-ws to retry immediately instead of waiting retryWait.
+          apolloContextHolder.getLink().terminate();
+        } catch (error) {
+          // Link may not be initialized yet during first connect.
+        }
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (isBackgrounded()) {
+        pauseWatchdogForBackground();
+      } else {
+        resumeWatchdogFromBackground();
+      }
+    };
+
+    const handlePageHide = () => pauseWatchdogForBackground();
+    const handlePageShow = () => resumeWatchdogFromBackground();
+    const handleFreeze = () => pauseWatchdogForBackground();
+    const handleResume = () => resumeWatchdogFromBackground();
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('pageshow', handlePageShow);
+    document.addEventListener('freeze', handleFreeze);
+    document.addEventListener('resume', handleResume);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('pageshow', handlePageShow);
+      document.removeEventListener('freeze', handleFreeze);
+      document.removeEventListener('resume', handleResume);
+    };
+  }, []);
+
+  useEffect(() => {
     const interval = setInterval(() => {
+      if (backgroundedRef.current) {
+        return;
+      }
+
       const tsNow = Date.now();
 
       // If the initial connection never succeeds within terminateAndRetry ms, give up and show error

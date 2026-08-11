@@ -79,6 +79,10 @@ const intlMessages = defineMessages({
     id: 'app.navBar.recording.unavailable',
     description: 'recording data is either loading or failed to load',
   },
+  idleShort: {
+    id: 'app.navBar.recording.idleShort',
+    description: 'Short idle recording button label on compact/mobile header',
+  },
 });
 
 interface RecordingIndicatorProps {
@@ -209,25 +213,37 @@ const RecordingIndicator: React.FC<RecordingIndicatorProps> = ({
     }
   }, [shouldNotify, recordingNotificationEnabled, recording]);
 
+  const skyroomPhone = isSkyroomTheme() && isPhone;
+  const showElapsedOnChip = recording || (skyroomPhone && time > 0);
+
   const recordTitle = useMemo(() => {
-    if (isPhone) return '';
     if (disabled) return intl.formatMessage(intlMessages.unavailableTitle);
+    if (skyroomPhone) {
+      if (!recording && time === 0) {
+        return intl.formatMessage(intlMessages.idleShort);
+      }
+      if (!recording) {
+        return intl.formatMessage(intlMessages.resumeTitle);
+      }
+      return intl.formatMessage(intlMessages.stopTitle);
+    }
+    if (isPhone) return '';
     if (!recording) {
       return time > 0
         ? intl.formatMessage(intlMessages.resumeTitle)
         : intl.formatMessage(intlMessages.startTitle);
     }
     return intl.formatMessage(intlMessages.stopTitle);
-  }, [recording, isPhone, disabled, intl.locale]);
+  }, [recording, isPhone, skyroomPhone, disabled, time, intl.locale]);
 
   const recordingIndicatorIcon = useMemo(() => (
     <Styled.RecordingIndicatorIcon
-      titleMargin={!isPhone || recording}
+      titleMargin={!isPhone || showElapsedOnChip || skyroomPhone}
       data-test="mainWhiteboard"
     >
       <SvgIcon iconName="recording" />
     </Styled.RecordingIndicatorIcon>
-  ), [isPhone, recording]);
+  ), [isPhone, showElapsedOnChip, skyroomPhone]);
 
   const title = useMemo(() => intl.formatMessage(
     recording
@@ -261,7 +277,7 @@ const RecordingIndicator: React.FC<RecordingIndicatorProps> = ({
         <Styled.VisuallyHidden id="recording-description">
           {`${title} ${recording ? humanizeSeconds(time) : ''}`}
         </Styled.VisuallyHidden>
-        {recording ? (
+        {showElapsedOnChip ? (
           <span aria-hidden>{humanizeSeconds(time)}</span>
         ) : (
           <span>{recordTitle}</span>
@@ -324,9 +340,11 @@ const RecordingIndicator: React.FC<RecordingIndicatorProps> = ({
               recording={recording}
             >
               {recordingIndicatorIcon}
-              {recording ? (
+              {showElapsedOnChip || skyroomPhone ? (
                 <Styled.PresentationTitle>
-                  {humanizeSeconds(time)}
+                  {showElapsedOnChip
+                    ? humanizeSeconds(time)
+                    : intl.formatMessage(intlMessages.idleShort)}
                 </Styled.PresentationTitle>
               ) : null}
             </Styled.RecordingStatusViewOnly>

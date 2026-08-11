@@ -224,6 +224,9 @@ const ConnectionStatus = ({
         case 'error':
           // eslint-disable-next-line no-case-declarations
           const { error } = ev.data || {};
+          if (typeof document !== 'undefined' && document.hidden) {
+            break;
+          }
           setErrorOnRtt(error);
           break;
         default:

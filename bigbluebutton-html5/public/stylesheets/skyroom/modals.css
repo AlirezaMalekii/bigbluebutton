@@ -89,6 +89,47 @@
   justify-content: center !important;
 }
 
+/* About RooMeet — readable description + copyright */
+html[data-skyroom="true"] [data-test="aboutModalTitleLabel"] .skyroom-about-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: start;
+  line-height: 1.65;
+}
+
+html[data-skyroom="true"] [data-test="aboutModalTitleLabel"] .skyroom-about-description,
+html[data-skyroom="true"] [data-test="aboutModalTitleLabel"] .skyroom-about-copyright,
+html[data-skyroom="true"] [data-test="aboutModalTitleLabel"] .skyroom-about-meta,
+html[data-skyroom="true"] [data-test="aboutModalTitleLabel"] .skyroom-about-link {
+  margin: 0 !important;
+}
+
+html[data-skyroom="true"] [data-test="aboutModalTitleLabel"] .skyroom-about-description {
+  color: var(--skyroom-modal-text, #eef4fb) !important;
+  font-size: 0.9rem !important;
+}
+
+html[data-skyroom="true"] [data-test="aboutModalTitleLabel"] .skyroom-about-copyright {
+  color: var(--skyroom-modal-text-muted, #aab6c7) !important;
+  font-size: 0.82rem !important;
+}
+
+html[data-skyroom="true"] [data-test="aboutModalTitleLabel"] .skyroom-about-meta {
+  color: var(--skyroom-modal-text-muted, #aab6c7) !important;
+  font-size: 0.78rem !important;
+}
+
+html[data-skyroom="true"] [data-test="aboutModalTitleLabel"] .skyroom-about-link a {
+  color: var(--skyroom-accent, #20c7bb) !important;
+  text-decoration: none !important;
+  font-size: 0.82rem !important;
+}
+
+html[data-skyroom="true"] [data-test="aboutModalTitleLabel"] .skyroom-about-link a:hover {
+  text-decoration: underline !important;
+}
+
 /* ---------------------------------------------------------------------
    2) Selects
    --------------------------------------------------------------------- */

@@ -12,7 +12,35 @@ import MediaStreamUtils from '/imports/utils/media-stream-utils';
 import { hasMediaDevicesEventTarget } from '/imports/ui/services/webrtc-base/utils';
 import AudioManager from '/imports/ui/services/audio-manager';
 import Session from '/imports/ui/services/storage/in-memory';
+import {
+  DEFAULT_INPUT_DEVICE_ID,
+  getStoredAudioInputDeviceId,
+} from '/imports/api/audio/client/bridge/service';
 import AudioCaptionsSelectContainer from '../audio-graphql/audio-captions/captions/component';
+
+const BROWSER_DEFAULT_DEVICE_ID = 'default';
+const LISTEN_ONLY_DEVICE_ID = 'listen-only';
+
+const resolvePreferredInputDeviceId = (currentDeviceId, audioInputDevices = []) => {
+  if (currentDeviceId && currentDeviceId !== LISTEN_ONLY_DEVICE_ID) {
+    const stillAvailable = audioInputDevices.length === 0
+      || audioInputDevices.some((device) => device.deviceId === currentDeviceId);
+
+    if (stillAvailable) return currentDeviceId;
+  }
+
+  const storedDeviceId = getStoredAudioInputDeviceId();
+  if (storedDeviceId && audioInputDevices.some((device) => device.deviceId === storedDeviceId)) {
+    return storedDeviceId;
+  }
+
+  const browserDefault = audioInputDevices.find(
+    (device) => device.deviceId === BROWSER_DEFAULT_DEVICE_ID,
+  );
+  if (browserDefault) return browserDefault.deviceId;
+
+  return audioInputDevices[0]?.deviceId || DEFAULT_INPUT_DEVICE_ID;
+};
 
 const propTypes = {
   intl: PropTypes.shape({
@@ -129,7 +157,9 @@ class AudioSettings extends React.Component {
     this.updateDeviceList = this.updateDeviceList.bind(this);
 
     this.state = {
-      inputDeviceId,
+      inputDeviceId: (inputDeviceId === LISTEN_ONLY_DEVICE_ID && unmuteOnExit)
+        ? (getStoredAudioInputDeviceId() || BROWSER_DEFAULT_DEVICE_ID)
+        : inputDeviceId,
       outputDeviceId,
       // If streams need to be produced, device selectors and audio join are
       // blocked until at least one stream is generated
@@ -148,6 +178,7 @@ class AudioSettings extends React.Component {
     const {
       inputDeviceId,
       outputDeviceId,
+      unmuteOnExit,
     } = this.state;
     const {
       isConnected,
@@ -156,6 +187,7 @@ class AudioSettings extends React.Component {
       checkMicrophonePermission,
       toggleVoice,
       permissionStatus,
+      inputDeviceId: propInputDeviceId,
     } = this.props;
 
     Session.setItem('inEchoTest', true);
@@ -164,7 +196,7 @@ class AudioSettings extends React.Component {
     AudioManager.isEchoTest = true;
     checkMicrophonePermission({ gumOnPrompt: true, permissionStatus })
       .then(this.updateDeviceList)
-      .then(() => {
+      .then((devices) => {
         if (!this._isMounted) return;
 
         if (hasMediaDevicesEventTarget()) {
@@ -174,7 +206,16 @@ class AudioSettings extends React.Component {
           );
         }
         this.setState({ findingDevices: false });
-        this.setInputDevice(inputDeviceId);
+
+        // First-time unmute from the footer mic opens this modal while still on
+        // the virtual listen-only input. Prefer the browser default (or stored)
+        // microphone so Confirm joins with a mic without opening the select.
+        const listedInputs = devices?.audioInputDevices || [];
+        const nextInputDeviceId = (propInputDeviceId === LISTEN_ONLY_DEVICE_ID && unmuteOnExit)
+          ? resolvePreferredInputDeviceId(null, listedInputs)
+          : inputDeviceId;
+
+        this.setInputDevice(nextInputDeviceId);
         this.setOutputDevice(outputDeviceId);
       });
 
@@ -183,7 +224,7 @@ class AudioSettings extends React.Component {
     if (isConnected && !isMuted) {
       toggleMuteMicrophoneSystem(isMuted, toggleVoice);
       // We only need to revert the mute state if the user is not listen-only
-      if (inputDeviceId !== 'listen-only') this.setState({ unmuteOnExit: true });
+      if (propInputDeviceId !== LISTEN_ONLY_DEVICE_ID) this.setState({ unmuteOnExit: true });
     }
   }
 

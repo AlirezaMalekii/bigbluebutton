@@ -29,6 +29,7 @@ const Container = styled.div<{ $hidden: boolean; $animations: boolean }>`
 
   ${({ $hidden }) => ($hidden
     ? css`
+        display: none;
         height: 0;
         min-height: 0;
         margin: 0;

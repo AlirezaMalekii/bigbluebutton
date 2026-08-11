@@ -32,7 +32,7 @@ export const applySkyroomWhiteLabelSettings = (settings) => {
 
   if (app) {
     app.clientTitle = SKYROOM_PRODUCT_NAME;
-    app.copyright = '';
+    app.copyright = `© ${new Date().getFullYear()} RooMeet. All rights reserved.`;
     app.displayBbbServerVersion = false;
     app.helpLink = '';
     if (app.bbbTabletApp) {

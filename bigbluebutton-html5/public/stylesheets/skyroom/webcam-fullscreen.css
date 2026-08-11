@@ -19,6 +19,7 @@ html.skyroom-webcam-fs #layout {
 #layout[data-skyroom-webcam-fullscreen] .skyroom-mobile-zone-tabs,
 #layout[data-skyroom-webcam-fullscreen] .skyroom-mobile-status-rail,
 #layout[data-skyroom-webcam-fullscreen] .skyroom-mobile-talking-rail,
+#layout[data-skyroom-webcam-fullscreen] .skyroom-mobile-zone-fs-cluster,
 #layout[data-skyroom-webcam-fullscreen] .skyroom-mobile-zone-fs-btn,
 #layout[data-skyroom-webcam-fullscreen] #bannerBar,
 #layout[data-skyroom-webcam-fullscreen] #notificationsBar {

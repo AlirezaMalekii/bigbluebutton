@@ -996,6 +996,7 @@ class MeetingActor(
   }
 
   def handleMonitorNumberOfUsers(msg: MonitorNumberOfUsersInternalMsg) {
+    flagDeferredGraphqlDisconnects()
     state = removeUsersWithExpiredUserLeftFlag(liveMeeting, state)
 
     if (!liveMeeting.props.meetingProp.isBreakout) {
@@ -1138,6 +1139,26 @@ class MeetingActor(
   }
 
   def handleExtendMeetingDuration(msg: ExtendMeetingDuration) = ???
+
+  def flagDeferredGraphqlDisconnects(): Unit = {
+    val now = System.currentTimeMillis()
+    RegisteredUsers.findAll(liveMeeting.registeredUsers).foreach { ru =>
+      if (!ru.loggedOut && !ru.ejected && !ru.graphqlConnected && ru.graphqlDisconnectedOn != 0 &&
+        now - ru.graphqlDisconnectedOn >= Users2x.GraphqlDisconnectGraceMs) {
+        Users2x.findWithIntId(liveMeeting.users2x, ru.id).foreach { u =>
+          if (!u.userLeftFlag.left && Users2x.shouldDeferGraphqlDisconnectLeave(u)) {
+            log.info(
+              "Graphql disconnect grace expired; setting user left flag. user={} meetingId={}",
+              u.intId,
+              props.meetingProp.intId
+            )
+            sendUserLeftFlagUpdatedEvtMsg(outGW, liveMeeting, u.intId, leftFlag = true)
+            Users2x.setUserLeftFlag(liveMeeting.users2x, u.intId)
+          }
+        }
+      }
+    }
+  }
 
   def removeUsersWithExpiredUserLeftFlag(liveMeeting: LiveMeeting, state: MeetingState2x): MeetingState2x = {
     val leftUsers = Users2x.findAllExpiredUserLeftFlags(liveMeeting.users2x, expiryTracker.meetingExpireWhenLastUserLeftInMs)

@@ -5,9 +5,11 @@ import { createPortal } from 'react-dom';
 import { defineMessages, useIntl } from 'react-intl';
 import Icon from '/imports/ui/components/common/icon/component';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
+import { layoutDispatch } from '/imports/ui/components/layout/context';
 import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
+  openSkyroomMobileBox,
 } from '../panel-toggles';
 import {
   getSkyroomMobileActiveBox,
@@ -16,6 +18,7 @@ import {
 } from '../mobile-bottom-state';
 import {
   getSkyroomMobileZoneFullscreen,
+  setSkyroomMobileZoneFullscreen,
   subscribeSkyroomMobileZoneFullscreen,
   toggleSkyroomMobileZoneFullscreen,
 } from '../mobile-zone-fullscreen-state';
@@ -36,6 +39,11 @@ const messages = defineMessages({
     description: 'Exit expanded mobile zone view',
     defaultMessage: 'Exit expanded view',
   },
+  minimize: {
+    id: 'app.skyroom.mobileZoneMinimize.label',
+    description: 'Minimize the current mobile box (same as tapping the active tab)',
+    defaultMessage: 'Minimize panel',
+  },
 });
 
 const bottomHeaderSlot = (activeBox: SkyroomMobileBox | undefined): HTMLElement | null => {
@@ -53,6 +61,7 @@ const bottomHeaderSlot = (activeBox: SkyroomMobileBox | undefined): HTMLElement 
 
 const SkyroomMobileZoneFullscreenButtons: React.FC = () => {
   const intl = useIntl();
+  const layoutContextDispatch = layoutDispatch();
   const [, force] = useReducer((x: number) => x + 1, 0);
   const [isMobile, setIsMobile] = useState(isSkyroomMobileViewport);
   const [activeBox, setActiveBox] = useState(getSkyroomMobileActiveBox);
@@ -102,8 +111,22 @@ const SkyroomMobileZoneFullscreenButtons: React.FC = () => {
     };
   }, [activeBox]);
 
-  const onTop = useCallback(() => toggleSkyroomMobileZoneFullscreen('top'), []);
-  const onBottom = useCallback(() => toggleSkyroomMobileZoneFullscreen('bottom'), []);
+  const onTopFs = useCallback(() => toggleSkyroomMobileZoneFullscreen('top'), []);
+  const onBottomFs = useCallback(() => toggleSkyroomMobileZoneFullscreen('bottom'), []);
+
+  const onMinimizeBottom = useCallback(() => {
+    setSkyroomMobileZoneFullscreen(null);
+    openSkyroomMobileBox(layoutContextDispatch, null);
+  }, [layoutContextDispatch]);
+
+  const onMinimizeTop = useCallback(() => {
+    if (getSkyroomMobileZoneFullscreen() === 'top') {
+      setSkyroomMobileZoneFullscreen(null);
+      return;
+    }
+    // Same as tapping the active bottom tab to turn it off — stage fills the space.
+    openSkyroomMobileBox(layoutContextDispatch, null);
+  }, [layoutContextDispatch]);
 
   if (!isMobile || !isSkyroomColumnLayout()) return null;
 
@@ -115,11 +138,12 @@ const SkyroomMobileZoneFullscreenButtons: React.FC = () => {
 
   if (!showTopBtn && !showBottomBtn) return null;
 
-  const renderBtn = (
+  const minimizeLabel = intl.formatMessage(messages.minimize);
+  const hasCloseableBox = Boolean(activeBox) || expanded === 'bottom';
+
+  const renderFsBtn = (
     zone: 'top' | 'bottom',
     onClick: () => void,
-    classSuffix: string,
-    inHeader = false,
   ) => {
     const isExpanded = expanded === zone;
     const label = isExpanded
@@ -131,8 +155,6 @@ const SkyroomMobileZoneFullscreenButtons: React.FC = () => {
         type="button"
         className={[
           'skyroom-mobile-zone-fs-btn',
-          `skyroom-mobile-zone-fs-btn--${classSuffix}`,
-          inHeader ? 'skyroom-mobile-zone-fs-btn--in-header' : '',
           isExpanded ? 'is-expanded' : '',
         ].filter(Boolean).join(' ')}
         data-test={zone === 'top' ? 'skyroomMobileExpandTop' : 'skyroomMobileExpandBottom'}
@@ -146,22 +168,57 @@ const SkyroomMobileZoneFullscreenButtons: React.FC = () => {
     );
   };
 
+  const renderMinimizeBtn = (zone: 'top' | 'bottom', onClick: () => void) => (
+    <button
+      type="button"
+      className="skyroom-mobile-zone-fs-btn skyroom-mobile-zone-min-btn"
+      data-test={zone === 'top' ? 'skyroomMobileMinimizeTop' : 'skyroomMobileMinimizeBottom'}
+      aria-label={minimizeLabel}
+      title={minimizeLabel}
+      onClick={onClick}
+    >
+      <Icon iconName="minus" />
+    </button>
+  );
+
+  const renderCluster = (
+    zone: 'top' | 'bottom',
+    onFs: () => void,
+    onMin: () => void,
+    classSuffix: string,
+    inHeader = false,
+    showMinimize = true,
+  ) => (
+    <div
+      className={[
+        'skyroom-mobile-zone-fs-cluster',
+        `skyroom-mobile-zone-fs-cluster--${classSuffix}`,
+        inHeader ? 'skyroom-mobile-zone-fs-cluster--in-header' : '',
+      ].filter(Boolean).join(' ')}
+      data-test={zone === 'top' ? 'skyroomMobileTopZoneControls' : 'skyroomMobileBottomZoneControls'}
+    >
+      {showMinimize ? renderMinimizeBtn(zone, onMin) : null}
+      {renderFsBtn(zone, onFs)}
+    </div>
+  );
+
   const showTopForUser = showTopBtn && !isPresenter && expanded !== 'bottom';
   const bottomInHeader = Boolean(headerSlot);
   const showBottomForUser = showBottomBtn && expanded !== 'top';
+  const showTopMinimize = hasCloseableBox || expanded === 'top';
 
   return (
     <>
       {showTopForUser && layoutEl && createPortal(
-        renderBtn('top', onTop, 'top'),
+        renderCluster('top', onTopFs, onMinimizeTop, 'top', false, showTopMinimize),
         layoutEl,
       )}
       {showBottomForUser && bottomInHeader && headerSlot && createPortal(
-        renderBtn('bottom', onBottom, 'bottom', true),
+        renderCluster('bottom', onBottomFs, onMinimizeBottom, 'bottom', true, true),
         headerSlot,
       )}
       {showBottomForUser && !bottomInHeader && layoutEl && createPortal(
-        renderBtn('bottom', onBottom, 'bottom'),
+        renderCluster('bottom', onBottomFs, onMinimizeBottom, 'bottom', false, true),
         layoutEl,
       )}
     </>

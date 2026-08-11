@@ -73,6 +73,7 @@
 
   /* Chat bubbles (dark column) */
   --skyroom-bubble-bg: var(--skyroom-surface-3, #1a2436);
+  --skyroom-bubble-own-bg: rgba(32, 199, 187, 0.16);
   --skyroom-bubble-text: var(--skyroom-text-primary, #e6edf7);
   --skyroom-bubble-border: var(--border-subtle);
 
@@ -92,7 +93,10 @@
   --skyroom-accent-border: rgba(32, 199, 187, 0.36);
   --skyroom-accent-glow: rgba(32, 199, 187, 0.10);
   --skyroom-accent-hover-bg: rgba(32, 199, 187, 0.14);
-  --skyroom-accent-active-bg: linear-gradient(145deg, rgba(13, 136, 126, 0.88), rgba(10, 111, 103, 0.92));
+  --skyroom-accent-active-bg: linear-gradient(145deg, var(--skyroom-brand-500), var(--skyroom-brand-600));
+  --skyroom-action-off-bg: rgba(148, 163, 184, 0.12);
+  --skyroom-action-off-border: rgba(148, 163, 184, 0.28);
+  --skyroom-action-off-icon: rgba(170, 182, 199, 0.72);
   --skyroom-danger-soft: rgba(223, 39, 33, 0.16);
   --skyroom-danger-border: rgba(223, 39, 33, 0.38);
   /* Switch / toggle off-track (neutral — not danger red) */

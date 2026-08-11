@@ -412,15 +412,16 @@ class VideoPreview extends Component {
 
     if (this.brightnessMarker) {
       const markerStyle = window.getComputedStyle(this.brightnessMarker);
-      const left = parseFloat(markerStyle.left);
-      const right = parseFloat(markerStyle.right);
+      const inlineStart = parseFloat(markerStyle.insetInlineStart);
+      const inlineEnd = parseFloat(markerStyle.insetInlineEnd);
 
-      if (left < 0) {
-        this.brightnessMarker.style.left = '0px';
-        this.brightnessMarker.style.right = 'auto';
-      } else if (right < 0) {
-        this.brightnessMarker.style.right = '0px';
-        this.brightnessMarker.style.left = 'auto';
+      // Keep the value label inside the track in both LTR and RTL.
+      if (inlineStart < 0) {
+        this.brightnessMarker.style.insetInlineStart = '0px';
+        this.brightnessMarker.style.insetInlineEnd = 'auto';
+      } else if (inlineEnd < 0) {
+        this.brightnessMarker.style.insetInlineEnd = '0px';
+        this.brightnessMarker.style.insetInlineStart = 'auto';
       }
     }
   }
@@ -1143,8 +1144,9 @@ class VideoPreview extends Component {
     const { brightness, wholeImageBrightness, isStartSharingDisabled } = this.state;
     const shared = this.isAlreadyShared(webcamDeviceId);
 
-    const origin = brightness <= 100 ? 'left' : 'right';
-    const offset = origin === 'left'
+    // Logical insets follow the range thumb in both LTR and RTL.
+    const origin = brightness <= 100 ? 'insetInlineStart' : 'insetInlineEnd';
+    const offset = origin === 'insetInlineStart'
       ? (brightness * 100) / 200
       : ((200 - brightness) * 100) / 200;
 
@@ -1159,7 +1161,10 @@ class VideoPreview extends Component {
           <Styled.MarkerDynamicWrapper>
             <Styled.MarkerDynamic
               ref={(ref) => this.brightnessMarker = ref}
-              style={{ [origin]: `calc(${offset}% - 1rem)` }}
+              style={{
+                insetInlineStart: origin === 'insetInlineStart' ? `calc(${offset}% - 1rem)` : 'auto',
+                insetInlineEnd: origin === 'insetInlineEnd' ? `calc(${offset}% - 1rem)` : 'auto',
+              }}
             >
               {brightness - 100}
             </Styled.MarkerDynamic>
@@ -1348,6 +1353,9 @@ class VideoPreview extends Component {
     || !!(deviceError || previewError);
 
     const shared = this.isAlreadyShared(webcamDeviceId);
+    // Switching to another device is a replace, so a per-user/meeting cap
+    // should not block Start sharing when this user already has a webcam.
+    const replacingSharedCamera = hasVideoStream && !shared;
 
     const showStopAllButton = hasVideoStream && VideoService.isMultipleCamerasEnabled();
 
@@ -1383,7 +1391,7 @@ class VideoPreview extends Component {
                   />
                 </Styled.ExtraActions>
               ) : null}
-                {!shared && camCapReached ? (
+                {!shared && camCapReached && !replacingSharedCamera ? (
                   <span>{intl.formatMessage(intlMessages.camCapReached)}</span>
                 ) : (
                   <div style={{ display: 'flex' }}>

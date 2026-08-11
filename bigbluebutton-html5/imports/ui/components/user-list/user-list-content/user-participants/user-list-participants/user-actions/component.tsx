@@ -170,6 +170,10 @@ const messages = defineMessages({
     description: 'Open user actions menu',
     defaultMessage: 'User actions',
   },
+  sharingWebcam: {
+    id: 'app.userList.sharingWebcam',
+    description: 'Tooltip for webcam-on status in the user row',
+  },
 });
 const makeDropdownPluginItem: (
   userDropdownItems: PluginSdk.UserListDropdownInterface[]) => DropdownItem[] = (
@@ -690,6 +694,7 @@ const UserActions: React.FC<UserActionsProps> = ({
   const useSkyroomActionsMenu = isSkyroomColumnLayout();
   const voiceJoined = Boolean(user.voice?.joined) && !user.voice?.deafened;
   const showPresenterStatus = Boolean(user.presenter);
+  const showWebcamStatus = Boolean(user?.cameras?.length > 0);
   const showReactionStatus = reactionsEnabled
     && Boolean(user.reactionEmoji)
     && user.reactionEmoji !== 'none'
@@ -754,6 +759,13 @@ const UserActions: React.FC<UserActionsProps> = ({
           >
             <Icon iconName={isMuted ? 'mute' : 'unmute'} />
           </Styled.StatusIcon>
+        ) : null}
+        {showWebcamStatus ? (
+          <TooltipContainer title={intl.formatMessage(messages.sharingWebcam)}>
+            <Styled.StatusIcon data-test="userRowWebcam">
+              <Icon iconName={user?.pinned === true ? 'pin-video_on' : 'video'} />
+            </Styled.StatusIcon>
+          </TooltipContainer>
         ) : null}
         {showPresenterStatus ? (
           <Styled.StatusIcon data-test="userRowPresenter" title="presenter">

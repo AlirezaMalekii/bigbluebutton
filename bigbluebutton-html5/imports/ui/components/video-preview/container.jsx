@@ -35,6 +35,8 @@ const VideoPreviewContainer = (props) => {
   const [setAway] = useMutation(SET_AWAY);
   const streams = useStreams();
   const exitVideo = useExitVideo();
+  // forceExit: switching cameras can race isConnected; still unshare the previous device.
+  const exitVideoForSwitch = useExitVideo(true);
   const stopVideo = useStopVideo();
   const sharedDevices = useSharedDevices();
   const hasVideoStream = useHasVideoStream();
@@ -102,9 +104,20 @@ const VideoPreviewContainer = (props) => {
     );
   };
 
-  const startSharing = (deviceId) => {
+  const startSharing = async (deviceId) => {
     callbackToClose();
     setIsOpen(false);
+
+    // One live webcam per user: switching devices (front ↔ rear, or another
+    // USB camera) must replace the previous share, not stack a second stream.
+    const otherSharedDevices = (sharedDevices || []).filter((id) => id && id !== deviceId);
+    if (otherSharedDevices.length > 0) {
+      otherSharedDevices.forEach((oldDeviceId) => {
+        Service.deleteStream(oldDeviceId);
+      });
+      await exitVideoForSwitch();
+    }
+
     VideoService.joinVideo(deviceId, isCamLocked);
   };
 

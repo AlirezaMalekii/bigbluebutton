@@ -34,6 +34,9 @@ trait UserConnectionAliveReqMsgHdlr extends RightsManagementTrait {
     for {
       user <- Users2x.findWithIntId(liveMeeting.users2x, msg.body.userId)
     } yield {
+      msg.body.clientIsHidden.foreach { hidden =>
+        Users2x.setLastClientIsHidden(liveMeeting.users2x, user.intId, hidden)
+      }
       UserConnectionStatusDAO.updateUserAlive(
         user.meetingId,
         user.intId,

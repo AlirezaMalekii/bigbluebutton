@@ -25,7 +25,19 @@ trait UserLeaveReqMsgHdlr extends HandlerHelpers {
       RegisteredUsers.updateUserConnectedToGraphql(liveMeeting.registeredUsers, regUser, graphqlConnected = false)
     }
 
-    handleUserLeaveReq(msg.userId, liveMeeting.props.meetingProp.intId, loggedOut = false, state)
+    Users2x.findWithIntId(liveMeeting.users2x, msg.userId) match {
+      case Some(user) if Users2x.shouldDeferGraphqlDisconnectLeave(user) =>
+        log.info(
+          "Deferring user left flag after graphql disconnect. user {} mobile={} hidden={} meetingId={}",
+          msg.userId,
+          user.mobile,
+          user.lastClientIsHidden,
+          liveMeeting.props.meetingProp.intId
+        )
+        state
+      case _ =>
+        handleUserLeaveReq(msg.userId, liveMeeting.props.meetingProp.intId, loggedOut = false, state)
+    }
   }
 
   def handleUserLeaveReq(userId: String, meetingId: String, loggedOut: Boolean, state: MeetingState2x): MeetingState2x = {

@@ -255,15 +255,48 @@
 }
 
 #layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"] button,
-#layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"] [data-test="recordingStatus"] {
+#layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"] [data-test="recordingStatus"],
+#layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"] [class*="RecordingStatusViewOnly"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
   min-height: 26px !important;
   height: 26px !important;
   padding: 0 9px !important;
   border-radius: 999px !important;
-  font-size: 0.625rem !important;
+  font-size: 0.6875rem !important;
   font-weight: 600 !important;
-  letter-spacing: 0.03em !important;
-  text-transform: uppercase !important;
+  letter-spacing: 0.01em !important;
+  text-transform: none !important;
+}
+
+#layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"] [class*="PresentationTitle"] {
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: 1 !important;
+}
+
+/* Idle recording pill — icon + short «ضبط» / Record label */
+#layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"][data-recording="false"] button:not([disabled]),
+#layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"][data-recording="false"] [class*="RecordingStatusViewOnly"] {
+  border: 1px solid rgba(255, 106, 102, 0.55) !important;
+  background: rgba(223, 39, 33, 0.12) !important;
+  box-shadow: none !important;
+  color: #fff !important;
+}
+
+#layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"][data-recording="false"] button:not([disabled]) span,
+#layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"][data-recording="false"] [class*="RecordingStatusViewOnly"] span {
+  color: #fff !important;
+}
+
+#layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"][data-recording="false"] button:not([disabled]) svg,
+#layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"][data-recording="false"] [class*="RecordingStatusViewOnly"] svg {
+  color: #ff6a66 !important;
+  fill: #ff6a66 !important;
 }
 
 /*
@@ -661,20 +694,18 @@ html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hi
   }
 
   #layout[data-skyroom-column="true"] [data-test="presentationTitle"] {
-    max-width: min(170px, 46vw) !important;
+    max-width: min(120px, 32vw) !important;
     flex: 0 1 auto !important;
     min-width: 0 !important;
   }
 
   /*
-   * While recording, the recording chip (icon + elapsed time) shares the centered
-   * header zone with the session name. On phones that timer text squeezes the name
-   * so it gets clipped. Drop the elapsed-time text here so the full meeting name
-   * keeps its width; the red recording icon still signals that recording is on
-   * (the exact duration remains available via the recording modal/tooltip).
+   * Recording chip (idle «ضبط» or elapsed time) shares the centered header
+   * with the session name. Keep the chip readable and shrink the title instead.
    */
   #layout[data-skyroom-column="true"] #Navbar [data-test="skyroom-header-center"] {
     gap: 6px !important;
+    max-width: min(72vw, 420px) !important;
   }
 
   #layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"] {
@@ -682,6 +713,6 @@ html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hi
   }
 
   #layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"] [class*="PresentationTitle"] {
-    display: none !important;
+    display: flex !important;
   }
 }

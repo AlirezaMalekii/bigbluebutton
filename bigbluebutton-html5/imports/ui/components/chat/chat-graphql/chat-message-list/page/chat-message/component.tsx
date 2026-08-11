@@ -933,6 +933,8 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
       $sequence={message.messageSequence}
       data-sequence={message.messageSequence}
       data-message-type={message.messageType}
+      data-own={message.user?.userId === currentUserId ? 'true' : 'false'}
+      data-system-sender={isSystemSender ? 'true' : 'false'}
       data-focusable={focusable}
       data-skyroom-has-meta={headingElement ? 'true' : 'false'}
       onKeyDown={(e) => {
