@@ -41,8 +41,10 @@ scripts/safemeet-publish-packages.sh --debs "artifacts/*.deb"
 ```
 
 The publish script uploads `.deb` files, imports them into the aptly repo with
-`-force-replace`, updates the signed `jammy-300` publication, and syncs it into
-the nginx web root.
+`-force-replace`, keeps the latest two versions of each package, updates the
+signed `jammy-300` publication, and serves it from aptly's public tree (nginx
+bind-mount). It does not copy the pool into `/var/www` — that duplicate filled
+the 36G repo VM.
 
 ## Install Fresh BBB Server
 

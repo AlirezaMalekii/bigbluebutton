@@ -224,6 +224,7 @@ jobs:
         env:
           GITHUB_EVENT_BEFORE: ${{ github.event.before }}
           REPO_DOMAIN: new-bbb-install.roomeet.ir
+          SAFEMEET_FORCE_FULL_PACKAGES: ${{ github.event_name == 'workflow_dispatch' && inputs.force_full_publish }}
         run: |
           set -euo pipefail
           BASELINE=""
@@ -270,7 +271,11 @@ jobs:
           if [[ -n "$BASELINE" ]]; then
             git fetch --no-tags --depth=1 origin "$BASELINE" 2>/dev/null || git fetch --no-tags origin "$BASELINE" 2>/dev/null || true
           fi
-          PACKAGES="$(bash scripts/safemeet-detect-packages.sh "$BASELINE" HEAD 2>/dev/null || true)"
+          if [[ "${SAFEMEET_FORCE_FULL_PACKAGES:-}" == "true" ]]; then
+            PACKAGES="$(bash scripts/safemeet-detect-packages.sh 2>/dev/null || true)"
+          else
+            PACKAGES="$(bash scripts/safemeet-detect-packages.sh "$BASELINE" HEAD 2>/dev/null || true)"
+          fi
           if [[ -z "${PACKAGES// }" ]]; then
             echo "mode=installer-only" >> "$GITHUB_OUTPUT"
             echo "packages=" >> "$GITHUB_OUTPUT"

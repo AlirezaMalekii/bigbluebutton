@@ -76,6 +76,10 @@ fi
 
 cp -r dist/* staging/usr/share/bigbluebutton/html5-client
 
+# Client always loads /resources/sounds/*.mp3. Unused .wav copies (especially
+# RelaxingMusic.wav ~22MB) inflate the Debian package and CI upload time.
+rm -f staging/usr/share/bigbluebutton/html5-client/resources/sounds/*.wav
+
 mkdir -p staging/etc/nginx/sites-available
 cp bigbluebutton.nginx staging/etc/nginx/sites-available/bigbluebutton
 

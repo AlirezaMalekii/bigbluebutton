@@ -169,10 +169,13 @@ upload_files() {
   ssh_cmd "install -d -m 0755 '${remote_incoming}'"
 
   if [[ ${#DEB_FILES[@]} -gt 0 ]]; then
-    rsync -az -e "$(rsync_rsh)" "${DEB_FILES[@]}" "${REPO_USER}@${REPO_HOST}:${remote_incoming}/"
+    rsync -a --info=stats2 -e "$(rsync_rsh)" "${DEB_FILES[@]}" "${REPO_USER}@${REPO_HOST}:${remote_incoming}/"
   else
     log "No .deb artifacts matched '${DEB_GLOB}'"
   fi
+  rsync -a -e "$(rsync_rsh)" \
+    "${REPO_ROOT}/scripts/safemeet-aptly-prune-old.py" \
+    "${REPO_USER}@${REPO_HOST}:${REMOTE_BASE}/safemeet-aptly-prune-old.py"
 
   if [[ "$PUBLISH_INSTALLER" == "1" ]]; then
     rsync -az -e "$(rsync_rsh)" \
@@ -195,21 +198,34 @@ upload_files() {
 
 publish_remote() {
   log "Updating aptly repository"
+  # Serve aptly public in place via bind-mount. Copying the pool into nginx
+  # doubled disk use on a 36G repo VM and made publish fail with ENOSPC.
   ssh_cmd "set -euo pipefail
 if compgen -G '${REMOTE_INCOMING}/*.deb' >/dev/null; then
   aptly repo add -force-replace '${REPO_NAME}' '${REMOTE_INCOMING}'
 fi
+rm -rf '${REMOTE_INCOMING}'
+python3 '${REMOTE_BASE}/safemeet-aptly-prune-old.py' '${REPO_NAME}' --keep 2
 if aptly publish list -raw 2>/dev/null | grep -q '^${REPO_PREFIX} ${REPO_DISTRIBUTION}$'; then
   aptly publish update -batch -gpg-key='${GPG_IDENTITY}' '${REPO_DISTRIBUTION}' '${REPO_PREFIX}'
 else
   aptly publish repo -batch -architectures='${REPO_ARCHITECTURES}' -gpg-key='${GPG_IDENTITY}' -distribution='${REPO_DISTRIBUTION}' -component='${REPO_COMPONENT}' '${REPO_NAME}' '${REPO_PREFIX}'
 fi
-rm -rf '${WEB_ROOT}/${REPO_PREFIX}'
-install -d -m 0755 '${WEB_ROOT}/${REPO_PREFIX}'
-rsync -a --delete '/root/.aptly/public/${REPO_PREFIX}/' '${WEB_ROOT}/${REPO_PREFIX}/'
+aptly db cleanup >/dev/null
+WEB_PREFIX='${WEB_ROOT}/${REPO_PREFIX}'
+APTLY_PUBLIC='/root/.aptly/public/${REPO_PREFIX}'
+mkdir -p \"\$WEB_PREFIX\" \"\$APTLY_PUBLIC\"
+if ! findmnt \"\$WEB_PREFIX\" >/dev/null 2>&1; then
+  rm -rf \"\$WEB_PREFIX\"
+  mkdir -p \"\$WEB_PREFIX\"
+  mount --bind \"\$APTLY_PUBLIC\" \"\$WEB_PREFIX\"
+fi
+if ! grep -Fq \"\$WEB_PREFIX\" /etc/fstab; then
+  echo \"\$APTLY_PUBLIC \$WEB_PREFIX none bind 0 0\" >> /etc/fstab
+fi
 chmod -R a+rX '${WEB_ROOT}'
-test -f '${WEB_ROOT}/${REPO_PREFIX}/dists/${REPO_DISTRIBUTION}/Release'
-test -f '${WEB_ROOT}/${REPO_PREFIX}/dists/${REPO_DISTRIBUTION}/Release.gpg'"
+test -f \"\$WEB_PREFIX/dists/${REPO_DISTRIBUTION}/Release\"
+test -f \"\$WEB_PREFIX/dists/${REPO_DISTRIBUTION}/Release.gpg\""
 }
 
 main() {

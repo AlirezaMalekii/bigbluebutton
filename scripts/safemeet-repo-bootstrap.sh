@@ -90,9 +90,15 @@ if ! aptly publish list -raw 2>/dev/null | grep -q '^${REPO_PREFIX} ${REPO_DISTR
   aptly publish repo -batch -architectures='${REPO_ARCHITECTURES}' -gpg-key='${GPG_IDENTITY}' -distribution='${REPO_DISTRIBUTION}' -component='${REPO_COMPONENT}' '${REPO_NAME}' '${REPO_PREFIX}'
 fi
 
-rm -rf '${WEB_ROOT}/${REPO_PREFIX}'
-install -d -m 0755 '${WEB_ROOT}/${REPO_PREFIX}'
-rsync -a --delete '/root/.aptly/public/${REPO_PREFIX}/' '${WEB_ROOT}/${REPO_PREFIX}/'
+install -d -m 0755 '${WEB_ROOT}/${REPO_PREFIX}' '/root/.aptly/public/${REPO_PREFIX}'
+if ! findmnt '${WEB_ROOT}/${REPO_PREFIX}' >/dev/null 2>&1; then
+  rm -rf '${WEB_ROOT}/${REPO_PREFIX}'
+  install -d -m 0755 '${WEB_ROOT}/${REPO_PREFIX}'
+  mount --bind '/root/.aptly/public/${REPO_PREFIX}' '${WEB_ROOT}/${REPO_PREFIX}'
+fi
+if ! grep -Fq '${WEB_ROOT}/${REPO_PREFIX}' /etc/fstab; then
+  echo '/root/.aptly/public/${REPO_PREFIX} ${WEB_ROOT}/${REPO_PREFIX} none bind 0 0' >> /etc/fstab
+fi
 chmod -R a+rX '${WEB_ROOT}'
 
 cat >/etc/nginx/sites-available/${REPO_DOMAIN} <<'NGINXEOF'

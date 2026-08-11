@@ -169,7 +169,12 @@ path_to_packages() {
   esac
 }
 
-if [[ -z "$LAST_COMMIT" ]] || ! git cat-file -e "${LAST_COMMIT}^{commit}" 2>/dev/null; then
+# Laptop deploy-detect-components.sh treats akka/web as "libs" and would also
+# rebuild bbb-web + bbb-fsesl-akka. That is correct for ./deploy.sh, but it
+# makes CI take 40+ minutes. Package selection is path-based only.
+if [[ "${SAFEMEET_FORCE_FULL_PACKAGES:-}" == "1" || "${SAFEMEET_FORCE_FULL_PACKAGES:-}" == "true" ]]; then
+  add_full_package_set
+elif [[ -z "$LAST_COMMIT" ]] || ! git cat-file -e "${LAST_COMMIT}^{commit}" 2>/dev/null; then
   add_full_package_set
 else
   CHANGED_FILES="$(git diff --name-only "$LAST_COMMIT" "$CURRENT_COMMIT" 2>/dev/null || true)"
@@ -179,7 +184,7 @@ else
       [[ -n "$path" ]] || continue
 
       case "$path" in
-        .gitlab-ci.yml|build/package-names.inc.sh|build/setup-inside-docker.sh|build/opts-global.sh)
+        .gitlab-ci.yml|build/package-names.inc.sh|build/opts-global.sh)
           add_full_package_set
           break
           ;;
@@ -189,18 +194,6 @@ else
       [[ -n "${package:-}" ]] && add_package "$package"
       path_to_packages "$path"
     done <<< "$CHANGED_FILES"
-  fi
-
-  COMPONENTS="$(bash scripts/deploy-detect-components.sh "$LAST_COMMIT" "$CURRENT_COMMIT" 2>/dev/null || true)"
-  if [[ "$COMPONENTS" == "full" ]]; then
-    # deploy-detect-components.sh returns "full" for deploy orchestration changes.
-    # That does not mean every Debian package changed, so keep the path-based
-    # package selection above instead of forcing an expensive full package build.
-    :
-  elif [[ -n "${COMPONENTS// }" ]]; then
-    while IFS= read -r component; do
-      [[ -n "$component" ]] && component_to_packages "$component"
-    done <<< "$COMPONENTS"
   fi
 fi
 
