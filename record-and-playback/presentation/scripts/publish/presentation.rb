@@ -1297,6 +1297,22 @@ def process_external_video_events(events, package_dir)
   generate_json_file(package_dir, 'external_videos.json', external_videos)
 end
 
+def process_background_music_events(events, package_dir)
+  BigBlueButton.logger.info('Processing background music events')
+
+  raw_presentation_dir = File.join(@recording_dir, 'raw', @meeting_id, 'presentation')
+  background_music = BigBlueButton::BackgroundMusic.build(
+    events,
+    recording_events: @rec_events,
+    translate_timestamp: method(:translate_timestamp),
+    raw_presentation_dir: raw_presentation_dir,
+    package_dir: package_dir,
+    logger: BigBlueButton.logger
+  )
+
+  generate_json_file(package_dir, 'background_music.json', background_music)
+end
+
 def generate_done_or_fail_file(success)
   File.open("#{@recording_dir}/status/published/#{@meeting_id}-presentation#{success ? '.done' : '.fail'}", 'w') do |file|
     file.write("#{success ? 'Published' : 'Failed publishing'} #{@meeting_id}")
@@ -1504,6 +1520,8 @@ begin
         process_poll_events(@doc, package_dir)
 
         process_external_video_events(@doc, package_dir)
+
+        process_background_music_events(@doc, package_dir)
 
         # Write deskshare.xml to file
         File.open("#{package_dir}/#{@deskshare_xml_filename}", 'w') { |f| f.puts @deskshare_xml.target! }

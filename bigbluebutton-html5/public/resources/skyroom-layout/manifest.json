@@ -1,0 +1,27 @@
+{
+  "requiredSdkVersion": "~0.0.99",
+  "name": "skyroom-layout",
+  "version": "1.0.0",
+  "javascriptEntrypointUrl": "noop.js",
+  "enabledForBreakoutRooms": true,
+  "eventPersistence": {
+    "isEnabled": true
+  },
+  "dataChannels": [
+    {
+      "name": "webcam-zones",
+      "pushPermission": ["moderator"],
+      "replaceOrDeletePermission": ["moderator", "creator"]
+    },
+    {
+      "name": "shared-notes-panel",
+      "pushPermission": ["moderator"],
+      "replaceOrDeletePermission": ["moderator", "creator"]
+    },
+    {
+      "name": "background-music",
+      "pushPermission": ["moderator"],
+      "replaceOrDeletePermission": ["moderator", "creator"]
+    }
+  ]
+}

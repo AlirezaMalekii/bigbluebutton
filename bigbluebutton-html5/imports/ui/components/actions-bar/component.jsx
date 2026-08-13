@@ -19,6 +19,7 @@ import Selector from '/imports/ui/components/common/selector/component';
 import ToggleGroup from '/imports/ui/components/common/toggle-group/component';
 import Separator from '/imports/ui/components/common/separator/component';
 import SkyroomMobileFooterLogo from '/imports/ui/components/skyroom-layout/header-logo/SkyroomMobileFooterLogo';
+import SkyroomBackgroundMusicQuickControl from '/imports/ui/components/skyroom-layout/background-music/SkyroomBackgroundMusicQuickControl';
 
 const intlMessages = defineMessages({
   actionsBarLabel: {
@@ -213,6 +214,7 @@ class ActionsBar extends PureComponent {
               setPresentationFitToWidth,
             }}
             />
+            <SkyroomBackgroundMusicQuickControl />
           </Styled.Left>
           <Styled.Center>
             {this.renderPluginsActionBarItems(ActionsBarPosition.LEFT)}

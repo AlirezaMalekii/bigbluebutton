@@ -25,6 +25,7 @@ const EVENTS = {
 const ID = {
   ABOUT: 'about',
   ALTERNATES: 'alternates',
+  BACKGROUND_MUSIC: 'backgroundMusic',
   CANVASES: 'canvases',
   CAPTIONS: 'captions',
   CHAT: 'chat',

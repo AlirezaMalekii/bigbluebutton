@@ -169,6 +169,51 @@ const buildVideos = result => {
   )).sort((a, b) => a.timestamp - b.timestamp);
 };
 
+const buildBackgroundMusic = result => {
+  if (!Array.isArray(result)) return [];
+
+  return result.map(item => {
+    const timestamp = parseFloat(item?.timestamp);
+    const stopTimestamp = parseFloat(item?.stop_timestamp);
+    const mediaUrl = typeof item?.media_url === 'string'
+      && /^external-media\/[A-Za-z0-9._-]+$/.test(item.media_url)
+      ? item.media_url
+      : '';
+    const syncEvents = Array.isArray(item?.sync_events)
+      ? item.sync_events.map(event => ({
+        at: parseFloat(event?.at),
+        position: Math.max(parseFloat(event?.position), 0),
+        status: ['playing', 'paused', 'stopped'].includes(event?.status)
+          ? event.status
+          : 'stopped',
+        volume: Math.min(Math.max(parseFloat(event?.volume), 0), 1),
+        loop: event?.loop === true,
+      })).filter(event => (
+        Number.isFinite(event.at)
+        && Number.isFinite(event.position)
+        && Number.isFinite(event.volume)
+      ))
+      : [];
+
+    return {
+      schemaVersion: parseInt(item?.schema_version ?? 1, 10),
+      timestamp,
+      stopTimestamp,
+      mediaUrl,
+      mediaName: item?.media_name ?? '',
+      mimeType: item?.mime_type ?? '',
+      provider: item?.provider ?? 'background-music',
+      available: item?.available === true && mediaUrl.length > 0,
+      syncEvents,
+    };
+  }).filter(item => (
+    Number.isFinite(item.timestamp)
+    && Number.isFinite(item.stopTimestamp)
+    && item.stopTimestamp > item.timestamp
+    && item.syncEvents.length > 0
+  )).sort((left, right) => left.timestamp - right.timestamp);
+};
+
 const buildMetadata = result => {
   let data = {};
   const { recording } = result;
@@ -595,6 +640,9 @@ const build = (filename, value) => {
         case config.captions:
           data = buildCaptions(value);
           break;
+        case config.backgroundMusic:
+          data = buildBackgroundMusic(value);
+          break;
         case config.polls:
           data = buildPolls(value);
           break;
@@ -695,6 +743,7 @@ export {
   build,
   buildVideos,
   buildStyle,
+  buildBackgroundMusic,
   getAttr,
   getId,
   getNumbers,

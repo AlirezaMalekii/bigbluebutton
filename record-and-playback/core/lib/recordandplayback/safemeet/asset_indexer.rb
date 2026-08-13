@@ -262,7 +262,11 @@ module BigBlueButton
 
     def find_presentation_assets(published_root)
       files = []
-      %w[slides_new.xml layout.xml polls.json external_videos.json presentation_text.json notes.html shapes.svg panzooms.xml cursor.xml tldraw.json video.xml].each do |name|
+      presentation_files = %w[
+        slides_new.xml layout.xml polls.json external_videos.json background_music.json
+        presentation_text.json notes.html shapes.svg panzooms.xml cursor.xml tldraw.json video.xml
+      ]
+      presentation_files.each do |name|
         path = File.join(published_root, name)
         files << asset_entry(name, path, "presentation:#{name}") if File.exist?(path)
       end

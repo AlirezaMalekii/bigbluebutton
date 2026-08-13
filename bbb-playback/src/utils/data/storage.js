@@ -161,6 +161,7 @@ const storage = {
   get built() {
     return {
       captions: hasProperty(DATA, ID.CAPTIONS),
+      backgroundMusic: hasProperty(DATA, ID.BACKGROUND_MUSIC),
       chat: hasProperty(DATA, ID.CHAT),
       notes: hasProperty(DATA, ID.NOTES),
       polls: hasProperty(DATA, ID.POLLS),
@@ -188,6 +189,9 @@ const storage = {
   },
   get captions() {
     return DATA[ID.CAPTIONS];
+  },
+  get backgroundMusic() {
+    return DATA[ID.BACKGROUND_MUSIC];
   },
   get chat() {
     return DATA[ID.CHAT];

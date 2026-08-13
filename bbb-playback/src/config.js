@@ -16,6 +16,7 @@ const date = { enabled: true };
 
 const files = {
   alternates: 'presentation_text.json',
+  backgroundMusic: 'background_music.json',
   captions: 'captions.json',
   chat: 'slides_new.xml',
   cursor: 'cursor.xml',

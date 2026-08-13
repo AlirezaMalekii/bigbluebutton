@@ -10,6 +10,7 @@ import Content from './content';
 import Media from './media';
 import Modal from './modal';
 import BottomBar from 'components/bars/bottom';
+import BackgroundMusic from 'components/background-music';
 import TopBar from 'components/bars/top';
 import {
   play,
@@ -136,6 +137,7 @@ const Player = () => {
         hidePresentation={hidePresentation}
       />
       <BottomBar />
+      <BackgroundMusic />
       <Modal
         handleClose={() => setModal('')}
         handleSearch={(value) => setSearch(value)}

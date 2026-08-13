@@ -3,6 +3,14 @@ package org.bigbluebutton.web
 class UrlMappings {
 
   static mappings = {
+    "/bigbluebutton/background-music/upload"(controller: "backgroundMusic") {
+      action = [POST: 'upload']
+    }
+
+    "/bigbluebutton/background-music/$meetingId/$trackId"(controller: "backgroundMusic") {
+      action = [GET: 'stream']
+    }
+
     "/bigbluebutton/presentation/$authzToken/upload"(controller: "presentation") {
       action = [POST: 'upload']
     }

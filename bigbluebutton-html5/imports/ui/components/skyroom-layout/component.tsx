@@ -10,6 +10,7 @@ import useGuestWaitingAutoFocus from './guest-waiting-auto-focus/hook';
 import useSkyroomWebcamZoneSync from './webcam-zone-sync/useSkyroomWebcamZoneSync';
 import useSkyroomNotesPanelSync from './notes-panel-sync/useSkyroomNotesPanelSync';
 import useSkyroomMobileLayoutLoading from './loading/useSkyroomMobileLayoutLoading';
+import SkyroomBackgroundMusicController from './background-music/SkyroomBackgroundMusicController';
 
 /**
  * Mounts Skyroom column layout behaviour, the shared-notes column, and the
@@ -29,6 +30,7 @@ const SkyroomColumnController: React.FC = () => {
       <SkyroomWebcamFullscreenController />
       <SkyroomMobileTalkingRail />
       <SkyroomMobileStatusRail />
+      <SkyroomBackgroundMusicController />
     </>
   );
 };

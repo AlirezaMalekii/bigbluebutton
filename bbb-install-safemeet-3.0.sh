@@ -45,6 +45,7 @@ DRY_RUN=0
 SKIP_HEALTH_CHECK=0
 PACKAGES_UPGRADED=0
 THEME_CHANGED=0
+PLUGIN_MANIFEST_CHANGED=0
 INSTALL_ARGS=()
 
 log() {
@@ -481,6 +482,84 @@ upsert_property() {
   fi
 }
 
+ensure_skyroom_plugin_manifest() {
+  local host="$1"
+  local manifest_url="https://${host}/html5client/resources/skyroom-layout/manifest.json"
+  local result
+
+  result="$(python3 - "$BBB_WEB_PROPS" "$manifest_url" <<'PY'
+import json
+import os
+import sys
+import tempfile
+
+path, manifest_url = sys.argv[1:]
+try:
+    with open(path, "r", encoding="utf-8") as source:
+        lines = source.readlines()
+except FileNotFoundError:
+    lines = []
+
+key = "pluginManifests"
+current = []
+for line in lines:
+    if line.startswith(f"{key}="):
+        raw = line.split("=", 1)[1].strip()
+        if raw:
+            current = json.loads(raw)
+        break
+
+if not isinstance(current, list):
+    raise SystemExit("pluginManifests must be a JSON array")
+
+suffix = "/html5client/resources/skyroom-layout/manifest.json"
+updated = [
+    entry for entry in current
+    if not (isinstance(entry, dict) and str(entry.get("url", "")).endswith(suffix))
+]
+updated.append({"url": manifest_url})
+serialized = json.dumps(updated, ensure_ascii=False, separators=(",", ":"))
+replacement = f"{key}={serialized}\n"
+
+new_lines = []
+replaced = False
+for line in lines:
+    if line.startswith(f"{key}="):
+        if not replaced:
+            new_lines.append(replacement)
+            replaced = True
+        continue
+    new_lines.append(line)
+if not replaced:
+    if new_lines and not new_lines[-1].endswith("\n"):
+        new_lines[-1] += "\n"
+    new_lines.append(replacement)
+
+if new_lines == lines:
+    print("unchanged")
+    raise SystemExit(0)
+
+directory = os.path.dirname(path) or "."
+os.makedirs(directory, exist_ok=True)
+mode = os.stat(path).st_mode & 0o777 if os.path.exists(path) else 0o644
+uid = os.stat(path).st_uid if os.path.exists(path) else os.getuid()
+gid = os.stat(path).st_gid if os.path.exists(path) else os.getgid()
+with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=directory, delete=False) as target:
+    target.writelines(new_lines)
+    temporary_path = target.name
+os.chmod(temporary_path, mode)
+os.chown(temporary_path, uid, gid)
+os.replace(temporary_path, path)
+print("changed")
+PY
+)" || die "Unable to update pluginManifests in ${BBB_WEB_PROPS}."
+
+  if [[ "$result" == "changed" ]]; then
+    PLUGIN_MANIFEST_CHANGED=1
+    log "Registered SafeMeet realtime data-channel manifest"
+  fi
+}
+
 asset_ext_from_url() {
   local url="$1"
   local fallback="$2"
@@ -515,6 +594,7 @@ apply_safemeet_config() {
     log "DRY RUN: would backup ${BBB_WEB_PROPS}, ${BBB_HTML5_YML}, ${APT_LIST}, ${SAFE_APT_LIST}, and ${APT_PIN}"
     log "DRY RUN: would cache assets in ${ASSET_DIR}"
     [[ -n "$LOGO_LINK_URL" ]] && log "DRY RUN: would set branding.logoLinkUrl=${LOGO_LINK_URL}"
+    log "DRY RUN: would register the SafeMeet data-channel manifest in ${BBB_WEB_PROPS}"
     apply_theme_config "$host" "$stamp"
     return 0
   fi
@@ -525,6 +605,11 @@ apply_safemeet_config() {
   backup_file "$APT_LIST" "$stamp"
   backup_file "$SAFE_APT_LIST" "$stamp"
   backup_file "$APT_PIN" "$stamp"
+
+  ensure_skyroom_plugin_manifest "$host"
+  if [[ "$PLUGIN_MANIFEST_CHANGED" == "1" ]]; then
+    changed=1
+  fi
 
   if [[ -n "$DEFAULT_PDF_URL" ]]; then
     local pdf_dest="${ASSET_DIR}/default.pdf"
@@ -576,7 +661,7 @@ health_check() {
   [[ "$SKIP_HEALTH_CHECK" == "1" ]] && return 0
   [[ "$DRY_RUN" == "1" ]] && return 0
 
-  if [[ "$PACKAGES_UPGRADED" -eq 0 && -z "$DEFAULT_PDF_URL" && -z "$LOGO_URL" && -z "$LOGO_LINK_URL" && -z "$THEME_CONFIG_URL" && -z "$THEME_ID" && "$THEME_RESET" != "1" && "$THEME_CHANGED" != "1" ]]; then
+  if [[ "$PACKAGES_UPGRADED" -eq 0 && -z "$DEFAULT_PDF_URL" && -z "$LOGO_URL" && -z "$LOGO_LINK_URL" && -z "$THEME_CONFIG_URL" && -z "$THEME_ID" && "$THEME_RESET" != "1" && "$THEME_CHANGED" != "1" && "$PLUGIN_MANIFEST_CHANGED" != "1" ]]; then
     log "No package or config changes applied; skipping health checks"
     return 0
   fi
@@ -604,6 +689,11 @@ health_check() {
   if [[ "$THEME_CHANGED" == "1" && "$THEME_RESET" != "1" ]]; then
     curl -fsSL "https://${host}/safemeet/theme-override.css" -o /dev/null \
       || die "Theme override is not reachable at https://${host}/safemeet/theme-override.css"
+  fi
+  if [[ "$PLUGIN_MANIFEST_CHANGED" == "1" || "$PACKAGES_UPGRADED" -gt 0 ]]; then
+    curl -fsSL "https://${host}/html5client/resources/skyroom-layout/manifest.json" \
+      | python3 -c 'import json,sys; data=json.load(sys.stdin); assert data["name"] == "skyroom-layout"' \
+      || die "SafeMeet data-channel manifest is not reachable or valid."
   fi
 }
 

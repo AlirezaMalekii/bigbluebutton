@@ -9,7 +9,7 @@ theme that becomes a CSS variable override on that server only.
 | ID | File | Brand |
 |---|---|---|
 | `safemeet` | `safemeet.json` | Teal (default product palette) |
-| `roomeet` | `roomeet.json` | Solid violet `#8738E5` |
+| `roomeet` | `roomeet.json` | Dual violet brand — Warm `#B61FD8`, Cool `#A78BFA`, Navy `#0F1440` |
 
 Schema version: `1`
 

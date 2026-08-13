@@ -221,6 +221,8 @@ redis_host = props['redis_host']
 redis_port = props['redis_port']
 redis_password = props['redis_password']
 presentation_dir = props['raw_presentation_src']
+background_music_default_dir = props['background_music_default_src'] ||
+                               '/usr/share/bigbluebutton/html5-client/resources/music'
 kurento_video_dir = props['kurento_video_src']
 kurento_screenshare_dir = props['kurento_screenshare_src']
 mediasoup_video_dir = props['mediasoup_video_src']
@@ -253,6 +255,15 @@ archive_audio(meeting_id, audio_dir, raw_archive_dir)
 archive_notes(meeting_id, notes_endpoint, bn_notes_endpoint, notes_formats, raw_archive_dir)
 # Presentation files
 archive_directory("#{presentation_dir}/#{meeting_id}/#{meeting_id}", "#{target_dir}/presentation")
+# Default tracks live in the HTML5 package rather than the meeting workspace.
+# Archive only those referenced by the durable music timeline so recordings stay
+# self-contained without copying the complete catalog into every meeting.
+BigBlueButton::BackgroundMusic.archive_default_assets(
+  events_file: "#{target_dir}/events.xml",
+  source_dir: background_music_default_dir,
+  target_dir: "#{target_dir}/presentation/background-music/default",
+  logger: BigBlueButton.logger
+)
 # Learning Analytics Dashboard JSON file
 base_id = meeting_id.split('-').first
 if (src = Dir["/var/bigbluebutton/learning-dashboard/#{base_id}-*/**/learning_dashboard_data.json"].first)

@@ -18,6 +18,8 @@ import { notify } from '/imports/ui/services/notification';
 import { ModalRegistration } from '/imports/ui/core/singletons/modalController';
 import { SKYROOM_OPEN_POLL_RESULTS_EVENT } from '/imports/ui/components/skyroom-layout/active-poll-summary/openPollResultsModal';
 import { getSkyroomFileTypeMenuIcon } from '/imports/ui/components/skyroom-layout/file-type-icon/SkyroomFileTypeIcon';
+import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import { openSkyroomBackgroundMusic } from '/imports/ui/components/skyroom-layout/background-music/state';
 
 const propTypes = {
   hasActivePoll: PropTypes.bool,
@@ -137,6 +139,10 @@ const intlMessages = defineMessages({
     id: 'app.actionsBar.actionsDropdown.unshareCameraAsContent',
     description: 'Label for unshare camera as content',
   },
+  backgroundMusic: {
+    id: 'app.skyroom.backgroundMusic.title',
+    description: 'Open background music controls',
+  },
 });
 
 const handlePresentationClick = () => Session.setItem('showUploadPresentationView', true);
@@ -150,6 +156,7 @@ class ActionsDropdown extends PureComponent {
     this.takePresenterId = uniqueId('action-item-');
     this.timerId = uniqueId('action-item-');
     this.selectUserRandId = uniqueId('action-item-');
+    this.backgroundMusicId = uniqueId('action-item-');
 
     this.handleTimerClick = this.handleTimerClick.bind(this);
     this.makePresentationItems = this.makePresentationItems.bind(this);
@@ -307,6 +314,16 @@ class ActionsDropdown extends PureComponent {
             this.setCameraAsContentModalIsOpen(true);
           },
         dataTest: 'shareCameraAsContent',
+      });
+    }
+
+    if (amIModerator && isSkyroomTheme()) {
+      actions.push({
+        icon: 'audio_on',
+        label: intl.formatMessage(intlMessages.backgroundMusic),
+        key: this.backgroundMusicId,
+        onClick: openSkyroomBackgroundMusic,
+        dataTest: 'skyroomBackgroundMusic',
       });
     }
 

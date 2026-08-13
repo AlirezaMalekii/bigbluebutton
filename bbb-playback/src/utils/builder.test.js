@@ -1,8 +1,5 @@
-jest.mock('utils/tldraw', () => ({
-  isTldrawWhiteboard: () => false,
-}));
-
 import {
+  buildBackgroundMusic,
   buildStyle,
   buildVideos,
   getAttr,
@@ -10,6 +7,65 @@ import {
   getNumbers,
   mergeMessages,
 } from './builder';
+
+jest.mock('utils/tldraw', () => ({
+  isTldrawWhiteboard: () => false,
+}));
+
+it('builds a validated background music playback timeline', () => {
+  const items = buildBackgroundMusic([{
+    schema_version: 1,
+    timestamp: 12.5,
+    stop_timestamp: 32.5,
+    media_url: 'external-media/background.m4a',
+    media_name: 'تمرکز',
+    mime_type: 'audio/mp4',
+    provider: 'background-music-default',
+    available: true,
+    sync_events: [
+      { at: 12.5, position: 0, status: 'playing', volume: 0.35, loop: true },
+      { at: 20, position: 7.5, status: 'paused', volume: 0.5, loop: false },
+    ],
+  }]);
+
+  expect(items).toEqual([{
+    schemaVersion: 1,
+    timestamp: 12.5,
+    stopTimestamp: 32.5,
+    mediaUrl: 'external-media/background.m4a',
+    mediaName: 'تمرکز',
+    mimeType: 'audio/mp4',
+    provider: 'background-music-default',
+    available: true,
+    syncEvents: [
+      { at: 12.5, position: 0, status: 'playing', volume: 0.35, loop: true },
+      { at: 20, position: 7.5, status: 'paused', volume: 0.5, loop: false },
+    ],
+  }]);
+});
+
+it('rejects remote background music URLs and malformed intervals', () => {
+  const items = buildBackgroundMusic([
+    {
+      timestamp: 1,
+      stop_timestamp: 5,
+      media_url: 'https://example.test/music.mp3?token=secret',
+      available: true,
+      sync_events: [{ at: 1, position: 0, status: 'playing', volume: 0.2, loop: true }],
+    },
+    {
+      timestamp: 9,
+      stop_timestamp: 8,
+      media_url: 'external-media/music.mp3',
+      available: true,
+      sync_events: [{ at: 9, position: 0, status: 'playing', volume: 0.2, loop: true }],
+    },
+  ]);
+
+  expect(items).toHaveLength(1);
+  expect(items[0]).toMatchObject({ mediaUrl: '', available: false });
+  expect(JSON.stringify(items)).not.toContain('token=secret');
+});
 
 it('builds synchronized external media schema v2 without exposing source URLs', () => {
   const items = buildVideos([{
