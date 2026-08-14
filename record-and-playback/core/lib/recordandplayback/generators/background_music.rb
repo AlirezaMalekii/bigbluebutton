@@ -85,6 +85,7 @@ module BigBlueButton
 
     def persisted_states(events)
       roles = {}
+      presenter_id = nil
       states = events.xpath('/recording/event').sort_by { |event| event_timestamp(event) }.map do |event|
         case event['eventname']
         when 'ParticipantJoinEvent'
@@ -95,15 +96,18 @@ module BigBlueButton
             roles[child_text(event, 'userId').to_s] = child_text(event, 'value').to_s
           end
           next
+        when 'AssignPresenterEvent'
+          presenter_id = child_text(event, 'userid') || child_text(event, 'userId')
+          next
         end
 
         next unless background_music_event?(event)
 
         user_id = child_text(event, 'userId').to_s
-        # Full recordings contain participant role events. Segmented recordings
-        # may start after the join event, so an unknown role remains compatible;
-        # a known viewer is never allowed to alter the published music timeline.
-        next if roles.key?(user_id) && roles[user_id] != 'MODERATOR'
+        # Full recordings contain role and presenter events. Segmented recordings
+        # may start after them, so an unknown role remains compatible. A known
+        # viewer may publish only while they are the active presenter.
+        next if roles.key?(user_id) && roles[user_id] != 'MODERATOR' && user_id != presenter_id.to_s
 
         parse_persisted_state(event)
       end.compact

@@ -150,9 +150,17 @@ useDefaultDarkLogo=true
 defaultDarkLogoURL=https://<bbb-host>/safemeet/logo.<ext>
 ```
 
-`--logo-url` sets both light and dark logo defaults to the same asset (SafeMeet uses one dark meeting theme).
+`--default-pdf-url` also copies the file to `/var/www/bigbluebutton-default/assets/default.pdf` and refreshes snapshotted `default.pdf` files under class-materials. An already-running meeting keeps its current slides until that session ends and is created again; teacher uploads stay.
 
-`--logo-link-url` writes the meeting-logo click target into:
+`--logo-url` replaces the **single** meeting platform logo (both light and dark
+defaults). It does not sit beside SafeMeet/RooMeet — it becomes the logo.
+
+If `--logo-url` is omitted, the client uses the packaged mark for `--theme-id`:
+
+- `roomeet` → RooMeet Persian lockup
+- `safemeet` or unset → SafeMeet lockup
+
+`--logo-link-url` writes the click target for that one logo into:
 
 ```text
 /etc/bigbluebutton/bbb-html5.yml
@@ -163,10 +171,13 @@ public:
   app:
     branding:
       logoLinkUrl: https://roomeet.ir
+      themeId: roomeet
 ```
 
-Meeting theme JSON is also stored at `/etc/safemeet-bbb/theme.json`. The HTML5
-client loads `/safemeet/theme-override.css` when present.
+The HTML5 client loads `/safemeet/theme-override.css` when present. Meeting theme
+JSON is stored at `/etc/safemeet-bbb/theme.json`. Theme JSON `id` is also written
+to `public.app.branding.themeId` so the meeting uses the matching packaged
+platform logo when `--logo-url` is not set.
 
 Class materials persistence (presentations + whiteboard across sessions for the same external `meetingID`) is documented in `docs/safemeet/class-materials-persistence.md`. Defaults are enabled with 14-day idle retention under `/var/bigbluebutton/safemeet-class-materials`.
 

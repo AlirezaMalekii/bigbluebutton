@@ -7,18 +7,24 @@ require 'tmpdir'
 
 module BigBlueButton
   describe BackgroundMusic do
-    def background_music_events(states, last_timestamp: nil)
+    def background_music_events(states, last_timestamp: nil, user_id: 'moderator-1', role: 'MODERATOR',
+                                presenter: false)
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.recording do
           xml.event(eventname: 'ParticipantJoinEvent', timestamp: 0) do
-            xml.userId('moderator-1')
-            xml.role('MODERATOR')
+            xml.userId(user_id)
+            xml.role(role)
+          end
+          if presenter
+            xml.event(eventname: 'AssignPresenterEvent', timestamp: 1) do
+              xml.userid(user_id)
+            end
           end
           states.each do |item|
             xml.event(eventname: 'PluginGeneratedEvent', timestamp: item.fetch(:timestamp)) do
               xml.pluginName(described_class::PLUGIN_NAME)
               xml.pluginEventName(described_class::EVENT_NAME)
-              xml.userId('moderator-1')
+              xml.userId(user_id)
               xml.timestampUTC(item.fetch(:timestamp_utc, item.fetch(:timestamp)))
               xml.payloadJson(JSON.generate(item.fetch(:state)))
             end
@@ -205,6 +211,38 @@ module BigBlueButton
         end
       end.doc.root
       doc.root.children.first.add_next_sibling(viewer_event)
+
+      expect(described_class.persisted_states(doc)).to be_empty
+    end
+
+    it 'accepts persisted music state from the active presenter' do
+      doc = background_music_events([
+                                      { timestamp: 2_000,
+                                        state: state(revision: 2_000, changed_at: 2_000,
+                                                     source: default_source) }
+                                    ], last_timestamp: 3_000, user_id: 'presenter-1', role: 'VIEWER',
+                                       presenter: true)
+
+      states = described_class.persisted_states(doc)
+
+      expect(states.length).to eq(1)
+      expect(states.first.dig(:source, :track_id)).to eq('calm')
+    end
+
+    it 'rejects music state after presenter control moves to another viewer' do
+      doc = background_music_events([
+                                      { timestamp: 2_000,
+                                        state: state(revision: 2_000, changed_at: 2_000,
+                                                     source: default_source) }
+                                    ], last_timestamp: 3_000, user_id: 'presenter-1', role: 'VIEWER',
+                                       presenter: true)
+      reassignment = Nokogiri::XML::Builder.new do |xml|
+        xml.event(eventname: 'AssignPresenterEvent', timestamp: 1_500) do
+          xml.userid('presenter-2')
+        end
+      end.doc.root
+      plugin_event = doc.at_xpath('/recording/event[@eventname="PluginGeneratedEvent"]')
+      plugin_event.add_previous_sibling(reassignment)
 
       expect(described_class.persisted_states(doc)).to be_empty
     end

@@ -4,6 +4,10 @@ export const SKYROOM_PRODUCT_NAME_EN = 'SafeMeet';
 export const SKYROOM_PLATFORM_URL = 'https://safemeet.ir';
 export const SKYROOM_PLATFORM_LOGO_PATH = '/resources/images/skyroom/SafeMeet.ir.svg';
 export const SKYROOM_PLATFORM_ICON_PATH = '/resources/images/skyroom/SafeMeet-icon.svg';
+export const SKYROOM_ROOMEET_URL = 'https://roomeet.ir';
+export const SKYROOM_ROOMEET_LOGO_PATH = '/resources/images/skyroom/Roomeet.ir.svg';
+export const SKYROOM_ROOMEET_LOGO_LIGHT_PATH = '/resources/images/skyroom/Roomeet.ir-light.svg';
+export const SKYROOM_ROOMEET_ICON_PATH = '/resources/images/skyroom/Roomeet-icon.svg';
 
 const BBB_TEXT_REPLACEMENTS = [
   [/BigBlueButton\s*Inc\.?/gi, ''],

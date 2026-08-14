@@ -293,9 +293,12 @@ public:
         descId: openDebugWindow
     branding:
       displayBrandingArea: true
-      # Server-wide URL opened when users click the custom meeting logo.
+      # Server-wide URL opened when users click the meeting logo.
       # Override via /etc/bigbluebutton/bbb-html5.yml or install --logo-link-url.
       logoLinkUrl: ""
+      # Packaged platform mark when --logo-url is not set: safemeet | roomeet.
+      # Written by install --theme-id / --theme-config-url.
+      themeId: ""
     connectionTimeout: 60000
     showHelpButton: false
     # Whether the fallback mechanism should be used

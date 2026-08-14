@@ -21,8 +21,9 @@ const SkyroomBackgroundMusicQuickControl: React.FC = () => {
   const [playbackIssue] = useSkyroomBackgroundMusicPlaybackIssue();
   const { data: currentUser } = useCurrentUser((user) => ({
     isModerator: user.isModerator,
+    presenter: user.presenter,
   }));
-  const isModerator = Boolean(currentUser?.isModerator);
+  const canControl = Boolean(currentUser?.isModerator || currentUser?.presenter);
 
   const trackName = useMemo(() => {
     if (!state.source) return '';
@@ -32,9 +33,9 @@ const SkyroomBackgroundMusicQuickControl: React.FC = () => {
   }, [intl, state.source]);
 
   if (!isSkyroomColumnLayout() || !state.source) return null;
-  if (!isModerator && playbackIssue !== 'autoplay') return null;
+  if (!canControl && playbackIssue !== 'autoplay') return null;
 
-  const unlockPlayback = !isModerator && playbackIssue === 'autoplay';
+  const unlockPlayback = !canControl && playbackIssue === 'autoplay';
   const label = unlockPlayback
     ? intl.formatMessage(intlMessages.unlock)
     : `${intl.formatMessage(intlMessages.open)}: ${trackName}`;

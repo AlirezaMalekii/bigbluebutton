@@ -1538,8 +1538,16 @@ class ApiController {
       }
 
       boolean anyRestored = false
-      boolean hasCurrent = presentations.any { it.current }
-      presentations.eachWithIndex { meta, index ->
+      boolean skippedDefaultWasCurrent = false
+      boolean restoredHasCurrent = false
+      presentations.each { meta ->
+        if (isPersistedServerDefaultPresentation(meta)) {
+          skippedDefaultWasCurrent = skippedDefaultWasCurrent || meta.current
+          log.info("SafeMeet class materials: skipping persisted server default presentationId={} name={} extId={}",
+              meta.id, meta.name, extId)
+          return
+        }
+
         File original = classMaterialsService.findOriginalFile(extId, meta.id)
         if (original == null || !original.isFile()) {
           log.warn("SafeMeet class materials: missing original for presentationId={} extId={}", meta.id, extId)
@@ -1561,7 +1569,10 @@ class ApiController {
         File dest = new File(uploadDir, newFilename)
         FileUtils.copyFile(original, dest)
 
-        boolean isCurrent = meta.current || (!hasCurrent && index == 0)
+        boolean isCurrent = meta.current
+        if (isCurrent) {
+          restoredHasCurrent = true
+        }
         def uploadFailed = false
         def uploadFailReasons = new ArrayList<String>()
 
@@ -1589,6 +1600,12 @@ class ApiController {
         }
       }
 
+      boolean injectedServerDefault = injectCurrentServerDefaultPresentation(
+          conf, skippedDefaultWasCurrent || !restoredHasCurrent)
+      if (injectedServerDefault) {
+        anyRestored = true
+      }
+
       if (anyRestored) {
         classMaterialsService.touch(extId)
         log.info("SafeMeet class materials restored for extId={} internalId={}",
@@ -1597,6 +1614,47 @@ class ApiController {
       return anyRestored
     } catch (Exception e) {
       log.error("SafeMeet class materials restore failed for meeting {}", conf?.getInternalId(), e)
+      return false
+    }
+  }
+
+  private boolean isPersistedServerDefaultPresentation(meta) {
+    if (meta == null) {
+      return false
+    }
+    if (meta.defaultPresentation) {
+      return true
+    }
+    String name = (meta.name ?: "").trim().toLowerCase()
+    return name == "default.pdf" || name == "default"
+  }
+
+  /**
+   * Always load the live server default PDF after restoring class files, so
+   * `--default-pdf-url` replaces the snapshotted default.pdf without dropping
+   * teacher uploads.
+   */
+  private boolean injectCurrentServerDefaultPresentation(Meeting conf, boolean makeCurrent) {
+    if (!presentationService?.defaultUploadedPresentation) {
+      return false
+    }
+    try {
+      downloadAndProcessDocument(
+          presentationService.defaultUploadedPresentation,
+          conf.getInternalId(),
+          makeCurrent,
+          "",
+          false,
+          true,
+          true,
+          false
+      )
+      log.info("SafeMeet class materials: injected current server default meeting={} current={}",
+          conf.getInternalId(), makeCurrent)
+      return true
+    } catch (Exception e) {
+      log.error("SafeMeet class materials: failed injecting server default for meeting {}",
+          conf?.getInternalId(), e)
       return false
     }
   }

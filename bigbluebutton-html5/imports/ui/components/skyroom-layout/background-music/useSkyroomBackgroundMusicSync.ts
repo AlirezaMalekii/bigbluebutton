@@ -104,8 +104,9 @@ export const useSkyroomBackgroundMusicSync = () => {
   const enabled = isSkyroomTheme();
   const { data: currentUser } = useCurrentUser((user) => ({
     isModerator: user.isModerator,
+    presenter: user.presenter,
   }));
-  const isModerator = Boolean(currentUser?.isModerator);
+  const canControl = Boolean(currentUser?.isModerator || currentUser?.presenter);
   const [timeSync] = useTimeSync();
   const { data } = useBackgroundMusicSubscription();
   const [pushEntry] = useMutation(SKYROOM_BACKGROUND_MUSIC_PUSH);
@@ -130,7 +131,7 @@ export const useSkyroomBackgroundMusicSync = () => {
   }, []);
 
   const broadcastState = useCallback(async (state: BackgroundMusicState) => {
-    if (!enabled || !isModerator) return;
+    if (!enabled || !canControl) return;
     if (inFlightRef.current || creationPendingRef.current) {
       queuedStateRef.current = state;
       return;
@@ -142,7 +143,9 @@ export const useSkyroomBackgroundMusicSync = () => {
       channelName: SKYROOM_BACKGROUND_MUSIC_CHANNEL,
       subChannelName: SKYROOM_BACKGROUND_MUSIC_SUBCHANNEL,
       payloadJson: state,
-      toRoles: ['viewer', 'moderator'],
+      // Empty recipients make the entry public in BBB. Every meeting client
+      // subscribes to the public channel and applies the same state locally.
+      toRoles: [],
       toUserIds: [],
     };
 
@@ -207,7 +210,7 @@ export const useSkyroomBackgroundMusicSync = () => {
   }, [
     clearEntryWaitTimer,
     enabled,
-    isModerator,
+    canControl,
     persistEvent,
     pushEntry,
     replaceEntry,
@@ -251,7 +254,7 @@ export const useSkyroomBackgroundMusicSync = () => {
   }, [clearEntryWaitTimer, data, enabled]);
 
   useEffect(() => {
-    if (!enabled || !isModerator) {
+    if (!enabled || !canControl) {
       setSkyroomBackgroundMusicCommandPublisher(null);
       return undefined;
     }
@@ -294,7 +297,7 @@ export const useSkyroomBackgroundMusicSync = () => {
       }
       setSkyroomBackgroundMusicCommandPublisher(null);
     };
-  }, [broadcastState, enabled, isModerator, timeSync]);
+  }, [broadcastState, canControl, enabled, timeSync]);
 
   useEffect(() => () => {
     clearEntryWaitTimer();
@@ -302,7 +305,7 @@ export const useSkyroomBackgroundMusicSync = () => {
     setSkyroomBackgroundMusicCommandPublisher(null);
   }, [clearEntryWaitTimer]);
 
-  return { enabled, isModerator };
+  return { enabled, canControl };
 };
 
 export default useSkyroomBackgroundMusicSync;

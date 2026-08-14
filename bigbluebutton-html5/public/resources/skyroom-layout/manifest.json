@@ -20,8 +20,8 @@
     },
     {
       "name": "background-music",
-      "pushPermission": ["moderator"],
-      "replaceOrDeletePermission": ["moderator", "creator"]
+      "pushPermission": ["moderator", "presenter"],
+      "replaceOrDeletePermission": ["moderator", "presenter"]
     }
   ]
 }

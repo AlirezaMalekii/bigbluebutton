@@ -25,8 +25,8 @@ import java.nio.file.StandardCopyOption
 import java.util.regex.Pattern
 
 /**
- * Stores moderator-uploaded MP3 files beside the meeting's temporary presentation
- * workspace without creating a presentation pod or conversion job.
+ * Stores moderator- or presenter-uploaded MP3 files beside the meeting's temporary
+ * presentation workspace without creating a presentation pod or conversion job.
  */
 class BackgroundMusicController {
   MeetingService meetingService
@@ -49,15 +49,17 @@ class BackgroundMusicController {
       renderJson([code: 'unauthorized'], 401)
       return
     }
-    if (!Meeting.ROLE_MODERATOR.equals(userSession.role)) {
-      renderJson([code: 'forbidden'], 403)
+    String meetingId = userSession.meetingID
+    Meeting meeting = Util.isMeetingIdValidFormat(meetingId)
+      ? meetingService.getNotEndedMeetingWithId(meetingId)
+      : null
+    if (meeting == null) {
+      renderJson([code: 'meeting-ended'], 410)
       return
     }
-
-    String meetingId = userSession.meetingID
-    if (!Util.isMeetingIdValidFormat(meetingId)
-        || meetingService.getNotEndedMeetingWithId(meetingId) == null) {
-      renderJson([code: 'meeting-ended'], 410)
+    def user = meeting.getUserById(userSession.internalUserId)
+    if (!(user?.isModerator()) && !(user?.isPresenter())) {
+      renderJson([code: 'forbidden'], 403)
       return
     }
 

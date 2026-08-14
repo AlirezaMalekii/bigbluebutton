@@ -11,6 +11,10 @@ theme that becomes a CSS variable override on that server only.
 | `safemeet` | `safemeet.json` | Teal (default product palette) |
 | `roomeet` | `roomeet.json` | Dual violet brand — Warm `#B61FD8`, Cool `#A78BFA`, Navy `#0F1440` |
 
+`--theme-id` also selects the packaged meeting logo when `--logo-url` is not set:
+RooMeet Persian lockup for `roomeet`, SafeMeet lockup otherwise. `--logo-url`
+replaces that mark entirely (one logo, not two).
+
 Schema version: `1`
 
 ## Apply on a BBB server

@@ -96,7 +96,7 @@ High-risk changes require official BBB documentation, an end-to-end trace, compa
 ## Meeting surface map
 
 - shell: `app/component.jsx`
-- navbar: `nav-bar/` plus `skyroom-layout/header-logo/`, poll summary, connection widgets
+- navbar: `nav-bar/` plus `skyroom-layout/header-logo/` (one platform mark: custom `--logo-url`, else RooMeet/SafeMeet by `branding.themeId`), poll summary, connection widgets
 - action dock: `actions-bar/`
 - users: `user-list/` plus SafeMeet search/avatar extensions
 - chat: `chat/chat-graphql/` plus SafeMeet header/composer/sticker extensions

@@ -80,5 +80,6 @@ No Meeting-Core change is required as long as `bbb_meeting_id` stays stable per 
 
 - Shared notes, chat, polls, and webcams are **not** restored.
 - Restore re-converts the original file (page ids stay `presentationId/pageNum` because presentation ids are preserved).
+- The live server default PDF (`--default-pdf-url` / `beans.presentationService.defaultUploadedPresentation`) is **always re-injected** on create. Snapshotted `default.pdf` is skipped so a new default replaces the old template; teacher uploads stay.
 - Explicit create-time pre-upload XML is skipped when a valid materials snapshot is restored (SafeMeet default path has no pre-uploads).
 - Retention is **idle-based**: each successful restore/snapshot refreshes `lastAccessedAt` / `manifest.json` mtime.

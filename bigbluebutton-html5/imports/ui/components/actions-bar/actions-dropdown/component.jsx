@@ -317,7 +317,7 @@ class ActionsDropdown extends PureComponent {
       });
     }
 
-    if (amIModerator && isSkyroomTheme()) {
+    if ((amIPresenter || amIModerator) && isSkyroomTheme()) {
       actions.push({
         icon: 'audio_on',
         label: intl.formatMessage(intlMessages.backgroundMusic),

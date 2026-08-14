@@ -199,6 +199,7 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
       branding: {
         displayBrandingArea: true,
         logoLinkUrl: '',
+        themeId: '',
       },
       connectionTimeout: 60000,
       showHelpButton: false,

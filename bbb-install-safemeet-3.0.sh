@@ -66,7 +66,7 @@ Usage:
 
 SafeMeet options:
   --default-pdf-url URL   Download and set the default whiteboard PDF.
-  --logo-url URL          Download and set the default meeting logo (also used as dark logo).
+  --logo-url URL          Replace the meeting platform logo (also used as dark logo).
   --logo-link-url URL     Set the URL opened when users click the meeting logo.
   --theme-config-url URL  Download a theme JSON and apply meeting palette override.
   --theme-id ID           Shortcut for built-in themes hosted at ${SAFE_THEMES_URL}/<id>.json
@@ -231,6 +231,7 @@ apply_theme_config() {
   local stamp="$2"
   local theme_url=""
   local tmp_json tmp_css tmp_py
+  local theme_pack_id=""
 
   if [[ "$THEME_RESET" == "1" ]]; then
     if [[ "$DRY_RUN" == "1" ]]; then
@@ -241,6 +242,7 @@ apply_theme_config() {
     backup_file "$THEME_JSON_ASSET" "$stamp"
     backup_file "$THEME_JSON_STATE" "$stamp"
     rm -f "$THEME_CSS_ASSET" "$THEME_JSON_ASSET" "$THEME_JSON_STATE"
+    upsert_html5_yaml_string ".public.app.branding.themeId" ""
     THEME_CHANGED=1
     log "Meeting theme override removed; packaged SafeMeet default will be used"
     return 0
@@ -291,6 +293,15 @@ apply_theme_config() {
   install -m 0644 "$tmp_json" "$THEME_JSON_STATE"
   install -m 0644 "$tmp_json" "$THEME_JSON_ASSET"
   install -m 0644 "$tmp_css" "$THEME_CSS_ASSET"
+  theme_pack_id="$(python3 -c 'import json,sys
+from pathlib import Path
+data = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+print(str(data.get("id") or "").strip())' "$tmp_json")"
+  if [[ "$theme_pack_id" =~ ^[a-z0-9][a-z0-9_-]*$ ]]; then
+    upsert_html5_yaml_string ".public.app.branding.themeId" "$theme_pack_id"
+    THEME_ID="$theme_pack_id"
+    log "Meeting brand themeId=${theme_pack_id}"
+  fi
   THEME_CHANGED=1
   log "Meeting theme override applied at https://${host}/safemeet/theme-override.css"
 }
@@ -585,6 +596,67 @@ download_asset() {
   chmod 0644 "$dest"
 }
 
+refresh_class_materials_default_pdf() {
+  local new_pdf="$1"
+  local materials="/var/bigbluebutton/safemeet-class-materials"
+  [[ -f "$new_pdf" && -d "$materials" ]] || return 0
+
+  python3 - "$new_pdf" "$materials" <<'PY'
+import hashlib
+import json
+import os
+import shutil
+import sys
+
+new_pdf, root = sys.argv[1], sys.argv[2]
+
+
+def md5(path):
+    digest = hashlib.md5()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def is_server_default(meta):
+    if meta.get("default") is True:
+        return True
+    name = str(meta.get("name") or "").strip().lower()
+    return name in {"default.pdf", "default"}
+
+
+new_hash = md5(new_pdf)
+updated = 0
+for class_id in os.listdir(root):
+    class_dir = os.path.join(root, class_id)
+    manifest_path = os.path.join(class_dir, "manifest.json")
+    if not os.path.isfile(manifest_path):
+        continue
+    try:
+        with open(manifest_path, encoding="utf-8") as handle:
+            manifest = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        continue
+    for meta in manifest.get("presentations") or []:
+        if not is_server_default(meta):
+            continue
+        pres_id = str(meta.get("id") or "")
+        if not pres_id:
+            continue
+        dest = os.path.join(class_dir, "presentations", pres_id, f"{pres_id}.pdf")
+        if not os.path.isfile(dest):
+            continue
+        if md5(dest) == new_hash:
+            continue
+        shutil.copyfile(new_pdf, dest)
+        os.chmod(dest, 0o644)
+        updated += 1
+
+print(updated)
+PY
+}
+
 apply_safemeet_config() {
   local host="$1"
   local stamp="$2"
@@ -592,7 +664,7 @@ apply_safemeet_config() {
 
   if [[ "$DRY_RUN" == "1" ]]; then
     log "DRY RUN: would backup ${BBB_WEB_PROPS}, ${BBB_HTML5_YML}, ${APT_LIST}, ${SAFE_APT_LIST}, and ${APT_PIN}"
-    log "DRY RUN: would cache assets in ${ASSET_DIR}"
+    [[ -n "$DEFAULT_PDF_URL" ]] && log "DRY RUN: would download default PDF and refresh persisted class defaults"
     [[ -n "$LOGO_LINK_URL" ]] && log "DRY RUN: would set branding.logoLinkUrl=${LOGO_LINK_URL}"
     log "DRY RUN: would register the SafeMeet data-channel manifest in ${BBB_WEB_PROPS}"
     apply_theme_config "$host" "$stamp"
@@ -615,6 +687,14 @@ apply_safemeet_config() {
     local pdf_dest="${ASSET_DIR}/default.pdf"
     download_asset "$DEFAULT_PDF_URL" "$pdf_dest" "default PDF"
     upsert_property "$BBB_WEB_PROPS" "beans.presentationService.defaultUploadedPresentation" "https://${host}/safemeet/default.pdf"
+    # Keep the packaged BBB path in sync so anything still fetching /default.pdf matches.
+    if [[ -d /var/www/bigbluebutton-default/assets ]]; then
+      cp -a "$pdf_dest" /var/www/bigbluebutton-default/assets/default.pdf
+      chmod 0644 /var/www/bigbluebutton-default/assets/default.pdf
+    fi
+    local refreshed_defaults
+    refreshed_defaults="$(refresh_class_materials_default_pdf "$pdf_dest" || true)"
+    log "Refreshed ${refreshed_defaults:-0} persisted class default.pdf files"
     changed=1
   fi
 
@@ -650,7 +730,7 @@ apply_safemeet_config() {
     log "Restarting services that read BBB web / HTML5 defaults"
     systemctl reload nginx || true
     systemctl restart bbb-web || true
-    if [[ -n "$LOGO_LINK_URL" ]]; then
+    if [[ -n "$LOGO_LINK_URL" || "$THEME_CHANGED" == "1" ]]; then
       systemctl restart bbb-apps-akka || true
     fi
   fi
@@ -689,6 +769,10 @@ health_check() {
   if [[ "$THEME_CHANGED" == "1" && "$THEME_RESET" != "1" ]]; then
     curl -fsSL "https://${host}/safemeet/theme-override.css" -o /dev/null \
       || die "Theme override is not reachable at https://${host}/safemeet/theme-override.css"
+    if [[ -n "$THEME_ID" ]]; then
+      grep -qE "themeId:[[:space:]]*[\"']?${THEME_ID}" "$BBB_HTML5_YML" \
+        || die "themeId ${THEME_ID} was not written to ${BBB_HTML5_YML}"
+    fi
   fi
   if [[ "$PLUGIN_MANIFEST_CHANGED" == "1" || "$PACKAGES_UPGRADED" -gt 0 ]]; then
     curl -fsSL "https://${host}/html5client/resources/skyroom-layout/manifest.json" \

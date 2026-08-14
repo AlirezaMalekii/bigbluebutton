@@ -1,20 +1,34 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
-import {
-  SKYROOM_PLATFORM_ICON_PATH,
-  SKYROOM_PLATFORM_LOGO_PATH,
-  SKYROOM_PLATFORM_URL,
-} from '/imports/ui/components/skyroom-layout/white-label';
+import useMeeting from '/imports/ui/core/hooks/useMeeting';
+import { isDarkThemeEnabled } from '/imports/ui/components/app/service';
+import { resolveSkyroomMeetingLogo } from './resolveMeetingLogo';
 import Styled from './styles';
 
 const intlMessages = defineMessages({
-  logoAlt: {
+  safemeetAlt: {
     id: 'app.skyroom.platformLogo.alt',
     description: 'Alt text for SafeMeet platform logo in header',
   },
-  logoLinkAria: {
+  safemeetLinkAria: {
     id: 'app.skyroom.platformLogo.linkAria',
-    description: 'Accessible label for clickable platform logo link',
+    description: 'Accessible label for clickable SafeMeet logo link',
+  },
+  roomeetAlt: {
+    id: 'app.skyroom.platformLogo.roomeetAlt',
+    description: 'Alt text for RooMeet platform logo in header',
+  },
+  roomeetLinkAria: {
+    id: 'app.skyroom.platformLogo.roomeetLinkAria',
+    description: 'Accessible label for clickable RooMeet logo link',
+  },
+  customAlt: {
+    id: 'app.skyroom.headerLogo.alt',
+    description: 'Alt text for custom meeting logo in header',
+  },
+  customLinkAria: {
+    id: 'app.skyroom.headerLogo.linkAria',
+    description: 'Accessible label for clickable custom meeting logo link',
   },
 });
 
@@ -22,31 +36,82 @@ type SkyroomPlatformLogoProps = {
   iconOnly?: boolean;
 };
 
-const getPlatformLogoSrc = (iconOnly: boolean) => {
-  const basename = window.meetingClientSettings?.public?.app?.basename ?? '';
-  const path = iconOnly ? SKYROOM_PLATFORM_ICON_PATH : SKYROOM_PLATFORM_LOGO_PATH;
-  return `${basename}${path}`;
-};
-
 const SkyroomPlatformLogo: React.FC<SkyroomPlatformLogoProps> = ({ iconOnly = false }) => {
   const intl = useIntl();
-  const alt = intl.formatMessage(intlMessages.logoAlt);
+  const [darkMode, setDarkMode] = useState(isDarkThemeEnabled());
+
+  useEffect(() => {
+    const handleDarkModeChange = (event: Event) => {
+      const { enabled } = (event as CustomEvent<{ enabled: boolean }>).detail;
+      setDarkMode(enabled);
+    };
+
+    window.addEventListener('darkmodechange', handleDarkModeChange);
+    return () => window.removeEventListener('darkmodechange', handleDarkModeChange);
+  }, []);
+
+  const { data: meeting } = useMeeting((m) => ({
+    customLogoUrl: m.customLogoUrl,
+    customDarkLogoUrl: m.customDarkLogoUrl,
+    loginUrl: m.loginUrl,
+  }));
+
+  const logo = resolveSkyroomMeetingLogo({
+    customLogoUrl: meeting?.customLogoUrl?.trim() ?? '',
+    customDarkLogoUrl: meeting?.customDarkLogoUrl?.trim() ?? '',
+    loginUrl: meeting?.loginUrl?.trim() ?? '',
+    darkMode,
+    preferIcon: iconOnly,
+  });
+
+  const altId = {
+    custom: intlMessages.customAlt,
+    roomeet: intlMessages.roomeetAlt,
+    safemeet: intlMessages.safemeetAlt,
+  }[logo.source];
+  const linkAriaId = {
+    custom: intlMessages.customLinkAria,
+    roomeet: intlMessages.roomeetLinkAria,
+    safemeet: intlMessages.safemeetLinkAria,
+  }[logo.source];
+  const alt = intl.formatMessage(altId);
+  const linkAria = intl.formatMessage(linkAriaId);
+
+  const image = (
+    <Styled.PlatformLogoImage
+      src={logo.src}
+      alt={alt}
+      draggable={false}
+      $iconOnly={logo.iconOnly}
+    />
+  );
+
+  if (!logo.href) {
+    return (
+      <Styled.PlatformWrap
+        data-test="skyroomPlatformLogo"
+        data-logo-source={logo.source}
+        data-icon-only={logo.iconOnly ? 'true' : undefined}
+      >
+        {image}
+      </Styled.PlatformWrap>
+    );
+  }
 
   return (
-    <Styled.PlatformWrap data-test="skyroomPlatformLogo" data-icon-only={iconOnly ? 'true' : undefined}>
+    <Styled.PlatformWrap
+      data-test="skyroomPlatformLogo"
+      data-logo-source={logo.source}
+      data-icon-only={logo.iconOnly ? 'true' : undefined}
+    >
       <Styled.PlatformLink
-        href={SKYROOM_PLATFORM_URL}
+        href={logo.href}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label={intl.formatMessage(intlMessages.logoLinkAria)}
-        $iconOnly={iconOnly}
+        aria-label={linkAria}
+        $iconOnly={logo.iconOnly}
       >
-        <Styled.PlatformLogoImage
-          src={getPlatformLogoSrc(iconOnly)}
-          alt={alt}
-          draggable={false}
-          $iconOnly={iconOnly}
-        />
+        {image}
       </Styled.PlatformLink>
     </Styled.PlatformWrap>
   );

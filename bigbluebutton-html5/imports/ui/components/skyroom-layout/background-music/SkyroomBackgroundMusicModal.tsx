@@ -90,8 +90,9 @@ const SkyroomBackgroundMusicModal: React.FC = () => {
   const [playbackIssue] = useSkyroomBackgroundMusicPlaybackIssue();
   const { data: currentUser } = useCurrentUser((user) => ({
     isModerator: user.isModerator,
+    presenter: user.presenter,
   }));
-  const isModerator = Boolean(currentUser?.isModerator);
+  const canControl = Boolean(currentUser?.isModerator || currentUser?.presenter);
   const {
     isOpen, open, close, id,
   } = useModalRegistration({ id: 'skyroomBackgroundMusicModal', priority: 'low' });
@@ -101,15 +102,15 @@ const SkyroomBackgroundMusicModal: React.FC = () => {
 
   useEffect(() => {
     const handleOpen = () => {
-      if (isModerator && isSkyroomTheme()) open();
+      if (canControl && isSkyroomTheme()) open();
     };
     window.addEventListener(SKYROOM_BACKGROUND_MUSIC_OPEN_EVENT, handleOpen);
     return () => window.removeEventListener(SKYROOM_BACKGROUND_MUSIC_OPEN_EVENT, handleOpen);
-  }, [isModerator, open]);
+  }, [canControl, open]);
 
   useEffect(() => {
-    if (isOpen && !isModerator) close();
-  }, [close, isModerator, isOpen]);
+    if (isOpen && !canControl) close();
+  }, [canControl, close, isOpen]);
 
   const selectedTrackName = useMemo(() => {
     if (!state.source) return '';
@@ -136,7 +137,7 @@ const SkyroomBackgroundMusicModal: React.FC = () => {
     }
   };
 
-  if (!isOpen || !isModerator || !isSkyroomTheme()) return null;
+  if (!isOpen || !canControl || !isSkyroomTheme()) return null;
 
   const isPlaying = state.status === 'playing';
   let statusMessage = intlMessages.stopped;

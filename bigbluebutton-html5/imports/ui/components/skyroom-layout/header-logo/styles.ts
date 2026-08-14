@@ -55,8 +55,7 @@ const platformLogoSizing = `
   flex: 0 0 auto;
   height: 42px;
   width: auto;
-  max-width: min(172px, 38vw);
-  aspect-ratio: 1832 / 448;
+  max-width: min(220px, 42vw);
   object-fit: contain;
   object-position: left center;
   user-select: none;

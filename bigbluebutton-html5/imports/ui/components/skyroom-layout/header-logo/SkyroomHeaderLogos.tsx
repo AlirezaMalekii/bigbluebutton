@@ -4,7 +4,6 @@ import {
   isSkyroomMobileViewport,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import SkyroomPlatformLogo from './SkyroomPlatformLogo';
-import SkyroomHeaderLogo from './SkyroomHeaderLogo';
 import Styled from './styles';
 
 type SkyroomHeaderLogosProps = {
@@ -46,7 +45,6 @@ const SkyroomHeaderLogos: React.FC<SkyroomHeaderLogosProps> = ({ placement = 'he
   const logos = (
     <Styled.Group data-test="skyroomHeaderLogos">
       <SkyroomPlatformLogo iconOnly={footerIconOnly} />
-      {!footerIconOnly && <SkyroomHeaderLogo />}
     </Styled.Group>
   );
 
