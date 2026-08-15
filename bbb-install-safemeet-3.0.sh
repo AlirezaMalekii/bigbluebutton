@@ -30,6 +30,9 @@ THEME_JSON_ASSET="${ASSET_DIR}/theme.json"
 THEME_COMPILE_URL="${THEME_COMPILE_URL:-${SAFE_THEMES_URL}/safemeet-theme-compile.py}"
 BBB_WEB_PROPS="/etc/bigbluebutton/bbb-web.properties"
 BBB_HTML5_YML="/etc/bigbluebutton/bbb-html5.yml"
+DEFAULT_MEETING_LOCALE="${DEFAULT_MEETING_LOCALE:-fa-IR}"
+DEFAULT_WELCOME_MESSAGE='\u0628\u0647 \u062c\u0644\u0633\u0647 <b>%%CONFNAME%%</b> \u062e\u0648\u0634 \u0622\u0645\u062f\u06cc\u062f.'
+DEFAULT_WELCOME_MESSAGE_FOOTER='\u0628\u0631\u0627\u06cc \u062a\u062c\u0631\u0628\u0647 \u0628\u0647\u062a\u0631\u060c \u0627\u0632 \u0647\u062f\u0633\u062a \u0648 \u0627\u062a\u0635\u0627\u0644 \u067e\u0627\u06cc\u062f\u0627\u0631 \u0627\u06cc\u0646\u062a\u0631\u0646\u062a \u0627\u0633\u062a\u0641\u0627\u062f\u0647 \u06a9\u0646\u06cc\u062f.'
 APT_LIST="/etc/apt/sources.list.d/bigbluebutton.list"
 SAFE_APT_LIST="/etc/apt/sources.list.d/safemeet-bigbluebutton.list"
 APT_PIN="/etc/apt/preferences.d/safemeet-bbb"
@@ -142,6 +145,7 @@ write_state() {
 SAFE_REPO_URL=${SAFE_REPO_URL}
 HOST=${host}
 DEFAULT_PDF_URL=${DEFAULT_PDF_URL}
+DEFAULT_MEETING_LOCALE=${DEFAULT_MEETING_LOCALE}
 LOGO_URL=${LOGO_URL}
 LOGO_LINK_URL=${LOGO_LINK_URL}
 THEME_CONFIG_URL=${theme_url}
@@ -194,6 +198,44 @@ cursor[keys[-1]] = value
 
 with open(path, "w", encoding="utf-8") as handle:
     yaml.safe_dump(data, handle, default_flow_style=False, allow_unicode=True, sort_keys=False)
+PY
+}
+
+read_html5_yaml_string() {
+  local key_path="$1"
+  local file="$BBB_HTML5_YML"
+
+  if command -v yq >/dev/null 2>&1; then
+    yq e "${key_path} // \"\"" "$file"
+    return 0
+  fi
+
+  python3 - "$file" "$key_path" <<'PY'
+import sys
+
+path, key_path = sys.argv[1:]
+keys = [key for key in key_path.lstrip(".").split(".") if key]
+
+try:
+    import yaml  # type: ignore
+except ImportError as exc:
+    raise SystemExit(
+        "Need yq or PyYAML to read /etc/bigbluebutton/bbb-html5.yml safely."
+    ) from exc
+
+try:
+    with open(path, encoding="utf-8") as source:
+        value = yaml.safe_load(source) or {}
+except FileNotFoundError:
+    value = {}
+
+for key in keys:
+    if not isinstance(value, dict):
+        value = ""
+        break
+    value = value.get(key, "")
+
+print(value if isinstance(value, str) else "")
 PY
 }
 
@@ -486,11 +528,45 @@ upsert_property() {
   local key="$2"
   local value="$3"
   touch "$file"
-  if grep -qE "^${key}=" "$file"; then
-    sed -i "s#^${key}=.*#${key}=${value}#" "$file"
-  else
-    printf '%s=%s\n' "$key" "$value" >> "$file"
-  fi
+  python3 - "$file" "$key" "$value" <<'PY'
+import os
+import sys
+import tempfile
+
+path, key, value = sys.argv[1:]
+prefix = f"{key}="
+with open(path, encoding="utf-8") as source:
+    lines = source.readlines()
+
+replacement = f"{prefix}{value}\n"
+updated = False
+result = []
+for line in lines:
+    if line.startswith(prefix):
+        if not updated:
+            result.append(replacement)
+            updated = True
+        continue
+    result.append(line)
+if not updated:
+    result.append(replacement)
+
+stat = os.stat(path)
+directory = os.path.dirname(path) or "."
+fd, tmp_path = tempfile.mkstemp(prefix=f".{os.path.basename(path)}.", dir=directory, text=True)
+try:
+    with os.fdopen(fd, "w", encoding="utf-8") as output:
+        output.writelines(result)
+    os.chmod(tmp_path, stat.st_mode)
+    os.chown(tmp_path, stat.st_uid, stat.st_gid)
+    os.replace(tmp_path, path)
+except BaseException:
+    try:
+        os.unlink(tmp_path)
+    except FileNotFoundError:
+        pass
+    raise
+PY
 }
 
 ensure_skyroom_plugin_manifest() {
@@ -666,6 +742,7 @@ apply_safemeet_config() {
     log "DRY RUN: would backup ${BBB_WEB_PROPS}, ${BBB_HTML5_YML}, ${APT_LIST}, ${SAFE_APT_LIST}, and ${APT_PIN}"
     [[ -n "$DEFAULT_PDF_URL" ]] && log "DRY RUN: would download default PDF and refresh persisted class defaults"
     [[ -n "$LOGO_LINK_URL" ]] && log "DRY RUN: would set branding.logoLinkUrl=${LOGO_LINK_URL}"
+    log "DRY RUN: would set the default meeting locale to ${DEFAULT_MEETING_LOCALE}"
     log "DRY RUN: would register the SafeMeet data-channel manifest in ${BBB_WEB_PROPS}"
     apply_theme_config "$host" "$stamp"
     return 0
@@ -682,6 +759,14 @@ apply_safemeet_config() {
   if [[ "$PLUGIN_MANIFEST_CHANGED" == "1" ]]; then
     changed=1
   fi
+
+  # Packaged defaults must be non-empty or bbb-conf reports the installation
+  # as unhealthy. Keep the persistent override brand-neutral and Persian so
+  # both SafeMeet and RooMeet themes inherit useful fallback copy.
+  upsert_property "$BBB_WEB_PROPS" "defaultWelcomeMessage" "$DEFAULT_WELCOME_MESSAGE"
+  upsert_property "$BBB_WEB_PROPS" "defaultWelcomeMessageFooter" "$DEFAULT_WELCOME_MESSAGE_FOOTER"
+  upsert_html5_yaml_string ".public.app.defaultSettings.application.overrideLocale" "$DEFAULT_MEETING_LOCALE"
+  changed=1
 
   if [[ -n "$DEFAULT_PDF_URL" ]]; then
     local pdf_dest="${ASSET_DIR}/default.pdf"
@@ -730,7 +815,7 @@ apply_safemeet_config() {
     log "Restarting services that read BBB web / HTML5 defaults"
     systemctl reload nginx || true
     systemctl restart bbb-web || true
-    if [[ -n "$LOGO_LINK_URL" || "$THEME_CHANGED" == "1" ]]; then
+    if [[ -n "$DEFAULT_MEETING_LOCALE" || -n "$LOGO_LINK_URL" || "$THEME_CHANGED" == "1" ]]; then
       systemctl restart bbb-apps-akka || true
     fi
   fi
@@ -741,14 +826,14 @@ health_check() {
   [[ "$SKIP_HEALTH_CHECK" == "1" ]] && return 0
   [[ "$DRY_RUN" == "1" ]] && return 0
 
-  if [[ "$PACKAGES_UPGRADED" -eq 0 && -z "$DEFAULT_PDF_URL" && -z "$LOGO_URL" && -z "$LOGO_LINK_URL" && -z "$THEME_CONFIG_URL" && -z "$THEME_ID" && "$THEME_RESET" != "1" && "$THEME_CHANGED" != "1" && "$PLUGIN_MANIFEST_CHANGED" != "1" ]]; then
-    log "No package or config changes applied; skipping health checks"
-    return 0
-  fi
-
   log "Running health checks"
   if command -v bbb-conf >/dev/null 2>&1; then
-    bbb-conf --status || true
+    local status_output
+    status_output="$(bbb-conf --status)" || die "bbb-conf --status failed"
+    printf '%s\n' "$status_output"
+    if grep -Fq '[✘' <<<"$status_output"; then
+      die "One or more BigBlueButton services are not active"
+    fi
     bbb-conf --check || true
   fi
 
@@ -766,6 +851,10 @@ health_check() {
     grep -qE 'logoLinkUrl:' "$BBB_HTML5_YML" \
       || die "logoLinkUrl was not written to ${BBB_HTML5_YML}"
   fi
+  local effective_locale
+  effective_locale="$(read_html5_yaml_string ".public.app.defaultSettings.application.overrideLocale")"
+  [[ "$effective_locale" == "$DEFAULT_MEETING_LOCALE" ]] \
+    || die "Default meeting locale is ${effective_locale:-unset}; expected ${DEFAULT_MEETING_LOCALE} in ${BBB_HTML5_YML}"
   if [[ "$THEME_CHANGED" == "1" && "$THEME_RESET" != "1" ]]; then
     curl -fsSL "https://${host}/safemeet/theme-override.css" -o /dev/null \
       || die "Theme override is not reachable at https://${host}/safemeet/theme-override.css"
@@ -854,6 +943,8 @@ main() {
   [[ -n "$LOGO_URL" ]] && validate_url "$LOGO_URL" "--logo-url"
   [[ -n "$LOGO_LINK_URL" ]] && validate_url "$LOGO_LINK_URL" "--logo-link-url"
   [[ -n "$THEME_CONFIG_URL" ]] && validate_url "$THEME_CONFIG_URL" "--theme-config-url"
+  [[ "$DEFAULT_MEETING_LOCALE" =~ ^[a-z]{2}(-[A-Z]{2})?$ ]] \
+    || die "DEFAULT_MEETING_LOCALE must use a locale such as fa-IR."
   if [[ -n "$THEME_CONFIG_URL" && -n "$THEME_ID" ]]; then
     die "Use either --theme-config-url or --theme-id, not both."
   fi

@@ -62,6 +62,9 @@ wget -qO- https://new-bbb-install.roomeet.ir/bbb-install-safemeet-3.0.sh | bash 
 Fresh install first uses the existing Roomeet/BBB install flow as the baseline,
 then adds the SafeMeet repository and upgrades any BBB packages that exist there.
 This lets the SafeMeet repo start small and override only changed packages.
+The installer also persists `fa-IR` as the default meeting locale, so a new
+meeting opens in Persian even when the browser language is English and the join
+URL contains no locale userdata parameter.
 
 ## Meeting theme packs
 
@@ -144,6 +147,8 @@ Relevant keys:
 
 ```properties
 beans.presentationService.defaultUploadedPresentation=https://<bbb-host>/safemeet/default.pdf
+defaultWelcomeMessage=<Persian brand-neutral welcome copy>
+defaultWelcomeMessageFooter=<Persian connectivity/headset guidance>
 useDefaultLogo=true
 defaultLogoURL=https://<bbb-host>/safemeet/logo.<ext>
 useDefaultDarkLogo=true
@@ -169,6 +174,9 @@ If `--logo-url` is omitted, the client uses the packaged mark for `--theme-id`:
 ```yaml
 public:
   app:
+    defaultSettings:
+      application:
+        overrideLocale: fa-IR
     branding:
       logoLinkUrl: https://roomeet.ir
       themeId: roomeet
@@ -204,6 +212,7 @@ bbb-conf --check
 curl -fsS "https://<bbb-host>/safemeet/default.pdf" >/dev/null
 curl -fsS "https://<bbb-host>/safemeet/logo.svg" >/dev/null
 curl -fsS "https://<bbb-host>/safemeet/theme-override.css" >/dev/null   # only if a theme was applied
+yq e '.public.app.defaultSettings.application.overrideLocale' /etc/bigbluebutton/bbb-html5.yml
 ```
 
 New default PDF/logo/theme values are reliable for newly created meetings (hard-refresh
