@@ -31,6 +31,7 @@ object JsonUtils {
   implicit object AnyJsonWriter extends JsonWriter[Any] {
     def write(x: Any): JsValue = x match {
       case n: Int             => JsNumber(n)
+      case n: Long            => JsNumber(n)
       case s: String          => JsString(s)
       case b: Boolean         => JsBoolean(b)
       case f: Float           => JsNumber(f)

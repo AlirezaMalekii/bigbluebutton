@@ -20,6 +20,7 @@ import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import Toggle from '/imports/ui/components/common/switch/component';
 import { ModalRegistration } from '/imports/ui/core/singletons/modalController';
 import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import { isRoomeetBrand } from '/imports/ui/components/skyroom-layout/white-label';
 
 const intlMessages = defineMessages({
   optionsLabel: {
@@ -37,6 +38,17 @@ const intlMessages = defineMessages({
   aboutLabel: {
     id: 'app.navBar.optionsDropdown.aboutLabel',
     description: 'About option label',
+    defaultMessage: 'About {brand}',
+  },
+  brandSafemeet: {
+    id: 'app.skyroom.brand.safemeet',
+    description: 'SafeMeet product name',
+    defaultMessage: 'SafeMeet',
+  },
+  brandRoomeet: {
+    id: 'app.skyroom.brand.roomeet',
+    description: 'RooMeet product name',
+    defaultMessage: 'RooMeet',
   },
   aboutDesc: {
     id: 'app.navBar.optionsDropdown.aboutDesc',
@@ -306,7 +318,11 @@ class OptionsDropdown extends PureComponent {
         key: 'list-item-about',
         icon: 'about',
         dataTest: 'aboutModal',
-        label: intl.formatMessage(intlMessages.aboutLabel),
+        label: intl.formatMessage(intlMessages.aboutLabel, {
+          brand: intl.formatMessage(
+            isRoomeetBrand() ? intlMessages.brandRoomeet : intlMessages.brandSafemeet,
+          ),
+        }),
         description: intl.formatMessage(intlMessages.aboutDesc),
         onClick: () => this.setAboutModalIsOpen(),
       },

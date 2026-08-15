@@ -89,7 +89,7 @@
   justify-content: center !important;
 }
 
-/* About RooMeet — readable description + copyright */
+/* About modal — brand-aware description + copyright */
 html[data-skyroom="true"] [data-test="aboutModalTitleLabel"] .skyroom-about-body {
   display: flex;
   flex-direction: column;

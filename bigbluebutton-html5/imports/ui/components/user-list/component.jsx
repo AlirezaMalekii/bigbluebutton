@@ -5,6 +5,7 @@ import Styled from './styles';
 import CustomLogo from './custom-logo/component';
 import UserContentContainer from './user-list-content/container';
 import { SkyroomUserSearchProvider } from '../skyroom-layout/user-search/context';
+import { isSkyroomColumnLayout } from '../skyroom-layout/panel-toggles';
 
 const propTypes = {
   compact: PropTypes.bool,
@@ -30,13 +31,15 @@ class UserList extends PureComponent {
       showBranding,
     } = this.props;
     const logoUrl = DarkModeIsEnabled ? CustomDarkLogoUrl : CustomLogoUrl;
+    const showCustomLogo = showBranding
+      && !compact
+      && logoUrl
+      && !isSkyroomColumnLayout();
 
     return (
       <Styled.UserList data-test="userListContainer">
         {
-          showBranding
-            && !compact
-            && logoUrl
+          showCustomLogo
             ? <CustomLogo CustomLogoUrl={logoUrl} /> : null
         }
         <SkyroomUserSearchProvider>

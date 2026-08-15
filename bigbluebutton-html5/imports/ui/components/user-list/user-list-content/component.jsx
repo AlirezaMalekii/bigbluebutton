@@ -47,6 +47,7 @@ class UserContent extends PureComponent {
     const ROLE_MODERATOR = window.meetingClientSettings.public.user.role_moderator;
     const showGuestPanelOpener = currentUser?.role === ROLE_MODERATOR
       && !isSkyroomMobileViewport();
+    const skyroomColumn = isSkyroomColumnLayout();
 
     // Skyroom drives its own mobile bottom-zone layout (one box at a time), so use the
     // clean column structure even on phones — not the stock crammed mobile scroll list.
@@ -74,8 +75,8 @@ class UserContent extends PureComponent {
           </Styled.ScrollableList>
         ) : (
           <>
-            <ChatList />
-            <UserNotesContainer />
+            {skyroomColumn ? null : <ChatList />}
+            {skyroomColumn ? null : <UserNotesContainer />}
             {isTimerActive && <TimerContainer isModerator={currentUser?.role === ROLE_MODERATOR} />}
             {showGuestPanelOpener ? <GuestPanelOpenerContainer /> : null}
             <UserPollsContainer isPresenter={currentUser?.presenter} />

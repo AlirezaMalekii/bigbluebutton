@@ -801,7 +801,8 @@
 #layout[data-skyroom-column="true"] [data-test="messageTitle"],
 #layout[data-skyroom-column="true"] [data-test="sharedNotesButton"],
 #layout[data-skyroom-column="true"] [data-test="notesTitle"],
-#layout[data-skyroom-column="true"] [data-test="brandingArea"] {
+#layout[data-skyroom-column="true"] [data-test="brandingArea"],
+#layout[data-skyroom-column="true"] [data-test="userListContainer"] > div:has([data-test="brandingArea"]) {
   display: none !important;
 }
 

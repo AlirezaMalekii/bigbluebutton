@@ -4,21 +4,50 @@ export const SKYROOM_PRODUCT_NAME_EN = 'SafeMeet';
 export const SKYROOM_PLATFORM_URL = 'https://safemeet.ir';
 export const SKYROOM_PLATFORM_LOGO_PATH = '/resources/images/skyroom/SafeMeet.ir.svg';
 export const SKYROOM_PLATFORM_ICON_PATH = '/resources/images/skyroom/SafeMeet-icon.svg';
+export const SKYROOM_ROOMEET_NAME = 'رومیت';
+export const SKYROOM_ROOMEET_NAME_EN = 'RooMeet';
 export const SKYROOM_ROOMEET_URL = 'https://roomeet.ir';
 export const SKYROOM_ROOMEET_LOGO_PATH = '/resources/images/skyroom/Roomeet.ir.svg';
 export const SKYROOM_ROOMEET_LOGO_LIGHT_PATH = '/resources/images/skyroom/Roomeet.ir-light.svg';
 export const SKYROOM_ROOMEET_ICON_PATH = '/resources/images/skyroom/Roomeet-icon.svg';
 
-const BBB_TEXT_REPLACEMENTS = [
-  [/BigBlueButton\s*Inc\.?/gi, ''],
-  [/BigBlueButton/gi, SKYROOM_PRODUCT_NAME_EN],
-  [/بیگ[\s‌-]*بلو[\s‌-]*باتن/gi, SKYROOM_PRODUCT_NAME],
-  [/bigbluebutton/gi, 'safemeet'],
-];
+export const getBrandingThemeId = () => (
+  window.meetingClientSettings?.public?.app?.branding?.themeId?.trim().toLowerCase() ?? ''
+);
+
+export const isRoomeetBrand = () => getBrandingThemeId() === 'roomeet';
+
+/** Active install theme: RooMeet when `--theme-id roomeet`, otherwise SafeMeet. */
+export const getSkyroomBrand = () => {
+  if (isRoomeetBrand()) {
+    return {
+      id: 'roomeet',
+      nameFa: SKYROOM_ROOMEET_NAME,
+      nameEn: SKYROOM_ROOMEET_NAME_EN,
+      url: SKYROOM_ROOMEET_URL,
+    };
+  }
+  return {
+    id: 'safemeet',
+    nameFa: SKYROOM_PRODUCT_NAME,
+    nameEn: SKYROOM_PRODUCT_NAME_EN,
+    url: SKYROOM_PLATFORM_URL,
+  };
+};
+
+const getBbbTextReplacements = () => {
+  const brand = getSkyroomBrand();
+  return [
+    [/BigBlueButton\s*Inc\.?/gi, ''],
+    [/BigBlueButton/gi, brand.nameEn],
+    [/بیگ[\s‌-]*بلو[\s‌-]*باتن/gi, brand.nameFa],
+    [/bigbluebutton/gi, brand.id],
+  ];
+};
 
 const scrubString = (value) => {
   if (typeof value !== 'string' || !value) return value;
-  return BBB_TEXT_REPLACEMENTS.reduce(
+  return getBbbTextReplacements().reduce(
     (text, [pattern, replacement]) => text.replace(pattern, replacement),
     value,
   ).replace(/\s{2,}/g, ' ').trim();
@@ -33,10 +62,11 @@ export const applySkyroomWhiteLabelSettings = (settings) => {
   if (!target?.public) return target;
 
   const { app, settings: publicSettings } = target.public;
+  const brand = getSkyroomBrand();
 
   if (app) {
-    app.clientTitle = SKYROOM_PRODUCT_NAME;
-    app.copyright = `© ${new Date().getFullYear()} RooMeet. All rights reserved.`;
+    app.clientTitle = brand.nameFa;
+    app.copyright = `© ${new Date().getFullYear()} ${brand.nameEn}. All rights reserved.`;
     app.displayBbbServerVersion = false;
     app.helpLink = '';
     if (app.bbbTabletApp) {

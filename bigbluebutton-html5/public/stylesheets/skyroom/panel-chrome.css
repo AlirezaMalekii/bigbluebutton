@@ -13,7 +13,7 @@
 
 /* --- Header row --- */
 #layout[data-skyroom-column="true"] [data-test="userListContainer"] [class*="Container"]:has([data-test-users-count]),
-#layout[data-skyroom-column="true"] [data-test="userListContent"] > div:first-child,
+#layout[data-skyroom-column="true"] [data-test="userListContent"] > div:has([data-test-users-count]),
 #layout[data-skyroom-column="true"] [data-test="publicChatPanel"] [data-test="chatTitle"],
 #layout[data-skyroom-column="true"] [data-test="sharedNotesPanelTitle"] {
   display: flex !important;

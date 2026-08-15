@@ -57,7 +57,7 @@ const BreakoutRoomItem = ({
   };
 
   if (!hasBreakoutRoom) {
-    return <span />;
+    return null;
   }
 
   const skyroomColumn = isSkyroomColumnLayout();

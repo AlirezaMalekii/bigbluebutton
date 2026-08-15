@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
-import { isDarkThemeEnabled } from '/imports/ui/components/app/service';
 import { resolveSkyroomMeetingLogo } from './resolveMeetingLogo';
 import Styled from './styles';
 
@@ -38,7 +37,7 @@ type SkyroomPlatformLogoProps = {
 
 const SkyroomPlatformLogo: React.FC<SkyroomPlatformLogoProps> = ({ iconOnly = false }) => {
   const intl = useIntl();
-  const [darkMode, setDarkMode] = useState(isDarkThemeEnabled());
+  const [darkMode, setDarkMode] = useState(true);
 
   useEffect(() => {
     const handleDarkModeChange = (event: Event) => {

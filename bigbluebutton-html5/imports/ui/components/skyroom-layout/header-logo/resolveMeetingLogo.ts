@@ -1,12 +1,14 @@
 import {
+  getBrandingThemeId,
   SKYROOM_PLATFORM_ICON_PATH,
   SKYROOM_PLATFORM_LOGO_PATH,
   SKYROOM_PLATFORM_URL,
   SKYROOM_ROOMEET_ICON_PATH,
-  SKYROOM_ROOMEET_LOGO_LIGHT_PATH,
   SKYROOM_ROOMEET_LOGO_PATH,
   SKYROOM_ROOMEET_URL,
 } from '/imports/ui/components/skyroom-layout/white-label';
+
+export { getBrandingThemeId };
 
 export type MeetingLogoSource = 'custom' | 'roomeet' | 'safemeet';
 
@@ -29,20 +31,22 @@ const getClientBasename = () => (
   window.meetingClientSettings?.public?.app?.basename ?? ''
 );
 
-export const getBrandingThemeId = () => (
-  window.meetingClientSettings?.public?.app?.branding?.themeId?.trim().toLowerCase() ?? ''
-);
-
 export const getConfiguredLogoLinkUrl = () => (
   window.meetingClientSettings?.public?.app?.branding?.logoLinkUrl?.trim() ?? ''
 );
 
 const packagedAsset = (path: string) => `${getClientBasename()}${path}`;
 
+const isInstallerDefaultLogo = (url: string) => (
+  /\/safemeet\/logo\.(svg|png|webp|gif|jpe?g)(?:[?#]|$)/i.test(url)
+);
+
 /**
  * One meeting logo:
  * 1. `--logo-url` / meeting customLogoUrl replaces the platform mark
- * 2. else `--theme-id roomeet` uses the packaged RooMeet lockup
+ *    unless it is the installer default `/safemeet/logo.svg` (often the
+ *    light lockup, unreadable on the dark meeting UI)
+ * 2. else `--theme-id roomeet` uses the packaged RooMeet dark lockup
  * 3. else the packaged SafeMeet lockup
  *
  * `--logo-link-url` always wins for the click target.
@@ -54,7 +58,8 @@ export const resolveSkyroomMeetingLogo = ({
   darkMode = true,
   preferIcon = false,
 }: ResolveMeetingLogoArgs): MeetingLogoResolution => {
-  const customSrc = (darkMode && customDarkLogoUrl ? customDarkLogoUrl : customLogoUrl).trim();
+  const rawCustom = (darkMode && customDarkLogoUrl ? customDarkLogoUrl : customLogoUrl).trim();
+  const customSrc = (rawCustom && !isInstallerDefaultLogo(rawCustom)) ? rawCustom : '';
   const logoLinkUrl = getConfiguredLogoLinkUrl();
   const isRoomeet = getBrandingThemeId() === 'roomeet';
   const packagedHref = isRoomeet ? SKYROOM_ROOMEET_URL : SKYROOM_PLATFORM_URL;
@@ -70,12 +75,9 @@ export const resolveSkyroomMeetingLogo = ({
   }
 
   if (isRoomeet) {
-    let path = SKYROOM_ROOMEET_LOGO_PATH;
-    if (preferIcon) {
-      path = SKYROOM_ROOMEET_ICON_PATH;
-    } else if (!darkMode) {
-      path = SKYROOM_ROOMEET_LOGO_LIGHT_PATH;
-    }
+    // Meeting UI is dark-first; the light lockup (navy wordmark) is unreadable
+    // on the dark header if darkMode has not been applied yet.
+    const path = preferIcon ? SKYROOM_ROOMEET_ICON_PATH : SKYROOM_ROOMEET_LOGO_PATH;
     return {
       source: 'roomeet',
       src: packagedAsset(path),
