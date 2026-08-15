@@ -98,7 +98,7 @@ jobs:
           else
             echo "recording=false" >> "$GITHUB_OUTPUT"
           fi
-          if has '^(scripts/|deploy\.sh|deploy\.rsync-excludes)'; then echo "shell=true" >> "$GITHUB_OUTPUT"; else echo "shell=false" >> "$GITHUB_OUTPUT"; fi
+          if has '^(scripts/|bbb-install-safemeet-3\.0\.sh$|deploy\.sh$|deploy\.rsync-excludes$)'; then echo "shell=true" >> "$GITHUB_OUTPUT"; else echo "shell=false" >> "$GITHUB_OUTPUT"; fi
           if has '^(akka-bbb-fsesl/|bbb-fsesl-client/)'; then echo "fsesl=true" >> "$GITHUB_OUTPUT"; else echo "fsesl=false" >> "$GITHUB_OUTPUT"; fi
 
   shellcheck:
@@ -112,6 +112,7 @@ jobs:
         uses: ludeeus/action-shellcheck@2.0.0
         with:
           scandir: './scripts'
+          additional_files: 'bbb-install-safemeet-3.0.sh deploy.sh'
           severity: error
 
   html5-checks:
