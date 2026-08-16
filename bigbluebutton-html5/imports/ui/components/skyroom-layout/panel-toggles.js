@@ -76,9 +76,15 @@ export const syncSkyroomMobileWebcamDockVisibility = (boxOrVisible) => {
   }
 };
 
-/** Phone breakpoint — matches layout/utils.js isMobile (clientWidth <= 599). */
+/**
+ * SafeMeet phone layout:
+ * - preserve BBB's width breakpoint for narrow windows
+ * - keep short, touch-first phone viewports mobile after landscape rotation
+ * Normal tablets (short side >= 600px) and short desktop windows stay desktop.
+ */
+export const SKYROOM_PHONE_MEDIA = '(max-width: 599.98px), (max-height: 599.98px) and (any-pointer: coarse)';
 export const isSkyroomMobileViewport = () => typeof window !== 'undefined'
-  && layoutIsMobile();
+  && (layoutIsMobile() || window.matchMedia(SKYROOM_PHONE_MEDIA).matches);
 
 export const isSkyroomColumnLayout = () => {
   const layoutEl = document.getElementById('layout');

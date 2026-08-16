@@ -181,7 +181,7 @@ const SkyroomBackgroundMusicModal: React.FC = () => {
                   data-test={`skyroomBackgroundMusicTrack-${track.id}`}
                 >
                   <span className="skyroom-background-music__track-icon" aria-hidden="true">
-                    <Icon iconName="audio_on" />
+                    <Icon iconName="volume_level_2" />
                   </span>
                   <span>{intl.formatMessage({ id: track.labelId })}</span>
                   <span className="skyroom-background-music__track-check" aria-hidden="true">
@@ -312,7 +312,7 @@ const SkyroomBackgroundMusicModal: React.FC = () => {
             type="button"
             className="skyroom-background-music__stop"
             onClick={() => publishSkyroomBackgroundMusicCommand({ type: 'stop' })}
-            disabled={!state.source || state.status === 'stopped'}
+            disabled={!state.source}
             aria-label={intl.formatMessage(intlMessages.stop)}
             data-test="skyroomBackgroundMusicStop"
           >

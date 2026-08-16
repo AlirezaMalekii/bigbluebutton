@@ -11,15 +11,15 @@ export const SKYROOM_ROOMEET_LOGO_PATH = '/resources/images/skyroom/Roomeet.ir.s
 export const SKYROOM_ROOMEET_LOGO_LIGHT_PATH = '/resources/images/skyroom/Roomeet.ir-light.svg';
 export const SKYROOM_ROOMEET_ICON_PATH = '/resources/images/skyroom/Roomeet-icon.svg';
 
-export const getBrandingThemeId = () => (
-  window.meetingClientSettings?.public?.app?.branding?.themeId?.trim().toLowerCase() ?? ''
+export const getBrandingThemeId = (settings = window.meetingClientSettings) => (
+  settings?.public?.app?.branding?.themeId?.trim().toLowerCase() ?? ''
 );
 
-export const isRoomeetBrand = () => getBrandingThemeId() === 'roomeet';
+export const isRoomeetBrand = (settings) => getBrandingThemeId(settings) === 'roomeet';
 
 /** Active install theme: RooMeet when `--theme-id roomeet`, otherwise SafeMeet. */
-export const getSkyroomBrand = () => {
-  if (isRoomeetBrand()) {
+export const getSkyroomBrand = (settings) => {
+  if (isRoomeetBrand(settings)) {
     return {
       id: 'roomeet',
       nameFa: SKYROOM_ROOMEET_NAME,
@@ -33,6 +33,29 @@ export const getSkyroomBrand = () => {
     nameEn: SKYROOM_PRODUCT_NAME_EN,
     url: SKYROOM_PLATFORM_URL,
   };
+};
+
+export const applySkyroomBrandFavicon = (settings = window.meetingClientSettings) => {
+  if (typeof document === 'undefined') return;
+
+  const basename = settings?.public?.app?.basename ?? '';
+  const iconPath = isRoomeetBrand(settings)
+    ? SKYROOM_ROOMEET_ICON_PATH
+    : SKYROOM_PLATFORM_ICON_PATH;
+  const href = `${basename}${iconPath}`;
+  let favicon = document.querySelector('link[data-skyroom-brand-favicon]');
+
+  if (!favicon) {
+    favicon = document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.type = 'image/svg+xml';
+    favicon.setAttribute('data-skyroom-brand-favicon', '');
+    document.head.appendChild(favicon);
+  }
+
+  if (favicon.getAttribute('href') !== href) {
+    favicon.setAttribute('href', href);
+  }
 };
 
 const getBbbTextReplacements = () => {
@@ -62,7 +85,8 @@ export const applySkyroomWhiteLabelSettings = (settings) => {
   if (!target?.public) return target;
 
   const { app, settings: publicSettings } = target.public;
-  const brand = getSkyroomBrand();
+  const brand = getSkyroomBrand(target);
+  applySkyroomBrandFavicon(target);
 
   if (app) {
     app.clientTitle = brand.nameFa;

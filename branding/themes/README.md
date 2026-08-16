@@ -11,9 +11,10 @@ theme that becomes a CSS variable override on that server only.
 | `safemeet` | `safemeet.json` | Teal (default product palette) |
 | `roomeet` | `roomeet.json` | Dual violet brand — Warm `#B61FD8`, Cool `#A78BFA`, Navy `#0F1440` |
 
-`--theme-id` also selects the packaged meeting logo when `--logo-url` is not set:
-RooMeet Persian lockup for `roomeet`, SafeMeet lockup otherwise. `--logo-url`
-replaces that mark entirely (one logo, not two).
+`--theme-id` also selects the packaged meeting logo when `--logo-url` is not set
+and the browser-tab favicon: RooMeet assets for `roomeet`, SafeMeet assets
+otherwise. `--logo-url` replaces the in-meeting mark entirely (one logo, not
+two), but the favicon continues to represent the installed theme.
 
 Schema version: `1`
 
@@ -41,6 +42,9 @@ Restore packaged default:
 wget -qO- https://new-bbb-install.roomeet.ir/bbb-install-safemeet-3.0.sh | bash -s -- \
   -s live51.roomeet.ir --config-only --theme-reset
 ```
+
+Open a new meeting tab or hard-refresh an existing tab after changing/resetting
+the theme so the browser replaces a cached favicon and client settings.
 
 ## What the installer writes
 

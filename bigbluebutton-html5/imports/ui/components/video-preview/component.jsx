@@ -43,11 +43,21 @@ const DEFAULT_BRIGHTNESS_STATE = {
   wholeImageBrightness: false,
 }
 
+// getUserMedia errors raised when the camera hardware is held by another
+// capture. On phones that means the camera we are already sharing.
+const HARDWARE_BUSY_ERRORS = [
+  'NotReadableError',
+  'TrackStartError',
+  'AbortError',
+  'TimeoutError',
+];
+
 const propTypes = {
   intl: PropTypes.object.isRequired,
   closeModal: PropTypes.func.isRequired,
   startSharing: PropTypes.func.isRequired,
   stopSharing: PropTypes.func.isRequired,
+  releaseSharedCameras: PropTypes.func,
   resolve: PropTypes.func,
   camCapReached: PropTypes.bool,
   hasVideoStream: PropTypes.bool.isRequired,
@@ -60,6 +70,7 @@ const defaultProps = {
   camCapReached: true,
   webcamDeviceId: null,
   sharedDevices: [],
+  releaseSharedCameras: () => Promise.resolve(),
 };
 
 const intlMessages = defineMessages({
@@ -601,8 +612,34 @@ class VideoPreview extends Component {
     const {
       webcamDeviceId,
       selectedProfile,
-      brightness,
     } = this.state;
+
+    // A user publishes a single camera at a time, so sharing another device has
+    // to replace the previous one. Releasing it can also end the freshly
+    // previewed track on phones, hence the re-acquisition below.
+    if (this.getOtherSharedDevices(webcamDeviceId).length > 0) {
+      this.setState({ isStartSharingDisabled: true });
+      await this.releaseOtherSharedCameras(webcamDeviceId);
+
+      if (!this._isMounted) return;
+
+      if (!this.hasLiveCameraTrack()) {
+        const profile = PreviewService.getCameraProfile(selectedProfile)
+          || PreviewService.getDefaultProfile();
+        await this.getCameraStream(webcamDeviceId, profile);
+
+        if (!this._isMounted) return;
+
+        // The selected camera could not be reopened; keep the modal open so the
+        // error is visible instead of ending up with no camera at all.
+        if (!this.hasLiveCameraTrack({ allowMuted: true })) return;
+        this.displayPreview();
+      }
+
+      this.setState({ isStartSharingDisabled: false });
+    }
+
+    const { brightness } = this.state;
 
     // Only streams that will be shared should be stored in the service.
     // If the store call returns false, we're duplicating stuff. So clean this one
@@ -772,6 +809,61 @@ class VideoPreview extends Component {
     return actualDeviceId;
   }
 
+  // Local cameras this user is currently sharing, other than the given device.
+  getOtherSharedDevices(deviceId) {
+    const { sharedDevices, cameraAsContent } = this.props;
+
+    if (cameraAsContent) return [];
+
+    return (sharedDevices || []).filter((id) => id && id !== deviceId);
+  }
+
+  releaseOtherSharedCameras(deviceId) {
+    const { releaseSharedCameras } = this.props;
+    return releaseSharedCameras(deviceId);
+  }
+
+  // A track that ended - or that a phone silently muted when another camera took
+  // over the hardware - cannot be published, so it has to be acquired again.
+  hasLiveCameraTrack({ allowMuted = false } = {}) {
+    const stream = this.currentVideoStream;
+
+    if (stream == null) return false;
+
+    const cameraStream = stream.originalStream || stream.mediaStream;
+    const tracks = cameraStream ? MediaStreamUtils.getVideoTracks(cameraStream) : [];
+
+    return tracks.some((track) => track.readyState === 'live' && (allowMuted || !track.muted));
+  }
+
+  async acquireStream(deviceId, profile) {
+    try {
+      return await PreviewService.doGUM(deviceId, profile);
+    } catch (error) {
+      const otherSharedDevices = this.getOtherSharedDevices(deviceId);
+      const isHardwareBusy = HARDWARE_BUSY_ERRORS.includes(error.name)
+        || HARDWARE_BUSY_ERRORS.includes(error.message);
+
+      if (!isHardwareBusy || otherSharedDevices.length === 0) throw error;
+
+      logger.warn({
+        logCode: 'video_preview_release_busy_camera',
+        extraInfo: {
+          errorName: error.name,
+          errorMessage: error.message,
+          deviceId,
+          otherSharedDevices,
+        },
+      }, 'Camera hardware is busy with the shared device; releasing it to switch');
+
+      // Only one camera per user is ever published, so the previous device can
+      // be unshared to free the hardware for the newly selected one.
+      await this.releaseOtherSharedCameras(deviceId);
+
+      return PreviewService.doGUM(deviceId, profile);
+    }
+  }
+
   getInitialCameraStream(deviceId) {
     const { cameraAsContent } = this.props;
     const defaultProfile = !cameraAsContent ? PreviewService.getDefaultProfile() : PreviewService.getCameraAsContentProfile();
@@ -878,12 +970,12 @@ class VideoPreview extends Component {
 
     try {
       // The return of doGUM is an instance of BBBVideoStream (a thin wrapper over a MediaStream)
-      bbbVideoStream = await PreviewService.doGUM(deviceId, profile);
+      bbbVideoStream = await this.acquireStream(deviceId, profile);
       this.currentVideoStream = bbbVideoStream;
       const updatedDevice = this.updateDeviceId(deviceId);
 
       if (updatedDevice !== deviceId) {
-        bbbVideoStream = await PreviewService.doGUM(updatedDevice, profile);
+        bbbVideoStream = await this.acquireStream(updatedDevice, profile);
         this.currentVideoStream = bbbVideoStream;
       }
     } catch(error) {

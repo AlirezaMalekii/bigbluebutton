@@ -6,6 +6,7 @@ import VideoPreview from '/imports/ui/components/video-preview/component';
 import VideoService from '/imports/ui/components/video-provider/service';
 import * as ScreenShareService from '/imports/ui/components/screenshare/service';
 import logger from '/imports/startup/client/logger';
+import MediaStreamUtils from '/imports/utils/media-stream-utils';
 import { SCREENSHARING_ERRORS } from '/imports/api/screenshare/client/bridge/errors';
 import { EXTERNAL_VIDEO_STOP } from '../external-video-player/mutations';
 import {
@@ -19,6 +20,19 @@ import { SET_AWAY } from '../user-list/user-list-content/user-participants/user-
 import useCurrentUser from '../../core/hooks/useCurrentUser';
 import { layoutSelectInput } from '../layout/context';
 import getFromUserSettings from '/imports/ui/services/users-settings';
+
+const CAMERA_RELEASE_TIMEOUT_MS = 2000;
+const CAMERA_RELEASE_POLL_INTERVAL_MS = 100;
+
+const isCameraReleased = (deviceId) => {
+  const stream = Service.getStream(deviceId);
+
+  if (!stream) return true;
+
+  const tracks = MediaStreamUtils.getVideoTracks(stream.originalStream || stream.mediaStream);
+
+  return tracks.length === 0 || tracks.every((track) => track.readyState === 'ended');
+};
 
 const VideoPreviewContainer = (props) => {
   const {
@@ -35,8 +49,6 @@ const VideoPreviewContainer = (props) => {
   const [setAway] = useMutation(SET_AWAY);
   const streams = useStreams();
   const exitVideo = useExitVideo();
-  // forceExit: switching cameras can race isConnected; still unshare the previous device.
-  const exitVideoForSwitch = useExitVideo(true);
   const stopVideo = useStopVideo();
   const sharedDevices = useSharedDevices();
   const hasVideoStream = useHasVideoStream();
@@ -104,20 +116,45 @@ const VideoPreviewContainer = (props) => {
     );
   };
 
-  const startSharing = async (deviceId) => {
-    callbackToClose();
-    setIsOpen(false);
-
-    // One live webcam per user: switching devices (front ↔ rear, or another
-    // USB camera) must replace the previous share, not stack a second stream.
-    const otherSharedDevices = (sharedDevices || []).filter((id) => id && id !== deviceId);
-    if (otherSharedDevices.length > 0) {
-      otherSharedDevices.forEach((oldDeviceId) => {
-        Service.deleteStream(oldDeviceId);
-      });
-      await exitVideoForSwitch();
+  // Most phones cannot keep two cameras open at once, so switching devices has
+  // to unshare the previous camera and wait until its hardware is actually free.
+  const waitForCameraRelease = (deviceId) => new Promise((resolve) => {
+    if (isCameraReleased(deviceId)) {
+      resolve();
+      return;
     }
 
+    const startedAt = Date.now();
+    const interval = setInterval(() => {
+      const released = isCameraReleased(deviceId);
+      const timedOut = Date.now() - startedAt >= CAMERA_RELEASE_TIMEOUT_MS;
+
+      if (released || timedOut) {
+        clearInterval(interval);
+        // The video bridge normally stops the stream once it is unshared; force
+        // it when that teardown did not happen so the hardware is not stuck.
+        if (!released) Service.deleteStream(deviceId);
+        resolve();
+      }
+    }, CAMERA_RELEASE_POLL_INTERVAL_MS);
+  });
+
+  const releaseSharedCameras = async (keepDeviceId) => {
+    const devicesToRelease = (sharedDevices || []).filter((id) => id && id !== keepDeviceId);
+
+    if (devicesToRelease.length === 0) return;
+
+    await Promise.all(devicesToRelease.map((deviceId) => {
+      const streamId = VideoService.getMyStreamId(deviceId, streams);
+      return streamId ? stopVideo(streamId) : Promise.resolve();
+    }));
+
+    await Promise.all(devicesToRelease.map(waitForCameraRelease));
+  };
+
+  const startSharing = (deviceId) => {
+    callbackToClose();
+    setIsOpen(false);
     VideoService.joinVideo(deviceId, isCamLocked);
   };
 
@@ -141,6 +178,7 @@ const VideoPreviewContainer = (props) => {
         cameraAsContentDeviceId,
         startSharingCameraAsContent,
         stopSharing,
+        releaseSharedCameras,
         sharedDevices,
         hasVideoStream,
         camCapReached,

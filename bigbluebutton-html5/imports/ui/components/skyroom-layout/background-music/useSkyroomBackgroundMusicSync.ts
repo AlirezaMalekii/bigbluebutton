@@ -82,8 +82,13 @@ const buildNextState = (
       if (!current.source || current.status !== 'playing') return null;
       return { ...base, status: 'paused' };
     case 'stop':
-      if (!current.source || (current.status === 'stopped' && current.position === 0)) return null;
-      return { ...base, status: 'stopped', position: 0 };
+      if (!current.source) return null;
+      return {
+        ...base,
+        source: null,
+        status: 'stopped',
+        position: 0,
+      };
     case 'volume': {
       const volume = Math.min(1, Math.max(0, command.volume));
       if (Math.abs(volume - current.volume) < 0.005) return null;

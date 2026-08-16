@@ -174,6 +174,22 @@ const messages = defineMessages({
     id: 'app.userList.sharingWebcam',
     description: 'Tooltip for webcam-on status in the user row',
   },
+  presenter: {
+    id: 'app.userList.presenter',
+    description: 'Tooltip for presenter status in the user row',
+  },
+  muted: {
+    id: 'app.userList.muted',
+    description: 'Tooltip for muted microphone status in the user row',
+  },
+  unmuted: {
+    id: 'app.userList.unmuted',
+    description: 'Tooltip for unmuted microphone status in the user row',
+  },
+  reaction: {
+    id: 'app.userList.reaction',
+    description: 'Tooltip for reaction status in the user row',
+  },
 });
 const makeDropdownPluginItem: (
   userDropdownItems: PluginSdk.UserListDropdownInterface[]) => DropdownItem[] = (
@@ -699,6 +715,13 @@ const UserActions: React.FC<UserActionsProps> = ({
     && Boolean(user.reactionEmoji)
     && user.reactionEmoji !== 'none'
     && !user.away;
+  const microphoneStatusLabel = intl.formatMessage(isMuted ? messages.muted : messages.unmuted);
+  const webcamStatusLabel = intl.formatMessage(messages.sharingWebcam);
+  const presenterStatusLabel = intl.formatMessage(messages.presenter);
+  const reactionStatusLabel = intl.formatMessage(
+    messages.reaction,
+    { reaction: user.reactionEmoji },
+  );
   const existingPrivateChat = chats?.find(
     (chat) => chat.participant?.userId === user.userId,
   );
@@ -751,31 +774,50 @@ const UserActions: React.FC<UserActionsProps> = ({
           }}
         />
       </Styled.ActionMenuWrap>
-      <Styled.StatusIconBar aria-hidden>
+      <Styled.StatusIconBar>
         {voiceJoined ? (
-          <Styled.StatusIcon
-            data-test={isMuted ? 'userRowMuted' : 'userRowUnmuted'}
-            title={isMuted ? 'muted' : 'unmuted'}
-          >
-            <Icon iconName={isMuted ? 'mute' : 'unmute'} />
-          </Styled.StatusIcon>
+          <TooltipContainer title={microphoneStatusLabel}>
+            <Styled.StatusIcon
+              data-test={isMuted ? 'userRowMuted' : 'userRowUnmuted'}
+              role="img"
+              aria-label={microphoneStatusLabel}
+            >
+              <Icon iconName={isMuted ? 'mute' : 'unmute'} />
+            </Styled.StatusIcon>
+          </TooltipContainer>
         ) : null}
         {showWebcamStatus ? (
-          <TooltipContainer title={intl.formatMessage(messages.sharingWebcam)}>
-            <Styled.StatusIcon data-test="userRowWebcam">
+          <TooltipContainer title={webcamStatusLabel}>
+            <Styled.StatusIcon
+              data-test="userRowWebcam"
+              role="img"
+              aria-label={webcamStatusLabel}
+            >
               <Icon iconName={user?.pinned === true ? 'pin-video_on' : 'video'} />
             </Styled.StatusIcon>
           </TooltipContainer>
         ) : null}
         {showPresenterStatus ? (
-          <Styled.StatusIcon data-test="userRowPresenter" title="presenter">
-            <Icon iconName="presentation" />
-          </Styled.StatusIcon>
+          <TooltipContainer title={presenterStatusLabel}>
+            <Styled.StatusIcon
+              data-test="userRowPresenter"
+              role="img"
+              aria-label={presenterStatusLabel}
+            >
+              <Icon iconName="presentation" />
+            </Styled.StatusIcon>
+          </TooltipContainer>
         ) : null}
         {showReactionStatus ? (
-          <Styled.StatusReaction data-test="userRowReaction" title={user.reactionEmoji}>
-            {user.reactionEmoji}
-          </Styled.StatusReaction>
+          <TooltipContainer title={reactionStatusLabel}>
+            <Styled.StatusReaction
+              data-test="userRowReaction"
+              role="img"
+              aria-label={reactionStatusLabel}
+            >
+              {user.reactionEmoji}
+            </Styled.StatusReaction>
+          </TooltipContainer>
         ) : null}
       </Styled.StatusIconBar>
     </Styled.LeftActionsCluster>

@@ -1,11 +1,10 @@
 /* =====================================================================
    Skyroom — Responsive / phone skin
    ---------------------------------------------------------------------
-   ALL rules here are gated to phone widths (<600px) — the exact point
-   where utils.js flips deviceType to MOBILE and the Skyroom column
-   engine bows out (column-layout.js returns null), letting stock BBB
-   drive the geometry. Nothing in this file may apply at >=600px, so
-   desktop & tablet stay byte-for-byte unchanged.
+   Rules are gated to a narrow viewport, or a short touch-first viewport
+   after phone landscape rotation. This mirrors SKYROOM_PHONE_MEDIA in
+   panel-toggles.js. Normal tablets and pointer-accurate desktop windows
+   keep the desktop column layout.
 
    Loaded LAST in client/main.html so it wins at equal specificity.
 
@@ -16,7 +15,7 @@
      `html[data-skyroom="true"]` inside the media query.
    ===================================================================== */
 
-@media (max-width: 599.98px) {
+@media (max-width: 599.98px), (max-height: 599.98px) and (any-pointer: coarse) {
   /* Hide mis-positioned desktop geometry until the mobile split engine tags #layout. */
   html[data-skyroom="true"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) {
     visibility: hidden !important;

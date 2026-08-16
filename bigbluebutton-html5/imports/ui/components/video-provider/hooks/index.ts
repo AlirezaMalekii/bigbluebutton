@@ -854,6 +854,11 @@ export const useStopVideo = () => {
     const connectingStream = getConnectingStream();
     const hasTargetStream = streams.some((s) => s.streamId === cameraId);
     const hasOtherStream = streams.some((s) => s.streamId !== cameraId);
+    // On a camera switch the previous stream is stopped while the new device is
+    // already connecting. Only drop the pending stream when it is the target,
+    // otherwise the replacement camera would never be published.
+    const isConnectingStreamTarget = cameraId == null
+      || connectingStream?.stream === cameraId;
 
     if (hasTargetStream) {
       cameraBroadcastStop({ variables: { cameraId } });
@@ -861,7 +866,7 @@ export const useStopVideo = () => {
 
     if (!hasOtherStream && !connectingStream) {
       videoService.exitedVideo();
-    } else {
+    } else if (isConnectingStreamTarget) {
       videoService.stopConnectingStream();
     }
   }, [cameraBroadcastStop]);

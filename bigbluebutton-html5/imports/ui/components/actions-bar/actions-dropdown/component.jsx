@@ -319,7 +319,7 @@ class ActionsDropdown extends PureComponent {
 
     if ((amIPresenter || amIModerator) && isSkyroomTheme()) {
       actions.push({
-        icon: 'audio_on',
+        icon: 'volume_level_2',
         label: intl.formatMessage(intlMessages.backgroundMusic),
         key: this.backgroundMusicId,
         onClick: openSkyroomBackgroundMusic,
