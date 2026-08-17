@@ -784,10 +784,47 @@
   border-color: var(--skyroom-accent, #20c7bb) !important;
 }
 
-/* Phone layout: narrow viewports and short touch-first landscape viewports use
-   the CustomLayout mobile split engine. Keep this query synchronized with
-   SKYROOM_PHONE_MEDIA in panel-toggles.js. */
-@media (max-width: 599.98px), (max-height: 599.98px) and (any-pointer: coarse) {
+/* Presentation/whiteboard layout-only fullscreen (phone desktop-mode).
+   Browser Fullscreen API is skipped on touch; chrome must hide so the stage
+   can cover the meeting and the overlay button remains the exit path. */
+#layout[data-skyroom-presentation-fullscreen] {
+  overflow: hidden !important;
+}
+
+#layout[data-skyroom-presentation-fullscreen] header[role="banner"],
+#layout[data-skyroom-presentation-fullscreen] #Navbar,
+#layout[data-skyroom-presentation-fullscreen] #ActionsBar,
+#layout[data-skyroom-presentation-fullscreen] #Sidebar,
+#layout[data-skyroom-presentation-fullscreen] [data-skyroom-sidebar],
+#layout[data-skyroom-presentation-fullscreen] .skyroom-mobile-zone-tabs,
+#layout[data-skyroom-presentation-fullscreen] .skyroom-mobile-status-rail,
+#layout[data-skyroom-presentation-fullscreen] .skyroom-mobile-talking-rail,
+#layout[data-skyroom-presentation-fullscreen] .skyroom-mobile-zone-fs-cluster,
+#layout[data-skyroom-presentation-fullscreen] .react-draggable:has(#cameraDock),
+#layout[data-skyroom-presentation-fullscreen] #cameraDock,
+#layout[data-skyroom-presentation-fullscreen] #skyroom-sidebar-webcam-dock,
+#layout[data-skyroom-presentation-fullscreen] #skyroom-stage-webcam-dock,
+#layout[data-skyroom-presentation-fullscreen] #skyroom-center-webcam-dock,
+#layout[data-skyroom-presentation-fullscreen] #bannerBar,
+#layout[data-skyroom-presentation-fullscreen] #notificationsBar {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+#layout[data-skyroom-presentation-fullscreen] [data-test="presentationContainer"] {
+  pointer-events: auto;
+}
+
+#layout[data-skyroom-presentation-fullscreen] .skyroom-presentation-fullscreen-btn {
+  pointer-events: auto !important;
+  z-index: 1100 !important;
+}
+
+/* Phone (<600px): the Skyroom CustomLayout mobile split engine now drives geometry
+   and tags #layout with data-skyroom-mobile="true". Let its inline bounds (edge-inset
+   width + bottom-zone top/height) win there. The full-width fallback below only applies
+   if the engine is somehow inactive. Aligned with utils.js phoneUpperBoundary (600). */
+@media (max-width: 599.98px) {
   #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) .resizeSidebarNavWrapper,
   #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) .resizeSidebarContentWrapper {
     width: 100% !important;

@@ -6,20 +6,28 @@ function getFullscreenElement() {
   return null;
 }
 
+const isAnyFullScreen = () => Boolean(getFullscreenElement());
+
 const isFullScreen = (element) => {
-  if (getFullscreenElement() && getFullscreenElement() === element) {
-    return true;
-  }
-  return false;
+  const fsEl = getFullscreenElement();
+  if (!fsEl) return false;
+  if (!element) return true;
+  return fsEl === element || element.contains?.(fsEl) || fsEl.contains?.(element);
 };
 
 function cancelFullScreen() {
-  if (document.exitFullscreen) {
-    document.exitFullscreen();
-  } else if (document.mozCancelFullScreen) {
-    document.mozCancelFullScreen();
-  } else if (document.webkitExitFullscreen) {
-    document.webkitExitFullscreen();
+  const exit = document.exitFullscreen
+    || document.mozCancelFullScreen
+    || document.webkitExitFullscreen
+    || document.msExitFullscreen;
+  if (!exit) return;
+  try {
+    const result = exit.call(document);
+    if (result && typeof result.catch === 'function') {
+      result.catch(() => {});
+    }
+  } catch (e) {
+    // Already not in fullscreen — ignore.
   }
 }
 
@@ -42,7 +50,10 @@ function fullscreenRequest(element) {
 const toggleFullScreen = (ref = null) => {
   const element = ref || document.documentElement;
 
-  if (isFullScreen(element)) {
+  // Exit if ANY node is fullscreen. Matching only `ref` fails on mobile
+  // desktop-mode (iOS/Android) where the FS element is html/body or a wrapper,
+  // so a second tap requested fullscreen again and trapped the user.
+  if (isAnyFullScreen()) {
     cancelFullScreen();
   } else {
     fullscreenRequest(element);
@@ -52,5 +63,7 @@ const toggleFullScreen = (ref = null) => {
 export default {
   toggleFullScreen,
   isFullScreen,
+  isAnyFullScreen,
+  cancelFullScreen,
   getFullscreenElement,
 };

@@ -245,13 +245,13 @@ body::before {
   background-position: 0 0;
 }
 
-@media (max-width: 599.98px), (max-height: 599.98px) and (any-pointer: coarse) {
+@media (max-width: 599px) {
   body::before {
     background-size: 260px 260px;
   }
 }
 
-@media (max-width: 599.98px), (max-height: 599.98px) and (any-pointer: coarse), (prefers-reduced-motion: reduce) {
+@media (max-width: 599px), (prefers-reduced-motion: reduce) {
   html,
   body {
     background-attachment: scroll !important;

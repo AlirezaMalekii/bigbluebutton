@@ -66,14 +66,14 @@ const isBackgroundShapeId = (id) => typeof id === 'string' && id.startsWith(BG_S
 const isBackgroundShape = (shape) => isBackgroundShapeId(shape?.id);
 
 // Viewport for letterbox centering. Do NOT feed this into widthGap zoom math.
-// Phone uses a fitted svg box (#presentationInnerWrapper = slide size); prefer
-// that DOM size so stale full-stage editor bounds cannot blank the top card.
+// Skyroom uses a fitted svg box (#presentationInnerWrapper = slide size); prefer
+// that DOM size so hideUi / tldraw chrome cannot shift the camera origin.
 const resolveCameraViewportSize = (editor, fallbackWidth, fallbackHeight) => {
   const bounds = editor?.getViewportScreenBounds?.();
   let width = bounds?.width > 0 ? bounds.width : fallbackWidth;
   let height = bounds?.height > 0 ? bounds.height : fallbackHeight;
 
-  if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
+  if (isSkyroomColumnLayout()) {
     const inner = typeof document !== 'undefined'
       ? document.getElementById('presentationInnerWrapper')
       : null;
@@ -438,6 +438,7 @@ const Whiteboard = React.memo((props) => {
   const pageActualZoomRatioRef = useRef(_pageZoomRatioCache);
   const calculateZoomValueRef = useRef(null);
   const calculateZoomWithGapValueRef = useRef(null);
+  const resolveFullSlideFitZoomRef = useRef(null);
   const fitToWidthRef = useRef(fitToWidth);
   const whiteboardIdRef = React.useRef(whiteboardId);
   const curPageIdRef = React.useRef(curPageId);
@@ -1186,8 +1187,31 @@ const Whiteboard = React.memo((props) => {
       : calcedZoom;
   };
 
+  // Fitted svg box is the tldraw canvas on Skyroom. Fitting to presentationArea*
+  // (full stage) over-zooms once the presenter toolbar hides and pins the slide left.
+  const calculateCanvasFitZoom = (localWidth, localHeight) => {
+    const canvasW = Number.isFinite(presentationWidth) ? presentationWidth : 0;
+    const canvasH = Number.isFinite(presentationHeight) ? presentationHeight : 0;
+    if (!(canvasW > 0) || !(canvasH > 0) || !(localWidth > 0) || !(localHeight > 0)) {
+      return calculateZoomValue(localWidth, localHeight);
+    }
+    const calcedZoom = fitToWidth
+      ? canvasW / localWidth
+      : Math.min(canvasW / localWidth, canvasH / localHeight);
+    return calcedZoom === 0 || calcedZoom === Infinity || Number.isNaN(calcedZoom)
+      ? calculateZoomValue(localWidth, localHeight)
+      : calcedZoom;
+  };
+
+  const resolveFullSlideFitZoom = (fitWidth, fitHeight) => (
+    isSkyroomColumnLayout()
+      ? calculateCanvasFitZoom(fitWidth, fitHeight)
+      : calculateZoomValue(fitWidth, fitHeight)
+  );
+
   // Ref keeps store listeners and RAF callbacks pointing at the latest closure (avoids stale presentationAreaWidth/Height).
   calculateZoomValueRef.current = calculateZoomValue;
+  resolveFullSlideFitZoomRef.current = resolveFullSlideFitZoom;
 
   const getContainerDimensions = () => {
     const container = document.querySelector('[data-test="presentationContainer"]');
@@ -1432,7 +1456,10 @@ const Whiteboard = React.memo((props) => {
           );
           const viewerFitWidth = useFullSlideOrigin ? scaledWidth : scaledViewBoxWidth;
           const viewerFitHeight = useFullSlideOrigin ? scaledHeight : scaledViewBoxHeight;
-          baseZoom = calculateZoomValueRef.current(viewerFitWidth, viewerFitHeight);
+          baseZoom = useFullSlideOrigin
+            ? (resolveFullSlideFitZoomRef.current?.(viewerFitWidth, viewerFitHeight)
+              ?? calculateZoomValueRef.current(viewerFitWidth, viewerFitHeight))
+            : calculateZoomValueRef.current(viewerFitWidth, viewerFitHeight);
           let nextX = useFullSlideOrigin ? 0 : xOffset;
           let nextY = useFullSlideOrigin ? 0 : yOffset;
 
@@ -2393,7 +2420,9 @@ const Whiteboard = React.memo((props) => {
       const useFullSlideOrigin = shouldUseLocalFullSlideCamera(page, xOffset, yOffset);
       const viewerFitWidth = useFullSlideOrigin ? scaledWidth : scaledViewBoxWidth;
       const viewerFitHeight = useFullSlideOrigin ? scaledHeight : scaledViewBoxHeight;
-      const newZoom = calculateZoomValue(viewerFitWidth, viewerFitHeight);
+      const newZoom = useFullSlideOrigin
+        ? resolveFullSlideFitZoom(viewerFitWidth, viewerFitHeight)
+        : calculateZoomValue(viewerFitWidth, viewerFitHeight);
       const camera = tlEditorRef.current.getCamera();
       let nextX = useFullSlideOrigin ? 0 : xOffset;
       let nextY = useFullSlideOrigin ? 0 : yOffset;
@@ -2667,9 +2696,23 @@ const Whiteboard = React.memo((props) => {
         );
       }, isMountedPollingFrameRef);
     });
-  }, [presentationHeight, presentationWidth, presentationAreaHeight, presentationAreaWidth, curPageId, presentationId]);
+  }, [
+    presentationHeight,
+    presentationWidth,
+    presentationAreaHeight,
+    presentationAreaWidth,
+    curPageId,
+    presentationId,
+    isPresenter,
+    hasWBAccess,
+  ]);
 
   React.useEffect(() => {
+    // hideUi / slide-nav unmount on role change; let the settled-area poll
+    // recenter instantly instead of animating a stale over-zoom to the left.
+    if (presenterChanged) {
+      return;
+    }
     if (!isPresenter
       && !viewerCanPan
       && tlEditorRef.current
@@ -2692,7 +2735,9 @@ const Whiteboard = React.memo((props) => {
       );
       const viewerFitWidth = useFullSlideOrigin ? scaledWidth : scaledViewBoxWidth;
       const viewerFitHeight = useFullSlideOrigin ? scaledHeight : scaledViewBoxHeight;
-      const fitZoom = calculateZoomValue(viewerFitWidth, viewerFitHeight);
+      const fitZoom = useFullSlideOrigin
+        ? resolveFullSlideFitZoom(viewerFitWidth, viewerFitHeight)
+        : calculateZoomValue(viewerFitWidth, viewerFitHeight);
       let nextX = useFullSlideOrigin ? 0 : pageXOffset;
       let nextY = useFullSlideOrigin ? 0 : pageYOffset;
 

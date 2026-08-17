@@ -67,15 +67,11 @@ const LayoutObserver: React.FC = () => {
 
   const setDeviceType = () => {
     let newDeviceType = null;
-    const useSkyroomPhoneLayout = isSkyroomTheme() && isSkyroomMobileViewport();
-    if (useSkyroomPhoneLayout || isMobile()) {
-      newDeviceType = DEVICE_TYPE.MOBILE;
-    } else {
-      if (isTablet()) newDeviceType = DEVICE_TYPE.TABLET;
-      if (isTabletPortrait()) newDeviceType = DEVICE_TYPE.TABLET_PORTRAIT;
-      if (isTabletLandscape()) newDeviceType = DEVICE_TYPE.TABLET_LANDSCAPE;
-      if (isDesktop()) newDeviceType = DEVICE_TYPE.DESKTOP;
-    }
+    if (isMobile()) newDeviceType = DEVICE_TYPE.MOBILE;
+    if (isTablet()) newDeviceType = DEVICE_TYPE.TABLET;
+    if (isTabletPortrait()) newDeviceType = DEVICE_TYPE.TABLET_PORTRAIT;
+    if (isTabletLandscape()) newDeviceType = DEVICE_TYPE.TABLET_LANDSCAPE;
+    if (isDesktop()) newDeviceType = DEVICE_TYPE.DESKTOP;
 
     if (newDeviceType !== deviceType) {
       layoutContextDispatch({
@@ -101,8 +97,7 @@ const LayoutObserver: React.FC = () => {
     const APP_CONFIG = window.meetingClientSettings.public.app;
     const DESKTOP_FONT_SIZE = APP_CONFIG.desktopFontSize;
     const MOBILE_FONT_SIZE = APP_CONFIG.mobileFontSize;
-    const useSkyroomPhoneLayout = isSkyroomTheme() && isSkyroomMobileViewport();
-    const fontSize = (useSkyroomPhoneLayout || isMobile()) ? MOBILE_FONT_SIZE : DESKTOP_FONT_SIZE;
+    const fontSize = isMobile() ? MOBILE_FONT_SIZE : DESKTOP_FONT_SIZE;
     document.getElementsByTagName('html')[0].style.fontSize = fontSize;
 
     layoutContextDispatch({
@@ -140,9 +135,7 @@ const LayoutObserver: React.FC = () => {
 
     const handleWindowResize = throttle(() => {
       setEnableResize((enableResize) => {
-        const shouldEnableResize = isSkyroomTheme()
-          ? !isSkyroomMobileViewport()
-          : !window.matchMedia(MOBILE_MEDIA).matches;
+        const shouldEnableResize = !window.matchMedia(MOBILE_MEDIA).matches;
         if (enableResize === shouldEnableResize) return enableResize;
         return shouldEnableResize;
       });

@@ -20,7 +20,7 @@ interface IntlLoaderProps extends IntlLoaderContainerProps {
 }
 
 // Bump when adding/changing locale strings so browsers refetch despite a stable html5ClientBuild.
-const LOCALES_REVISION = '20260816a';
+const LOCALES_REVISION = '20260817a';
 
 const buildFetchLocale = (locale: string) => {
   const clientVersion = window.meetingClientSettings.public.app.html5ClientBuild;

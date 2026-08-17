@@ -29,6 +29,10 @@ import {
   startSkyroomWhiteLabelDomWatch,
   stopSkyroomWhiteLabelDomWatch,
 } from './white-label';
+import {
+  startSkyroomPhonePortraitLock,
+  stopSkyroomPhonePortraitLock,
+} from './phone-orientation';
 import { dispatchSkyroomLayoutResize } from './layout-resize';
 
 type SkyroomPanelVisibility = {
@@ -96,6 +100,7 @@ export const useSkyroomColumnLayout = () => {
   useEffect(() => {
     applySkyroomWhiteLabelSettings();
     startSkyroomWhiteLabelDomWatch();
+    startSkyroomPhonePortraitLock();
 
     const layoutEl = document.getElementById('layout');
     if (layoutEl) {
@@ -164,6 +169,7 @@ export const useSkyroomColumnLayout = () => {
 
     return () => {
       stopSkyroomWhiteLabelDomWatch();
+      stopSkyroomPhonePortraitLock();
       window.clearInterval(interval);
       if (layoutEl) {
         layoutEl.removeAttribute(SKYROOM_COLUMN_ATTR);

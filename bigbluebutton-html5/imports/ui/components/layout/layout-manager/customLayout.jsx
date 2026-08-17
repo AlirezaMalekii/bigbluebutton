@@ -794,6 +794,11 @@ const CustomLayout = (props) => {
       if (skyroomLayout.cameraDockBounds) {
         layoutCameraDockBounds = skyroomLayout.cameraDockBounds;
       }
+      const isSkyroomMediaFullscreen = fullscreen.element === 'Presentation'
+        || fullscreen.element === 'Screenshare'
+        || fullscreen.element === 'ExternalVideo'
+        || fullscreen.element === 'GenericContent';
+
       if (skyroomLayout.stageMediaMinimized ?? skyroomLayout.screenshareMinimized) {
         layoutMediaBounds = {
           width: 0,
@@ -803,7 +808,10 @@ const CustomLayout = (props) => {
           right: isRTL ? skyroomLayout.mediaAreaBounds.right : null,
           zIndex: 0,
         };
-      } else {
+      } else if (!isSkyroomMediaFullscreen) {
+        // Keep BBB fullscreen mediaBounds (full window) — overwriting them with
+        // the Skyroom stage card made layout-only fullscreen a no-op, so phone
+        // desktop-mode had to rely on the browser Fullscreen API and got stuck.
         layoutMediaBounds = {
           width: skyroomLayout.mediaAreaBounds.width,
           height: skyroomLayout.mediaAreaBounds.height,
@@ -815,6 +823,11 @@ const CustomLayout = (props) => {
       }
 
       const layoutEl = document.getElementById('layout');
+      if (fullscreen.element === 'Presentation') {
+        layoutEl?.setAttribute('data-skyroom-presentation-fullscreen', 'true');
+      } else {
+        layoutEl?.removeAttribute('data-skyroom-presentation-fullscreen');
+      }
       // Mobile split (<600px) ⇒ flag it so layout.css gates desktop geometry off and
       // responsive.css positions the phone zones; desktop/tablet ⇒ clear the flag.
       if (skyroomLayout.isMobileSplit) {
@@ -1116,6 +1129,7 @@ const CustomLayout = (props) => {
       layoutElOff?.removeAttribute('data-skyroom-sidebar-webcam');
       layoutElOff?.removeAttribute('data-skyroom-split-cameras');
       layoutElOff?.removeAttribute('data-skyroom-webcam-float');
+      layoutElOff?.removeAttribute('data-skyroom-presentation-fullscreen');
       layoutElOff?.style.removeProperty('--skyroom-stage-top');
       layoutElOff?.style.removeProperty('--skyroom-stage-bottom');
       layoutElOff?.style.removeProperty('--skyroom-stage-left');

@@ -31,6 +31,7 @@ import {
 import { SKYROOM_MOBILE_ZONE_FS_EVENT } from '/imports/ui/components/skyroom-layout/mobile-zone-fullscreen-state';
 import {
   isPresentationFullscreenActive,
+  shouldUseLayoutOnlyPresentationFullscreen,
   togglePresentationFullscreen,
 } from './presentation-fullscreen';
 
@@ -83,11 +84,28 @@ const getToolbarHeight = () => {
 // Match --skyroom-presentation-toolbar-h so camera fit never boots with height=0
 // (that over-zooms, then the shorter canvas looks top-biased).
 const SKYROOM_MOBILE_PRESENTATION_TOOLBAR_H = 22;
+const SKYROOM_DESKTOP_PRESENTATION_TOOLBAR_H = 36;
+const FULL_SLIDE_VIEWBOX_EPSILON = 0.5;
 
 const getSkyroomMobileSlideToolbarHeight = () => Math.max(
   getToolbarHeight() || 0,
   SKYROOM_MOBILE_PRESENTATION_TOOLBAR_H,
 );
+
+const getSkyroomSlideToolbarReserve = (userIsPresenter) => {
+  if (isSkyroomColumnLayout() && isSkyroomMobileViewport()) {
+    return getSkyroomMobileSlideToolbarHeight();
+  }
+  const toolbarElHeight = getToolbarHeight() || 0;
+  if (isSkyroomColumnLayout()) {
+    // Slide-nav exists only for the presenter. Viewers must not reserve a
+    // phantom toolbar — that over-zooms the fitted box and shifts the file left.
+    return userIsPresenter
+      ? (toolbarElHeight || SKYROOM_DESKTOP_PRESENTATION_TOOLBAR_H)
+      : toolbarElHeight;
+  }
+  return toolbarElHeight || 14;
+};
 
 const IGNORE_PRESENTATION_RESTORATION_TIMEOUT = 5000;
 
@@ -353,12 +371,13 @@ class Presentation extends PureComponent {
       setPresentationFitToWidth(false);
     }
 
-    // Presenter chrome reserves change available slide height on phone.
+    // Presenter chrome (slide-nav on desktop, chips/pen bar on phone) changes
+    // the fitted slide box. Recalc on role change so viewer zoom cannot overfill
+    // a stale box and pin the PDF to the left.
     if (
       (userIsPresenter !== prevProps.userIsPresenter
         || hasWBAccess !== prevProps.hasWBAccess)
       && isSkyroomColumnLayout()
-      && isSkyroomMobileViewport()
     ) {
       this.onResize();
     }
@@ -489,9 +508,7 @@ class Presentation extends PureComponent {
     // Phone: reserve slide-nav + presenter top chips + pen bar so calculateSize()
     // yields a shorter slide that sits between chrome bands (not under them).
     const isMobileStage = isSkyroomColumnLayout() && isSkyroomMobileViewport();
-    const toolbarH = isMobileStage
-      ? getSkyroomMobileSlideToolbarHeight()
-      : (getToolbarHeight() || 0);
+    const toolbarH = getSkyroomSlideToolbarReserve(userIsPresenter);
     const presenterChromeH = isMobileStage && (userIsPresenter || hasWBAccess)
       ? (getSkyroomMobileWbTopChromeReserve() + getSkyroomMobileWbToolbarReserve())
       : 0;
@@ -580,11 +597,14 @@ class Presentation extends PureComponent {
     const originalHeight = slidePosition.height;
     const viewBoxWidth = viewBoxDimensions.width;
     const viewBoxHeight = viewBoxDimensions.height;
+    const skyroomFullSlide = isSkyroomColumnLayout()
+      && viewBoxWidth + FULL_SLIDE_VIEWBOX_EPSILON >= originalWidth
+      && viewBoxHeight + FULL_SLIDE_VIEWBOX_EPSILON >= originalHeight;
 
     let svgWidth;
     let svgHeight;
 
-    if (!userIsPresenter) {
+    if (!userIsPresenter && !skyroomFullSlide) {
       svgWidth = (presentationHeight * viewBoxWidth) / viewBoxHeight;
       if (presentationWidth < svgWidth) {
         svgHeight = (presentationHeight * presentationWidth) / svgWidth;
@@ -592,7 +612,11 @@ class Presentation extends PureComponent {
       } else {
         svgHeight = presentationHeight;
       }
-    } else if (!fitToWidth) {
+    } else if (userIsPresenter && fitToWidth) {
+      svgWidth = presentationWidth;
+      svgHeight = (svgWidth * originalHeight) / originalWidth;
+      if (svgHeight > presentationHeight) svgHeight = presentationHeight;
+    } else {
       svgWidth = (presentationHeight * originalWidth) / originalHeight;
       if (presentationWidth < svgWidth) {
         svgHeight = (presentationHeight * presentationWidth) / svgWidth;
@@ -600,10 +624,6 @@ class Presentation extends PureComponent {
       } else {
         svgHeight = presentationHeight;
       }
-    } else {
-      svgWidth = presentationWidth;
-      svgHeight = (svgWidth * originalHeight) / originalWidth;
-      if (svgHeight > presentationHeight) svgHeight = presentationHeight;
     }
 
     if (typeof svgHeight !== 'number' || typeof svgWidth !== 'number') {
@@ -751,8 +771,10 @@ class Presentation extends PureComponent {
     const isIphone = !!(navigator.userAgent.match(/iPhone/i));
 
     if (!allowFullscreen || isIphone) return null;
-    // Presenters use the top-right dock button (desktop + mobile).
-    if (userIsPresenter) return null;
+    // Presenters use the top-right dock on pointer desktops. On phone
+    // desktop-mode the overlay must stay available so exit cannot get trapped
+    // inside the options menu after the board covers the meeting.
+    if (userIsPresenter && !shouldUseLayoutOnlyPresentationFullscreen()) return null;
 
     const presentationIsFullscreen = isPresentationFullscreenActive({
       fullscreenContext,
@@ -773,7 +795,7 @@ class Presentation extends PureComponent {
           togglePresentationFullscreen({
             fullscreenRef: this.refPresentationContainer,
             elementId: fullscreenElementId,
-            currentElement: fullscreenContext ? fullscreenElementId : '',
+            currentElement: presentationIsFullscreen ? fullscreenElementId : '',
             layoutContextDispatch,
           });
         }}
@@ -840,13 +862,10 @@ class Presentation extends PureComponent {
     const svgHeight = svgDimensions.height;
     const svgWidth = svgDimensions.width;
 
-    const toolbarHeight = getToolbarHeight();
     const isSkyroomMobileStage = isSkyroomColumnLayout() && isSkyroomMobileViewport();
     const isSkyroomStage = isSkyroomColumnLayout();
     const showPresenterChrome = Boolean(userIsPresenter || hasWBAccess);
-    const slideToolbarH = isSkyroomMobileStage
-      ? getSkyroomMobileSlideToolbarHeight()
-      : (toolbarHeight || 14);
+    const slideToolbarH = getSkyroomSlideToolbarReserve(userIsPresenter);
     const topChromeH = isSkyroomMobileStage && showPresenterChrome
       ? getSkyroomMobileWbTopChromeReserve()
       : 0;
@@ -886,7 +905,7 @@ class Presentation extends PureComponent {
     }
 
     const svgStackHeight = hasFittedSlide
-      ? (topChromeH + svgHeight + penBarH + (isSkyroomMobileStage ? slideToolbarH : toolbarHeight))
+      ? (topChromeH + svgHeight + penBarH + slideToolbarH)
       : undefined;
 
     const slideContent = currentSlide?.content

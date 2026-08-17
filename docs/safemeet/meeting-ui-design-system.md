@@ -126,10 +126,9 @@ Visual changes must not obscure stage content or alter synchronization. Floating
 
 ## Responsive policy
 
-- phone: viewport width below 600px, plus short-side-below-600px touch viewports
-  after landscape rotation, using SafeMeet top/bottom split zones
-- tablet: normal viewports from 600–1199px with a short side of at least 600px,
-  using constrained column and stage space
+- phone: below 600px, using SafeMeet top/bottom split zones. Phones lock to
+  portrait so rotating the device does not switch into a landscape meeting layout.
+- tablet: 600–1199px, constrained column and stage space
 - desktop: 1200px and above
 
 Do not solve phone behavior by shrinking desktop UI. Decide which zone owns the feature, whether it scrolls, how it closes, and what happens when presentation/screenshare/webcams appear.
@@ -158,9 +157,6 @@ Prefer stable IDs, roles, `data-test`, and explicit SafeMeet attributes. Avoid g
 ## JS/CSS synchronization
 
 Layout constants in `skyroom-layout/column-layout.js` mirror CSS tokens such as page gap, column stack gap, chrome height, mobile edge, and footer lift. Update both sources in one change and verify all device sizes.
-
-The JavaScript predicate `SKYROOM_PHONE_MEDIA` in `skyroom-layout/panel-toggles.js`
-must stay synchronized with phone media queries in `public/stylesheets/skyroom/`.
 
 ## Accessibility baseline
 

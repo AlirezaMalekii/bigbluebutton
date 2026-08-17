@@ -83,6 +83,9 @@ const intlMessages = defineMessages({
   closeExternalVideoLabel: {
     id: 'app.externalVideo.stopShareExternalVideo',
   },
+  closeExternalAudioLabel: {
+    id: 'app.externalVideo.stopShareExternalAudio',
+  },
 });
 
 interface ExternalVideoPlayerProps {
@@ -1022,7 +1025,11 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
                 size="sm"
                 onClick={stopExternalVideoShare}
                 data-test="stopExternalVideoShare"
-                label={intl.formatMessage(intlMessages.closeExternalVideoLabel)}
+                label={intl.formatMessage(
+                  isPresentationAudio
+                    ? intlMessages.closeExternalAudioLabel
+                    : intlMessages.closeExternalVideoLabel,
+                )}
                 hideLabel
                 className={Styled.ExternalVideoCloseButton}
               />

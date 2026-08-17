@@ -19,6 +19,7 @@ import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import KEY_CODES from '/imports/utils/keyCodes';
 import Spinner from '/imports/ui/components/common/spinner/component';
 import Separator from '/imports/ui/components/common/separator/component';
+import { togglePresentationFullscreen } from '/imports/ui/components/presentation/presentation-fullscreen';
 
 const intlMessages = defineMessages({
   previousSlideLabel: {
@@ -167,20 +168,14 @@ class PresentationToolbar extends PureComponent {
       fullscreenElementId,
       isFullscreen,
       layoutContextDispatch,
-      fullscreenAction,
       fullscreenRef,
-      handleToggleFullScreen,
     } = this.props;
 
-    handleToggleFullScreen(fullscreenRef);
-    const newElement = isFullscreen ? '' : fullscreenElementId;
-
-    layoutContextDispatch({
-      type: fullscreenAction,
-      value: {
-        element: newElement,
-        group: '',
-      },
+    togglePresentationFullscreen({
+      fullscreenRef,
+      elementId: fullscreenElementId,
+      currentElement: isFullscreen ? fullscreenElementId : '',
+      layoutContextDispatch,
     });
   }
 
@@ -568,14 +563,12 @@ PresentationToolbar.propTypes = {
   zoom: PropTypes.number.isRequired,
   isConnected: PropTypes.bool.isRequired,
   fullscreenElementId: PropTypes.string.isRequired,
-  fullscreenAction: PropTypes.string.isRequired,
   isFullscreen: PropTypes.bool.isRequired,
   layoutContextDispatch: PropTypes.func.isRequired,
   multiUser: PropTypes.bool.isRequired,
   setMultiUserWhiteboardDisabled: PropTypes.func.isRequired,
   setMultiUserWhiteboardEnabled: PropTypes.func.isRequired,
   fullscreenRef: PropTypes.instanceOf(Element),
-  handleToggleFullScreen: PropTypes.func.isRequired,
   isPollingEnabled: PropTypes.bool.isRequired,
   amIPresenter: PropTypes.bool.isRequired,
   startPoll: PropTypes.func.isRequired,

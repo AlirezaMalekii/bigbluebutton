@@ -186,6 +186,23 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
     });
     try { window.localStorage.setItem('skyroom-theme', 'dark'); } catch (e) {}
 
+    /* Phones stay portrait. Tablets and desktop are unchanged.
+       Native lock often needs fullscreen/PWA; the React helper adds a visual fallback. */
+    (function lockSkyroomPhonePortrait() {
+      var ua = navigator.userAgent || '';
+      var isPhone = /iPhone|Android.+Mobile|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+      var isIpadDesktopUa = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+      var isTablet = isIpadDesktopUa || /iPad|Tablet|Nexus 7|Nexus 10|SM-T/i.test(ua);
+      var shortSide = Math.min(screen.width || 0, screen.height || 0);
+      if (!isPhone || isTablet || shortSide >= 600) return;
+      document.documentElement.setAttribute('data-skyroom-phone-portrait-lock', 'true');
+      try {
+        if (screen.orientation && typeof screen.orientation.lock === 'function') {
+          screen.orientation.lock('portrait').catch(function () {});
+        }
+      } catch (e) {}
+    })();
+
     /* Optional per-server palette override written by bbb-install-safemeet
        to /var/www/bigbluebutton-default/assets/safemeet/theme-override.css
        and served at /safemeet/theme-override.css. Missing file = default theme. */

@@ -579,14 +579,9 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
 
   // Downstream prop - useCallback to make it stable
   const createVideoTag = useCallback((stream: string, video: HTMLVideoElement) => {
-    const isLocal = VideoService.isLocalStream(stream);
-    const track = isLocal
-      ? bridgeRefs.current.localTracks[stream]
-      : bridgeRefs.current.remoteTracks[stream];
-
     bridgeRefs.current.videoTags[stream] = video;
-
-    if (track) attachLiveKitStream(stream);
+    // Local preview lives in localVideoStreams before the published track exists.
+    attachLiveKitStream(stream);
   }, []);
 
   // Downstream prop - useCallback to make it stable

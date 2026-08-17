@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
-import { isSkyroomColumnLayout } from '../panel-toggles';
+import { isSkyroomColumnLayout, isSkyroomMobileViewport } from '../panel-toggles';
 import { getBackgroundMusicCatalogTrack } from './catalog';
 import {
   openSkyroomBackgroundMusic,
@@ -9,6 +9,12 @@ import {
   useSkyroomBackgroundMusicPlaybackIssue,
   useSkyroomBackgroundMusicState,
 } from './state';
+
+const isSkyroomMobileFooter = (): boolean => {
+  if (typeof document === 'undefined') return false;
+  if (document.getElementById('layout')?.hasAttribute('data-skyroom-mobile')) return true;
+  return isSkyroomMobileViewport();
+};
 
 const intlMessages = defineMessages({
   open: { id: 'app.skyroom.backgroundMusic.open', description: 'Open background music controls' },
@@ -39,6 +45,10 @@ const SkyroomBackgroundMusicQuickControl: React.FC = () => {
   if (!isSkyroomColumnLayout() || !state.source) return null;
 
   const unlockPlayback = !canControl && playbackIssue === 'autoplay';
+  // Phone footer stays icon-dense; open/stop music from the + actions menu.
+  // Keep this chip only when a viewer must unlock autoplay-blocked playback.
+  if (isSkyroomMobileFooter() && !unlockPlayback) return null;
+
   let statusMessage = intlMessages.stopped;
   if (state.status === 'playing') statusMessage = intlMessages.playing;
   if (state.status === 'paused') statusMessage = intlMessages.paused;
@@ -71,6 +81,7 @@ const SkyroomBackgroundMusicQuickControl: React.FC = () => {
         className="skyroom-background-music-quick"
         data-interactive="false"
         data-status={state.status}
+        data-unlock="false"
         data-test="skyroomBackgroundMusicQuickControl"
         role="status"
         aria-label={label}
@@ -87,6 +98,7 @@ const SkyroomBackgroundMusicQuickControl: React.FC = () => {
       className="skyroom-background-music-quick"
       data-interactive="true"
       data-status={state.status}
+      data-unlock={unlockPlayback ? 'true' : 'false'}
       data-test="skyroomBackgroundMusicQuickControl"
       aria-label={label}
       title={label}

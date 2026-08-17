@@ -108,6 +108,8 @@ const WebcamConnecting = styled.div<{
   display: flex;
   justify-content: center;
   align-items: center;
+  position: absolute;
+  inset: 0;
   height: 100%;
   width: 100%;
   min-width: 100%;

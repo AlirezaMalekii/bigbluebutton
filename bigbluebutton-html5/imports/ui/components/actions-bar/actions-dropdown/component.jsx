@@ -19,7 +19,10 @@ import { ModalRegistration } from '/imports/ui/core/singletons/modalController';
 import { SKYROOM_OPEN_POLL_RESULTS_EVENT } from '/imports/ui/components/skyroom-layout/active-poll-summary/openPollResultsModal';
 import { getSkyroomFileTypeMenuIcon } from '/imports/ui/components/skyroom-layout/file-type-icon/SkyroomFileTypeIcon';
 import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
-import { openSkyroomBackgroundMusic } from '/imports/ui/components/skyroom-layout/background-music/state';
+import {
+  getSkyroomBackgroundMusicState,
+  openSkyroomBackgroundMusic,
+} from '/imports/ui/components/skyroom-layout/background-music/state';
 
 const propTypes = {
   hasActivePoll: PropTypes.bool,
@@ -142,6 +145,14 @@ const intlMessages = defineMessages({
   backgroundMusic: {
     id: 'app.skyroom.backgroundMusic.title',
     description: 'Open background music controls',
+  },
+  backgroundMusicPlaying: {
+    id: 'app.skyroom.backgroundMusic.status.playing',
+    description: 'Music playing state in actions menu',
+  },
+  backgroundMusicPaused: {
+    id: 'app.skyroom.backgroundMusic.status.paused',
+    description: 'Music paused state in actions menu',
   },
 });
 
@@ -318,12 +329,20 @@ class ActionsDropdown extends PureComponent {
     }
 
     if ((amIPresenter || amIModerator) && isSkyroomTheme()) {
+      const musicState = getSkyroomBackgroundMusicState();
+      let musicLabel = intl.formatMessage(intlMessages.backgroundMusic);
+      if (musicState.source && musicState.status === 'playing') {
+        musicLabel = `${musicLabel} — ${intl.formatMessage(intlMessages.backgroundMusicPlaying)}`;
+      } else if (musicState.source && musicState.status === 'paused') {
+        musicLabel = `${musicLabel} — ${intl.formatMessage(intlMessages.backgroundMusicPaused)}`;
+      }
       actions.push({
         icon: 'volume_level_2',
-        label: intl.formatMessage(intlMessages.backgroundMusic),
+        label: musicLabel,
         key: this.backgroundMusicId,
         onClick: openSkyroomBackgroundMusic,
         dataTest: 'skyroomBackgroundMusic',
+        iconRight: musicState.status === 'playing' || musicState.status === 'paused' ? 'check' : null,
       });
     }
 

@@ -28,16 +28,20 @@ export const isPrivilegedCameraUser = (user) => Boolean(
   user?.presenter || user?.isModerator,
 );
 
-const isActiveStream = (stream) => stream && stream.type !== VIDEO_TYPES.CONNECTING;
+// Keep CONNECTING tiles in Skyroom docks so the <video> exists before attach.
+const isActiveStream = (stream) => Boolean(stream);
 
 export const getSkyroomStreamKey = (item) => {
   if (item.type === VIDEO_TYPES.GRID) return `grid:${item.userId}`;
-  if (item.type === VIDEO_TYPES.STREAM) return `stream:${item.stream}`;
+  if (item.stream) return `stream:${item.stream}`;
   return `other:${item.userId}`;
 };
 
 export const isPrivilegedStream = (item) => {
-  if (!item || item.type === VIDEO_TYPES.CONNECTING) return false;
+  if (!item) return false;
+  if (item.type === VIDEO_TYPES.CONNECTING) {
+    return item.userId === Auth.userID && isSkyroomWebcamZoneModeratorView();
+  }
   if (item.type === VIDEO_TYPES.GRID) {
     return Boolean(item.isModerator || item.presenter);
   }
@@ -63,7 +67,6 @@ export const isPrivilegedStream = (item) => {
 /** Privilege fingerprint for layout/list invalidation when roles change. */
 export const getSkyroomStreamPrivilegeKey = (item) => {
   if (!item) return 'x';
-  if (item.type === VIDEO_TYPES.CONNECTING) return 'c';
   return isPrivilegedStream(item) ? 'p' : 'v';
 };
 

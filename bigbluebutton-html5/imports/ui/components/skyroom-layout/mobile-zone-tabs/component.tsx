@@ -72,6 +72,11 @@ const messages = defineMessages({
     description: 'Skyroom mobile bottom tab — lobby waiting guests',
     defaultMessage: 'Lobby waiting',
   },
+  ariaLabel: {
+    id: 'app.skyroom.mobileTabs.ariaLabel',
+    description: 'Accessible name for mobile bottom panel tabs',
+    defaultMessage: 'Bottom panel tabs',
+  },
 });
 
 type TabKey = Exclude<SkyroomMobileBox, null>;
@@ -180,7 +185,7 @@ const SkyroomMobileZoneTabs: React.FC = () => {
     <nav
       className="skyroom-mobile-zone-tabs"
       data-test="skyroomMobileZoneTabs"
-      aria-label="Bottom panel tabs"
+      aria-label={intl.formatMessage(messages.ariaLabel)}
       style={{
         position: 'fixed',
         left: SKYROOM_MOBILE_EDGE,

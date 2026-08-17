@@ -40,6 +40,16 @@ const intlMessages = defineMessages({
 const VIDEO_CONTAINER_WIDTH_BOUND = 125;
 const VIDEO_CONTAINER_PLUGIN_HELPERS_WIDTH_BOUND = 175;
 
+const mediaStreamHasLiveVideo = (el: HTMLVideoElement | null) => {
+  const mediaStream = el?.srcObject;
+  return mediaStream instanceof MediaStream
+    && mediaStream.getVideoTracks().some((track) => track.readyState === 'live');
+};
+
+const videoHasRenderableFrame = (el: HTMLVideoElement | null) => (
+  Boolean(el && (el.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA || el.videoWidth > 0))
+);
+
 interface VideoListItemProps {
   pluginUserCameraHelperPerPosition: UserCameraHelperAreas;
   isFullscreenContext: boolean;
@@ -241,14 +251,24 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
     Session.setItem('canConnect', true);
   };
 
-  // component did mount
+  // Attach listeners before srcObject so a local MediaStream that already has
+  // frames cannot fire loadeddata before we observe it (stuck avatar overlay).
   useEffect(() => {
     const isAudioOnly = stream.type === VIDEO_TYPES.AUDIO_ONLY;
+    const videoEl = videoTag.current;
 
-    if (!isAudioOnly) {
+    if (!isAudioOnly && videoEl) {
       subscribeToStreamStateChange(cameraId, onStreamStateChange);
-      onVideoItemMount(videoTag.current!);
-      videoTag?.current?.addEventListener('loadeddata', onLoadedData);
+      videoEl.addEventListener('loadeddata', onLoadedData);
+      videoEl.addEventListener('loadedmetadata', onLoadedData);
+      videoEl.addEventListener('playing', onLoadedData);
+      onVideoItemMount(videoEl);
+      if (videoHasRenderableFrame(videoEl) || mediaStreamHasLiveVideo(videoEl)) {
+        onLoadedData();
+      }
+      if (mediaStreamHasLiveVideo(videoEl)) {
+        setIsStreamHealthy(true);
+      }
     }
 
     if (videoContainer.current) {
@@ -257,8 +277,10 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
     }
 
     return () => {
-      if (!isAudioOnly) {
-        videoTag?.current?.removeEventListener('loadeddata', onLoadedData);
+      if (!isAudioOnly && videoEl) {
+        videoEl.removeEventListener('loadeddata', onLoadedData);
+        videoEl.removeEventListener('loadedmetadata', onLoadedData);
+        videoEl.removeEventListener('playing', onLoadedData);
       }
       pluginSqueezedResizeObserver.disconnect();
       resizeObserver.disconnect();
