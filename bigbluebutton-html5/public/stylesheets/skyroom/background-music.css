@@ -1,5 +1,7 @@
 /* SafeMeet background music: isolated from BBB presentation/media pods. */
 html[data-skyroom="true"] .skyroom-background-music-modal.ReactModal__Content {
+  display: flex !important;
+  flex-direction: column !important;
   width: min(440px, calc(100vw - 32px)) !important;
   max-width: 440px !important;
   max-height: min(760px, calc(100dvh - 32px)) !important;
@@ -9,16 +11,22 @@ html[data-skyroom="true"] .skyroom-background-music-modal.ReactModal__Content {
   background:
     linear-gradient(155deg, rgba(24, 40, 60, 0.98), rgba(8, 15, 28, 0.98)) !important;
   box-shadow: var(--shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.4)) !important;
+  box-sizing: border-box !important;
 }
 
 html[data-skyroom="true"] .skyroom-background-music-modal > div {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
   min-height: 0;
   max-height: 100%;
+  overflow: hidden;
 }
 
 html[data-skyroom="true"] .skyroom-background-music-modal [data-test="modalSimpleBody"] {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
   min-height: 0;
   overflow: hidden !important;
   padding-block-end: var(--space-4, 16px);
@@ -27,8 +35,10 @@ html[data-skyroom="true"] .skyroom-background-music-modal [data-test="modalSimpl
 html[data-skyroom="true"] .skyroom-background-music {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
   gap: var(--space-3, 12px);
   min-width: 0;
+  min-height: 0;
   color: var(--skyroom-modal-text, #eef4fb);
 }
 
@@ -42,8 +52,13 @@ html[data-skyroom="true"] .skyroom-background-music__subtitle {
 html[data-skyroom="true"] .skyroom-background-music__section {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
   gap: var(--space-2, 8px);
   min-height: 0;
+}
+
+html[data-skyroom="true"] .skyroom-background-music > :not(.skyroom-background-music__section) {
+  flex-shrink: 0;
 }
 
 html[data-skyroom="true"] .skyroom-background-music__section h3 {
@@ -55,7 +70,9 @@ html[data-skyroom="true"] .skyroom-background-music__section h3 {
 html[data-skyroom="true"] .skyroom-background-music__tracks {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  flex: 1 1 auto;
   gap: var(--space-2, 8px);
+  min-height: 0;
   max-height: 230px;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -386,16 +403,78 @@ html[data-skyroom="true"] .skyroom-background-music-quick[data-status="playing"]
 }
 
 @media (max-width: 640px) {
-  html[data-skyroom="true"] .skyroom-background-music-modal.ReactModal__Content {
+  html[data-skyroom="true"] .skyroom-background-music-modal.ReactModal__Content:not(#fsmodal) {
     width: calc(100vw - 16px) !important;
     max-width: none !important;
-    max-height: calc(100dvh - 16px) !important;
+    height: auto !important;
+    max-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
     margin: 8px !important;
-    padding-bottom: calc(var(--space-4, 16px) + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    overflow: hidden !important;
+  }
+
+  html[data-skyroom="true"] .skyroom-background-music-modal header [class*="Title"],
+  html[data-skyroom="true"] .skyroom-background-music-modal header h2 {
+    line-height: 1.3 !important;
+    margin-bottom: 4px !important;
+    padding-inline: 2.5rem !important;
+  }
+
+  html[data-skyroom="true"] .skyroom-background-music-modal [data-test="modalSimpleBody"] {
+    padding-block-end: var(--space-2, 8px);
+  }
+
+  html[data-skyroom="true"] .skyroom-background-music {
+    gap: var(--space-2, 8px);
+  }
+
+  html[data-skyroom="true"] .skyroom-background-music__subtitle {
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
+  html[data-skyroom="true"] .skyroom-background-music__section {
+    gap: 6px;
   }
 
   html[data-skyroom="true"] .skyroom-background-music__tracks {
-    max-height: min(226px, 31dvh);
+    flex: 1 1 auto;
+    min-height: 88px;
+    max-height: min(136px, 22dvh);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html[data-skyroom="true"] .skyroom-background-music__track {
+    min-height: 40px;
+    padding: 6px 8px;
+    font-size: 0.75rem;
+  }
+
+  html[data-skyroom="true"] .skyroom-background-music__upload-button {
+    min-height: 36px;
+  }
+
+  html[data-skyroom="true"] .skyroom-background-music__settings {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-3, 12px);
+    padding: 8px 0;
+  }
+
+  html[data-skyroom="true"] .skyroom-background-music__volume {
+    gap: 4px;
+  }
+
+  html[data-skyroom="true"] .skyroom-background-music__volume input[type="range"] {
+    height: 18px;
+  }
+
+  html[data-skyroom="true"] .skyroom-background-music__loop {
+    min-height: 32px;
+  }
+
+  html[data-skyroom="true"] .skyroom-background-music__controls button {
+    min-height: 42px;
   }
 }
 
@@ -422,20 +501,6 @@ html[data-skyroom="true"] .skyroom-background-music-quick[data-status="playing"]
 #layout[data-skyroom-mobile="true"] .skyroom-background-music-quick[data-unlock="true"] .skyroom-background-music-quick__name,
 #layout[data-skyroom-mobile="true"] .skyroom-background-music-quick[data-unlock="true"] .skyroom-background-music-quick__bars {
   display: none;
-}
-
-@media (max-width: 420px) {
-  html[data-skyroom="true"] .skyroom-background-music__tracks {
-    grid-template-columns: 1fr;
-  }
-
-  html[data-skyroom="true"] .skyroom-background-music__settings {
-    grid-template-columns: 1fr;
-  }
-
-  html[data-skyroom="true"] .skyroom-background-music__loop {
-    min-height: 36px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

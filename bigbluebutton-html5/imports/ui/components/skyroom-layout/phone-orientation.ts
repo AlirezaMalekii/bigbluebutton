@@ -1,8 +1,4 @@
 import deviceInfo from '/imports/utils/deviceInfo';
-import { dispatchSkyroomLayoutResize } from './layout-resize';
-
-export const SKYROOM_PHONE_PORTRAIT_LOCK_ATTR = 'data-skyroom-phone-portrait-lock';
-export const SKYROOM_PHONE_LANDSCAPE_ATTR = 'data-skyroom-phone-landscape';
 
 const PHONE_SHORT_SIDE_PX = 600;
 
@@ -14,111 +10,148 @@ const isPhoneClassDevice = (): boolean => {
   return shortSide > 0 && shortSide < PHONE_SHORT_SIDE_PX;
 };
 
-const lockNativeOrientation = () => {
-  if (typeof window === 'undefined' || !isPhoneClassDevice()) return;
-  const orientation = window.screen?.orientation as (ScreenOrientation & {
-    lock?: (orientation: string) => Promise<void>;
-    unlock?: () => void;
-  }) | undefined;
+type OrientationWithLock = ScreenOrientation & {
+  lock?: (type: string) => Promise<void>;
+  unlock?: () => void;
+};
+
+type ScreenWithLegacy = Screen & {
+  lockOrientation?: (type: string) => boolean;
+  mozLockOrientation?: (type: string) => boolean;
+  msLockOrientation?: (type: string) => boolean;
+};
+
+const tryNativeLock = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const orientation = window.screen?.orientation as OrientationWithLock | undefined;
   if (orientation && typeof orientation.lock === 'function') {
     orientation.lock('portrait').catch(() => {});
-    return;
+    return true;
   }
-  const screenWithLegacy = window.screen as Screen & {
-    lockOrientation?: (type: string) => boolean;
-    mozLockOrientation?: (type: string) => boolean;
-    msLockOrientation?: (type: string) => boolean;
-  };
-  const legacy = screenWithLegacy.lockOrientation
-    || screenWithLegacy.mozLockOrientation
-    || screenWithLegacy.msLockOrientation;
+  const screenLegacy = window.screen as ScreenWithLegacy;
+  const legacy = screenLegacy.lockOrientation
+    || screenLegacy.mozLockOrientation
+    || screenLegacy.msLockOrientation;
   if (typeof legacy === 'function') {
-    try {
-      legacy.call(window.screen, 'portrait');
-    } catch (error) {
-      // Browsers reject orientation lock outside fullscreen / installed PWA.
-    }
+    try { legacy.call(window.screen, 'portrait'); return true; } catch { return false; }
+  }
+  return false;
+};
+
+const tryNativeUnlock = () => {
+  const orientation = window.screen?.orientation as OrientationWithLock | undefined;
+  if (orientation && typeof orientation.unlock === 'function') {
+    try { orientation.unlock(); } catch { /* ignore */ }
   }
 };
 
-const applyVisualLock = () => {
+const LOCK_ATTR = 'data-skyroom-phone-portrait-lock';
+const LANDSCAPE_ATTR = 'data-skyroom-phone-landscape';
+const OVERLAY_ID = 'skyroom-phone-portrait-overlay';
+
+const getViewportSize = () => {
+  const viewport = window.visualViewport;
+  return {
+    width: Math.round(viewport?.width || window.innerWidth),
+    height: Math.round(viewport?.height || window.innerHeight),
+  };
+};
+
+const getLockTarget = (): HTMLElement => document.body || document.documentElement;
+
+const getOverlayMessage = (): string => {
+  const lang = document.documentElement.lang || navigator.language || 'en';
+  return lang.toLowerCase().startsWith('fa')
+    ? 'برای ادامه جلسه، گوشی را عمودی نگه دارید'
+    : 'To continue the meeting, keep your phone in portrait mode';
+};
+
+const ensureOverlay = (): HTMLElement | null => {
+  if (typeof document === 'undefined' || !document.body) return null;
+  let overlay = document.getElementById(OVERLAY_ID);
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = OVERLAY_ID;
+    overlay.setAttribute('aria-live', 'polite');
+    overlay.setAttribute('role', 'status');
+    document.body.appendChild(overlay);
+  }
+  overlay.textContent = getOverlayMessage();
+  return overlay;
+};
+
+const applyVisualState = () => {
   const html = document.documentElement;
-  if (!isPhoneClassDevice()) {
-    html.removeAttribute(SKYROOM_PHONE_PORTRAIT_LOCK_ATTR);
-    html.removeAttribute(SKYROOM_PHONE_LANDSCAPE_ATTR);
-    html.style.removeProperty('--skyroom-phone-lock-w');
-    html.style.removeProperty('--skyroom-phone-lock-h');
-    return;
+  const target = getLockTarget();
+  const { width, height } = getViewportSize();
+  const isLandscape = width > height;
+  ensureOverlay();
+
+  if (isLandscape) {
+    html.setAttribute(LOCK_ATTR, 'true');
+    target.setAttribute(LOCK_ATTR, 'true');
+    target.setAttribute(LANDSCAPE_ATTR, 'true');
+    window.scrollTo(0, 0);
+  } else {
+    target.removeAttribute(LANDSCAPE_ATTR);
   }
-
-  html.setAttribute(SKYROOM_PHONE_PORTRAIT_LOCK_ATTR, 'true');
-  const landscape = window.matchMedia('(orientation: landscape)').matches;
-  if (!landscape) {
-    if (html.hasAttribute(SKYROOM_PHONE_LANDSCAPE_ATTR)) {
-      html.removeAttribute(SKYROOM_PHONE_LANDSCAPE_ATTR);
-      html.style.removeProperty('--skyroom-phone-lock-w');
-      html.style.removeProperty('--skyroom-phone-lock-h');
-      dispatchSkyroomLayoutResize();
-    }
-    return;
-  }
-
-  const portraitWidth = `${window.innerHeight}px`;
-  const portraitHeight = `${window.innerWidth}px`;
-  const unchanged = html.getAttribute(SKYROOM_PHONE_LANDSCAPE_ATTR) === 'true'
-    && html.style.getPropertyValue('--skyroom-phone-lock-w') === portraitWidth
-    && html.style.getPropertyValue('--skyroom-phone-lock-h') === portraitHeight;
-  if (unchanged) return;
-
-  html.setAttribute(SKYROOM_PHONE_LANDSCAPE_ATTR, 'true');
-  html.style.setProperty('--skyroom-phone-lock-w', portraitWidth);
-  html.style.setProperty('--skyroom-phone-lock-h', portraitHeight);
-  dispatchSkyroomLayoutResize();
 };
 
-let started = false;
-let stopLock: (() => void) | null = null;
+const clearVisualState = () => {
+  const html = document.documentElement;
+  const target = getLockTarget();
+  html.removeAttribute(LOCK_ATTR);
+  target.removeAttribute(LOCK_ATTR);
+  target.removeAttribute(LANDSCAPE_ATTR);
+  const overlay = document.getElementById(OVERLAY_ID);
+  overlay?.remove();
+};
+
+let cleanup: (() => void) | null = null;
 
 export const startSkyroomPhonePortraitLock = () => {
-  if (started || typeof window === 'undefined') return;
-  started = true;
+  if (cleanup || typeof window === 'undefined') return;
   if (!isPhoneClassDevice()) return;
 
   const html = document.documentElement;
-  html.setAttribute(SKYROOM_PHONE_PORTRAIT_LOCK_ATTR, 'true');
-  lockNativeOrientation();
-  applyVisualLock();
+  const target = getLockTarget();
+  html.setAttribute(LOCK_ATTR, 'true');
+  target.setAttribute(LOCK_ATTR, 'true');
 
-  const onOrientationChange = () => {
-    lockNativeOrientation();
-    applyVisualLock();
+  tryNativeLock();
+  applyVisualState();
+
+  const mql = window.matchMedia('(orientation: landscape)');
+  const onChange = () => {
+    tryNativeLock();
+    applyVisualState();
   };
 
-  window.addEventListener('orientationchange', onOrientationChange);
-  window.addEventListener('pointerdown', lockNativeOrientation, { passive: true, once: true });
+  if (mql.addEventListener) {
+    mql.addEventListener('change', onChange);
+  } else if (mql.addListener) {
+    mql.addListener(onChange);
+  }
 
-  stopLock = () => {
-    window.removeEventListener('orientationchange', onOrientationChange);
-    html.removeAttribute(SKYROOM_PHONE_PORTRAIT_LOCK_ATTR);
-    html.removeAttribute(SKYROOM_PHONE_LANDSCAPE_ATTR);
-    html.style.removeProperty('--skyroom-phone-lock-w');
-    html.style.removeProperty('--skyroom-phone-lock-h');
-    const orientation = window.screen?.orientation as (ScreenOrientation & {
-      unlock?: () => void;
-    }) | undefined;
-    if (orientation && typeof orientation.unlock === 'function') {
-      try {
-        orientation.unlock();
-      } catch (error) {
-        // Ignore unlock failures when the browser never granted the lock.
-      }
+  window.addEventListener('resize', onChange);
+  window.visualViewport?.addEventListener('resize', onChange);
+  window.visualViewport?.addEventListener('scroll', onChange);
+
+  cleanup = () => {
+    if (mql.removeEventListener) {
+      mql.removeEventListener('change', onChange);
+    } else if (mql.removeListener) {
+      mql.removeListener(onChange);
     }
-    started = false;
-    stopLock = null;
+    window.removeEventListener('resize', onChange);
+    window.visualViewport?.removeEventListener('resize', onChange);
+    window.visualViewport?.removeEventListener('scroll', onChange);
+    clearVisualState();
+    tryNativeUnlock();
+    cleanup = null;
   };
 };
 
 export const stopSkyroomPhonePortraitLock = () => {
-  if (stopLock) stopLock();
-  started = false;
+  if (cleanup) cleanup();
 };

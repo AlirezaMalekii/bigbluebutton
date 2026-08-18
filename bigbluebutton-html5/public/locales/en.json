@@ -1795,7 +1795,7 @@
     "app.sessionDetails.copied": "Copied!",
     "app.skyroom.backgroundMusic.title": "Background music",
     "app.skyroom.backgroundMusic.subtitle": "Play music for everyone without changing the presentation or whiteboard.",
-    "app.skyroom.backgroundMusic.defaultTracks": "SafeMeet music",
+    "app.skyroom.backgroundMusic.defaultTracks": "Music",
     "app.skyroom.backgroundMusic.personalTrack": "Personal track",
     "app.skyroom.backgroundMusic.addPersonal": "Add personal music",
     "app.skyroom.backgroundMusic.uploadHint": "MP3, up to 15 MB",

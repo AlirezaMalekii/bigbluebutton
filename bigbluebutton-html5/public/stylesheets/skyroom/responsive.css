@@ -1573,6 +1573,8 @@
      Session details, about, recording confirm, webcam, connection, etc.
      Fullscreen shells (settings / poll / timer / presentations) stay in
      section 14. Overlay flex-centers the card; body scrolls inside.
+     Background music owns its phone layout in background-music.css so the
+     track list scrolls internally and play/stop stay visible.
      =================================================================== */
   html[data-skyroom="true"] .ReactModal__Overlay:not(.fullscreenModalOverlay) {
     display: flex !important;
@@ -1581,8 +1583,8 @@
     padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px)) !important;
   }
 
-  html[data-skyroom="true"] .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal),
-  html[data-skyroom="true"] #modals-container .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal) {
+  html[data-skyroom="true"] .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal):not(.skyroom-background-music-modal),
+  html[data-skyroom="true"] #modals-container .ReactModal__Content:not(#fsmodal):not(.poll-creation-modal):not([data-test="pollCreationModal"]):not([data-test="managePresentationsModal"]):not([data-test="timerActivationModal"]):not(.timer-activation-modal):not(.skyroom-background-music-modal) {
     position: relative !important;
     top: auto !important;
     left: auto !important;
@@ -4366,21 +4368,35 @@
   }
 }
 
-/* Phones keep a portrait meeting canvas if the OS still rotates the tab.
-   Tablets and pointer-accurate desktops are not tagged and stay unchanged. */
-html[data-skyroom="true"][data-skyroom-phone-portrait-lock="true"][data-skyroom-phone-landscape="true"] {
-  width: var(--skyroom-phone-lock-w) !important;
-  height: var(--skyroom-phone-lock-h) !important;
-  transform: rotate(-90deg);
-  transform-origin: top left;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  overflow: hidden;
+/* Phone-only fallback for browsers that rotate the tab anyway. */
+html[data-skyroom="true"][data-skyroom-phone-portrait-lock="true"],
+html[data-skyroom="true"][data-skyroom-phone-portrait-lock="true"] body {
+  overflow: hidden !important;
 }
 
-html[data-skyroom="true"][data-skyroom-phone-portrait-lock="true"][data-skyroom-phone-landscape="true"] body,
-html[data-skyroom="true"][data-skyroom-phone-portrait-lock="true"][data-skyroom-phone-landscape="true"] #app {
-  width: 100% !important;
-  height: 100% !important;
+body[data-skyroom-phone-portrait-lock="true"][data-skyroom-phone-landscape="true"] {
+  overflow: hidden !important;
+}
+
+body[data-skyroom-phone-portrait-lock="true"][data-skyroom-phone-landscape="true"] #app {
+  display: none !important;
+}
+
+body[data-skyroom-phone-portrait-lock="true"][data-skyroom-phone-landscape="true"] #skyroom-phone-portrait-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  background: #101824;
+  color: #eef4fb;
+  font-size: clamp(1rem, 3.8vw, 1.2rem);
+  line-height: 1.8;
+}
+
+body[data-skyroom-phone-portrait-lock="true"]:not([data-skyroom-phone-landscape="true"]) #skyroom-phone-portrait-overlay {
+  display: none !important;
 }

@@ -272,6 +272,24 @@ class ActionsDropdown extends PureComponent {
       });
     }
 
+    if ((amIPresenter || amIModerator) && isSkyroomTheme()) {
+      const musicState = getSkyroomBackgroundMusicState();
+      let musicLabel = intl.formatMessage(intlMessages.backgroundMusic);
+      if (musicState.source && musicState.status === 'playing') {
+        musicLabel = `${musicLabel} — ${intl.formatMessage(intlMessages.backgroundMusicPlaying)}`;
+      } else if (musicState.source && musicState.status === 'paused') {
+        musicLabel = `${musicLabel} — ${intl.formatMessage(intlMessages.backgroundMusicPaused)}`;
+      }
+      actions.push({
+        icon: 'volume_level_2',
+        label: musicLabel,
+        key: this.backgroundMusicId,
+        onClick: openSkyroomBackgroundMusic,
+        dataTest: 'skyroomBackgroundMusic',
+        iconRight: musicState.status === 'playing' || musicState.status === 'paused' ? 'check' : null,
+      });
+    }
+
     if (amIPresenter && isPollingEnabled) {
       let pollActionLabel = isQuizEnabled
         ? formatMessage(pollQuizBtnLabel)
@@ -325,24 +343,6 @@ class ActionsDropdown extends PureComponent {
             this.setCameraAsContentModalIsOpen(true);
           },
         dataTest: 'shareCameraAsContent',
-      });
-    }
-
-    if ((amIPresenter || amIModerator) && isSkyroomTheme()) {
-      const musicState = getSkyroomBackgroundMusicState();
-      let musicLabel = intl.formatMessage(intlMessages.backgroundMusic);
-      if (musicState.source && musicState.status === 'playing') {
-        musicLabel = `${musicLabel} — ${intl.formatMessage(intlMessages.backgroundMusicPlaying)}`;
-      } else if (musicState.source && musicState.status === 'paused') {
-        musicLabel = `${musicLabel} — ${intl.formatMessage(intlMessages.backgroundMusicPaused)}`;
-      }
-      actions.push({
-        icon: 'volume_level_2',
-        label: musicLabel,
-        key: this.backgroundMusicId,
-        onClick: openSkyroomBackgroundMusic,
-        dataTest: 'skyroomBackgroundMusic',
-        iconRight: musicState.status === 'playing' || musicState.status === 'paused' ? 'check' : null,
       });
     }
 
