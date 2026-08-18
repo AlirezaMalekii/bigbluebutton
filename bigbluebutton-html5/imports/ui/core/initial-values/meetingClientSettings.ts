@@ -601,6 +601,7 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
     },
     notes: {
       enabled: true,
+      showInMeeting: false,
       id: 'notes',
       pinnable: true,
     },

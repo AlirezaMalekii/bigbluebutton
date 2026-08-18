@@ -688,6 +688,46 @@ html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hi
     gap: 0 6px !important;
   }
 
+  /* Mobile header — theme logo replaces panel toggle chips */
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    max-width: min(42vw, 168px) !important;
+    overflow: hidden !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"] a {
+    height: 28px !important;
+    max-width: min(42vw, 168px) !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"] img,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"] object {
+    height: 28px !important;
+    max-width: min(42vw, 168px) !important;
+    min-width: 72px !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"][data-logo-source="roomeet"] a {
+    height: 30px !important;
+    max-width: min(44vw, 176px) !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"][data-logo-source="roomeet"] img,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"][data-logo-source="roomeet"] object {
+    height: 30px !important;
+    max-width: min(44vw, 176px) !important;
+    min-width: 96px !important;
+  }
+
+  #layout[data-skyroom-column="true"] [data-test="presentationTitle"] {
+    display: none !important;
+  }
+
   #layout[data-skyroom-column="true"] #Navbar [class*="IsTalkingWrapper"],
   #layout[data-skyroom-column="true"] #Navbar [data-test="talkingIndicator"] {
     display: none !important;
@@ -714,5 +754,23 @@ html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hi
 
   #layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"] [class*="PresentationTitle"] {
     display: flex !important;
+  }
+
+  /* Compact recording chip on mobile — icon + short «ضبط» / Record label */
+  #layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"] button,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"] [data-test="recordingStatus"],
+  #layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"] [class*="RecordingStatusViewOnly"] {
+    gap: 4px !important;
+    min-height: 22px !important;
+    height: 22px !important;
+    padding: 0 7px !important;
+    font-size: 0.625rem !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"] button svg,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="recordingIndicator"] [class*="RecordingStatusViewOnly"] svg {
+    width: 12px !important;
+    height: 12px !important;
+    font-size: 12px !important;
   }
 }

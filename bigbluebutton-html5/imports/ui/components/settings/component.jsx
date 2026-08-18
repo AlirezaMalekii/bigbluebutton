@@ -11,6 +11,7 @@ import Styled from './styles';
 import { formatLocaleCode } from '/imports/utils/string-utils';
 import { setUseCurrentLocale } from '../../core/local-states/useCurrentLocale';
 import Transcription from '/imports/ui/components/settings/submenus/transcription/component';
+import SkyroomSharedNotesFeatureSetting from '/imports/ui/components/skyroom-layout/shared-notes-feature-setting/component';
 
 const intlMessages = defineMessages({
   appTabLabel: {
@@ -268,6 +269,11 @@ class Settings extends Component {
             : null}
         </Styled.SettingsTabList>
         <Styled.SettingsTabPanel selectedClassName="is-selected">
+          <SkyroomSharedNotesFeatureSetting
+            isModerator={isModerator}
+            displaySettingsStatus={this.displaySettingsStatus}
+            showToggleLabel={showToggleLabel}
+          />
           <Application
             allLocales={allLocales}
             handleUpdateSettings={this.handleUpdateSettings}

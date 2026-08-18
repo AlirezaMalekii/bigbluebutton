@@ -820,6 +820,8 @@ public:
         native: '😍'
   notes:
     enabled: true
+    # SafeMeet: hide shared-notes UI until a moderator enables it in meeting settings.
+    showInMeeting: false
     id: notes
     pinnable: true
   layout:

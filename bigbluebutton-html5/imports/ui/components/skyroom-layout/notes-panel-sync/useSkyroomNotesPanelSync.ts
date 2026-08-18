@@ -5,6 +5,7 @@ import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import logger from '/imports/startup/client/logger';
 import {
   getSkyroomNotesSyncEntryId,
+  setSkyroomNotesFeatureVisible,
   setSkyroomNotesGlobalOpen,
   setSkyroomNotesSyncEntryId,
 } from '../notes-panel-state';
@@ -22,6 +23,7 @@ interface DataChannelRow {
   entryId: string;
   payloadJson?: {
     open?: boolean;
+    featureVisible?: boolean;
     version?: number;
   };
   updatedAt: string;
@@ -62,29 +64,38 @@ export const useSkyroomNotesPanelSync = () => {
       (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
     )[0];
 
-    const { open, version } = latest?.payloadJson ?? {};
-    if (typeof open !== 'boolean') return;
+    const { open, featureVisible, version } = latest?.payloadJson ?? {};
 
     const entryVersion = version ?? new Date(latest.updatedAt).getTime();
     if (entryVersion <= lastAppliedVersion.current) return;
 
     lastAppliedVersion.current = entryVersion;
     setSkyroomNotesSyncEntryId(latest.entryId);
-    setSkyroomNotesGlobalOpen(open, { clearDismiss: true });
+
+    if (typeof featureVisible === 'boolean') {
+      setSkyroomNotesFeatureVisible(featureVisible);
+    }
+    if (typeof open === 'boolean') {
+      setSkyroomNotesGlobalOpen(open, { clearDismiss: true });
+    }
   }, [data]);
 
-  const broadcastGlobalOpen = useCallback(async (open: boolean) => {
+  const broadcastPayload = useCallback(async (payloadJson: {
+    open?: boolean;
+    featureVisible?: boolean;
+    version?: number;
+  }) => {
     if (!isModerator || pendingBroadcast.current) return;
     pendingBroadcast.current = true;
 
-    const version = Date.now();
-    const payloadJson = { open, version };
+    const version = payloadJson.version ?? Date.now();
+    const payload = { ...payloadJson, version };
 
     const variables = {
       pluginName: SKYROOM_NOTES_PANEL_PLUGIN,
       channelName: SKYROOM_NOTES_PANEL_CHANNEL,
       subChannelName: SKYROOM_NOTES_PANEL_SUBCHANNEL,
-      payloadJson,
+      payloadJson: payload,
       toRoles: ['viewer', 'moderator'],
       toUserIds: [],
     };
@@ -112,18 +123,31 @@ export const useSkyroomNotesPanelSync = () => {
     }
   }, [isModerator, pushEntry, replaceEntry]);
 
+  const broadcastGlobalOpen = useCallback(async (open: boolean) => {
+    await broadcastPayload({ open });
+  }, [broadcastPayload]);
+
+  const broadcastFeatureVisible = useCallback(async (featureVisible: boolean) => {
+    await broadcastPayload({ featureVisible });
+  }, [broadcastPayload]);
+
   useEffect(() => {
     if (!isModerator) return undefined;
 
     setSkyroomNotesModeratorBroadcast(broadcastGlobalOpen);
+    setSkyroomNotesFeatureModeratorBroadcast(broadcastFeatureVisible);
 
-    return () => setSkyroomNotesModeratorBroadcast(null);
-  }, [isModerator, broadcastGlobalOpen]);
+    return () => {
+      setSkyroomNotesModeratorBroadcast(null);
+      setSkyroomNotesFeatureModeratorBroadcast(null);
+    };
+  }, [isModerator, broadcastGlobalOpen, broadcastFeatureVisible]);
 
   return { isModerator };
 };
 
 let moderatorBroadcast: ((open: boolean) => void) | null = null;
+let featureModeratorBroadcast: ((visible: boolean) => void) | null = null;
 
 export const setSkyroomNotesModeratorBroadcast = (
   fn: ((open: boolean) => void) | null,
@@ -131,8 +155,18 @@ export const setSkyroomNotesModeratorBroadcast = (
   moderatorBroadcast = fn;
 };
 
+export const setSkyroomNotesFeatureModeratorBroadcast = (
+  fn: ((visible: boolean) => void) | null,
+): void => {
+  featureModeratorBroadcast = fn;
+};
+
 export const broadcastSkyroomNotesGlobalOpen = (open: boolean): void => {
   moderatorBroadcast?.(open);
+};
+
+export const broadcastSkyroomNotesFeatureVisible = (visible: boolean): void => {
+  featureModeratorBroadcast?.(visible);
 };
 
 export default useSkyroomNotesPanelSync;

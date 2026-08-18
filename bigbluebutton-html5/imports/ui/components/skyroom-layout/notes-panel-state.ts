@@ -1,13 +1,19 @@
 import { dispatchSkyroomLayoutResize } from './layout-resize';
 
 type NotesPanelListener = (open: boolean) => void;
+type NotesFeatureListener = (visible: boolean) => void;
 
 let skyroomNotesGlobalOpen = false;
 let skyroomNotesLocallyDismissed = false;
 /** Viewer-only: panel open while moderator has not shared notes globally. */
 let skyroomNotesLocallyOpen = false;
 let skyroomNotesSyncEntryId: string | null = null;
+/** Meeting-wide shared-notes chrome visibility (nav icon, mobile tab, column). */
+let skyroomNotesFeatureVisible = Boolean(
+  window.meetingClientSettings?.public?.notes?.showInMeeting,
+);
 const listeners = new Set<NotesPanelListener>();
+const featureListeners = new Set<NotesFeatureListener>();
 
 const getVisibleNotesOpen = (): boolean => {
   if (skyroomNotesGlobalOpen) {
@@ -20,6 +26,33 @@ const notifyListeners = (): void => {
   const visible = getVisibleNotesOpen();
   listeners.forEach((listener) => listener(visible));
   dispatchSkyroomLayoutResize();
+};
+
+const notifyFeatureListeners = (): void => {
+  featureListeners.forEach((listener) => listener(skyroomNotesFeatureVisible));
+  dispatchSkyroomLayoutResize();
+};
+
+export const getSkyroomNotesFeatureVisible = (): boolean => skyroomNotesFeatureVisible;
+
+export const setSkyroomNotesFeatureVisible = (visible: boolean): void => {
+  if (skyroomNotesFeatureVisible === visible) return;
+  skyroomNotesFeatureVisible = visible;
+  if (!visible) {
+    skyroomNotesGlobalOpen = false;
+    skyroomNotesLocallyOpen = false;
+    skyroomNotesLocallyDismissed = false;
+    notifyListeners();
+  }
+  notifyFeatureListeners();
+};
+
+export const subscribeSkyroomNotesFeatureVisible = (
+  listener: NotesFeatureListener,
+): (() => void) => {
+  featureListeners.add(listener);
+  listener(skyroomNotesFeatureVisible);
+  return () => featureListeners.delete(listener);
 };
 
 export const getSkyroomNotesOpen = (): boolean => getVisibleNotesOpen();

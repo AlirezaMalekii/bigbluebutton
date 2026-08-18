@@ -572,6 +572,8 @@ export interface Reaction {
 
 export interface Notes {
   enabled: boolean
+  /** When false, shared-notes UI stays hidden until a moderator enables it in meeting settings. */
+  showInMeeting: boolean
   id: string
   pinnable: boolean
 }

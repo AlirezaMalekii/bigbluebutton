@@ -30,6 +30,7 @@ import {
   isSkyroomBreakoutOpen,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import SkyroomHeaderStatusCluster from '/imports/ui/components/skyroom-layout/active-poll-summary/SkyroomHeaderStatusCluster';
+import SkyroomPlatformLogo from '/imports/ui/components/skyroom-layout/header-logo/SkyroomPlatformLogo';
 import LeaveMeetingButtonContainer from './leave-meeting-button/container';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import Tooltip from '/imports/ui/components/common/tooltip/component';
@@ -445,11 +446,11 @@ class NavBar extends Component {
     const APP_CONFIG = window.meetingClientSettings?.public?.app;
     const enableTalkingIndicator = APP_CONFIG?.enableTalkingIndicator;
     const skyroomHeader = isSkyroomColumnLayout();
+    const skyroomMobileHeader = skyroomHeader && isSkyroomMobileViewport();
     const skyroomMobileTalkingInRail = skyroomHeader && isSkyroomMobileViewport();
-    const notesEnabledInSettings = window.meetingClientSettings?.public?.notes?.enabled;
     const showSharedNotesToggle = skyroomHeader
       && shouldShowNavBarToggleButton
-      && (isSharedNotesEnabled || notesEnabledInSettings);
+      && isSharedNotesEnabled;
     return shouldShowNavbar && (
       <Styled.Navbar
         id="Navbar"
@@ -476,7 +477,7 @@ class NavBar extends Component {
                 && <Styled.ArrowLeft iconName="left_arrow" />}
               {shouldShowNavBarToggleButton && !isUserListExpanded && document.dir === 'rtl'
                 && <Styled.ArrowLeft iconName="left_arrow" />}
-              {shouldShowNavBarToggleButton && (
+              {!skyroomMobileHeader && shouldShowNavBarToggleButton && (
                 <Styled.NavbarToggleButton
                   tooltipplacement="right"
                   onClick={this.handleToggleUserList}
@@ -494,7 +495,7 @@ class NavBar extends Component {
                   hasNotification={hasNotification}
                 />
               )}
-              {isSkyroomColumnLayout() && shouldShowNavBarToggleButton && (
+              {!skyroomMobileHeader && isSkyroomColumnLayout() && shouldShowNavBarToggleButton && (
                 <Styled.NavbarToggleButton
                   tooltipplacement="right"
                   onClick={this.handleTogglePublicChat}
@@ -512,7 +513,7 @@ class NavBar extends Component {
                   hasNotification={hasUnreadMessages}
                 />
               )}
-              {showSharedNotesToggle && (
+              {!skyroomMobileHeader && showSharedNotesToggle && (
                 <Styled.NavbarToggleButton
                   tooltipplacement="right"
                   onClick={this.handleToggleSharedNotes}
@@ -529,7 +530,7 @@ class NavBar extends Component {
                   hasNotification={hasUnreadNotes}
                 />
               )}
-              {skyroomHeader && shouldShowNavBarToggleButton && showBreakoutToggle && (
+              {!skyroomMobileHeader && skyroomHeader && shouldShowNavBarToggleButton && showBreakoutToggle && (
                 <Styled.NavbarToggleButton
                   tooltipplacement="right"
                   onClick={this.handleToggleBreakout}
@@ -549,26 +550,33 @@ class NavBar extends Component {
                 && <Styled.ArrowRight iconName="right_arrow" />}
               {shouldShowNavBarToggleButton && isUserListExpanded && document.dir === 'rtl'
                 && <Styled.ArrowRight iconName="right_arrow" />}
+              {skyroomMobileHeader && (
+                <div data-test="skyroomMobileHeaderLogo">
+                  <SkyroomPlatformLogo hideTagline />
+                </div>
+              )}
               {renderPluginItems(leftPluginItems)}
             </Styled.Left>
             <Styled.Center data-test="skyroom-header-center">
-              <Styled.PresentationTitle
-                data-test="presentationTitle"
-                id="presentationTitle"
-                onClick={hasSessionDetails ? () => this.setModalIsOpen(true) : undefined}
-                style={hasSessionDetails ? undefined : { cursor: 'default' }}
-              >
-                {hasSessionDetails ? (
-                  <Tooltip title={intl.formatMessage(intlMessages.openDetailsTooltip)}>
-                    <span>
-                      {presentationTitle}
-                      <Icon iconName="device_list_selector" />
-                    </span>
-                  </Tooltip>
-                ) : (
-                  <span>{presentationTitle}</span>
-                )}
-              </Styled.PresentationTitle>
+              {!skyroomMobileHeader && (
+                <Styled.PresentationTitle
+                  data-test="presentationTitle"
+                  id="presentationTitle"
+                  onClick={hasSessionDetails ? () => this.setModalIsOpen(true) : undefined}
+                  style={hasSessionDetails ? undefined : { cursor: 'default' }}
+                >
+                  {hasSessionDetails ? (
+                    <Tooltip title={intl.formatMessage(intlMessages.openDetailsTooltip)}>
+                      <span>
+                        {presentationTitle}
+                        <Icon iconName="device_list_selector" />
+                      </span>
+                    </Tooltip>
+                  ) : (
+                    <span>{presentationTitle}</span>
+                  )}
+                </Styled.PresentationTitle>
+              )}
               <ModalRegistration id="SessionDetailsModal" priority="low">
                 {
                   ({

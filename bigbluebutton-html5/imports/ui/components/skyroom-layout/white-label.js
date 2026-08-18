@@ -8,8 +8,10 @@ export const SKYROOM_ROOMEET_NAME = 'رومیت';
 export const SKYROOM_ROOMEET_NAME_EN = 'RooMeet';
 export const SKYROOM_ROOMEET_URL = 'https://roomeet.ir';
 export const SKYROOM_ROOMEET_LOGO_PATH = '/resources/images/skyroom/Roomeet.ir.svg';
+export const SKYROOM_ROOMEET_LOGO_COMPACT_PATH = '/resources/images/skyroom/Roomeet-lockup-compact.svg';
 export const SKYROOM_ROOMEET_LOGO_LIGHT_PATH = '/resources/images/skyroom/Roomeet.ir-light.svg';
 export const SKYROOM_ROOMEET_ICON_PATH = '/resources/images/skyroom/Roomeet-icon.svg';
+export const SKYROOM_PLATFORM_LOGO_COMPACT_PATH = '/resources/images/skyroom/SafeMeet-lockup-compact.svg';
 
 export const getBrandingThemeId = (settings = window.meetingClientSettings) => (
   settings?.public?.app?.branding?.themeId?.trim().toLowerCase() ?? ''

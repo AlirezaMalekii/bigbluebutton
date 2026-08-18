@@ -42,12 +42,10 @@ const SkyroomBackgroundMusicQuickControl: React.FC = () => {
     return track ? intl.formatMessage({ id: track.labelId }) : '';
   }, [intl, state.source]);
 
-  if (!isSkyroomColumnLayout() || !state.source) return null;
+  if (!isSkyroomColumnLayout() || !state.source || state.status === 'stopped') return null;
 
   const unlockPlayback = !canControl && playbackIssue === 'autoplay';
-  // Phone footer stays icon-dense; open/stop music from the + actions menu.
-  // Keep this chip only when a viewer must unlock autoplay-blocked playback.
-  if (isSkyroomMobileFooter() && !unlockPlayback) return null;
+  const mobileFooter = isSkyroomMobileFooter();
 
   let statusMessage = intlMessages.stopped;
   if (state.status === 'playing') statusMessage = intlMessages.playing;
@@ -82,6 +80,7 @@ const SkyroomBackgroundMusicQuickControl: React.FC = () => {
         data-interactive="false"
         data-status={state.status}
         data-unlock="false"
+        data-mobile-compact={mobileFooter ? 'true' : 'false'}
         data-test="skyroomBackgroundMusicQuickControl"
         role="status"
         aria-label={label}
@@ -99,6 +98,7 @@ const SkyroomBackgroundMusicQuickControl: React.FC = () => {
       data-interactive="true"
       data-status={state.status}
       data-unlock={unlockPlayback ? 'true' : 'false'}
+      data-mobile-compact={mobileFooter ? 'true' : 'false'}
       data-test="skyroomBackgroundMusicQuickControl"
       aria-label={label}
       title={label}

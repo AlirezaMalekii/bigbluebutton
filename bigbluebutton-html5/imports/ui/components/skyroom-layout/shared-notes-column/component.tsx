@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import NotesContainer from '/imports/ui/components/notes/component';
-import NotesService from '/imports/ui/components/notes/service';
+import useSkyroomSharedNotesUiVisible from '../useSkyroomSharedNotesUiVisible';
 import { GET_PAD_ID, GetPadIdQueryResponse } from '/imports/ui/components/notes/queries';
 import { PIN_NOTES } from '/imports/ui/components/notes/mutations';
 import { isSkyroomNotesOpen } from '/imports/ui/components/skyroom-layout/panel-toggles';
@@ -20,9 +20,7 @@ import Styled from './styles';
 
 const SkyroomSharedNotesColumn: React.FC = () => {
   const [notesOpen, setNotesOpen] = useState(isSkyroomNotesOpen);
-  const isEnabled = NotesService.useIsEnabled();
-  const notesEnabledInSettings = window.meetingClientSettings?.public?.notes?.enabled;
-  const showNotes = isEnabled || notesEnabledInSettings;
+  const showNotes = useSkyroomSharedNotesUiVisible();
   const NOTES_CONFIG = window.meetingClientSettings?.public?.notes;
   const { data: padIdData, loading: padLoading } = useQuery<GetPadIdQueryResponse>(
     GET_PAD_ID,

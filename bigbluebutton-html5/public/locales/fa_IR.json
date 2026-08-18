@@ -215,6 +215,8 @@
   "app.skyroom.mobileTabs.breakout": "اتاق‌های گروهی",
   "app.skyroom.mobileTabs.waiting": "منتظر در لابی",
   "app.skyroom.mobileTabs.ariaLabel": "تب‌های پایین صفحه",
+  "app.skyroom.settings.sharedNotesSectionTitle": "امکانات جلسه",
+  "app.skyroom.settings.sharedNotesLabel": "یادداشت‌های اشتراکی",
   "app.skyroom.loading": "در حال بارگذاری",
   "app.skyroom.mobileZoneFullscreen.expandTop": "بزرگ‌کردن صحنه",
   "app.skyroom.mobileZoneFullscreen.expandBottom": "بزرگ‌کردن پنل",

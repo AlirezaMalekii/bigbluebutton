@@ -17,7 +17,7 @@ import { useShortcut } from '../../core/hooks/useShortcut';
 import useMeeting from '../../core/hooks/useMeeting';
 import { registerTitleView } from '/imports/utils/dom-utils';
 import connectionStatus from '../../core/graphql/singletons/connectionStatus';
-import NotesService from '/imports/ui/components/notes/service';
+import useSkyroomSharedNotesUiVisible from '/imports/ui/components/skyroom-layout/useSkyroomSharedNotesUiVisible';
 import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import {
   subscribeSkyroomNotesOpen,
@@ -54,7 +54,7 @@ const NavBarContainer = ({ children, ...props }) => {
   const togglePublicChat = useShortcut('togglePublicChat');
 
   const [skyroomNotesOpen, setSkyroomNotesOpen] = useState(getSkyroomNotesOpen);
-  const isSharedNotesEnabled = NotesService.useIsEnabled();
+  const isSharedNotesEnabled = useSkyroomSharedNotesUiVisible();
   useEffect(() => subscribeSkyroomNotesOpen(setSkyroomNotesOpen), []);
 
   const notesPanelOpen = isSkyroomColumnLayout()

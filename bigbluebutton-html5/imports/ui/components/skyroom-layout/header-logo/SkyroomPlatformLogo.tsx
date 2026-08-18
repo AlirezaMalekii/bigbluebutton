@@ -33,9 +33,13 @@ const intlMessages = defineMessages({
 
 type SkyroomPlatformLogoProps = {
   iconOnly?: boolean;
+  hideTagline?: boolean;
 };
 
-const SkyroomPlatformLogo: React.FC<SkyroomPlatformLogoProps> = ({ iconOnly = false }) => {
+const SkyroomPlatformLogo: React.FC<SkyroomPlatformLogoProps> = ({
+  iconOnly = false,
+  hideTagline = false,
+}) => {
   const intl = useIntl();
   const [darkMode, setDarkMode] = useState(true);
 
@@ -61,6 +65,7 @@ const SkyroomPlatformLogo: React.FC<SkyroomPlatformLogoProps> = ({ iconOnly = fa
     loginUrl: meeting?.loginUrl?.trim() ?? '',
     darkMode,
     preferIcon: iconOnly,
+    hideTagline,
   });
 
   const altId = {
@@ -91,6 +96,7 @@ const SkyroomPlatformLogo: React.FC<SkyroomPlatformLogoProps> = ({ iconOnly = fa
         data-test="skyroomPlatformLogo"
         data-logo-source={logo.source}
         data-icon-only={logo.iconOnly ? 'true' : undefined}
+        data-hide-tagline={hideTagline ? 'true' : undefined}
       >
         {image}
       </Styled.PlatformWrap>
@@ -102,6 +108,7 @@ const SkyroomPlatformLogo: React.FC<SkyroomPlatformLogoProps> = ({ iconOnly = fa
       data-test="skyroomPlatformLogo"
       data-logo-source={logo.source}
       data-icon-only={logo.iconOnly ? 'true' : undefined}
+      data-hide-tagline={hideTagline ? 'true' : undefined}
     >
       <Styled.PlatformLink
         href={logo.href}

@@ -478,29 +478,57 @@ html[data-skyroom="true"] .skyroom-background-music-quick[data-status="playing"]
   }
 }
 
-/* Phone footer: music lives in the + actions menu, not as a dock chip. */
-#layout[data-skyroom-mobile="true"] .skyroom-background-music-quick:not([data-unlock="true"]) {
-  display: none !important;
+/* Phone footer — compact icon chip aligned with other 36px footer controls. */
+#layout[data-skyroom-mobile="true"] .skyroom-background-music-quick[data-mobile-compact="true"] {
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  min-height: 36px;
+  max-height: 36px;
+  margin-inline-start: 0;
+  padding: 0;
+  gap: 0;
+  justify-content: center;
+  align-items: center;
+  border-radius: 12px;
+  flex: 0 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+
+#layout[data-skyroom-mobile="true"] .skyroom-background-music-quick[data-mobile-compact="true"] .skyroom-background-music-quick__name {
+  display: none;
+}
+
+#layout[data-skyroom-mobile="true"] .skyroom-background-music-quick[data-mobile-compact="true"] > svg {
+  width: 16px;
+  height: 16px;
+}
+
+#layout[data-skyroom-mobile="true"] .skyroom-background-music-quick[data-mobile-compact="true"] .skyroom-background-music-quick__bars {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  height: 9px;
+  gap: 1px;
+  opacity: 0.92;
+}
+
+#layout[data-skyroom-mobile="true"] .skyroom-background-music-quick[data-mobile-compact="true"] .skyroom-background-music-quick__bars i {
+  width: 1.5px;
 }
 
 @media (max-width: 599px) {
-  html[data-skyroom="true"] .skyroom-background-music-quick:not([data-unlock="true"]) {
-    display: none !important;
+  html[data-skyroom="true"] .skyroom-background-music-quick[data-mobile-compact="true"] {
+    width: 36px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+    margin-inline-start: 0;
+    padding: 0;
+    border-radius: 12px;
   }
-}
-
-#layout[data-skyroom-mobile="true"] .skyroom-background-music-quick[data-unlock="true"] {
-  width: 40px;
-  min-width: 40px;
-  max-width: 40px;
-  min-height: 40px;
-  padding: 0;
-  justify-content: center;
-}
-
-#layout[data-skyroom-mobile="true"] .skyroom-background-music-quick[data-unlock="true"] .skyroom-background-music-quick__name,
-#layout[data-skyroom-mobile="true"] .skyroom-background-music-quick[data-unlock="true"] .skyroom-background-music-quick__bars {
-  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

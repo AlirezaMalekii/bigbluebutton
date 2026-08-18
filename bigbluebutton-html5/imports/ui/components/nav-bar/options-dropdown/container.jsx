@@ -44,6 +44,7 @@ const OptionsDropdownContainer = (props) => {
   } = useMeeting((m) => ({
     componentsFlags: m.componentsFlags,
     isBreakout: m.isBreakout,
+    name: m.name,
   }));
 
   const { data: currentUserData } = useCurrentUser((user) => ({
@@ -90,6 +91,7 @@ const OptionsDropdownContainer = (props) => {
       isMobile: deviceInfo.isMobile,
       noIOSFullscreen,
       isBreakoutRoom: currentMeeting?.isBreakout,
+      meetingName: currentMeeting?.name,
       // TODO: Replace/Remove
       isConnected: connected,
       isLayoutsEnabled,

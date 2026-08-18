@@ -31,7 +31,6 @@ import {
 import { SKYROOM_MOBILE_ZONE_FS_EVENT } from '/imports/ui/components/skyroom-layout/mobile-zone-fullscreen-state';
 import {
   isPresentationFullscreenActive,
-  shouldUseLayoutOnlyPresentationFullscreen,
   togglePresentationFullscreen,
 } from './presentation-fullscreen';
 
@@ -771,10 +770,9 @@ class Presentation extends PureComponent {
     const isIphone = !!(navigator.userAgent.match(/iPhone/i));
 
     if (!allowFullscreen || isIphone) return null;
-    // Presenters use the top-right dock on pointer desktops. On phone
-    // desktop-mode the overlay must stay available so exit cannot get trapped
-    // inside the options menu after the board covers the meeting.
-    if (userIsPresenter && !shouldUseLayoutOnlyPresentationFullscreen()) return null;
+    // Presenters use the top-right whiteboard dock; the top-left overlay
+    // overlaps undo/redo and duplicates the dock fullscreen control.
+    if (userIsPresenter) return null;
 
     const presentationIsFullscreen = isPresentationFullscreenActive({
       fullscreenContext,

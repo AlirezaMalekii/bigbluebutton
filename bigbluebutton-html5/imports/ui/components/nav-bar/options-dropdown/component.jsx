@@ -21,6 +21,7 @@ import Toggle from '/imports/ui/components/common/switch/component';
 import { ModalRegistration } from '/imports/ui/core/singletons/modalController';
 import { isSkyroomColumnLayout } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import { isRoomeetBrand } from '/imports/ui/components/skyroom-layout/white-label';
+import SkyroomMeetingDetailsModal from '/imports/ui/components/skyroom-layout/meeting-details-modal/SkyroomMeetingDetailsModal';
 
 const intlMessages = defineMessages({
   optionsLabel: {
@@ -138,6 +139,16 @@ const intlMessages = defineMessages({
     id: 'app.navBar.optionsDropdown.presenceLabel',
     description: 'Presence Label',
   },
+  meetingDetailsLabel: {
+    id: 'app.skyroom.meetingDetails.menuLabel',
+    description: 'Meeting details option in settings dropdown',
+    defaultMessage: 'جزییات جلسه',
+  },
+  meetingDetailsDesc: {
+    id: 'app.skyroom.meetingDetails.menuDesc',
+    description: 'Describes meeting details option',
+    defaultMessage: 'مشاهده نام و توضیحات جلسه',
+  },
 });
 
 const propTypes = {
@@ -156,6 +167,7 @@ const propTypes = {
   audioCaptionsSet: PropTypes.func.isRequired,
   isMobile: PropTypes.bool.isRequired,
   isDirectLeaveButtonEnabled: PropTypes.bool.isRequired,
+  meetingName: PropTypes.string,
   optionsDropdownItems: PropTypes.arrayOf(PropTypes.shape({
     id: PropTypes.string,
     type: PropTypes.string,
@@ -250,6 +262,7 @@ class OptionsDropdown extends PureComponent {
       intl, amIModerator, isBreakoutRoom, isConnected, audioCaptionsEnabled,
       audioCaptionsActive, audioCaptionsSet, isMobile, optionsDropdownItems,
       isDirectLeaveButtonEnabled, isLayoutsEnabled, away, handleToggleAFK,
+      meetingName,
     } = this.props;
 
     const { isIos } = deviceInfo;
@@ -314,6 +327,20 @@ class OptionsDropdown extends PureComponent {
         description: intl.formatMessage(intlMessages.settingsDesc),
         onClick: () => this.setOptionsMenuModalIsOpen(),
       },
+    );
+
+    if (isSkyroomColumnLayout() && isMobile && meetingName) {
+      this.menuItems.push({
+        key: 'list-item-meeting-details',
+        icon: 'about',
+        dataTest: 'meetingDetailsMenuItem',
+        label: intl.formatMessage(intlMessages.meetingDetailsLabel),
+        description: intl.formatMessage(intlMessages.meetingDetailsDesc),
+        onClick: () => this.setMeetingDetailsModalIsOpen(),
+      });
+    }
+
+    this.menuItems.push(
       {
         key: 'list-item-about',
         icon: 'about',
@@ -497,6 +524,25 @@ class OptionsDropdown extends PureComponent {
           actions={this.renderMenuItems()}
           opts={menuOpts}
         />
+
+        {/* Meeting Details Modal (Skyroom mobile) */}
+        <ModalRegistration id="skyroomMeetingDetailsModal" priority="low">
+          {({
+            isOpen,
+            id,
+            open,
+            close,
+          }) => {
+            this.setMeetingDetailsModalIsOpen = isOpen ? close : open;
+            return isOpen && (
+              <SkyroomMeetingDetailsModal
+                onRequestClose={close}
+                priority="low"
+                isOpen={isOpen}
+              />
+            );
+          }}
+        </ModalRegistration>
 
         {/* About Modal */}
         <ModalRegistration id="aboutModal" priority="low">

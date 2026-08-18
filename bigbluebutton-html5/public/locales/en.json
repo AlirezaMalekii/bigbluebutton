@@ -189,6 +189,8 @@
     "app.skyroom.mobileTabs.breakout": "Breakout rooms",
     "app.skyroom.mobileTabs.waiting": "Lobby waiting",
     "app.skyroom.mobileTabs.ariaLabel": "Bottom panel tabs",
+    "app.skyroom.settings.sharedNotesSectionTitle": "Meeting features",
+    "app.skyroom.settings.sharedNotesLabel": "Shared notes",
     "app.skyroom.loading": "Loading",
     "app.skyroom.mobileZoneFullscreen.expandTop": "Expand stage",
     "app.skyroom.mobileZoneFullscreen.expandBottom": "Expand panel",

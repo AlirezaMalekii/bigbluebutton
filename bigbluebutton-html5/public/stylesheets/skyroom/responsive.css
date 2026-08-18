@@ -499,8 +499,8 @@
   #layout[data-skyroom-column="true"] #ActionsBar > div {
     justify-content: center !important;
     align-items: center !important;
-    /* Gap separates the two main cluster shells so they never bleed into each other. */
-    gap: 10px !important;
+    /* Flat icon row — no cluster shells; tight uniform spacing between controls. */
+    gap: 4px !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     scrollbar-width: none !important;
@@ -616,19 +616,26 @@
     align-self: center !important;
   }
 
-  /* Compact cluster shells — clear gap via parent `gap`, not overlapping margins. */
-  #layout[data-skyroom-column="true"] #ActionsBar > div > div:first-child,
-  #layout[data-skyroom-column="true"] #ActionsBar > div > div:nth-child(2),
-  #layout[data-skyroom-column="true"] #ActionsBar > div > div:last-child {
-    gap: 3px !important;
-    padding: 2px 5px !important;
-    border-radius: 12px !important;
+  /* Flat footer — drop category cluster shells; buttons sit directly on the bar. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar > div > div:first-child,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar > div > div:nth-child(2),
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar > div > div:last-child {
+    gap: 4px !important;
+    padding: 0 !important;
     margin: 0 !important;
     margin-inline-end: 0 !important;
     margin-inline-start: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
     position: relative !important;
     transform: none !important;
     inset: auto !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar > div > div:last-child > div {
+    gap: 4px !important;
   }
 
   /* Inter-cluster spacing comes from parent gap only. */
@@ -668,13 +675,13 @@
     margin-inline: 0 !important;
   }
 
-  /* Center / right clusters — never grow into a neighbour; scroll row if needed. */
+  /* Center / right groups — never grow into a neighbour; scroll row if needed. */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar > div > div:nth-child(2),
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar > div > div:last-child {
     flex: 0 0 auto !important;
     flex-shrink: 0 !important;
     justify-content: center !important;
-    gap: 3px !important;
+    gap: 4px !important;
     isolation: isolate !important;
     max-width: none !important;
   }

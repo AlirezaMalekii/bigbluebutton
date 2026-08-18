@@ -130,6 +130,36 @@ html[data-skyroom="true"] [data-test="aboutModalTitleLabel"] .skyroom-about-link
   text-decoration: underline !important;
 }
 
+/* Meeting details modal — Skyroom mobile header overflow */
+html[data-skyroom="true"] [data-test="skyroomMeetingDetailsModal"] .skyroom-about-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: start;
+  line-height: 1.65;
+}
+
+html[data-skyroom="true"] [data-test="skyroomMeetingDetailsModal"] .skyroom-meeting-details-name,
+html[data-skyroom="true"] [data-test="skyroomMeetingDetailsModal"] .skyroom-meeting-details-description-label {
+  margin: 0 !important;
+  color: var(--skyroom-modal-text, #eef4fb) !important;
+  font-size: 0.92rem !important;
+}
+
+html[data-skyroom="true"] [data-test="skyroomMeetingDetailsModal"] .skyroom-meeting-details-description-body {
+  color: var(--skyroom-modal-text-muted, #c5d0de) !important;
+  font-size: 0.88rem !important;
+  line-height: 1.7 !important;
+}
+
+html[data-skyroom="true"] [data-test="skyroomMeetingDetailsModal"] .skyroom-meeting-details-description-body p {
+  margin: 0 0 0.5rem !important;
+}
+
+html[data-skyroom="true"] [data-test="skyroomMeetingDetailsModal"] .skyroom-meeting-details-description-body p:last-child {
+  margin-bottom: 0 !important;
+}
+
 /* ---------------------------------------------------------------------
    2) Selects
    --------------------------------------------------------------------- */

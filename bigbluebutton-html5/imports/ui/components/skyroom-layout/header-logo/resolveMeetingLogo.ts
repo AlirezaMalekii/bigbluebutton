@@ -4,8 +4,10 @@ import {
   SKYROOM_PLATFORM_LOGO_PATH,
   SKYROOM_PLATFORM_URL,
   SKYROOM_ROOMEET_ICON_PATH,
+  SKYROOM_ROOMEET_LOGO_COMPACT_PATH,
   SKYROOM_ROOMEET_LOGO_PATH,
   SKYROOM_ROOMEET_URL,
+  SKYROOM_PLATFORM_LOGO_COMPACT_PATH,
 } from '/imports/ui/components/skyroom-layout/white-label';
 
 export { getBrandingThemeId };
@@ -25,6 +27,7 @@ type ResolveMeetingLogoArgs = {
   loginUrl?: string;
   darkMode?: boolean;
   preferIcon?: boolean;
+  hideTagline?: boolean;
 };
 
 const getClientBasename = () => (
@@ -57,6 +60,7 @@ export const resolveSkyroomMeetingLogo = ({
   loginUrl = '',
   darkMode = true,
   preferIcon = false,
+  hideTagline = false,
 }: ResolveMeetingLogoArgs): MeetingLogoResolution => {
   const rawCustom = (darkMode && customDarkLogoUrl ? customDarkLogoUrl : customLogoUrl).trim();
   const customSrc = (rawCustom && !isInstallerDefaultLogo(rawCustom)) ? rawCustom : '';
@@ -77,7 +81,9 @@ export const resolveSkyroomMeetingLogo = ({
   if (isRoomeet) {
     // Meeting UI is dark-first; the light lockup (navy wordmark) is unreadable
     // on the dark header if darkMode has not been applied yet.
-    const path = preferIcon ? SKYROOM_ROOMEET_ICON_PATH : SKYROOM_ROOMEET_LOGO_PATH;
+    let path = SKYROOM_ROOMEET_LOGO_PATH;
+    if (preferIcon) path = SKYROOM_ROOMEET_ICON_PATH;
+    else if (hideTagline) path = SKYROOM_ROOMEET_LOGO_COMPACT_PATH;
     return {
       source: 'roomeet',
       src: packagedAsset(path),
@@ -86,9 +92,13 @@ export const resolveSkyroomMeetingLogo = ({
     };
   }
 
+  let safemeetPath = SKYROOM_PLATFORM_LOGO_PATH;
+  if (preferIcon) safemeetPath = SKYROOM_PLATFORM_ICON_PATH;
+  else if (hideTagline) safemeetPath = SKYROOM_PLATFORM_LOGO_COMPACT_PATH;
+
   return {
     source: 'safemeet',
-    src: packagedAsset(preferIcon ? SKYROOM_PLATFORM_ICON_PATH : SKYROOM_PLATFORM_LOGO_PATH),
+    src: packagedAsset(safemeetPath),
     href,
     iconOnly: preferIcon,
   };

@@ -11,7 +11,7 @@ import useChat from '/imports/ui/core/hooks/useChat';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
-import { useIsSharedNotesEnabled } from '/imports/ui/services/features';
+import useSkyroomSharedNotesUiVisible from '../useSkyroomSharedNotesUiVisible';
 import { useLayoutWebcamCount } from '/imports/ui/components/video-provider/hooks';
 import {
   USER_AGGREGATE_COUNT_SUBSCRIPTION,
@@ -90,7 +90,7 @@ const SkyroomMobileZoneTabs: React.FC = () => {
   const presentation = layoutSelectInput((i: Input) => i.presentation);
   const screenShare = layoutSelectInput((i: Input) => i.screenShare);
   const cameraDock = layoutSelectInput((i: Input) => i.cameraDock);
-  const notesEnabled = useIsSharedNotesEnabled();
+  const notesEnabled = useSkyroomSharedNotesUiVisible();
   const { data: meeting } = useMeeting((m: {
     componentsFlags?: { hasBreakoutRoom?: boolean };
     usersPolicies?: { guestPolicy?: string };
