@@ -8,7 +8,10 @@ import {
   setSkyroomNotesFeatureVisible,
   subscribeSkyroomNotesFeatureVisible,
 } from '../notes-panel-state';
-import { broadcastSkyroomNotesFeatureVisible, broadcastSkyroomNotesGlobalOpen } from '../notes-panel-sync/useSkyroomNotesPanelSync';
+import {
+  broadcastSkyroomNotesFeatureVisible,
+  broadcastSkyroomNotesGlobalOpen,
+} from '../notes-panel-sync/useSkyroomNotesPanelSync';
 import { isSkyroomColumnLayout } from '../panel-toggles';
 
 const intlMessages = defineMessages({
@@ -54,6 +57,9 @@ const SkyroomSharedNotesFeatureSetting: React.FC<SkyroomSharedNotesFeatureSettin
     return null;
   }
 
+  const sharedNotesLabel = intl.formatMessage(intlMessages.sharedNotesLabel);
+  const sharedNotesStatus = displaySettingsStatus(featureVisible, true);
+
   return (
     <>
       <Styled.Title>
@@ -64,7 +70,7 @@ const SkyroomSharedNotesFeatureSetting: React.FC<SkyroomSharedNotesFeatureSettin
           <Styled.Col aria-hidden="true">
             <Styled.FormElement>
               <Styled.Label>
-                {intl.formatMessage(intlMessages.sharedNotesLabel)}
+                {sharedNotesLabel}
               </Styled.Label>
             </Styled.FormElement>
           </Styled.Col>
@@ -72,10 +78,11 @@ const SkyroomSharedNotesFeatureSetting: React.FC<SkyroomSharedNotesFeatureSettin
             <Styled.FormElementRight>
               {displaySettingsStatus(featureVisible)}
               <Toggle
+                // @ts-ignore - JS component wrapped by intl does not expose its real props
                 icons={false}
                 checked={featureVisible}
                 onChange={handleToggle}
-                ariaLabel={`${intl.formatMessage(intlMessages.sharedNotesLabel)} - ${displaySettingsStatus(featureVisible, true)}`}
+                ariaLabel={`${sharedNotesLabel} - ${sharedNotesStatus}`}
                 showToggleLabel={showToggleLabel}
                 data-test="skyroomSharedNotesFeatureToggle"
               />

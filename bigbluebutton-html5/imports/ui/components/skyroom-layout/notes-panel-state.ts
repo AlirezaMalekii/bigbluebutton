@@ -47,9 +47,7 @@ export const setSkyroomNotesFeatureVisible = (visible: boolean): void => {
   notifyFeatureListeners();
 };
 
-export const subscribeSkyroomNotesFeatureVisible = (
-  listener: NotesFeatureListener,
-): (() => void) => {
+export const subscribeSkyroomNotesFeatureVisible = (listener: NotesFeatureListener): (() => void) => {
   featureListeners.add(listener);
   listener(skyroomNotesFeatureVisible);
   return () => featureListeners.delete(listener);

@@ -238,7 +238,7 @@ const UserListItem: React.FC<UserListItemProps> = ({
         >
           <Icon iconName="hand" />
         </span>
-      </TooltipContainer>
+      </TooltipContainer>,
     );
   }
   if (privateChatUnread > 0) {
