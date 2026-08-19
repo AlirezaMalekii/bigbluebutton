@@ -31,6 +31,10 @@
     0 1px 0 rgba(255, 255, 255, 0.06) inset !important;
 }
 
+[data-test="connectionStatusModal"]:has(.skyroom-conn-modal[data-speedtest-tab="true"]) {
+  max-height: min(92vh, 720px) !important;
+}
+
 /* Close control */
 [data-test="connectionStatusModal"] > div > div > header:first-of-type {
   position: absolute !important;
@@ -200,7 +204,15 @@
     border-radius: 16px !important;
   }
 
+  [data-test="connectionStatusModal"]:has(.skyroom-conn-modal[data-speedtest-tab="true"]) {
+    max-height: min(94vh, 760px) !important;
+  }
+
   .skyroom-conn-modal {
     padding: 16px !important;
   }
+}
+
+[data-test="connectionStatusModal"] [data-animate="true"] .skyroom-speedtest-needle {
+  transition: x2 160ms linear, y2 160ms linear;
 }

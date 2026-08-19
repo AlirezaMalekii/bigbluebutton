@@ -686,40 +686,53 @@ html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hi
   #layout[data-skyroom-column="true"] #Navbar {
     padding-inline: 10px !important;
     gap: 0 6px !important;
+    /* Talking rail is hidden on this breakpoint; do not clip the lockup icon. */
+    overflow: visible !important;
   }
 
-  /* Mobile header — theme logo replaces panel toggle chips */
+  /* Mobile header — theme logo replaces panel toggle chips.
+     Keep overflow visible: the SafeMeet leaf (and RooMeet heads) sit
+     near the top of the lockup; clipping here cut the icon while the
+     wordmark still looked fine. */
   #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] {
     display: inline-flex !important;
     align-items: center !important;
     flex: 0 0 auto !important;
     min-width: 0 !important;
     max-width: min(42vw, 168px) !important;
-    overflow: hidden !important;
+    overflow: visible !important;
+    padding-block: 2px !important;
+    box-sizing: content-box !important;
   }
 
   #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"] a {
-    height: 28px !important;
+    height: 26px !important;
     max-width: min(42vw, 168px) !important;
+    overflow: visible !important;
+    align-items: center !important;
   }
 
   #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"] img,
   #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"] object {
-    height: 28px !important;
+    height: 26px !important;
+    max-height: 26px !important;
     max-width: min(42vw, 168px) !important;
     min-width: 72px !important;
+    aspect-ratio: auto !important;
     object-fit: contain !important;
-    object-position: center center !important;
+    object-position: left center !important;
+    overflow: visible !important;
   }
 
   #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"][data-logo-source="roomeet"] a {
-    height: 30px !important;
+    height: 28px !important;
     max-width: min(44vw, 176px) !important;
   }
 
   #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"][data-logo-source="roomeet"] img,
   #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"][data-logo-source="roomeet"] object {
-    height: 30px !important;
+    height: 28px !important;
+    max-height: 28px !important;
     max-width: min(44vw, 176px) !important;
     min-width: 96px !important;
   }

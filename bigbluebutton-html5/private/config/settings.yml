@@ -180,6 +180,14 @@ public:
     enableNetworkStats: true
     # Enable the button to allow users to copy network stats to clipboard
     enableCopyNetworkStatsButton: true
+    # Same-origin HTTP speed test against this meeting node (not a public speed-test CDN)
+    enableSpeedTest: true
+    speedTest:
+      pingCount: 10
+      downloadDurationMs: 8000
+      uploadDurationMs: 8000
+      parallelStreams: 4
+      mobileParallelStreams: 3
     # where should client settings be stored? if you run a single BBB server or
     # a cluster with a reverse proxy in front of it, you may set this to 'local'
     # See See https://docs.bigbluebutton.org/administration/cluster-proxy

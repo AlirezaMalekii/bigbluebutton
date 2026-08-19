@@ -101,7 +101,7 @@
   width: auto !important;
   min-width: 84px !important;
   max-width: min(120px, 28vw) !important;
-  aspect-ratio: 1832 / 448 !important;
+  aspect-ratio: auto !important;
   object-fit: contain !important;
   object-position: left center !important;
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.28)) !important;
@@ -221,13 +221,14 @@
   gap: 5px !important;
 }
 
-/* Presenter "+" — no cluster shell; sits tight against the media group. */
+/* Presenter "+" — no cluster shell; keep a button-sized gap from the
+   background-music chip when that control is visible. */
 #layout[data-skyroom-column="true"] #ActionsBar > div > div:first-child:has([data-test="actionsButton"]) {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
-  gap: 0 !important;
+  gap: 6px !important;
   margin-inline-end: 10px !important;
 }
 

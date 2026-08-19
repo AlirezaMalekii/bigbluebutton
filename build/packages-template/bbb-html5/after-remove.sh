@@ -26,6 +26,11 @@ case "$1" in
       rm -rf /usr/share/bigbluebutton/html5-client
       log "Removed directory /usr/share/bigbluebutton/html5-client"
     fi
+
+    if [ -d /var/bigbluebutton/speedtest ]; then
+      rm -rf /var/bigbluebutton/speedtest
+      log "Removed directory /var/bigbluebutton/speedtest"
+    fi
   ;;
   upgrade)
     log "Upgrade argument received. No action taken."

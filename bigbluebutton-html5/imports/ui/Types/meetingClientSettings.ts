@@ -90,6 +90,8 @@ export interface App {
   emojiRain: EmojiRain
   enableNetworkStats: boolean
   enableCopyNetworkStatsButton: boolean
+  enableSpeedTest: boolean
+  speedTest: SpeedTestSettings
   userSettingsStorage: 'local' | 'session'
   defaultSettings: DefaultSettings
   shortcuts: Shortcuts
@@ -102,6 +104,14 @@ export interface App {
   terminateAndRetryConnection: number
   timeoutBeforeRedirectOnMeetingEnd: number | null
   showConnectionErrors: number[]
+}
+
+export interface SpeedTestSettings {
+  pingCount: number
+  downloadDurationMs: number
+  uploadDurationMs: number
+  parallelStreams: number
+  mobileParallelStreams: number
 }
 
 export interface BbbTabletApp {

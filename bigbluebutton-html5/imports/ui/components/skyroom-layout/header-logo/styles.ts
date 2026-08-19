@@ -12,6 +12,7 @@ const PlatformWrap = styled.div`
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
+  overflow: visible;
 `;
 
 const PlatformLink = styled.a<{ $iconOnly?: boolean }>`
@@ -24,6 +25,7 @@ const PlatformLink = styled.a<{ $iconOnly?: boolean }>`
   border: none;
   background: transparent;
   box-sizing: border-box;
+  overflow: visible;
   text-decoration: none;
   cursor: pointer;
   transition: opacity 0.18s ease;

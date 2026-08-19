@@ -1,0 +1,37 @@
+# SafeMeet meeting-server speed test (same origin as /html5client).
+# Exact / prefix-priority locations so the static html5 alias does not capture them.
+# Payload is created once by bbb-html5 after-install at /var/bigbluebutton/speedtest/payload.bin
+
+location = /html5client/speedtest/ping {
+    gzip off;
+    default_type text/plain;
+    add_header Cache-Control "no-store, no-cache, must-revalidate";
+    add_header Pragma "no-cache";
+    return 204;
+}
+
+location = /html5client/speedtest/upload {
+    gzip off;
+    client_max_body_size 64m;
+    client_body_buffer_size 64k;
+    client_body_timeout 15s;
+    lingering_close on;
+    default_type text/plain;
+    add_header Cache-Control "no-store, no-cache, must-revalidate";
+    add_header Pragma "no-cache";
+    return 204;
+}
+
+location = /html5client/speedtest/download {
+    gzip off;
+    gzip_static off;
+    etag off;
+    if_modified_since off;
+    expires -1;
+    add_header Cache-Control "no-store, no-cache, must-revalidate";
+    add_header Pragma "no-cache";
+    add_header Content-Type "application/octet-stream";
+    add_header X-Content-Type-Options "nosniff";
+    default_type application/octet-stream;
+    alias /var/bigbluebutton/speedtest/payload.bin;
+}

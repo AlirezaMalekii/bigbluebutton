@@ -43,6 +43,19 @@ fi
 chown root:root /usr/lib/systemd/system
 
 chmod go+r $BBB_HTML5_SETTINGS_FILE
+
+# Incompressible payload for the same-origin speed test (created once).
+SPEEDTEST_DIR=/var/bigbluebutton/speedtest
+SPEEDTEST_PAYLOAD=$SPEEDTEST_DIR/payload.bin
+SPEEDTEST_BYTES=16777216
+mkdir -p "$SPEEDTEST_DIR"
+CURRENT_SIZE=$(stat -c%s "$SPEEDTEST_PAYLOAD" 2>/dev/null || echo 0)
+if [ ! -f "$SPEEDTEST_PAYLOAD" ] || [ "$CURRENT_SIZE" -lt "$SPEEDTEST_BYTES" ]; then
+  dd if=/dev/urandom of="$SPEEDTEST_PAYLOAD" bs=1M count=16 status=none 2>/dev/null \
+    || dd if=/dev/urandom of="$SPEEDTEST_PAYLOAD" bs=1M count=16
+  chmod 644 "$SPEEDTEST_PAYLOAD"
+fi
+
 #
 # Restart nginx to take advantage of the updates to nginx configuration
 #

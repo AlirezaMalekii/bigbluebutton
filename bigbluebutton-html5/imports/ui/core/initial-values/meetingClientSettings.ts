@@ -109,6 +109,14 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
       },
       enableNetworkStats: true,
       enableCopyNetworkStatsButton: true,
+      enableSpeedTest: true,
+      speedTest: {
+        pingCount: 10,
+        downloadDurationMs: 8000,
+        uploadDurationMs: 8000,
+        parallelStreams: 4,
+        mobileParallelStreams: 3,
+      },
       userSettingsStorage: 'session',
       defaultSettings: {
         application: {

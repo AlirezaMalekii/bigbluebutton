@@ -617,6 +617,243 @@ const EmptySubtitle = styled.div`
   max-width: 280px;
 `;
 
+const SpeedTestRoot = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 100%;
+  padding-bottom: 4px;
+`;
+
+const SpeedTestServer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(218, 230, 245, 0.08);
+`;
+
+const SpeedTestServerLabel = styled.span`
+  font-size: 0.75rem;
+  color: var(--skyroom-text-secondary, #8d9aad);
+  flex-shrink: 0;
+`;
+
+const SpeedTestServerHost = styled.span`
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--skyroom-text-primary, #eef4fb);
+  direction: ltr;
+  unicode-bidi: isolate;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+`;
+
+const GaugeWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 0 0;
+`;
+
+const GaugeSvg = styled.svg`
+  width: min(100%, 280px);
+  height: auto;
+  overflow: visible;
+
+  @media (max-width: 560px) {
+    width: min(100%, 228px);
+  }
+`;
+
+const GaugeReadout = styled.div`
+  margin-top: -42px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+`;
+
+const GaugeValue = styled.div`
+  font-size: 2.15rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #fff;
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-variant-numeric: tabular-nums;
+
+  @media (max-width: 560px) {
+    font-size: 1.85rem;
+  }
+`;
+
+const GaugeUnit = styled.div`
+  margin-top: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--skyroom-brand-400, #14a99e);
+  direction: ltr;
+  unicode-bidi: isolate;
+`;
+
+const GaugePhase = styled.p`
+  margin: 10px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--skyroom-text-secondary, #8d9aad);
+  text-align: center;
+`;
+
+const SpeedMetricGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+`;
+
+const SpeedMetricCard = styled.div<{ $tone?: 'download' | 'upload' | 'neutral' }>`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(218, 230, 245, 0.08);
+
+  ${({ $tone }) => $tone === 'download' && `
+    border-color: rgba(32, 199, 187, 0.22);
+    background: linear-gradient(160deg, rgba(32, 199, 187, 0.1), rgba(255, 255, 255, 0.03));
+  `}
+
+  ${({ $tone }) => $tone === 'upload' && `
+    border-color: rgba(91, 141, 239, 0.22);
+    background: linear-gradient(160deg, rgba(91, 141, 239, 0.1), rgba(255, 255, 255, 0.03));
+  `}
+`;
+
+const SpeedMetricLabel = styled.span`
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--skyroom-text-secondary, #8d9aad);
+`;
+
+const SpeedMetricValue = styled.span`
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--skyroom-text-primary, #eef4fb);
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-variant-numeric: tabular-nums;
+`;
+
+const SpeedMetricUnit = styled.span`
+  margin-inline-start: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--skyroom-text-secondary, #8d9aad);
+`;
+
+const SpeedTestVerdict = styled.div`
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--skyroom-text-primary, #eef4fb);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(218, 230, 245, 0.08);
+
+  &[data-level="excellent"] {
+    border-color: rgba(46, 204, 113, 0.28);
+    background: rgba(46, 204, 113, 0.1);
+  }
+
+  &[data-level="good"] {
+    border-color: rgba(32, 199, 187, 0.28);
+    background: rgba(32, 199, 187, 0.1);
+  }
+
+  &[data-level="fair"] {
+    border-color: rgba(240, 180, 41, 0.3);
+    background: rgba(240, 180, 41, 0.1);
+  }
+
+  &[data-level="poor"] {
+    border-color: rgba(223, 39, 33, 0.32);
+    background: rgba(223, 39, 33, 0.1);
+  }
+`;
+
+const SpeedTestWarning = styled.p`
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--skyroom-text-muted, #8b95a5);
+`;
+
+const SpeedTestError = styled.p`
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--skyroom-text-primary, #eef4fb);
+  background: rgba(223, 39, 33, 0.1);
+  border: 1px solid rgba(223, 39, 33, 0.28);
+`;
+
+const SpeedTestActions = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+`;
+
+const SpeedTestButton = styled.button<{ $secondary?: boolean }>`
+  flex: 1;
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(32, 199, 187, 0.35);
+  background: linear-gradient(135deg, rgba(32, 199, 187, 0.88), rgba(13, 136, 126, 0.92));
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 140ms ease, background 140ms ease, border-color 140ms ease;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.06);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--skyroom-accent, #20c7bb);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  ${({ $secondary }) => $secondary && `
+    flex: 0 0 auto;
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(218, 230, 245, 0.14);
+    color: var(--skyroom-text-primary, #eef4fb);
+
+    &:hover:not(:disabled) {
+      filter: none;
+      background: rgba(255, 255, 255, 0.1);
+    }
+  `}
+`;
+
 export default {
   Shell,
   TopBar,
@@ -662,4 +899,24 @@ export default {
   EmptyIcon,
   EmptyTitle,
   EmptySubtitle,
+  SpeedTestRoot,
+  SpeedTestServer,
+  SpeedTestServerLabel,
+  SpeedTestServerHost,
+  GaugeWrap,
+  GaugeSvg,
+  GaugeReadout,
+  GaugeValue,
+  GaugeUnit,
+  GaugePhase,
+  SpeedMetricGrid,
+  SpeedMetricCard,
+  SpeedMetricLabel,
+  SpeedMetricValue,
+  SpeedMetricUnit,
+  SpeedTestVerdict,
+  SpeedTestWarning,
+  SpeedTestError,
+  SpeedTestActions,
+  SpeedTestButton,
 };

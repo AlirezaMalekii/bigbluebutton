@@ -40,6 +40,24 @@ export const SessionLogsTabIcon: React.FC<IconProps> = ({ className }) => (
   </svg>
 );
 
+export const SpeedTestTabIcon: React.FC<IconProps> = ({ className }) => (
+  <svg className={className} viewBox="0 0 20 20" fill="none" aria-hidden>
+    <path
+      d="M4.2 14.2a7 7 0 1111.6 0"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+    />
+    <path
+      d="M10 13.2l3.2-4.4"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+    />
+    <circle cx="10" cy="13.2" r="1.15" fill="currentColor" />
+  </svg>
+);
+
 export const UploadIcon: React.FC<IconProps> = ({ className }) => (
   <svg className={className} viewBox="0 0 16 16" fill="none" aria-hidden>
     <path

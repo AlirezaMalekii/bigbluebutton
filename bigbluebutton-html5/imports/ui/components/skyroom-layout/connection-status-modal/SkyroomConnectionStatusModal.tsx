@@ -6,11 +6,13 @@ import Icon from '/imports/ui/components/connection-status/icon/component';
 import Auth from '/imports/ui/services/auth';
 import connectionStatus from '/imports/ui/core/graphql/singletons/connectionStatus';
 import SkyroomConnectionStatusHero from './SkyroomConnectionStatusHero';
+import SkyroomSpeedTestTab from './SkyroomSpeedTestTab';
 import Styled from './styles';
 import {
   StatsTabIcon,
   MyLogsTabIcon,
   SessionLogsTabIcon,
+  SpeedTestTabIcon,
   UploadIcon,
   DownloadIcon,
   AudioIcon,
@@ -40,6 +42,10 @@ const intlMessages = defineMessages({
   sessionLogs: {
     id: 'app.connection-status.sessionLogs',
     description: 'Label for Session Logs tab',
+  },
+  speedTest: {
+    id: 'app.skyroom.speedTest.tab',
+    description: 'Label for Speed test tab',
   },
   empty: {
     id: 'app.connection-status.empty',
@@ -202,23 +208,39 @@ const SkyroomConnectionStatusModal: React.FC<SkyroomConnectionStatusModalProps> 
   onCopyNetworkData,
   setModalIsOpen,
 }) => {
+  const enableSpeedTest = window.meetingClientSettings?.public?.app?.enableSpeedTest !== false;
   const tabs = [
     {
       id: 'stats',
       label: intl.formatMessage(intlMessages.connectionStats),
       icon: StatsTabIcon,
+      spanId: 'connection-status-tab',
+      testId: 'connectionStatusTab',
     },
+    ...(enableSpeedTest ? [{
+      id: 'speed-test',
+      label: intl.formatMessage(intlMessages.speedTest),
+      icon: SpeedTestTabIcon,
+      spanId: 'speed-test-tab',
+      testId: 'speedTestTab',
+    }] : []),
     {
       id: 'my-logs',
       label: intl.formatMessage(intlMessages.myLogs),
       icon: MyLogsTabIcon,
+      spanId: 'my-logs-tab',
+      testId: 'myLogsTab',
     },
     ...(amIModerator ? [{
       id: 'session-logs',
       label: intl.formatMessage(intlMessages.sessionLogs),
       icon: SessionLogsTabIcon,
+      spanId: 'session-logs-tab',
+      testId: 'sessionLogsTab',
     }] : []),
   ];
+  const speedTestTabIndex = enableSpeedTest ? 1 : -1;
+  const myLogsTabIndex = enableSpeedTest ? 2 : 1;
 
   const renderEmpty = () => (
     <Styled.EmptyState data-test="connectionStatusItemEmpty">
@@ -235,8 +257,8 @@ const SkyroomConnectionStatusModal: React.FC<SkyroomConnectionStatusModalProps> 
   );
 
   const getConnectionsForTab = (): ConnectionEntry[] => {
-    if (selectedTab === 0) return [];
-    if (selectedTab === 1) {
+    if (selectedTab === 0 || selectedTab === speedTestTabIndex) return [];
+    if (selectedTab === myLogsTabIndex) {
       let connections = connectionData.filter((c) => c.user.userId === Auth.userID);
       if (isConnectionStatusEmpty(connections)) {
         connections = connectionStatus.getUserNetworkHistory() as unknown as ConnectionEntry[];
@@ -474,6 +496,7 @@ const SkyroomConnectionStatusModal: React.FC<SkyroomConnectionStatusModalProps> 
 
   const renderPanelContent = () => {
     if (selectedTab === 0) return renderStatsPanel();
+    if (selectedTab === speedTestTabIndex) return <SkyroomSpeedTestTab />;
     return (
       <Styled.PanelScroll>
         {renderLogEntries()}
@@ -482,7 +505,10 @@ const SkyroomConnectionStatusModal: React.FC<SkyroomConnectionStatusModalProps> 
   };
 
   return (
-    <Styled.Shell className="skyroom-conn-modal">
+    <Styled.Shell
+      className="skyroom-conn-modal"
+      data-speedtest-tab={selectedTab === speedTestTabIndex ? 'true' : 'false'}
+    >
       <Styled.TopBar className="skyroom-conn-modal__topbar">
         <Styled.TopBarIcon aria-hidden>
           <NetworkIcon />
@@ -507,10 +533,12 @@ const SkyroomConnectionStatusModal: React.FC<SkyroomConnectionStatusModalProps> 
                 type="button"
                 $active={selectedTab === index}
                 aria-selected={selectedTab === index}
+                aria-label={tab.label}
+                data-test={tab.testId}
                 onClick={() => onSelectTab(index)}
               >
                 <TabIcon />
-                <span>{tab.label}</span>
+                <span id={tab.spanId}>{tab.label}</span>
               </Styled.NavButton>
             );
           })}
