@@ -52,7 +52,9 @@ const isInstallerDefaultLogo = (url: string) => (
  * 2. else `--theme-id roomeet` uses the packaged RooMeet dark lockup
  * 3. else the packaged SafeMeet lockup
  *
- * `--logo-link-url` always wins for the click target.
+ * Click target: per-meeting loginURL (panel logo_link) wins; server-wide
+ * logoLinkUrl applies only to the default platform logo; custom logo with
+ * no meeting link stays non-clickable.
  */
 export const resolveSkyroomMeetingLogo = ({
   customLogoUrl = '',
@@ -64,10 +66,12 @@ export const resolveSkyroomMeetingLogo = ({
 }: ResolveMeetingLogoArgs): MeetingLogoResolution => {
   const rawCustom = (darkMode && customDarkLogoUrl ? customDarkLogoUrl : customLogoUrl).trim();
   const customSrc = (rawCustom && !isInstallerDefaultLogo(rawCustom)) ? rawCustom : '';
-  const logoLinkUrl = getConfiguredLogoLinkUrl();
+  const meetingLoginUrl = loginUrl.trim();
+  const globalLogoLinkUrl = getConfiguredLogoLinkUrl();
   const isRoomeet = getBrandingThemeId() === 'roomeet';
   const packagedHref = isRoomeet ? SKYROOM_ROOMEET_URL : SKYROOM_PLATFORM_URL;
-  const href = logoLinkUrl || (customSrc ? loginUrl.trim() : '') || packagedHref;
+  const href = meetingLoginUrl
+    || (!customSrc ? (globalLogoLinkUrl || packagedHref) : '');
 
   if (customSrc) {
     return {

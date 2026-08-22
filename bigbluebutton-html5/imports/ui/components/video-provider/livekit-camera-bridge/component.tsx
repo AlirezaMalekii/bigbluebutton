@@ -26,6 +26,7 @@ import BBBVideoStream from '/imports/ui/services/webrtc-base/bbb-video-stream';
 import { VideoItem } from '/imports/ui/components/video-provider/types';
 import { Output } from '/imports/ui/components/layout/layoutTypes';
 import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
+import { VideoPlaybackState } from '/imports/ui/components/video-provider/video-playback-utils';
 import {
   lkIsCameraSource,
   liveKitRoom,
@@ -598,6 +599,18 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
     delete bridgeRefs.current.videoTags[stream];
   }, []);
 
+  const handleVideoPlaybackStateChange = useCallback((stream: string, state: VideoPlaybackState) => {
+    if (state === 'playing' || document.visibilityState === 'hidden') return;
+
+    const videoElement = bridgeRefs.current.videoTags[stream];
+    if (!videoElement) return;
+
+    if (!VideoService.isLocalStream(stream)) {
+      bridgeRefs.current.remoteTracks[stream]?.detach(videoElement);
+    }
+    attachLiveKitStream(stream);
+  }, []);
+
   const startVirtualBackgroundByDrop = useCallback(async (
     stream: string,
     backgroundType: string,
@@ -648,6 +661,7 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
       isGridEnabled={isGridEnabled}
       onVideoItemMount={createVideoTag}
       onVideoItemUnmount={destroyVideoTag}
+      onVideoPlaybackStateChange={handleVideoPlaybackStateChange}
       onVirtualBgDrop={startVirtualBackgroundByDrop}
       overflowCount={overflowCount}
     />

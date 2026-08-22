@@ -9,6 +9,7 @@ import UserStatus from '/imports/ui/components/video-provider/video-list/video-l
 import PinArea from '/imports/ui/components/video-provider/video-list/video-list-item/pin-area/component';
 import UserAvatarVideo from '/imports/ui/components/video-provider/video-list/video-list-item/user-avatar/component';
 import {
+  isStreamStateHealthy,
   isStreamStateUnhealthy,
   subscribeToStreamStateChange,
   unsubscribeFromStreamStateChange,
@@ -30,6 +31,11 @@ import {
   isSkyroomMobileViewport,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import { dispatchSkyroomLayoutResize } from '/imports/ui/components/skyroom-layout/layout-resize';
+import {
+  videoHasRenderableFrame,
+  VideoPlaybackState,
+  VIDEO_PLAYBACK_STALL_GRACE_MS,
+} from '/imports/ui/components/video-provider/video-playback-utils';
 
 const intlMessages = defineMessages({
   disableDesc: {
@@ -39,16 +45,6 @@ const intlMessages = defineMessages({
 
 const VIDEO_CONTAINER_WIDTH_BOUND = 125;
 const VIDEO_CONTAINER_PLUGIN_HELPERS_WIDTH_BOUND = 175;
-
-const mediaStreamHasLiveVideo = (el: HTMLVideoElement | null) => {
-  const mediaStream = el?.srcObject;
-  return mediaStream instanceof MediaStream
-    && mediaStream.getVideoTracks().some((track) => track.readyState === 'live');
-};
-
-const videoHasRenderableFrame = (el: HTMLVideoElement | null) => (
-  Boolean(el && (el.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA || el.videoWidth > 0))
-);
 
 interface VideoListItemProps {
   pluginUserCameraHelperPerPosition: UserCameraHelperAreas;
@@ -66,6 +62,7 @@ interface VideoListItemProps {
   onHandleVideoFocus: ((id: string) => void) | null;
   onVideoItemMount: (ref: HTMLVideoElement) => void;
   onVideoItemUnmount: (stream: string) => void;
+  onVideoPlaybackStateChange: (state: VideoPlaybackState) => void;
   settingsSelfViewDisable: boolean;
   stream: VideoItem;
   makeDragOperations: (userId?: string) => {
@@ -136,6 +133,7 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
   const {
     name, voiceUser, isFullscreenContext, layoutContextDispatch, onHandleVideoFocus,
     cameraId, numOfStreams, focused, onVideoItemMount, onVideoItemUnmount,
+    onVideoPlaybackStateChange,
     makeDragOperations, dragging, draggingOver, isRTL, isStream, settingsSelfViewDisable,
     disabledCams, amIModerator, stream, setUserCamerasRequestedFromPlugin,
     pluginUserCameraHelperPerPosition, raisedHandPosition,
@@ -143,7 +141,7 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
 
   const intl = useIntl();
 
-  const [videoDataLoaded, setVideoDataLoaded] = useState(false);
+  const [playbackState, setPlaybackState] = useState<VideoPlaybackState>('waiting');
   const [isStreamHealthy, setIsStreamHealthy] = useState(false);
   const [isMirrored, setIsMirrored] = useState<boolean>(VideoService.mirrorOwnWebcam(stream.userId));
   const [isVideoSqueezed, setIsVideoSqueezed] = useState(false);
@@ -169,6 +167,10 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
   const videoContainer = useRef<HTMLDivElement | null>(null);
   const webcamMenuRef = useRef<HTMLDivElement | null>(null);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const playbackInterruptTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const videoFrameCallbackRef = useRef<number | null>(null);
+  const playbackStateRef = useRef<VideoPlaybackState>('waiting');
+  const playbackDisabledRef = useRef(false);
 
   useEffect(() => {
     setUserCamerasRequestedFromPlugin((userCamera) => {
@@ -182,6 +184,7 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
     });
   }, [videoContainer]);
 
+  const videoDataLoaded = playbackState === 'playing';
   const videoIsReady = isStreamHealthy && videoDataLoaded && !isSelfViewDisabled;
   const Settings = getSettingsSingletonInstance();
   const { animations, webcamBorderHighlightColor } = Settings.application;
@@ -232,23 +235,31 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
 
   const onStreamStateChange = (e: CustomEvent) => {
     const { streamState } = e.detail;
-    const newHealthState = !isStreamStateUnhealthy(streamState);
     e.stopPropagation();
-    setIsStreamHealthy(newHealthState);
+
+    if (isStreamStateHealthy(streamState)) {
+      setIsStreamHealthy(true);
+    } else if (isStreamStateUnhealthy(streamState)) {
+      setIsStreamHealthy(false);
+    }
   };
 
-  const onLoadedData = () => {
-    setVideoDataLoaded(true);
-    // Mobile Skyroom uses fixed zone bounds; avoid resize storms that freeze phones.
-    if (!isSkyroomMobileViewport() || !isSkyroomColumnLayout()) {
-      dispatchSkyroomLayoutResize();
-    }
+  const reportPlaybackState = (state: VideoPlaybackState) => {
+    if (playbackStateRef.current === state) return;
+    playbackStateRef.current = state;
+    setPlaybackState(state);
+    onVideoPlaybackStateChange(state);
+  };
 
-    /* used when re-sharing cameras after leaving a breakout room.
-    it is needed in cases where the user has more than one active camera
-    so we only share the second camera after the first
-    has finished loading (can't share more than one at the same time) */
-    Session.setItem('canConnect', true);
+  const playElement = (elem: HTMLVideoElement) => {
+    if (elem.paused) {
+      elem.play().catch((error) => {
+        if (error.name === 'NotAllowedError') {
+          const tagFailedEvent = new CustomEvent('videoPlayFailed', { detail: { mediaElement: elem } });
+          window.dispatchEvent(tagFailedEvent);
+        }
+      });
+    }
   };
 
   // Attach listeners before srcObject so a local MediaStream that already has
@@ -256,19 +267,152 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
   useEffect(() => {
     const isAudioOnly = stream.type === VIDEO_TYPES.AUDIO_ONLY;
     const videoEl = videoTag.current;
+    let lastObservedCurrentTime = videoEl?.currentTime || 0;
+
+    const clearPlaybackInterruptTimeout = () => {
+      if (playbackInterruptTimeoutRef.current) {
+        clearTimeout(playbackInterruptTimeoutRef.current);
+        playbackInterruptTimeoutRef.current = null;
+      }
+    };
+
+    const clearVideoFrameCallback = () => {
+      if (videoEl && videoFrameCallbackRef.current != null
+        && typeof videoEl.cancelVideoFrameCallback === 'function') {
+        videoEl.cancelVideoFrameCallback(videoFrameCallbackRef.current);
+      }
+      videoFrameCallbackRef.current = null;
+    };
+
+    // A decoded frame is not a permanent health signal. Browsers may keep the
+    // MediaStream live while frames silently stop (notably after mobile
+    // backgrounding or an SFU subscriber hiccup), so every real frame rearms
+    // this bounded liveness check.
+    const armPlaybackLivenessTimeout = () => {
+      clearPlaybackInterruptTimeout();
+      playbackInterruptTimeoutRef.current = setTimeout(() => {
+        playbackInterruptTimeoutRef.current = null;
+        if (document.visibilityState === 'hidden' || !document.hasFocus() || playbackDisabledRef.current) {
+          armPlaybackLivenessTimeout();
+          return;
+        }
+
+        // requestVideoFrameCallback can be throttled in a background browser
+        // tab even while MediaStream playback is healthy. currentTime is the
+        // compatible secondary signal and prevents destructive reconnect
+        // churn when frames are still progressing.
+        if (videoEl && !videoEl.paused && videoHasRenderableFrame(videoEl)
+          && videoEl.currentTime > lastObservedCurrentTime) {
+          lastObservedCurrentTime = videoEl.currentTime;
+          reportPlaybackState('playing');
+          armPlaybackLivenessTimeout();
+          return;
+        }
+
+        reportPlaybackState('stalled');
+      }, VIDEO_PLAYBACK_STALL_GRACE_MS);
+    };
+
+    const markDecodedFrame = () => {
+      if (!videoHasRenderableFrame(videoEl)) return;
+      clearVideoFrameCallback();
+      lastObservedCurrentTime = videoEl?.currentTime || lastObservedCurrentTime;
+      const wasPlaying = playbackStateRef.current === 'playing';
+      // A decoded frame is stronger evidence than a connection-state event and
+      // also covers the race where that event fired before this tile mounted.
+      setIsStreamHealthy(true);
+      reportPlaybackState('playing');
+      armPlaybackLivenessTimeout();
+
+      if (!wasPlaying) {
+        // Mobile Skyroom uses fixed zone bounds; avoid resize storms that freeze phones.
+        if (!isSkyroomMobileViewport() || !isSkyroomColumnLayout()) {
+          dispatchSkyroomLayoutResize();
+        }
+
+        /* Used when re-sharing cameras after leaving a breakout room. It is
+        needed when the user has multiple active cameras so the second share
+        starts only after the first has decoded a real frame. */
+        Session.setItem('canConnect', true);
+      }
+    };
+
+    const confirmDecodedFrame = () => {
+      if (!videoEl) return;
+      clearVideoFrameCallback();
+
+      if (typeof videoEl.requestVideoFrameCallback === 'function') {
+        videoFrameCallbackRef.current = videoEl.requestVideoFrameCallback(() => {
+          videoFrameCallbackRef.current = null;
+          markDecodedFrame();
+        });
+      } else {
+        markDecodedFrame();
+      }
+    };
+
+    const onLoadedMetadata = () => {
+      if (videoEl && !playbackDisabledRef.current) playElement(videoEl);
+    };
+
+    const onPlaybackCandidate = () => {
+      confirmDecodedFrame();
+    };
+
+    const onPlaybackInterrupted = () => {
+      if (!videoEl || document.visibilityState === 'hidden' || !document.hasFocus()
+        || playbackDisabledRef.current) return;
+      clearPlaybackInterruptTimeout();
+      const previousTime = videoEl.currentTime;
+      playbackInterruptTimeoutRef.current = setTimeout(() => {
+        playbackInterruptTimeoutRef.current = null;
+        if (document.visibilityState === 'hidden' || !document.hasFocus()
+          || playbackDisabledRef.current) return;
+
+        if (!videoEl.paused && videoEl.currentTime > previousTime) {
+          confirmDecodedFrame();
+        } else {
+          reportPlaybackState('stalled');
+        }
+      }, VIDEO_PLAYBACK_STALL_GRACE_MS);
+    };
+
+    const onPlaybackEnded = () => {
+      clearPlaybackInterruptTimeout();
+      clearVideoFrameCallback();
+      playbackInterruptTimeoutRef.current = setTimeout(() => {
+        playbackInterruptTimeoutRef.current = null;
+        if (document.visibilityState !== 'hidden' && document.hasFocus()
+          && !playbackDisabledRef.current) reportPlaybackState('ended');
+      }, VIDEO_PLAYBACK_STALL_GRACE_MS);
+    };
+
+    const resumePlayback = () => {
+      if (!videoEl || document.visibilityState === 'hidden' || !document.hasFocus()
+        || playbackDisabledRef.current) return;
+      reportPlaybackState('waiting');
+      onVideoItemMount(videoEl);
+      playElement(videoEl);
+      confirmDecodedFrame();
+    };
 
     if (!isAudioOnly && videoEl) {
       subscribeToStreamStateChange(cameraId, onStreamStateChange);
-      videoEl.addEventListener('loadeddata', onLoadedData);
-      videoEl.addEventListener('loadedmetadata', onLoadedData);
-      videoEl.addEventListener('playing', onLoadedData);
+      videoEl.addEventListener('loadeddata', onPlaybackCandidate);
+      videoEl.addEventListener('loadedmetadata', onLoadedMetadata);
+      videoEl.addEventListener('canplay', onPlaybackCandidate);
+      videoEl.addEventListener('playing', onPlaybackCandidate);
+      videoEl.addEventListener('timeupdate', onPlaybackCandidate);
+      videoEl.addEventListener('waiting', onPlaybackInterrupted);
+      videoEl.addEventListener('stalled', onPlaybackInterrupted);
+      videoEl.addEventListener('emptied', onPlaybackInterrupted);
+      videoEl.addEventListener('ended', onPlaybackEnded);
+      document.addEventListener('visibilitychange', resumePlayback);
+      window.addEventListener('focus', resumePlayback);
+      window.addEventListener('pageshow', resumePlayback);
+      onVideoPlaybackStateChange('waiting');
       onVideoItemMount(videoEl);
-      if (videoHasRenderableFrame(videoEl) || mediaStreamHasLiveVideo(videoEl)) {
-        onLoadedData();
-      }
-      if (mediaStreamHasLiveVideo(videoEl)) {
-        setIsStreamHealthy(true);
-      }
+      confirmDecodedFrame();
     }
 
     if (videoContainer.current) {
@@ -278,45 +422,40 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
 
     return () => {
       if (!isAudioOnly && videoEl) {
-        videoEl.removeEventListener('loadeddata', onLoadedData);
-        videoEl.removeEventListener('loadedmetadata', onLoadedData);
-        videoEl.removeEventListener('playing', onLoadedData);
+        unsubscribeFromStreamStateChange(cameraId, onStreamStateChange);
+        videoEl.removeEventListener('loadeddata', onPlaybackCandidate);
+        videoEl.removeEventListener('loadedmetadata', onLoadedMetadata);
+        videoEl.removeEventListener('canplay', onPlaybackCandidate);
+        videoEl.removeEventListener('playing', onPlaybackCandidate);
+        videoEl.removeEventListener('timeupdate', onPlaybackCandidate);
+        videoEl.removeEventListener('waiting', onPlaybackInterrupted);
+        videoEl.removeEventListener('stalled', onPlaybackInterrupted);
+        videoEl.removeEventListener('emptied', onPlaybackInterrupted);
+        videoEl.removeEventListener('ended', onPlaybackEnded);
+        document.removeEventListener('visibilitychange', resumePlayback);
+        window.removeEventListener('focus', resumePlayback);
+        window.removeEventListener('pageshow', resumePlayback);
+        clearPlaybackInterruptTimeout();
+        clearVideoFrameCallback();
+        onVideoItemUnmount(cameraId);
       }
       pluginSqueezedResizeObserver.disconnect();
       resizeObserver.disconnect();
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     };
   }, []);
 
-  // component will mount
+  playbackDisabledRef.current = (isSelfViewDisabled && stream.userId === Auth.userID)
+    || disabledCams?.includes(cameraId);
+
   useEffect(() => {
-    const playElement = (elem: HTMLVideoElement) => {
-      if (elem.paused) {
-        elem.play().catch((error) => {
-          // NotAllowedError equals autoplay issues, fire autoplay handling event
-          if (error.name === 'NotAllowedError') {
-            const tagFailedEvent = new CustomEvent('videoPlayFailed', { detail: { mediaElement: elem } });
-            window.dispatchEvent(tagFailedEvent);
-          }
-        });
-      }
-    };
-    if (!isSelfViewDisabled && videoDataLoaded) {
+    if (!playbackDisabledRef.current && videoTag.current?.srcObject) {
       playElement(videoTag.current!);
     }
-    if ((isSelfViewDisabled && stream.userId === Auth.userID) || disabledCams?.includes(cameraId)) {
+    if (playbackDisabledRef.current) {
       videoTag.current?.pause?.();
     }
-  }, [isSelfViewDisabled, videoDataLoaded]);
-
-  // component will unmount
-  useEffect(() => () => {
-    const isAudioOnly = stream.type === VIDEO_TYPES.AUDIO_ONLY;
-    if (!isAudioOnly) {
-      unsubscribeFromStreamStateChange(cameraId, onStreamStateChange);
-      onVideoItemUnmount(cameraId);
-    }
-    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-  }, []);
+  }, [isSelfViewDisabled, disabledCams, playbackState]);
 
   useEffect(() => {
     setIsSelfViewDisabled(settingsSelfViewDisable);

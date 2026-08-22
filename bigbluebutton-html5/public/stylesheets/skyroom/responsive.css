@@ -3549,7 +3549,7 @@
     overflow: visible !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock {
     border-radius: 14px !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
@@ -3571,14 +3571,60 @@
     contain: none !important;
   }
 
+  /* SafeMeet's active camera tiles are portalled into the stage dock. Keep
+     #cameraDock as the BBB host/test contract, but make the portal the actual
+     scroll container for the mobile 2-column grid. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #skyroom-stage-webcam-dock {
+    border-radius: 14px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior: contain !important;
+    align-items: flex-start !important;
+    justify-content: stretch !important;
+    box-sizing: border-box !important;
+    contain: none !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #skyroom-stage-webcam-dock .skyroom-stage-webcam-list {
+    width: 100% !important;
+    max-height: none !important;
+    align-self: flex-start !important;
+    align-content: start !important;
+    justify-content: stretch !important;
+    justify-items: stretch !important;
+    /* JS supplies exact 1/2-column pixel tracks; this is only a first-render fallback. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px !important;
+    box-sizing: border-box !important;
+    padding: 2px !important;
+    flex-shrink: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #skyroom-stage-webcam-dock .skyroom-webcam-zone-drag,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #skyroom-stage-webcam-dock [data-test="webcamVideoItem"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    max-height: none !important;
+    align-self: stretch !important;
+    aspect-ratio: unset !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #skyroom-stage-webcam-dock [data-test="webcamVideoItem"] video,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #skyroom-stage-webcam-dock [data-test="videoContainer"] {
+    touch-action: pan-y !important;
+  }
+
   /* When the dock is not in a webcam zone, kill hit-testing even if :has() fails. */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"]:not([data-skyroom-mobile-bottom-webcams="true"]):not([data-skyroom-mobile-top-webcams="true"]) #cameraDock,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"]:not([data-skyroom-mobile-bottom-webcams="true"]):not([data-skyroom-mobile-top-webcams="true"]) [data-test="cameraDock"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"]:not([data-skyroom-mobile-bottom-webcams="true"]):not([data-skyroom-mobile-top-webcams="true"]) #cameraDock {
     pointer-events: none !important;
     visibility: hidden !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="VideoCanvas"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [class*="VideoCanvas"] {
     position: relative !important;
     min-height: 0 !important;
     height: max-content !important;
@@ -3593,7 +3639,7 @@
     justify-content: stretch !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="VideoList"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [class*="VideoList"] {
     width: 100% !important;
     /* Do NOT set height with !important — JS sets an explicit px height for 3+
        so extra 2×2 rows overflow and #cameraDock can scroll. Percentage-based
@@ -3611,7 +3657,7 @@
   }
 
   /* Single webcam: fill the dock (no scroll needed). */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="VideoList"]:has([data-test="webcamVideoItem"]:only-child) {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [class*="VideoList"]:has([data-test="webcamVideoItem"]:only-child) {
     grid-template-columns: 1fr !important;
     grid-template-rows: 1fr !important;
     height: 100% !important;
@@ -3619,27 +3665,27 @@
   }
 
   /* Exactly two webcams: split the dock into two full-height columns. */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="VideoList"]:has([data-test="webcamVideoItem"]:first-child:nth-last-child(2)) {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [class*="VideoList"]:has([data-test="webcamVideoItem"]:first-child:nth-last-child(2)) {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     grid-template-rows: 1fr !important;
     height: 100% !important;
     max-height: 100% !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"]:has([data-test="webcamVideoItem"]:only-child),
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"]:has([data-test="webcamVideoItem"]:first-child:nth-last-child(2)) {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:only-child),
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:first-child:nth-last-child(2)) {
     align-items: stretch !important;
     overflow-y: hidden !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"]:has([data-test="webcamVideoItem"]:only-child) [class*="VideoCanvas"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"]:has([data-test="webcamVideoItem"]:first-child:nth-last-child(2)) [class*="VideoCanvas"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:only-child) [class*="VideoCanvas"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:first-child:nth-last-child(2)) [class*="VideoCanvas"] {
     height: 100% !important;
     max-height: 100% !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] > div,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="VideoCanvas"] > div {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock > div,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [class*="VideoCanvas"] > div {
     margin: 0 !important;
     align-self: stretch !important;
     width: 100% !important;
@@ -3647,7 +3693,7 @@
 
   /* Default (3+): stretch into fixed grid-row tracks from JS. Avoid height:100% —
      circular % sizing against the dock collapses extra rows and blocks scroll. */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [data-test="webcamVideoItem"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-test="webcamVideoItem"] {
     width: 100% !important;
     max-width: 100% !important;
     min-height: 0 !important;
@@ -3658,8 +3704,8 @@
   }
 
   /* 1–2 cams: fill the dock (overrides the 3+ defaults above). */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [data-test="webcamVideoItem"]:only-child,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="VideoList"]:has([data-test="webcamVideoItem"]:first-child:nth-last-child(2)) [data-test="webcamVideoItem"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-test="webcamVideoItem"]:only-child,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [class*="VideoList"]:has([data-test="webcamVideoItem"]:first-child:nth-last-child(2)) [data-test="webcamVideoItem"] {
     width: 100% !important;
     max-width: 100% !important;
     height: 100% !important;
@@ -3667,13 +3713,13 @@
     max-height: 100% !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [data-test="webcamVideoItem"] video,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [data-test="videoContainer"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-test="webcamVideoItem"] video,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-test="videoContainer"] {
     touch-action: pan-y !important;
   }
 
   /* Scroll affordance when more than one 2×2 page of cams is below the fold. */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"][data-skyroom-mobile-webcam-scroll="true"] [data-test="cameraDock"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"][data-skyroom-mobile-webcam-scroll="true"] #cameraDock {
     position: relative !important;
   }
 
@@ -3746,12 +3792,12 @@
     overflow: hidden !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [data-test="webcamItem"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [data-test="webcamItemTalkingUser"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-test="webcamItem"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-test="webcamItemTalkingUser"] {
     cursor: pointer;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="BottomBar"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [class*="BottomBar"] {
     display: flex !important;
     align-items: center !important;
     gap: 4px !important;
@@ -3759,14 +3805,14 @@
     box-sizing: border-box !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="MenuWrapper"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [class*="MenuWrapper"] {
     max-width: calc(100% - 2rem) !important;
     flex: 1 1 auto !important;
     min-width: 0 !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [class*="DropdownTrigger"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="cameraDock"] [data-test="webcamParticipantName"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [class*="DropdownTrigger"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-test="webcamParticipantName"] {
     text-overflow: clip !important;
     overflow: hidden !important;
     max-width: 100% !important;

@@ -280,6 +280,7 @@ const WebcamComponent: React.FC<WebcamComponentProps> = ({
               $isDraggable={!!cameraDock.isDraggable && !isFullScreen && !isDragging}
               $isDragging={isDragging}
               id="cameraDock"
+              data-test="cameraDock"
               role="region"
               draggable={cameraDock.isDraggable && !isFullScreen ? 'true' : undefined}
               style={{

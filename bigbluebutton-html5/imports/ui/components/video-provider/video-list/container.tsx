@@ -15,6 +15,7 @@ import { HookEvents } from 'bigbluebutton-html-plugin-sdk/dist/cjs/core/enum';
 import { DomElementManipulationHooks } from 'bigbluebutton-html-plugin-sdk/dist/cjs/dom-element-manipulation/enums';
 import { UpdatedEventDetails } from 'bigbluebutton-html-plugin-sdk/dist/cjs/core/types';
 import { UserCameraHelperAreas } from '../../plugins-engine/extensible-areas/components/user-camera-helper/types';
+import { VideoPlaybackState } from '../video-playback-utils';
 
 interface VideoListContainerProps {
   streams: VideoItem[];
@@ -26,6 +27,7 @@ interface VideoListContainerProps {
   overflowCount: number;
   onVideoItemMount: (stream: string, video: HTMLVideoElement) => void;
   onVideoItemUnmount: (stream: string) => void;
+  onVideoPlaybackStateChange: (stream: string, state: VideoPlaybackState) => void;
   onVirtualBgDrop: (stream: string, type: string, name: string, data: string) => Promise<unknown>;
 }
 
@@ -42,6 +44,7 @@ const VideoListContainer: React.FC<VideoListContainerProps> = (props) => {
     overflowCount,
     onVideoItemMount,
     onVideoItemUnmount,
+    onVideoPlaybackStateChange,
     onVirtualBgDrop,
   } = props;
   const numberOfPages = useNumberOfPages();
@@ -117,6 +120,7 @@ const VideoListContainer: React.FC<VideoListContainerProps> = (props) => {
           streams={streams}
           onVideoItemMount={onVideoItemMount}
           onVideoItemUnmount={onVideoItemUnmount}
+          onVideoPlaybackStateChange={onVideoPlaybackStateChange}
           onVirtualBgDrop={onVirtualBgDrop}
         />
       )

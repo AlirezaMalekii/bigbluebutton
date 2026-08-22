@@ -19,6 +19,7 @@ import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedS
 import { RAISED_HAND_USERS } from '/imports/ui/core/graphql/queries/users';
 import getFromUserSettings from '/imports/ui/services/users-settings';
 import { filterByMeetingId } from '/imports/ui/core/utils/subscriptionFilters';
+import { VideoPlaybackState } from '/imports/ui/components/video-provider/video-playback-utils';
 
 interface VideoListItemContainerProps {
   numOfStreams: number;
@@ -32,6 +33,7 @@ interface VideoListItemContainerProps {
   stream: VideoItem;
   setUserCamerasRequestedFromPlugin: React.Dispatch<React.SetStateAction<UpdatedDataForUserCameraDomElement[]>>;
   onVideoItemUnmount: (stream: string) => void;
+  onVideoPlaybackStateChange: (state: VideoPlaybackState) => void;
   onVirtualBgDrop: (type: string, name: string, data: string) => void;
   onVideoItemMount: (ref: HTMLVideoElement) => void;
 }
@@ -46,6 +48,7 @@ const VideoListItemContainer: React.FC<VideoListItemContainerProps> = (props) =>
     onHandleVideoFocus,
     onVideoItemMount,
     onVideoItemUnmount,
+    onVideoPlaybackStateChange,
     onVirtualBgDrop,
     setUserCamerasRequestedFromPlugin,
     stream,
@@ -126,6 +129,7 @@ const VideoListItemContainer: React.FC<VideoListItemContainerProps> = (props) =>
       onHandleVideoFocus={onHandleVideoFocus}
       onVideoItemMount={onVideoItemMount}
       onVideoItemUnmount={onVideoItemUnmount}
+      onVideoPlaybackStateChange={onVideoPlaybackStateChange}
       onVirtualBgDrop={onVirtualBgDrop}
       settingsSelfViewDisable={settingsSelfViewDisable}
       stream={stream}

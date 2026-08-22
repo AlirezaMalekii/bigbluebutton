@@ -15,6 +15,8 @@ import { ACTIONS } from '/imports/ui/components/layout/enums';
 import { Output } from '/imports/ui/components/layout/layoutTypes';
 import { VideoItem } from '/imports/ui/components/video-provider/types';
 import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
+import { VideoPlaybackState } from '/imports/ui/components/video-provider/video-playback-utils';
+import { computeMobileScrollableWebcamGrid } from '/imports/ui/components/video-provider/mobile-webcam-grid-utils';
 import { UserCameraHelperAreas } from '../../plugins-engine/extensible-areas/components/user-camera-helper/types';
 import {
   getSkyroomWebcamLayout,
@@ -115,6 +117,7 @@ interface VideoListProps {
   setUserCamerasRequestedFromPlugin: React.Dispatch<React.SetStateAction<UpdatedDataForUserCameraDomElement[]>>;
   onVideoItemMount: (stream: string, video: HTMLVideoElement) => void;
   onVideoItemUnmount: (stream: string) => void;
+  onVideoPlaybackStateChange: (stream: string, state: VideoPlaybackState) => void;
   onVirtualBgDrop: (stream: string, type: string, name: string, data: string) => Promise<unknown>;
 }
 
@@ -407,16 +410,23 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       if (visibleStage.length > 0 && stageGridEl) {
         const gridGutter = parseInt(window.getComputedStyle(stageGridEl)
           .getPropertyValue('grid-row-gap'), 10) || SKYROOM_STAGE_WEBCAM_GUTTER;
-        const stageBoundsWidth = skyroomLayout.stage?.width ?? cameraDock?.width;
+        const stageBoundsWidth = skyroomLayout.stage?.width ?? cameraDock?.width ?? 0;
         const stageBoundsHeight = skyroomLayout.stage?.height
           ?? cameraDock?.height
           ?? SKYROOM_SIDEBAR_WEBCAM_H;
-        const computedStageGrid = computeSkyroomStripGrid(
-          visibleStage.length,
-          stageBoundsWidth,
-          stageBoundsHeight,
-          gridGutter,
-        );
+        const computedStageGrid = isSkyroomColumnLayout() && isSkyroomMobileViewport()
+          ? computeMobileScrollableWebcamGrid(
+            visibleStage.length,
+            stageBoundsWidth,
+            stageBoundsHeight,
+            gridGutter,
+          )
+          : computeSkyroomStripGrid(
+            visibleStage.length,
+            stageBoundsWidth,
+            stageBoundsHeight,
+            gridGutter,
+          );
         if (computedStageGrid) {
           optimalGrid = computedStageGrid;
         }
@@ -623,6 +633,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       onVirtualBgDrop,
       onVideoItemMount,
       onVideoItemUnmount,
+      onVideoPlaybackStateChange,
       handleVideoFocus,
       setUserCamerasRequestedFromPlugin,
       focusedId,
@@ -684,6 +695,9 @@ class VideoList extends Component<VideoListProps, VideoListState> {
             }}
             stream={item}
             onVideoItemUnmount={onVideoItemUnmount}
+            onVideoPlaybackStateChange={(state) => {
+              if (isStream) onVideoPlaybackStateChange(item.stream, state);
+            }}
             onVirtualBgDrop={
               (type, name, data) => {
                 return isStream ? onVirtualBgDrop(item.stream, type, name, data) : Promise.resolve(null);

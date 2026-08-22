@@ -19,6 +19,12 @@ import WebRtcPeer from '/imports/ui/services/webrtc-base/peer';
 import { VideoItem } from './types';
 import { Output } from '/imports/ui/components/layout/layoutTypes';
 import { VIDEO_TYPES } from './enums';
+import {
+  getMissingWebcamStreamsForRestore,
+  getPlaybackRecoveryDelay,
+  shouldAttachMediaStream,
+  VideoPlaybackState,
+} from './video-playback-utils';
 
 const intlClientErrors = defineMessages({
   permissionError: {
@@ -134,14 +140,14 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     //     video tracks: attach it
     if (peer == null || videoElement == null) return false;
     const stream = peer.isPublisher ? peer.getLocalStream() : peer.getRemoteStream();
-    const diff = stream && (stream.id !== videoElement.srcObject?.id || !videoElement.paused);
+    const shouldAttach = shouldAttachMediaStream(stream, videoElement);
 
-    if (peer.started && diff) return true;
+    if (peer.started && shouldAttach) return true;
 
     return peer.isPublisher
       && peer.getLocalStream()
       && peer.getLocalStream().getVideoTracks().length > 0
-      && diff;
+      && shouldAttach;
   }
 
   private info: {
@@ -173,7 +179,13 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
   private restartTimer: Record<string, number>;
 
+  private playbackTimeout: Record<string, NodeJS.Timeout>;
+
+  private playbackState: Record<string, VideoPlaybackState>;
+
   private videoTags: Record<string, HTMLVideoElement>;
+
+  private localStreamsPendingWsRestore: Map<string, BBBVideoStream | null>;
 
   constructor(props: VideoProviderProps) {
     super(props);
@@ -189,9 +201,12 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     this.wsQueues = {};
     this.restartTimeout = {};
     this.restartTimer = {};
+    this.playbackTimeout = {};
+    this.playbackState = {};
     this.webRtcPeers = {};
     this.outboundIceQueues = {};
     this.videoTags = {};
+    this.localStreamsPendingWsRestore = new Map();
 
     this.createVideoTag = this.createVideoTag.bind(this);
     this.destroyVideoTag = this.destroyVideoTag.bind(this);
@@ -206,6 +221,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       { leading: false, trailing: true },
     );
     this.startVirtualBackgroundByDrop = this.startVirtualBackgroundByDrop.bind(this);
+    this.handleVideoPlaybackStateChange = this.handleVideoPlaybackStateChange.bind(this);
     this.onBeforeUnload = this.onBeforeUnload.bind(this);
   }
 
@@ -260,6 +276,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     Object.keys(this.webRtcPeers).forEach((stream) => {
       this.stopWebRTCPeer(stream, false);
     });
+    this.stopLocalStreamsPendingWsRestore();
     this.terminateWs();
   }
 
@@ -388,25 +405,25 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       maxRetries: WS_MAX_RETRIES = 5,
     } = window.meetingClientSettings.public.kurento.cameraWsOptions;
 
-    const { exitVideo } = this.props;
     logger.info({
       logCode: 'video_provider_onwsclose',
     }, 'Multiple video provider websocket connection closed.');
 
     this.clearWSHeartbeat();
-    exitVideo();
-    // Media is currently tied to signaling state  - so if signaling shuts down,
-    // media will shut down server-side. This cleans up our local state faster
-    // and notify the state change as failed so the UI rolls back to the placeholder
-    // avatar UI in the camera container
+    // A transient signaling interruption tears media down server-side, but it
+    // must not unshare the user's camera or stop the captured track. Preserve
+    // local capture while rebuilding every peer after the socket reopens.
     Object.keys(this.webRtcPeers).forEach((stream) => {
-      if (this.stopWebRTCPeer(stream, false)) {
+      if (this.destroyWebRTCPeerForSignalingReconnect(stream)) {
         notifyStreamStateChange(stream, 'failed');
       }
     });
     this.setState({ socketOpen: false });
 
     if (this.ws && this.ws.retryCount >= WS_MAX_RETRIES) {
+      const { exitVideo } = this.props;
+      exitVideo();
+      this.stopLocalStreamsPendingWsRestore();
       this.terminateWs();
     }
   }
@@ -418,7 +435,13 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
     this.updateLastMsgTime();
     this.setupWSHeartbeat();
-    this.setState({ socketOpen: true });
+    this.setState({ socketOpen: true }, () => {
+      const streamsToRestore = getMissingWebcamStreamsForRestore(
+        this.localStreamsPendingWsRestore.keys(),
+        Object.keys(this.webRtcPeers),
+      );
+      if (streamsToRestore.length > 0) this.connectStreams(streamsToRestore);
+    });
     // Resend queued messages that happened when socket was not connected
     Object.entries(this.wsQueues).forEach(([stream, queue]) => {
       if (this.webRtcPeers[stream] && queue !== null) {
@@ -618,6 +641,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
             errorCode: error.code,
           },
         }, 'Camera answer processing failed');
+        this.onWebRTCError(error, stream, peer.isPublisher);
       });
     } else {
       logger.warn({
@@ -694,6 +718,64 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     }
   }
 
+  clearPlaybackTimeout(stream: string) {
+    if (this.playbackTimeout[stream]) {
+      clearTimeout(this.playbackTimeout[stream]);
+      delete this.playbackTimeout[stream];
+    }
+  }
+
+  setPlaybackRecoveryTimeout(stream: string, state: VideoPlaybackState) {
+    const peer = this.webRtcPeers[stream];
+    if (!peer || peer.isPublisher || !peer.started) return;
+
+    const {
+      baseTimeout: CAMERA_VIEW_FAILED_WAIT_TIME = 30000,
+    } = window.meetingClientSettings.public.kurento.cameraTimeouts || {};
+    const timeout = getPlaybackRecoveryDelay(state, CAMERA_VIEW_FAILED_WAIT_TIME);
+
+    this.clearPlaybackTimeout(stream);
+    this.playbackTimeout[stream] = setTimeout(() => {
+      delete this.playbackTimeout[stream];
+
+      if (!this.mounted || this.playbackState[stream] === 'playing') return;
+      if (document.visibilityState === 'hidden' || !document.hasFocus()) {
+        this.setPlaybackRecoveryTimeout(stream, 'waiting');
+        return;
+      }
+
+      const currentPeer = this.webRtcPeers[stream];
+      const { streams } = this.props;
+      const stillExists = streams.some(
+        (item) => item.type === VIDEO_TYPES.STREAM && item.stream === stream,
+      );
+      if (!currentPeer || currentPeer.isPublisher || !currentPeer.started || !stillExists) return;
+
+      logger.error({
+        logCode: 'video_provider_playback_watchdog_timeout',
+        extraInfo: {
+          cameraId: stream,
+          connectionState: currentPeer.peerConnection?.connectionState,
+          playbackState: this.playbackState[stream],
+          role: VideoService.getRole(false),
+        },
+      }, 'Camera transport connected but no decoded video frame was rendered. Reconnecting viewer.');
+
+      this.onWebRTCError(new Error('mediaFlowTimeout'), stream, false);
+    }, timeout);
+  }
+
+  handleVideoPlaybackStateChange(stream: string, state: VideoPlaybackState) {
+    this.playbackState[stream] = state;
+
+    if (state === 'playing') {
+      this.clearPlaybackTimeout(stream);
+      return;
+    }
+
+    this.setPlaybackRecoveryTimeout(stream, state);
+  }
+
   stopWebRTCPeer(stream: string, restarting = false) {
     const isLocal = VideoService.isLocalStream(stream);
     const { stopVideo } = this.props;
@@ -708,6 +790,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
     if (isLocal) {
       stopVideo(stream);
+      if (!restarting) this.stopLocalStreamPendingWsRestore(stream);
     }
 
     const role = VideoService.getRole(isLocal);
@@ -744,6 +827,9 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
         if (typeof peer.inactivationHandler === 'function') {
           peer.bbbVideoStream.removeListener('inactive', peer.inactivationHandler);
         }
+        if (typeof peer.streamSwappedHandler === 'function') {
+          peer.bbbVideoStream.removeListener('streamSwapped', peer.streamSwappedHandler);
+        }
         peer.bbbVideoStream.stop();
       }
 
@@ -762,15 +848,80 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
     delete this.outboundIceQueues[stream];
     delete this.wsQueues[stream];
+    this.clearPlaybackTimeout(stream);
+    delete this.playbackState[stream];
 
     return stopped;
+  }
+
+  private destroyWebRTCPeerForSignalingReconnect(stream: string) {
+    const peer = this.webRtcPeers[stream];
+    const isLocal = VideoService.isLocalStream(stream);
+
+    if (!peer) return false;
+    if (!isLocal) {
+      this.clearRestartTimers(stream);
+      return this.destroyWebRTCPeer(stream);
+    }
+
+    const bbbVideoStream = peer.bbbVideoStream || VideoService.getPreloadedStream();
+    this.localStreamsPendingWsRestore.set(stream, bbbVideoStream);
+
+    if (bbbVideoStream) {
+      if (typeof peer.inactivationHandler === 'function') {
+        bbbVideoStream.removeListener('inactive', peer.inactivationHandler);
+      }
+      if (typeof peer.streamSwappedHandler === 'function') {
+        bbbVideoStream.removeListener('streamSwapped', peer.streamSwappedHandler);
+      }
+    }
+
+    // WebRtcPeer.dispose() normally stops every sender track. Detach its media
+    // references before disposing the signaling peer so the captured camera can
+    // be reused by the replacement publisher.
+    const peerConnection = peer.peerConnection;
+    if (peerConnection) {
+      peerConnection.onconnectionstatechange = null;
+      peerConnection.oniceconnectionstatechange = null;
+      if (peerConnection.signalingState !== 'closed') peerConnection.close();
+    }
+    peer.peerConnection = null;
+    peer.localStream = null;
+    peer.videoStream = null;
+    peer.bbbVideoStream = null;
+    if (peer.options) peer.options.videoStream = null;
+    if (typeof peer.dispose === 'function') peer.dispose();
+
+    delete this.webRtcPeers[stream];
+    delete this.outboundIceQueues[stream];
+    delete this.wsQueues[stream];
+    this.clearRestartTimers(stream);
+    this.clearPlaybackTimeout(stream);
+    delete this.playbackState[stream];
+
+    return true;
+  }
+
+  private stopLocalStreamsPendingWsRestore() {
+    const streams = new Set(this.localStreamsPendingWsRestore.values());
+    streams.forEach((stream) => {
+      if (stream && typeof stream.stop === 'function') stream.stop();
+    });
+    this.localStreamsPendingWsRestore.clear();
+  }
+
+  private stopLocalStreamPendingWsRestore(stream: string) {
+    const pendingStream = this.localStreamsPendingWsRestore.get(stream);
+    if (pendingStream && typeof pendingStream.stop === 'function') pendingStream.stop();
+    this.localStreamsPendingWsRestore.delete(stream);
   }
 
   private createPublisher(stream: string, peerOptions: Record<string, unknown>) {
     return new Promise((resolve, reject) => {
       try {
         const { id: profileId } = VideoService.getCameraProfile();
-        let bbbVideoStream = VideoService.getPreloadedStream();
+        let bbbVideoStream = this.localStreamsPendingWsRestore.get(stream)
+          || VideoService.getPreloadedStream();
 
         if (bbbVideoStream) {
           // eslint-disable-next-line no-param-reassign
@@ -779,6 +930,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
         const peer = new WebRtcPeer('sendonly', peerOptions);
         peer.bbbVideoStream = bbbVideoStream;
+        this.localStreamsPendingWsRestore.delete(stream);
         this.webRtcPeers[stream] = peer;
         peer.stream = stream;
         peer.started = false;
@@ -804,11 +956,12 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
           }
 
           peer.bbbVideoStream = bbbVideoStream;
-          bbbVideoStream.on('streamSwapped', ({ newStream }) => {
+          peer.streamSwappedHandler = ({ newStream }) => {
             if (newStream && newStream instanceof MediaStream) {
               this.replacePCVideoTracks(stream, newStream);
             }
-          });
+          };
+          bbbVideoStream.on('streamSwapped', peer.streamSwappedHandler);
           peer.inactivationHandler = () => this.handleLocalStreamInactive(stream);
           bbbVideoStream.once('inactive', peer.inactivationHandler);
           resolve(offer);
@@ -1250,6 +1403,8 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     }
 
     delete this.videoTags[stream];
+    this.clearPlaybackTimeout(stream);
+    delete this.playbackState[stream];
   }
 
   handlePlayStop(message: { cameraId: string; role: string }) {
@@ -1287,6 +1442,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       // Clear camera shared timeout when camera successfully starts
       this.clearRestartTimers(stream);
       this.attachVideoStream(stream);
+      this.handleVideoPlaybackStateChange(stream, 'waiting');
 
       playStart(stream);
     } else {
@@ -1389,6 +1545,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
         }}
         onVideoItemMount={this.createVideoTag}
         onVideoItemUnmount={this.destroyVideoTag}
+        onVideoPlaybackStateChange={this.handleVideoPlaybackStateChange}
         onVirtualBgDrop={this.startVirtualBackgroundByDrop}
       />
     );
