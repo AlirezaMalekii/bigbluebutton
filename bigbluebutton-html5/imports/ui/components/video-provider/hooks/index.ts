@@ -763,6 +763,7 @@ export const useVideoStreams = () => {
     overflowCount,
     totalNumberOfStreams: streams.length,
     totalNumberOfOtherStreams,
+    webcamsVisible: mobileWebcamsVisible,
   };
 };
 

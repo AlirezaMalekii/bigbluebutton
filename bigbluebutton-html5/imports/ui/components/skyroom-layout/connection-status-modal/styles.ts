@@ -660,20 +660,32 @@ const GaugeWrap = styled.div`
   align-items: center;
   justify-content: center;
   padding: 4px 0 0;
+  gap: 0;
 `;
 
-const GaugeSvg = styled.svg`
+const GaugeStage = styled.div`
+  position: relative;
   width: min(100%, 280px);
-  height: auto;
-  overflow: visible;
+  display: flex;
+  justify-content: center;
 
   @media (max-width: 560px) {
     width: min(100%, 228px);
   }
 `;
 
+const GaugeSvg = styled.svg`
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+`;
+
 const GaugeReadout = styled.div`
-  margin-top: -42px;
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -705,9 +717,12 @@ const GaugeUnit = styled.div`
 `;
 
 const GaugePhase = styled.p`
-  margin: 10px 0 0;
+  margin: 6px 0 0;
+  min-height: 2.4em;
+  max-width: 16.5rem;
+  padding: 0 10px;
   font-size: 0.8125rem;
-  line-height: 1.4;
+  line-height: 1.35;
   color: var(--skyroom-text-secondary, #8d9aad);
   text-align: center;
 `;
@@ -904,6 +919,7 @@ export default {
   SpeedTestServerLabel,
   SpeedTestServerHost,
   GaugeWrap,
+  GaugeStage,
   GaugeSvg,
   GaugeReadout,
   GaugeValue,

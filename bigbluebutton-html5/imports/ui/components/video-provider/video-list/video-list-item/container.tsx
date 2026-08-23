@@ -2,29 +2,19 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { UpdatedDataForUserCameraDomElement } from 'bigbluebutton-html-plugin-sdk/dist/cjs/dom-element-manipulation/user-camera/types';
 
-import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
-import useMeeting from '/imports/ui/core/hooks/useMeeting';
-import { layoutSelect, layoutDispatch, layoutSelectInput } from '/imports/ui/components/layout/context';
-import VideoListItem from './component';
+import Auth from '/imports/ui/services/auth';
+import DraggableVideoListItem, { VideoListItem, VideoListItemProps } from './component';
 import { VideoItem } from '/imports/ui/components/video-provider/types';
-import { Layout, Input } from '/imports/ui/components/layout/layoutTypes';
-import useSettings from '/imports/ui/services/settings/hooks/useSettings';
-import { SETTINGS } from '/imports/ui/services/settings/enums';
-import { useStorageKey } from '/imports/ui/services/storage/hooks';
-import useWhoIsTalking from '/imports/ui/core/hooks/useWhoIsTalking';
-import useWhoIsUnmuted from '/imports/ui/core/hooks/useWhoIsUnmuted';
 import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
 import { UserCameraHelperAreas } from '../../../plugins-engine/extensible-areas/components/user-camera-helper/types';
-import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
-import { RAISED_HAND_USERS } from '/imports/ui/core/graphql/queries/users';
-import getFromUserSettings from '/imports/ui/services/users-settings';
-import { filterByMeetingId } from '/imports/ui/core/utils/subscriptionFilters';
 import { VideoPlaybackState } from '/imports/ui/components/video-provider/video-playback-utils';
+import { useVideoListSharedState } from '../shared-state-context';
 
 interface VideoListItemContainerProps {
   numOfStreams: number;
   cameraId: string | null;
   pluginUserCameraHelperPerPosition: UserCameraHelperAreas;
+  userCameraDomElementRequested: boolean;
   userId: string;
   name: string;
   focused: boolean;
@@ -54,90 +44,87 @@ const VideoListItemContainer: React.FC<VideoListItemContainerProps> = (props) =>
     stream,
     userId,
     pluginUserCameraHelperPerPosition,
+    userCameraDomElementRequested,
   } = props;
 
-  const fullscreen = layoutSelect((i: Layout) => i.fullscreen);
-  const { element } = fullscreen;
-  const isFullscreenContext = (element === cameraId);
-  const layoutContextDispatch = layoutDispatch();
-  const isRTL = layoutSelect((i: Layout) => i.isRTL);
-  // @ts-ignore Untyped object
-  const { selfViewDisable: settingsSelfViewDisable } = useSettings(SETTINGS.APPLICATION);
-
-  const { data: currentUserData } = useCurrentUser((user) => ({
-    isModerator: user.isModerator,
-    locked: user.locked,
-  }));
-
-  const { data: currentMeeting } = useMeeting((m) => ({
-    lockSettings: m.lockSettings,
-    meetingId: m.meetingId,
-  }));
-
-  const hideUserList = currentUserData?.locked && currentMeeting?.lockSettings?.hideUserList;
-
-  const amIModerator = currentUserData?.isModerator;
-
-  const disabledCams = useStorageKey('disabledCams') || [];
-  const { data: talkingUsers } = useWhoIsTalking();
-  const { data: unmutedUsers } = useWhoIsUnmuted();
+  const fullscreenElement = useVideoListSharedState((state) => state.fullscreenElement);
+  const isFullscreenContext = fullscreenElement === cameraId;
+  const layoutContextDispatch = useVideoListSharedState((state) => state.layoutContextDispatch);
+  const isRTL = useVideoListSharedState((state) => state.isRTL);
+  const settingsSelfViewDisable = useVideoListSharedState(
+    (state) => state.settingsSelfViewDisable,
+  );
+  const currentUser = useVideoListSharedState((state) => (
+    stream.type === VIDEO_TYPES.CONNECTING ? state.currentUser : null
+  ));
+  const amIModerator = useVideoListSharedState((state) => state.amIModerator);
+  const disabledCams = useVideoListSharedState((state) => state.disabledCams);
+  const talking = useVideoListSharedState((state) => state.talkingUsers[userId]);
+  const unmuted = useVideoListSharedState((state) => state.unmutedUsers[userId]);
+  const raisedHandPosition = useVideoListSharedState(
+    (state) => state.raisedHandPositions[userId] || 0,
+  );
+  const hideNotifications = useVideoListSharedState((state) => state.hideNotifications);
+  const userCameraDropdownItems = useVideoListSharedState(
+    (state) => state.userCameraDropdownItems,
+  );
+  const setCameraPinned = useVideoListSharedState((state) => state.setCameraPinned);
   const voiceUser = stream.type !== VIDEO_TYPES.CONNECTING && stream.voice ? {
     ...stream.voice,
-    talking: talkingUsers[userId],
-    muted: !unmutedUsers[userId],
-  } : {};
-
-  type RaisedHandUser = {
-    userId: string;
+    talking: Boolean(talking),
+    muted: !unmuted,
+    deafened: Boolean((stream.voice as { deafened?: boolean }).deafened),
+  } : {
+    muted: true,
+    listenOnly: false,
+    talking: false,
+    joined: false,
+    deafened: false,
   };
 
-  const {
-    data: usersData,
-  } = useDeduplicatedSubscription<{ user: RaisedHandUser[] }>(RAISED_HAND_USERS);
-  const raisedHands: RaisedHandUser[] = currentMeeting?.meetingId
-    ? filterByMeetingId(
-      usersData?.user,
-      currentMeeting.meetingId,
-      RAISED_HAND_USERS,
-      (u) => ({ mismatchedUserId: u.userId }),
-    )
-    : [];
-  const raisedHandIndex = !hideUserList
-    ? raisedHands.findIndex((user) => user.userId === userId) + 1
-    : 0;
+  const cameraItemProps = {
+    isFullscreenContext,
+    layoutContextDispatch,
+    isRTL,
+    amIModerator,
+    pluginUserCameraHelperPerPosition,
+    userCameraDomElementRequested,
+    setUserCamerasRequestedFromPlugin,
+    cameraId,
+    disabledCams,
+    focused,
+    isStream,
+    name,
+    numOfStreams,
+    onHandleVideoFocus,
+    onVideoItemMount,
+    onVideoItemUnmount,
+    onVideoPlaybackStateChange,
+    settingsSelfViewDisable,
+    stream,
+    voiceUser,
+    currentUser,
+    raisedHandPosition,
+    userCameraDropdownItems,
+    setCameraPinned,
+  } as VideoListItemProps;
 
-  const { hideNotificationToasts } = layoutSelectInput((i: Input) => i.notificationsBar);
-  const hideNotifications = hideNotificationToasts
-    || getFromUserSettings('bbb_hide_notifications', false);
+  // Only the local, active camera can accept a virtual-background file drop.
+  // Rendering the upstream drag/file/modal wrapper for every remote tile adds
+  // global listeners and modal registrations with no usable functionality.
+  if (stream.type === VIDEO_TYPES.STREAM && userId === Auth.userID) {
+    return (
+      <DraggableVideoListItem
+        // eslint-disable-next-line react/jsx-props-no-spreading
+        {...cameraItemProps}
+        onVirtualBgDrop={onVirtualBgDrop}
+        hideNotificationToasts={hideNotifications}
+      />
+    );
+  }
 
-  return (
-    <VideoListItem
-      {...{
-        isFullscreenContext,
-        layoutContextDispatch,
-        isRTL,
-        amIModerator,
-      }}
-      pluginUserCameraHelperPerPosition={pluginUserCameraHelperPerPosition}
-      setUserCamerasRequestedFromPlugin={setUserCamerasRequestedFromPlugin}
-      cameraId={cameraId}
-      disabledCams={disabledCams}
-      focused={focused}
-      isStream={isStream}
-      name={name}
-      numOfStreams={numOfStreams}
-      onHandleVideoFocus={onHandleVideoFocus}
-      onVideoItemMount={onVideoItemMount}
-      onVideoItemUnmount={onVideoItemUnmount}
-      onVideoPlaybackStateChange={onVideoPlaybackStateChange}
-      onVirtualBgDrop={onVirtualBgDrop}
-      settingsSelfViewDisable={settingsSelfViewDisable}
-      stream={stream}
-      voiceUser={voiceUser}
-      raisedHandPosition={raisedHandIndex}
-      hideNotificationToasts={hideNotifications}
-    />
-  );
+  // eslint-disable-next-line react/jsx-props-no-spreading
+  return <VideoListItem {...cameraItemProps} />;
 };
 
 export default VideoListItemContainer;

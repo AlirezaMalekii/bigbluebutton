@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { useMutation, useReactiveVar } from '@apollo/client';
 import { defineMessages, useIntl } from 'react-intl';
 import useMeeting from '/imports/ui/core/hooks/useMeeting';
@@ -35,6 +35,7 @@ import {
   useVideoState,
 } from './state';
 import { VIDEO_TYPES } from './enums';
+import WebRtcPeer from '/imports/ui/services/webrtc-base/peer';
 
 const intlMessages = defineMessages({
   meetingCamCapReached: {
@@ -107,11 +108,25 @@ const VideoProviderContainer: React.FC<VideoProviderContainerProps> = (props) =>
     debounceTime: CAMERA_QUALITY_THR_DEBOUNCE = 2500,
   } = meetingSettings.public.kurento.cameraQualityThresholds;
 
-  const applyCameraProfile = debounce(
-    VideoService.applyCameraProfile,
-    CAMERA_QUALITY_THR_DEBOUNCE,
-    { leading: false, trailing: true },
-  ) as typeof VideoService.applyCameraProfile;
+  const applyCameraProfile = useMemo(() => {
+    const debouncedProfiles = new WeakMap<
+      WebRtcPeer,
+      typeof VideoService.applyCameraProfile
+    >();
+
+    return ((peer: WebRtcPeer, profileId: string) => {
+      let applyProfile = debouncedProfiles.get(peer);
+      if (!applyProfile) {
+        applyProfile = debounce(
+          VideoService.applyCameraProfile,
+          CAMERA_QUALITY_THR_DEBOUNCE,
+          { leading: false, trailing: true },
+        ) as typeof VideoService.applyCameraProfile;
+        debouncedProfiles.set(peer, applyProfile);
+      }
+      applyProfile(peer, profileId);
+    }) as typeof VideoService.applyCameraProfile;
+  }, [CAMERA_QUALITY_THR_DEBOUNCE]);
 
   const { data: currentMeeting } = useMeeting((m) => ({
     usersPolicies: m.usersPolicies,
@@ -137,6 +152,7 @@ const VideoProviderContainer: React.FC<VideoProviderContainerProps> = (props) =>
     overflowCount,
     totalNumberOfStreams,
     totalNumberOfOtherStreams,
+    webcamsVisible,
   } = useVideoStreams();
   VideoService.updateActivePeers(streams);
 
@@ -216,6 +232,7 @@ const VideoProviderContainer: React.FC<VideoProviderContainerProps> = (props) =>
     paginationEnabled,
     viewParticipantsWebcams,
     totalNumberOfStreams,
+    webcamsVisible,
     overflowCount,
     isUserLocked,
     currentVideoPageIndex,

@@ -1510,7 +1510,7 @@ These configs can be set in `/etc/bigbluebutton/bbb-web.properties`. The table i
 | `sessionsCleanupDelayInMinutes` | Minutes to wait before removing user sessions after a meeting has ended; during this delay the "Meeting has ended" screen is still reachable | Integer (0=keep indefinitely) | 60 |
 | `webcamsOnlyForModerator` | Allow webcams streaming reception only to and from moderators | true/false | false _`overwritable`_ |
 | `meetingCameraCap` | Per meeting camera share limit | Integer (0=disable) | 0 _`overwritable`_ |
-| `userCameraCap` | Per user camera share limit | Integer (0=disable) | 3 _`overwritable`_ |
+| `userCameraCap` | Per user camera share limit | Integer (0=disable) | 0 _`overwritable`_ |
 | `maxPinnedCameras` | Maximum number of cameras pinned simultaneously | Integer (0=disable) | 3 |
 | `muteOnStart` | Microphone is muted by default when users start sharing | true/false | true _`overwritable`_ |
 | `allowModsToUnmuteUsers` | Gives moderators permission to unmute other users | true/false | false _`overwritable`_ |

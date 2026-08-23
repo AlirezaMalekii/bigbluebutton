@@ -2,6 +2,7 @@ let STUN_TURN_DICT;
 let MAPPED_STUN_TURN_DICT;
 let TURN_CACHE_VALID_UNTIL = Math.floor(Date.now() / 1000);
 let HAS_SEEN_TURN_SERVER = false;
+let STUN_TURN_FETCH_PROMISE;
 
 const fetchStunTurnServers = function (sessionToken) {
   const now = Math.floor(Date.now() / 1000);
@@ -47,9 +48,19 @@ const fetchStunTurnServers = function (sessionToken) {
   const STUN_TURN_FETCH_URL = window.meetingClientSettings.public.media.stunTurnServersFetchAddress;
 
   const url = `${STUN_TURN_FETCH_URL}?sessionToken=${sessionToken}`;
-  return fetch(url, { credentials: 'include' })
+  // A webcam page may create several subscribers in the same render. Share
+  // the in-flight credential request so those peers do not stampede the TURN
+  // endpoint before the normal TTL cache has been populated.
+  if (STUN_TURN_FETCH_PROMISE) return STUN_TURN_FETCH_PROMISE;
+
+  const request = fetch(url, { credentials: 'include' })
     .then(res => res.json())
     .then(handleStunTurnResponse);
+  STUN_TURN_FETCH_PROMISE = request;
+
+  return request.finally(() => {
+    if (STUN_TURN_FETCH_PROMISE === request) STUN_TURN_FETCH_PROMISE = undefined;
+  });
 };
 
 const mapStunTurn = ({ stun, turn }) => {

@@ -20,33 +20,30 @@ const PROGRESS_THROTTLE_MS = 200;
 const readConfig = (): SpeedTestConfig => {
   const settings = window.meetingClientSettings?.public?.app?.speedTest;
   const parallel = deviceInfo.isMobile
-    ? settings?.mobileParallelStreams ?? DEFAULT_SPEED_TEST_CONFIG.parallelStreams
+    ? settings?.mobileParallelStreams ?? 1
     : settings?.parallelStreams ?? DEFAULT_SPEED_TEST_CONFIG.parallelStreams;
 
   return {
     pingCount: settings?.pingCount ?? DEFAULT_SPEED_TEST_CONFIG.pingCount,
     downloadDurationMs: settings?.downloadDurationMs ?? DEFAULT_SPEED_TEST_CONFIG.downloadDurationMs,
     uploadDurationMs: settings?.uploadDurationMs ?? DEFAULT_SPEED_TEST_CONFIG.uploadDurationMs,
-    parallelStreams: Math.max(1, parallel),
+    // Cap at 2 so the test cannot starve GraphQL/WebRTC on the same link.
+    parallelStreams: Math.max(1, Math.min(2, parallel)),
   };
 };
 
-const toErrorSnapshot = (error: unknown, serverHost: string): SpeedTestSnapshot => {
-  if (error instanceof SpeedTestRunError) {
-    return {
-      ...IDLE_SPEED_TEST_SNAPSHOT,
-      phase: 'error',
-      errorCode: error.code,
-      serverHost,
-    };
-  }
-  return {
-    ...IDLE_SPEED_TEST_SNAPSHOT,
-    phase: 'error',
-    errorCode: 'network',
-    serverHost,
-  };
-};
+const toErrorSnapshot = (
+  error: unknown,
+  previous: SpeedTestSnapshot,
+  serverHost: string,
+): SpeedTestSnapshot => ({
+  ...previous,
+  phase: 'error',
+  errorCode: error instanceof SpeedTestRunError ? error.code : 'network',
+  liveMbps: previous.downloadMbps ?? previous.liveMbps,
+  verdict: null,
+  serverHost,
+});
 
 const useSpeedTest = () => {
   const [snapshot, setSnapshot] = useState<SpeedTestSnapshot>({
@@ -56,6 +53,8 @@ const useSpeedTest = () => {
   const abortRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
   const runIdRef = useRef(0);
+  const snapshotRef = useRef(snapshot);
+  snapshotRef.current = snapshot;
 
   const emitThrottled = useMemo(() => throttle((next: SpeedTestSnapshot, runId: number) => {
     if (mountedRef.current && runIdRef.current === runId) {
@@ -106,7 +105,8 @@ const useSpeedTest = () => {
         });
         return;
       }
-      setSnapshot(toErrorSnapshot(error, serverHost));
+      runIdRef.current += 1;
+      setSnapshot(toErrorSnapshot(error, snapshotRef.current, serverHost));
     } finally {
       if (abortRef.current === controller) {
         abortRef.current = null;

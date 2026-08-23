@@ -25,6 +25,7 @@ import {
   shouldAttachMediaStream,
   VideoPlaybackState,
 } from './video-playback-utils';
+import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const intlClientErrors = defineMessages({
   permissionError: {
@@ -103,6 +104,7 @@ interface VideoProviderProps {
   isGridEnabled: boolean;
   isClientConnected: boolean;
   totalNumberOfStreams: number;
+  webcamsVisible: boolean;
   overflowCount: number;
   isUserLocked: boolean;
   currentVideoPageIndex: number;
@@ -187,6 +189,16 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
   private localStreamsPendingWsRestore: Map<string, BBBVideoStream | null>;
 
+  private visibleVideoStreams: Set<string>;
+
+  private viewportRetainedStreams: Set<string>;
+
+  private hasViewportVisibilitySnapshot: boolean;
+
+  private viewportReleaseTimeout: NodeJS.Timeout | null;
+
+  private requestedCameraProfiles: WeakMap<WebRtcPeer, string>;
+
   constructor(props: VideoProviderProps) {
     super(props);
     const { info } = this.props;
@@ -207,6 +219,11 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     this.outboundIceQueues = {};
     this.videoTags = {};
     this.localStreamsPendingWsRestore = new Map();
+    this.visibleVideoStreams = new Set();
+    this.viewportRetainedStreams = new Set();
+    this.hasViewportVisibilitySnapshot = false;
+    this.viewportReleaseTimeout = null;
+    this.requestedCameraProfiles = new WeakMap();
 
     this.createVideoTag = this.createVideoTag.bind(this);
     this.destroyVideoTag = this.destroyVideoTag.bind(this);
@@ -222,6 +239,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     );
     this.startVirtualBackgroundByDrop = this.startVirtualBackgroundByDrop.bind(this);
     this.handleVideoPlaybackStateChange = this.handleVideoPlaybackStateChange.bind(this);
+    this.handleVideoVisibilityChange = this.handleVideoVisibilityChange.bind(this);
     this.onBeforeUnload = this.onBeforeUnload.bind(this);
   }
 
@@ -272,6 +290,8 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     }
 
     window.removeEventListener('beforeunload', this.onBeforeUnload);
+    if (this.viewportReleaseTimeout) clearTimeout(this.viewportReleaseTimeout);
+    this.viewportReleaseTimeout = null;
     exitVideo();
     Object.keys(this.webRtcPeers).forEach((stream) => {
       this.stopWebRTCPeer(stream, false);
@@ -459,7 +479,104 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
   findAllPrivilegedStreams() {
     const { streams } = this.props;
     // Privileged streams are: floor holders, pinned users
-    return streams.filter((stream) => stream.type === VIDEO_TYPES.STREAM && (stream.floor || stream?.pinned));
+    return streams.filter((stream) => stream.type === VIDEO_TYPES.STREAM && (
+      stream.floor || stream.user?.pinned
+    ));
+  }
+
+  isViewportSubscriptionEnabled() {
+    const {
+      enabled = true,
+      activationThreshold = 5,
+    } = window.meetingClientSettings.public.kurento.viewportSubscription || {};
+    const { totalNumberOfStreams } = this.props;
+
+    return enabled
+      && isSkyroomTheme()
+      && totalNumberOfStreams >= Math.max(1, Number(activationThreshold) || 5);
+  }
+
+  shouldKeepRemoteStream(stream: VideoItem) {
+    if (stream.type === VIDEO_TYPES.GRID || stream.type === VIDEO_TYPES.AUDIO_ONLY) return true;
+    if (VideoService.isLocalStream(stream.stream)) return true;
+
+    const { focusedId } = this.props;
+    const user = stream.type === VIDEO_TYPES.STREAM ? stream.user : null;
+    return this.visibleVideoStreams.has(stream.stream)
+      || this.viewportRetainedStreams.has(stream.stream)
+      || focusedId === stream.stream
+      || (stream.type === VIDEO_TYPES.STREAM && Boolean(
+        stream.floor || user?.pinned || user?.presenter,
+      ));
+  }
+
+  getStreamsForMediaSubscription(streams: VideoItem[]) {
+    if (!this.isViewportSubscriptionEnabled()) return streams;
+    // Do not create a full-meeting burst while IntersectionObserver is taking
+    // its first snapshot. Local/focused/presenter streams remain protected by
+    // shouldKeepRemoteStream and visible subscribers follow on the next frame.
+    return streams.filter((stream) => this.shouldKeepRemoteStream(stream));
+  }
+
+  isRemoteStreamEligibleForSubscription(streamId: string) {
+    if (VideoService.isLocalStream(streamId)) return true;
+    if (!this.isViewportSubscriptionEnabled()) return true;
+
+    const { streams } = this.props;
+    const stream = streams.find((item) => (
+      item.type !== VIDEO_TYPES.GRID
+      && item.type !== VIDEO_TYPES.AUDIO_ONLY
+      && item.stream === streamId
+    ));
+    return Boolean(stream && this.shouldKeepRemoteStream(stream));
+  }
+
+  scheduleViewportRelease() {
+    const {
+      releaseDelay = 2500,
+    } = window.meetingClientSettings.public.kurento.viewportSubscription || {};
+    // One bounded batch timer prevents both per-tile timer growth and a
+    // continuous scroll from retaining every stream visited along the way.
+    if (this.viewportReleaseTimeout) return;
+
+    this.viewportReleaseTimeout = setTimeout(() => {
+      this.viewportReleaseTimeout = null;
+      this.viewportRetainedStreams = new Set(this.visibleVideoStreams);
+      const { socketOpen } = this.state;
+      const { streams } = this.props;
+      if (this.mounted && socketOpen) this.updateStreams(streams);
+    }, Math.max(0, Number(releaseDelay) || 0));
+  }
+
+  handleVideoVisibilityChange(changes: { stream: string; visible: boolean }[]) {
+    const firstSnapshot = !this.hasViewportVisibilitySnapshot;
+    let becameVisible = false;
+    let becameHidden = false;
+    this.hasViewportVisibilitySnapshot = true;
+
+    changes.forEach(({ stream, visible }) => {
+      if (visible) {
+        if (!this.visibleVideoStreams.has(stream)) becameVisible = true;
+        this.visibleVideoStreams.add(stream);
+        this.viewportRetainedStreams.add(stream);
+      } else if (this.visibleVideoStreams.delete(stream)) {
+        becameHidden = true;
+      }
+    });
+
+    if (!this.isViewportSubscriptionEnabled()) {
+      if (this.viewportReleaseTimeout) clearTimeout(this.viewportReleaseTimeout);
+      this.viewportReleaseTimeout = null;
+      this.viewportRetainedStreams = new Set(this.visibleVideoStreams);
+      return;
+    }
+
+    const { socketOpen } = this.state;
+    const { streams } = this.props;
+    if ((firstSnapshot || becameVisible) && this.mounted && socketOpen) {
+      this.updateStreams(streams);
+    }
+    if (becameHidden) this.scheduleViewportRelease();
   }
 
   updateQualityThresholds(numberOfPublishers: number) {
@@ -481,6 +598,8 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
           const exempt = threshold === 0
             || (CAMERA_QUALITY_THR_PRIVILEGED && privilegedStreams.some((vs) => vs.stream === peer.stream));
           const profileToApply = exempt ? peer.originalProfileId : profile;
+          if (this.requestedCameraProfiles.get(peer) === profileToApply) return;
+          this.requestedCameraProfiles.set(peer, profileToApply);
           applyCameraProfile(peer, profileToApply);
         });
     }
@@ -494,15 +613,30 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
   }
 
   disconnectStreams(streamsToDisconnect: string[]) {
-    streamsToDisconnect.forEach((stream) => this.stopWebRTCPeer(stream, false));
+    streamsToDisconnect.forEach((stream) => {
+      if (!VideoService.isLocalStream(stream)) {
+        const videoElement = this.videoTags[stream];
+        if (videoElement) {
+          videoElement.pause();
+          videoElement.srcObject = null;
+          videoElement.load();
+        }
+        notifyStreamStateChange(stream, 'failed');
+      }
+      this.stopWebRTCPeer(stream, false);
+    });
   }
 
   updateStreams(streams: VideoItem[], shouldDebounce = false) {
+    const streamsForMediaSubscription = this.getStreamsForMediaSubscription(streams);
     const connectedStreamIds = Object.keys(this.webRtcPeers);
     const [
       streamsToConnect,
       streamsToDisconnect,
-    ] = VideoService.getStreamsToConnectAndDisconnect(streams, connectedStreamIds);
+    ] = VideoService.getStreamsToConnectAndDisconnect(
+      streamsForMediaSubscription,
+      connectedStreamIds,
+    );
 
     if (shouldDebounce) {
       this.debouncedConnectStreams(streamsToConnect);
@@ -727,7 +861,8 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
   setPlaybackRecoveryTimeout(stream: string, state: VideoPlaybackState) {
     const peer = this.webRtcPeers[stream];
-    if (!peer || peer.isPublisher || !peer.started) return;
+    if (!peer || peer.isPublisher || !peer.started
+      || !this.isRemoteStreamEligibleForSubscription(stream)) return;
 
     const {
       baseTimeout: CAMERA_VIEW_FAILED_WAIT_TIME = 30000,
@@ -749,7 +884,8 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       const stillExists = streams.some(
         (item) => item.type === VIDEO_TYPES.STREAM && item.stream === stream,
       );
-      if (!currentPeer || currentPeer.isPublisher || !currentPeer.started || !stillExists) return;
+      if (!currentPeer || currentPeer.isPublisher || !currentPeer.started || !stillExists
+        || !this.isRemoteStreamEligibleForSubscription(stream)) return;
 
       logger.error({
         logCode: 'video_provider_playback_watchdog_timeout',
@@ -879,7 +1015,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     // WebRtcPeer.dispose() normally stops every sender track. Detach its media
     // references before disposing the signaling peer so the captured camera can
     // be reused by the replacement publisher.
-    const peerConnection = peer.peerConnection;
+    const { peerConnection } = peer;
     if (peerConnection) {
       peerConnection.onconnectionstatechange = null;
       peerConnection.oniceconnectionstatechange = null;
@@ -1001,6 +1137,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     if (this.webRtcPeers[stream]) {
       return;
     }
+    if (!isLocal && !this.isRemoteStreamEligibleForSubscription(stream)) return;
 
     const { webcam: NETWORK_PRIORITY } = window.meetingClientSettings.public.media.networkPriorities || {};
     const TRACE_LOGS = window.meetingClientSettings.public.kurento.traceLogs;
@@ -1036,54 +1173,63 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       }, 'video-provider failed to fetch STUN/TURN info, using default');
       // Use fallback STUN server
       iceServers = getMappedFallbackStun();
-    } finally {
-      // we need to set iceTransportPolicy after `fetchWebRTCMappedStunTurnServers`
-      // because `shouldForceRelay` uses the information from the stun API
-      peerOptions.configuration.iceTransportPolicy = shouldForceRelay() ? 'relay' : undefined;
-      if (iceServers.length > 0) {
-        peerOptions.configuration.iceServers = iceServers;
+    }
+
+    if (!isLocal && !this.isRemoteStreamEligibleForSubscription(stream)) {
+      delete this.webRtcPeers[stream];
+      delete this.outboundIceQueues[stream];
+      return;
+    }
+
+    // we need to set iceTransportPolicy after `fetchWebRTCMappedStunTurnServers`
+    // because `shouldForceRelay` uses the information from the stun API
+    peerOptions.configuration.iceTransportPolicy = shouldForceRelay() ? 'relay' : undefined;
+    if (iceServers.length > 0) {
+      peerOptions.configuration.iceServers = iceServers;
+    }
+
+    peerBuilderFunc(stream, peerOptions).then((offer) => {
+      if (!this.mounted) {
+        return this.stopWebRTCPeer(stream, false);
+      }
+      if (!isLocal && !this.isRemoteStreamEligibleForSubscription(stream)) {
+        return this.stopWebRTCPeer(stream, false);
+      }
+      const peer = this.webRtcPeers[stream];
+
+      if (peer && peer.peerConnection) {
+        const conn = peer.peerConnection;
+        conn.onconnectionstatechange = () => {
+          this.handleIceConnectionStateChange(stream, isLocal);
+        };
       }
 
-      peerBuilderFunc(stream, peerOptions).then((offer) => {
-        if (!this.mounted) {
-          return this.stopWebRTCPeer(stream, false);
-        }
-        const peer = this.webRtcPeers[stream];
+      const message = {
+        id: 'start',
+        type: 'video',
+        cameraId: stream,
+        role,
+        sdpOffer: offer,
+        bitrate,
+        record: VideoService.getRecord(),
+        mediaServer: VideoService.getMediaServerAdapter(),
+      };
 
-        if (peer && peer.peerConnection) {
-          const conn = peer.peerConnection;
-          conn.onconnectionstatechange = () => {
-            this.handleIceConnectionStateChange(stream, isLocal);
-          };
-        }
-
-        const message = {
-          id: 'start',
-          type: 'video',
+      logger.info({
+        logCode: 'video_provider_sfu_request_start_camera',
+        extraInfo: {
           cameraId: stream,
           role,
-          sdpOffer: offer,
-          bitrate,
-          record: VideoService.getRecord(),
-          mediaServer: VideoService.getMediaServerAdapter(),
-        };
+        },
+      }, `Camera offer generated. Role: ${role}`);
 
-        logger.info({
-          logCode: 'video_provider_sfu_request_start_camera',
-          extraInfo: {
-            cameraId: stream,
-            role,
-          },
-        }, `Camera offer generated. Role: ${role}`);
+      this.setReconnectionTimeout(stream, isLocal, false);
+      this.sendMessage(message);
 
-        this.setReconnectionTimeout(stream, isLocal, false);
-        this.sendMessage(message);
-
-        return null;
-      }).catch((error) => {
-        return this.onWebRTCError(error, stream, isLocal);
-      });
-    }
+      return null;
+    }).catch((error) => {
+      return this.onWebRTCError(error, stream, isLocal);
+    });
   }
 
   private getWebRTCStartTimeout(stream: string, isLocal: boolean) {
@@ -1094,6 +1240,11 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     } = window.meetingClientSettings.public.kurento.cameraTimeouts || {};
 
     return () => {
+      if (!isLocal && !this.isRemoteStreamEligibleForSubscription(stream)) {
+        this.clearRestartTimers(stream);
+        return;
+      }
+
       const role = VideoService.getRole(isLocal);
       if (!isLocal) {
         // Peer that timed out is a subscriber/viewer
@@ -1166,24 +1317,33 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       // no local candidate was generated and it wasn't set.
       const peer = this.webRtcPeers[stream];
       const stillExists = streams.some((item) => item.type === VIDEO_TYPES.STREAM && item.stream === stream);
+      const shouldReconnect = stillExists && this.isRemoteStreamEligibleForSubscription(stream);
 
-      if (stillExists) {
+      if (shouldReconnect) {
         const isEstablishedConnection = peer && peer.started;
         this.setReconnectionTimeout(stream, isLocal, isEstablishedConnection);
       }
 
       // second argument means it will only try to reconnect if
       // it's a viewer instance (see stopWebRTCPeer restarting argument)
-      this.stopWebRTCPeer(stream, stillExists);
+      this.stopWebRTCPeer(stream, shouldReconnect);
     }
   }
 
   reconnect(stream: string, isLocal: boolean) {
+    if (!isLocal && !this.isRemoteStreamEligibleForSubscription(stream)) {
+      this.stopWebRTCPeer(stream, false);
+      return;
+    }
     this.stopWebRTCPeer(stream, true);
     this.createWebRTCPeer(stream, isLocal);
   }
 
   setReconnectionTimeout(stream: string, isLocal: boolean, isEstablishedConnection: boolean) {
+    if (!isLocal && !this.isRemoteStreamEligibleForSubscription(stream)) {
+      this.clearRestartTimers(stream);
+      return null;
+    }
     const shouldSetReconnectionTimeout = !this.restartTimeout[stream] && !isEstablishedConnection;
 
     const {
@@ -1480,13 +1640,14 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     } else {
       const peer = this.webRtcPeers[streamId];
       const stillExists = streams.some((item) => item.type === VIDEO_TYPES.STREAM && streamId === item.stream);
+      const shouldReconnect = stillExists && this.isRemoteStreamEligibleForSubscription(streamId);
 
-      if (stillExists) {
+      if (shouldReconnect) {
         const isEstablishedConnection = peer && peer.started;
         this.setReconnectionTimeout(streamId, isLocal, isEstablishedConnection);
       }
 
-      this.stopWebRTCPeer(streamId, stillExists);
+      this.stopWebRTCPeer(streamId, shouldReconnect);
     }
   }
 
@@ -1530,6 +1691,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       handleVideoFocus,
       isGridEnabled,
       overflowCount,
+      webcamsVisible,
     } = this.props;
 
     return (
@@ -1542,10 +1704,12 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
           handleVideoFocus,
           isGridEnabled,
           overflowCount,
+          webcamsVisible,
         }}
         onVideoItemMount={this.createVideoTag}
         onVideoItemUnmount={this.destroyVideoTag}
         onVideoPlaybackStateChange={this.handleVideoPlaybackStateChange}
+        onVideoVisibilityChange={this.handleVideoVisibilityChange}
         onVirtualBgDrop={this.startVirtualBackgroundByDrop}
       />
     );

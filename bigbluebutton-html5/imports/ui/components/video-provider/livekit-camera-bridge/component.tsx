@@ -69,6 +69,7 @@ interface LiveKitCameraBridgeProps {
   handleVideoFocus: (id: string) => void;
   isGridEnabled: boolean;
   isClientConnected: boolean;
+  webcamsVisible: boolean;
   isUserLocked: boolean;
   currentVideoPageIndex: number;
   streams: VideoItem[];
@@ -98,6 +99,7 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
   handleVideoFocus,
   isGridEnabled,
   isClientConnected,
+  webcamsVisible,
   isUserLocked,
   currentVideoPageIndex,
   streams,
@@ -664,6 +666,7 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
       onVideoPlaybackStateChange={handleVideoPlaybackStateChange}
       onVirtualBgDrop={startVirtualBackgroundByDrop}
       overflowCount={overflowCount}
+      webcamsVisible={webcamsVisible}
     />
   );
 };

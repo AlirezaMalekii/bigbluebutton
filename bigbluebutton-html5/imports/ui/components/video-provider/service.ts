@@ -32,6 +32,8 @@ const FILTER_VIDEO_STATS = [
 ];
 
 class VideoService {
+  private static originalCameraConstraints = new WeakMap<MediaStreamTrack, Constraints2>();
+
   public isMobile: boolean;
 
   public webRtcPeersRef: Record<string, WebRtcPeer>;
@@ -361,22 +363,20 @@ class VideoService {
     }
   }
 
-  static reapplyResolutionIfNeeded(track: MediaStreamTrack, constraints?: Constraints2) {
+  static getCurrentVideoConstraints(track: MediaStreamTrack) {
     if (typeof track.getSettings !== 'function') {
-      return constraints;
+      return undefined;
     }
 
     const trackSettings = track.getSettings();
 
-    if (trackSettings.width && trackSettings.height) {
-      return {
-        ...constraints,
-        width: trackSettings.width,
-        height: trackSettings.height,
-      };
-    }
+    if (!trackSettings.width || !trackSettings.height) return undefined;
 
-    return constraints;
+    return {
+      width: trackSettings.width,
+      height: trackSettings.height,
+      ...(trackSettings.frameRate ? { frameRate: trackSettings.frameRate } : {}),
+    } as Constraints2;
   }
 
   static applyCameraProfile(peer: WebRtcPeer, profileId: string) {
@@ -407,8 +407,18 @@ class VideoService {
       peer.peerConnection.getSenders().forEach((sender: RTCRtpSender) => {
         const { track } = sender;
         if (track && track.kind === 'video' && typeof track.applyConstraints === 'function') {
-          const normalizedVideoConstraints = VideoService.reapplyResolutionIfNeeded(track, constraints);
-          track.applyConstraints(normalizedVideoConstraints)
+          let originalConstraints = VideoService.originalCameraConstraints.get(track);
+          if (!originalConstraints) {
+            originalConstraints = VideoService.getCurrentVideoConstraints(track);
+            if (originalConstraints) {
+              VideoService.originalCameraConstraints.set(track, originalConstraints);
+            }
+          }
+          // @ts-expect-error -> Untyped WebRtcPeer profile metadata.
+          const targetConstraints = profileId === peer.originalProfileId
+            ? originalConstraints || constraints
+            : constraints;
+          track.applyConstraints(targetConstraints)
             .catch((error) => {
               logger.warn({
                 logCode: 'video_provider_constraintchange_failed',

@@ -109,6 +109,10 @@ const intlMessages = defineMessages({
     id: 'app.skyroom.speedTest.gaugeLabel',
     description: 'Gauge accessible name',
   },
+  phaseFailed: {
+    id: 'app.skyroom.speedTest.phaseFailed',
+    description: 'Short failed phase label',
+  },
 });
 
 const PHASE_MESSAGE: Record<SpeedTestPhase, keyof typeof intlMessages> = {
@@ -118,7 +122,7 @@ const PHASE_MESSAGE: Record<SpeedTestPhase, keyof typeof intlMessages> = {
   download: 'phaseDownload',
   upload: 'phaseUpload',
   done: 'phaseDone',
-  error: 'phaseIdle',
+  error: 'phaseFailed',
 };
 
 const VERDICT_MESSAGE: Record<SpeedTestVerdict, keyof typeof intlMessages> = {
@@ -162,9 +166,7 @@ const SkyroomSpeedTestTab: React.FC = () => {
     || (typeof window !== 'undefined'
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
-  const phaseLabel = snapshot.phase === 'error' && snapshot.errorCode
-    ? intl.formatMessage(intlMessages[ERROR_MESSAGE[snapshot.errorCode]])
-    : intl.formatMessage(intlMessages[PHASE_MESSAGE[snapshot.phase]]);
+  const phaseLabel = intl.formatMessage(intlMessages[PHASE_MESSAGE[snapshot.phase]]);
 
   let liveMbps = snapshot.downloadMbps ?? snapshot.liveMbps;
   if (snapshot.phase === 'upload') {

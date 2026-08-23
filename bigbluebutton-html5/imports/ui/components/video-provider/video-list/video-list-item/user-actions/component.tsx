@@ -1,6 +1,5 @@
-import React, { MutableRefObject, useContext, useEffect } from 'react';
+import React, { MutableRefObject, useEffect } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
-import { useMutation } from '@apollo/client';
 import Session from '/imports/ui/services/storage/in-memory';
 import { UserCameraDropdownInterface, UserCameraDropdownOption } from 'bigbluebutton-html-plugin-sdk';
 import browserInfo from '/imports/utils/browserInfo';
@@ -9,9 +8,7 @@ import BBBMenu from '/imports/ui/components/common/menu/component';
 import { UserCameraDropdownItemType } from 'bigbluebutton-html-plugin-sdk/dist/cjs/extensible-areas/user-camera-dropdown-item/enums';
 import Styled from './styles';
 import Auth from '/imports/ui/services/auth';
-import { PluginsContext } from '/imports/ui/components/components-data/plugin-context/context';
 import { notify } from '/imports/ui/services/notification';
-import { SET_CAMERA_PINNED } from '/imports/ui/core/graphql/mutations/userMutations';
 import { VideoItem } from '/imports/ui/components/video-provider/types';
 import { useIsVideoPinEnabledForCurrentUser } from '/imports/ui/components/video-provider/hooks';
 import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
@@ -98,6 +95,8 @@ interface UserActionProps {
   menuTriggerRef?: MutableRefObject<HTMLDivElement | null>,
   isFullscreenContext: boolean;
   layoutContextDispatch: (...args: unknown[]) => void;
+  userCameraDropdownItems: UserCameraDropdownInterface[];
+  setCameraPinned: (userId: string, pinned: boolean) => void;
 }
 
 const UserActions: React.FC<UserActionProps> = (props) => {
@@ -106,22 +105,13 @@ const UserActions: React.FC<UserActionProps> = (props) => {
     isVideoSqueezed = false, menuTriggerRef,
     isRTL, isStream, isSelfViewDisabled, isMirrored,
     amIModerator, isFullscreenContext, layoutContextDispatch,
+    userCameraDropdownItems, setCameraPinned,
   } = props;
-
-  const { pluginsExtensibleAreasAggregatedState } = useContext(PluginsContext);
-
-  let userCameraDropdownItems: UserCameraDropdownInterface[] = [];
-  if (pluginsExtensibleAreasAggregatedState.userCameraDropdownItems) {
-    userCameraDropdownItems = [
-      ...pluginsExtensibleAreasAggregatedState.userCameraDropdownItems,
-    ];
-  }
 
   const intl = useIntl();
   const enableVideoMenu = window.meetingClientSettings.public.kurento.enableVideoMenu || false;
   const { isFirefox } = browserInfo;
 
-  const [setCameraPinned] = useMutation(SET_CAMERA_PINNED);
   const pinEnabledForCurrentUser = useIsVideoPinEnabledForCurrentUser(amIModerator);
   const useSkyroomMobileMenu = isSkyroomColumnLayout() && isSkyroomMobileViewport();
   const useSkyroomFullName = isSkyroomColumnLayout() && !isSkyroomMobileViewport();
@@ -232,12 +222,7 @@ const UserActions: React.FC<UserActionProps> = (props) => {
         label: intl.formatMessage(intlMessages[`${isPinnedIntlKey}Label`]),
         description: intl.formatMessage(intlMessages[`${isPinnedIntlKey}Desc`]),
         onClick: () => {
-          setCameraPinned({
-            variables: {
-              userId,
-              pinned: !pinned,
-            },
-          });
+          setCameraPinned(userId, !pinned);
         },
         dataTest: 'pinWebcamBtn',
       });
@@ -279,13 +264,17 @@ const UserActions: React.FC<UserActionProps> = (props) => {
     return menuItems;
   };
 
+  const availableActions = (enableVideoMenu || isVideoSqueezed)
+    ? getAvailableActions()
+    : [];
+
   const renderDefaultButton = () => (
     <Styled.WebcamMenuHost ref={menuTriggerRef} data-test="skyroomWebcamMenuHost">
       <Styled.MenuWrapper
         $skyroomMobile={useSkyroomMobileMenu}
         $skyroomFullName={useSkyroomFullName}
       >
-        {enableVideoMenu && getAvailableActions().length >= 1
+        {enableVideoMenu && availableActions.length >= 1
           ? (
             <BBBMenu
               overrideMobileStyles={useSkyroomMobileMenu}
@@ -302,7 +291,7 @@ const UserActions: React.FC<UserActionProps> = (props) => {
                   {displayName}
                 </Styled.DropdownTrigger>
               )}
-              actions={getAvailableActions()}
+              actions={availableActions}
               opts={getMenuOpts()}
             />
           )
@@ -340,7 +329,7 @@ const UserActions: React.FC<UserActionProps> = (props) => {
               onClick={() => null}
             />
           )}
-          actions={getAvailableActions()}
+          actions={availableActions}
           opts={getMenuOpts()}
         />
       </Styled.MenuWrapperSqueezed>

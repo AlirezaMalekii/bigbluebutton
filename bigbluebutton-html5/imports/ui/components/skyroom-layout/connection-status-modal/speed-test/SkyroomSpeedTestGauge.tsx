@@ -4,9 +4,9 @@ import type { SpeedTestPhase } from './types';
 import Styled from '../styles';
 
 const CX = 110;
-const CY = 108;
-const RADIUS = 86;
-const START_ANGLE = 135;
+const CY = 100;
+const RADIUS = 78;
+const START_ANGLE = 225;
 const SWEEP = 270;
 
 const polar = (cx: number, cy: number, r: number, angleDeg: number) => {
@@ -62,70 +62,72 @@ const SkyroomSpeedTestGauge: React.FC<SkyroomSpeedTestGaugeProps> = ({
 
   return (
     <Styled.GaugeWrap>
-      <Styled.GaugeSvg
-        viewBox="0 0 220 168"
-        role="img"
-        aria-label={`${gaugeLabel} ${displayValue} ${displayUnit}`}
-        data-animate={animate ? 'true' : 'false'}
-      >
-        <defs>
-          <linearGradient id="skyroomSpeedTestArc" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#0D887E" />
-            <stop offset="55%" stopColor="#20C7BB" />
-            <stop offset="100%" stopColor="#7EE7DE" />
-          </linearGradient>
-        </defs>
-        <path
-          d={arcPath(RADIUS, START_ANGLE, START_ANGLE + SWEEP)}
-          fill="none"
-          stroke="rgba(218, 230, 245, 0.12)"
-          strokeWidth="14"
-          strokeLinecap="round"
-        />
-        {progress > 0.004 ? (
+      <Styled.GaugeStage>
+        <Styled.GaugeSvg
+          viewBox="0 0 220 186"
+          role="img"
+          aria-label={`${gaugeLabel} ${displayValue} ${displayUnit}`}
+          data-animate={animate ? 'true' : 'false'}
+        >
+          <defs>
+            <linearGradient id="skyroomSpeedTestArc" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0D887E" />
+              <stop offset="55%" stopColor="#20C7BB" />
+              <stop offset="100%" stopColor="#7EE7DE" />
+            </linearGradient>
+          </defs>
           <path
-            d={arcPath(RADIUS, START_ANGLE, endAngle)}
+            d={arcPath(RADIUS, START_ANGLE, START_ANGLE + SWEEP)}
             fill="none"
-            stroke="url(#skyroomSpeedTestArc)"
+            stroke="rgba(218, 230, 245, 0.12)"
             strokeWidth="14"
             strokeLinecap="round"
-            className="skyroom-speedtest-progress"
           />
-        ) : null}
-        {TICK_MBPS.map((tick) => {
-          const angle = START_ANGLE + SWEEP * mbpsToGauge(tick);
-          const inner = polar(CX, CY, RADIUS - 11, angle);
-          const outer = polar(CX, CY, RADIUS + 6, angle);
-          return (
-            <line
-              key={tick}
-              x1={inner.x}
-              y1={inner.y}
-              x2={outer.x}
-              y2={outer.y}
-              stroke="rgba(218, 230, 245, 0.28)"
-              strokeWidth="1.5"
+          {progress > 0.004 ? (
+            <path
+              d={arcPath(RADIUS, START_ANGLE, endAngle)}
+              fill="none"
+              stroke="url(#skyroomSpeedTestArc)"
+              strokeWidth="14"
+              strokeLinecap="round"
+              className="skyroom-speedtest-progress"
             />
-          );
-        })}
-        <circle cx={CX} cy={CY} r="7" fill="#0F141C" stroke="#20C7BB" strokeWidth="2" />
-        {running || progress > 0 ? (
-          <line
-            x1={CX}
-            y1={CY}
-            x2={needle.x}
-            y2={needle.y}
-            stroke="#E6EDF7"
-            strokeWidth="2.4"
-            strokeLinecap="round"
-            className="skyroom-speedtest-needle"
-          />
-        ) : null}
-      </Styled.GaugeSvg>
-      <Styled.GaugeReadout>
-        <Styled.GaugeValue>{displayValue}</Styled.GaugeValue>
-        <Styled.GaugeUnit>{displayUnit}</Styled.GaugeUnit>
-      </Styled.GaugeReadout>
+          ) : null}
+          {TICK_MBPS.map((tick) => {
+            const angle = START_ANGLE + SWEEP * mbpsToGauge(tick);
+            const inner = polar(CX, CY, RADIUS - 11, angle);
+            const outer = polar(CX, CY, RADIUS + 6, angle);
+            return (
+              <line
+                key={tick}
+                x1={inner.x}
+                y1={inner.y}
+                x2={outer.x}
+                y2={outer.y}
+                stroke="rgba(218, 230, 245, 0.28)"
+                strokeWidth="1.5"
+              />
+            );
+          })}
+          <circle cx={CX} cy={CY} r="7" fill="#0F141C" stroke="#20C7BB" strokeWidth="2" />
+          {running || progress > 0 ? (
+            <line
+              x1={CX}
+              y1={CY}
+              x2={needle.x}
+              y2={needle.y}
+              stroke="#E6EDF7"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              className="skyroom-speedtest-needle"
+            />
+          ) : null}
+        </Styled.GaugeSvg>
+        <Styled.GaugeReadout>
+          <Styled.GaugeValue>{displayValue}</Styled.GaugeValue>
+          <Styled.GaugeUnit>{displayUnit}</Styled.GaugeUnit>
+        </Styled.GaugeReadout>
+      </Styled.GaugeStage>
       <Styled.GaugePhase aria-live="polite">{phaseLabel}</Styled.GaugePhase>
     </Styled.GaugeWrap>
   );

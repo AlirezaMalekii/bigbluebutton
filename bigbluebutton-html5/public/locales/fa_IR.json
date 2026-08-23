@@ -245,6 +245,7 @@
   "app.skyroom.speedTest.phaseDownload": "در حال سنجش دانلود…",
   "app.skyroom.speedTest.phaseUpload": "در حال سنجش آپلود…",
   "app.skyroom.speedTest.phaseDone": "تست تمام شد",
+  "app.skyroom.speedTest.phaseFailed": "تست کامل نشد",
   "app.skyroom.speedTest.ping": "پینگ",
   "app.skyroom.speedTest.jitter": "نوسان پینگ",
   "app.skyroom.speedTest.download": "دانلود",

@@ -45,6 +45,7 @@ import {
 import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
+  isSkyroomTheme,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const intlMessages = defineMessages({
@@ -103,6 +104,8 @@ const ASPECT_RATIO = 4 / 3;
 
 interface VideoListProps {
   pluginUserCameraHelperPerPosition: UserCameraHelperAreas;
+  userCameraDomElementIds: string[];
+  webcamsVisible: boolean;
   layoutType: string;
   layoutContextDispatch: (...args: unknown[]) => void;
   numberOfPages: number;
@@ -118,6 +121,7 @@ interface VideoListProps {
   onVideoItemMount: (stream: string, video: HTMLVideoElement) => void;
   onVideoItemUnmount: (stream: string) => void;
   onVideoPlaybackStateChange: (stream: string, state: VideoPlaybackState) => void;
+  onVideoVisibilityChange?: (changes: { stream: string; visible: boolean }[]) => void;
   onVirtualBgDrop: (stream: string, type: string, name: string, data: string) => Promise<unknown>;
 }
 
@@ -166,6 +170,20 @@ class VideoList extends Component<VideoListProps, VideoListState> {
 
   private stageGrid: HTMLDivElement | null;
 
+  private viewportObservers: Map<Element | null, IntersectionObserver>;
+
+  private viewportTargetObservers: Map<Element, IntersectionObserver>;
+
+  private viewportTargets: Map<Element, string>;
+
+  private visibleViewportTargets: Set<Element>;
+
+  private reportedStreamVisibility: Map<string, boolean>;
+
+  private pendingViewportStreams: Set<string>;
+
+  private viewportReportFrame: number | null;
+
   private unsubscribeSkyroomZones: (() => void) | null;
 
   private failedMediaElements: unknown[];
@@ -211,6 +229,13 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     this.sidebarGrid = null;
     this.centerGrid = null;
     this.stageGrid = null;
+    this.viewportObservers = new Map();
+    this.viewportTargetObservers = new Map();
+    this.viewportTargets = new Map();
+    this.visibleViewportTargets = new Set();
+    this.reportedStreamVisibility = new Map();
+    this.pendingViewportStreams = new Set();
+    this.viewportReportFrame = null;
     this.unsubscribeSkyroomZones = null;
     this.failedMediaElements = [];
     this.handleCanvasResize = throttle(this.handleCanvasResize.bind(this), 66,
@@ -221,6 +246,8 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     this.setOptimalGrid = this.setOptimalGrid.bind(this);
     this.handleAllowAutoplay = this.handleAllowAutoplay.bind(this);
     this.handlePlayElementFailed = this.handlePlayElementFailed.bind(this);
+    this.handleViewportIntersections = this.handleViewportIntersections.bind(this);
+    this.syncViewportTargets = this.syncViewportTargets.bind(this);
     this.autoplayWasHandled = false;
   }
 
@@ -234,35 +261,49 @@ class VideoList extends Component<VideoListProps, VideoListState> {
         () => this.handleCanvasResize(),
       );
     });
+    this.syncViewportTargets();
   }
 
-  componentDidUpdate(prevProps: VideoListProps) {
+  componentDidUpdate(prevProps: VideoListProps, prevState: VideoListState) {
     const {
-      layoutType, cameraDock, streams, focusedId,
+      layoutType, cameraDock, streams, focusedId, onVideoVisibilityChange, webcamsVisible,
     } = this.props;
+    const { skyroomZoneRevision } = this.state;
     const { width: cameraDockWidth, height: cameraDockHeight } = cameraDock;
     const {
       layoutType: prevLayoutType,
       cameraDock: prevCameraDock,
       streams: prevStreams,
       focusedId: prevFocusedId,
+      webcamsVisible: prevWebcamsVisible,
     } = prevProps;
     const { width: prevCameraDockWidth, height: prevCameraDockHeight } = prevCameraDock;
 
-    const privilegeKey = (list: VideoItem[]) => list
+    const layoutKey = (list: VideoItem[]) => list
       .map((s) => {
-        const id = s.type !== VIDEO_TYPES.GRID ? s.stream : s.userId;
-        return `${id ?? ''}:${getSkyroomStreamPrivilegeKey(s)}`;
+        const id = getSkyroomStreamKey(s);
+        const render = s.type === VIDEO_TYPES.GRID || !('render' in s) || s.render !== false;
+        return `${id}:${s.type}:${render ? 1 : 0}:${getSkyroomStreamPrivilegeKey(s)}`;
       })
       .join('|');
+    const nextLayoutKey = layoutKey(streams);
+    const previousLayoutKey = layoutKey(prevStreams);
 
     if (layoutType !== prevLayoutType
       || focusedId !== prevFocusedId
       || cameraDockWidth !== prevCameraDockWidth
       || cameraDockHeight !== prevCameraDockHeight
       || streams.length !== prevStreams.length
-      || privilegeKey(streams) !== privilegeKey(prevStreams)) {
+      || nextLayoutKey !== previousLayoutKey) {
       this.handleCanvasResize();
+    }
+
+    if (layoutType !== prevLayoutType
+      || nextLayoutKey !== previousLayoutKey
+      || skyroomZoneRevision !== prevState.skyroomZoneRevision
+      || webcamsVisible !== prevWebcamsVisible
+      || onVideoVisibilityChange !== prevProps.onVideoVisibilityChange) {
+      this.syncViewportTargets();
     }
   }
 
@@ -270,6 +311,208 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     window.removeEventListener('resize', this.handleCanvasResize, false);
     window.removeEventListener('videoPlayFailed', this.handlePlayElementFailed);
     this.unsubscribeSkyroomZones?.();
+    this.viewportObservers.forEach((observer) => observer.disconnect());
+    this.viewportObservers.clear();
+    this.viewportTargetObservers.clear();
+    this.viewportTargets.clear();
+    this.visibleViewportTargets.clear();
+    this.reportedStreamVisibility.clear();
+    this.pendingViewportStreams.clear();
+    if (this.viewportReportFrame !== null) cancelAnimationFrame(this.viewportReportFrame);
+    this.viewportReportFrame = null;
+  }
+
+  static getViewportObserverRoot(target: Element) {
+    return target.closest([
+      '#skyroom-stage-webcam-dock',
+      '#skyroom-sidebar-webcam-dock',
+      '#skyroom-center-webcam-dock',
+      '#cameraDock',
+    ].join(', '));
+  }
+
+  getViewportObserver(root: Element | null) {
+    const existing = this.viewportObservers.get(root);
+    if (existing) return existing;
+
+    const {
+      overscanPixels = 24,
+    } = window.meetingClientSettings.public.kurento.viewportSubscription || {};
+    const safeOverscan = Math.max(0, Number(overscanPixels) || 0);
+    const observer = new IntersectionObserver(this.handleViewportIntersections, {
+      root,
+      rootMargin: `${safeOverscan}px`,
+      threshold: 0.01,
+    });
+    this.viewportObservers.set(root, observer);
+    return observer;
+  }
+
+  isViewportTargetVisible(target: Element) {
+    const { webcamsVisible } = this.props;
+    if (!webcamsVisible) return false;
+
+    const element = target as HTMLElement;
+    const styles = window.getComputedStyle(element);
+    if (element.offsetParent === null
+      || styles.visibility === 'hidden'
+      || styles.display === 'none') return false;
+
+    const {
+      overscanPixels = 24,
+    } = window.meetingClientSettings.public.kurento.viewportSubscription || {};
+    const overscan = Math.max(0, Number(overscanPixels) || 0);
+    const targetRect = element.getBoundingClientRect();
+    const root = VideoList.getViewportObserverRoot(target);
+    const rootRect = root?.getBoundingClientRect() || {
+      top: 0,
+      right: window.innerWidth,
+      bottom: window.innerHeight,
+      left: 0,
+    };
+
+    return targetRect.width > 0
+      && targetRect.height > 0
+      && targetRect.bottom >= rootRect.top - overscan
+      && targetRect.top <= rootRect.bottom + overscan
+      && targetRect.right >= rootRect.left - overscan
+      && targetRect.left <= rootRect.right + overscan;
+  }
+
+  reportViewportVisibility(streams: Set<string>) {
+    const { onVideoVisibilityChange } = this.props;
+    const changes: { stream: string; visible: boolean }[] = [];
+
+    streams.forEach((stream) => {
+      const hasTarget = Array.from(this.viewportTargets.values()).some((targetStream) => (
+        targetStream === stream
+      ));
+      const visible = hasTarget && Array.from(this.viewportTargets.entries()).some(([target, targetStream]) => (
+        targetStream === stream && this.visibleViewportTargets.has(target)
+      ));
+      if (this.reportedStreamVisibility.get(stream) === visible) return;
+      if (hasTarget) {
+        this.reportedStreamVisibility.set(stream, visible);
+      } else {
+        this.reportedStreamVisibility.delete(stream);
+      }
+      changes.push({ stream, visible });
+    });
+
+    if (changes.length > 0) onVideoVisibilityChange?.(changes);
+  }
+
+  queueViewportVisibilityReport(streams: Set<string>) {
+    streams.forEach((stream) => this.pendingViewportStreams.add(stream));
+    if (this.viewportReportFrame !== null || this.pendingViewportStreams.size === 0) return;
+
+    this.viewportReportFrame = requestAnimationFrame(() => {
+      this.viewportReportFrame = null;
+      const pending = new Set(this.pendingViewportStreams);
+      this.pendingViewportStreams.clear();
+      this.reportViewportVisibility(pending);
+    });
+  }
+
+  handleViewportIntersections(entries: IntersectionObserverEntry[]) {
+    const affectedStreams = new Set<string>();
+
+    entries.forEach((entry) => {
+      const stream = this.viewportTargets.get(entry.target);
+      if (!stream) return;
+
+      const visible = entry.isIntersecting
+        && entry.intersectionRatio > 0
+        && this.isViewportTargetVisible(entry.target);
+
+      if (visible) {
+        this.visibleViewportTargets.add(entry.target);
+      } else {
+        this.visibleViewportTargets.delete(entry.target);
+      }
+      affectedStreams.add(stream);
+    });
+
+    this.queueViewportVisibilityReport(affectedStreams);
+  }
+
+  syncViewportTargets() {
+    const { onVideoVisibilityChange } = this.props;
+    if (!isSkyroomTheme() || !onVideoVisibilityChange) return;
+
+    const {
+      enabled = true,
+    } = window.meetingClientSettings.public.kurento.viewportSubscription || {};
+    if (!enabled) return;
+
+    const nextTargets = new Set(Array.from(document.querySelectorAll(
+      '[data-skyroom-viewport-stream]',
+    )));
+    const removedStreams = new Set<string>();
+
+    this.viewportTargets.forEach((stream, target) => {
+      if (nextTargets.has(target)) return;
+      this.viewportTargetObservers.get(target)?.unobserve(target);
+      this.viewportTargetObservers.delete(target);
+      this.viewportTargets.delete(target);
+      this.visibleViewportTargets.delete(target);
+      removedStreams.add(stream);
+    });
+
+    if (typeof IntersectionObserver !== 'function') {
+      const fallbackChanges: { stream: string; visible: boolean }[] = [];
+      const currentStreams = new Set<string>();
+      nextTargets.forEach((target) => {
+        const stream = target.getAttribute('data-skyroom-viewport-stream');
+        if (stream) currentStreams.add(stream);
+        if (!stream || this.reportedStreamVisibility.get(stream) === true) return;
+        this.reportedStreamVisibility.set(stream, true);
+        fallbackChanges.push({ stream, visible: true });
+      });
+      this.reportedStreamVisibility.forEach((visible, stream) => {
+        if (!visible || currentStreams.has(stream)) return;
+        this.reportedStreamVisibility.set(stream, false);
+        fallbackChanges.push({ stream, visible: false });
+      });
+      if (fallbackChanges.length > 0) onVideoVisibilityChange(fallbackChanges);
+      return;
+    }
+
+    nextTargets.forEach((target) => {
+      const stream = target.getAttribute('data-skyroom-viewport-stream');
+      if (!stream) return;
+      const observer = this.getViewportObserver(VideoList.getViewportObserverRoot(target));
+      const previousStream = this.viewportTargets.get(target);
+      const previousObserver = this.viewportTargetObservers.get(target);
+
+      if (previousStream === stream && previousObserver === observer) return;
+      if (previousObserver) previousObserver.unobserve(target);
+      if (previousStream && previousStream !== stream) {
+        this.visibleViewportTargets.delete(target);
+        removedStreams.add(previousStream);
+      }
+      this.viewportTargets.set(target, stream);
+      this.viewportTargetObservers.set(target, observer);
+      observer.observe(target);
+    });
+
+    // IntersectionObserver does not guarantee a new entry when only an
+    // ancestor's CSS visibility changes (mobile tab/zone switches). Refresh
+    // the current geometry on those bounded layout updates so hidden docks do
+    // not keep decoding every retained camera.
+    const layoutAffectedStreams = new Set(removedStreams);
+    nextTargets.forEach((target) => {
+      const stream = this.viewportTargets.get(target);
+      if (!stream) return;
+      if (this.isViewportTargetVisible(target)) {
+        this.visibleViewportTargets.add(target);
+      } else {
+        this.visibleViewportTargets.delete(target);
+      }
+      layoutAffectedStreams.add(stream);
+    });
+
+    this.queueViewportVisibilityReport(layoutAffectedStreams);
   }
 
   getSkyroomPartition() {
@@ -638,6 +881,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       setUserCamerasRequestedFromPlugin,
       focusedId,
       pluginUserCameraHelperPerPosition,
+      userCameraDomElementIds,
       isGridEnabled,
       overflowCount,
     } = this.props;
@@ -678,9 +922,11 @@ class VideoList extends Component<VideoListProps, VideoListState> {
         <Styled.VideoListItem
           $focused={isFocused}
           data-test="webcamVideoItem"
+          data-skyroom-viewport-stream={isStream ? stream : undefined}
         >
           <VideoListItemContainer
             pluginUserCameraHelperPerPosition={pluginUserCameraHelperPerPosition}
+            userCameraDomElementRequested={Boolean(stream && userCameraDomElementIds.includes(stream))}
             numOfStreams={numOfStreams}
             cameraId={stream}
             userId={userId}

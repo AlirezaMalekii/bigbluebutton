@@ -202,6 +202,33 @@
     max-width: 6rem !important;
   }
 
+  /* Phone header lockup — shorter than the ≤900px tablet cap so the
+     wordmark stays clear of the recording chip on ~360–390px. */
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] {
+    max-width: min(28vw, 108px) !important;
+    margin-inline-end: 8px !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"] a {
+    height: 18px !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"] img,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"] object {
+    height: 18px !important;
+    max-height: 18px !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"][data-logo-source="roomeet"] a {
+    height: 20px !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"][data-logo-source="roomeet"] img,
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"][data-logo-source="roomeet"] object {
+    height: 20px !important;
+    max-height: 20px !important;
+  }
+
   /* Center cluster: participate in the flex row, truncate gracefully */
   #layout[data-skyroom-column="true"] #Navbar [data-test="skyroom-header-center"] {
     position: static !important;
@@ -2431,15 +2458,18 @@
   }
 
   /* Webcam tile menu — anchored drop-up; must remain fully interactive on touch */
+  html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu,
   html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu) {
-    z-index: 1400 !important;
+    z-index: 2700 !important;
   }
 
+  html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu .MuiPopover-root,
   html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiPopover-root {
     top: unset !important;
-    z-index: 1400 !important;
+    z-index: 2700 !important;
   }
 
+  html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu .MuiPaper-root.override-mobile-styles,
   html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiPaper-root.override-mobile-styles {
     pointer-events: auto !important;
     width: min(260px, calc(100vw - 24px)) !important;
@@ -2449,20 +2479,24 @@
     height: auto !important;
     padding-bottom: 6px !important;
     overflow: visible !important;
-    z-index: 1401 !important;
+    z-index: 2701 !important;
   }
 
+  html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu .MuiBackdrop-root,
   html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiBackdrop-root {
     background-color: transparent !important;
     pointer-events: auto !important;
   }
 
+  html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu .MuiList-root,
   html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiList-root {
     display: block !important;
     width: 100% !important;
   }
 
+  html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu .MuiMenuItem-root,
   html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiMenuItem-root,
+  html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu [data-key^="menuItem-"],
   html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu) [data-key^="menuItem-"] {
     width: 100% !important;
     min-height: 40px !important;
@@ -2470,12 +2504,14 @@
     touch-action: manipulation !important;
   }
 
+  html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu [class*="MenuItemWrapper"],
   html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu) [class*="MenuItemWrapper"] {
     flex-direction: row !important;
     align-items: center !important;
     width: 100% !important;
   }
 
+  html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu [class*="Option"],
   html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu) [class*="Option"] {
     white-space: normal !important;
     text-align: start !important;

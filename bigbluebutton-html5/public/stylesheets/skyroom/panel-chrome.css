@@ -359,10 +359,12 @@
 .MuiModal-root:has(.skyroom-audio-settings-menu) .MuiPaper-root.override-mobile-styles,
 .MuiModal-root:has(.skyroom-presentation-options-menu) .override-mobile-styles,
 .MuiModal-root:has(.skyroom-presentation-options-menu) .MuiPaper-root.override-mobile-styles,
+.MuiModal-root.skyroom-webcam-actions-menu .MuiBackdrop-root,
 .MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiBackdrop-root {
   background-color: transparent !important;
 }
 
+.MuiModal-root.skyroom-webcam-actions-menu .MuiPaper-root.override-mobile-styles,
 .MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiPaper-root.override-mobile-styles {
   width: auto !important;
   min-width: 168px !important;

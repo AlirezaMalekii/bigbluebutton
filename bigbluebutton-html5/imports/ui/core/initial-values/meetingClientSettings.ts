@@ -111,11 +111,11 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
       enableCopyNetworkStatsButton: true,
       enableSpeedTest: true,
       speedTest: {
-        pingCount: 10,
-        downloadDurationMs: 8000,
-        uploadDurationMs: 8000,
-        parallelStreams: 4,
-        mobileParallelStreams: 3,
+        pingCount: 6,
+        downloadDurationMs: 5000,
+        uploadDurationMs: 4000,
+        parallelStreams: 2,
+        mobileParallelStreams: 1,
       },
       userSettingsStorage: 'session',
       defaultSettings: {
@@ -277,36 +277,66 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
           name: 'low-u30',
           bitrate: 30,
           hidden: true,
+          constraints: {
+            width: 320,
+            height: 180,
+            frameRate: 6,
+          },
         },
         {
           id: 'low-u25',
           name: 'low-u25',
           bitrate: 40,
           hidden: true,
+          constraints: {
+            width: 320,
+            height: 180,
+            frameRate: 8,
+          },
         },
         {
           id: 'low-u20',
           name: 'low-u20',
           bitrate: 50,
           hidden: true,
+          constraints: {
+            width: 480,
+            height: 270,
+            frameRate: 8,
+          },
         },
         {
           id: 'low-u15',
           name: 'low-u15',
           bitrate: 70,
           hidden: true,
+          constraints: {
+            width: 480,
+            height: 270,
+            frameRate: 10,
+          },
         },
         {
           id: 'low-u12',
           name: 'low-u12',
           bitrate: 90,
           hidden: true,
+          constraints: {
+            width: 640,
+            height: 360,
+            frameRate: 10,
+          },
         },
         {
           id: 'low-u8',
           name: 'low-u8',
           bitrate: 100,
           hidden: true,
+          constraints: {
+            width: 640,
+            height: 360,
+            frameRate: 12,
+          },
         },
         {
           id: 'low',
@@ -370,7 +400,7 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
       },
       cameraQualityThresholds: {
         enabled: true,
-        applyConstraints: false,
+        applyConstraints: true,
         privilegedStreams: true,
         debounceTime: 2500,
         thresholds: [
@@ -399,6 +429,12 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
             profile: 'low-u30',
           },
         ],
+      },
+      viewportSubscription: {
+        enabled: true,
+        activationThreshold: 5,
+        overscanPixels: 24,
+        releaseDelay: 2500,
       },
       pagination: {
         paginationToggleEnabled: true,

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
-import { UserCameraHelperButton } from 'bigbluebutton-html-plugin-sdk';
+import { UserCameraDropdownInterface, UserCameraHelperButton } from 'bigbluebutton-html-plugin-sdk';
 import { UpdatedDataForUserCameraDomElement } from 'bigbluebutton-html-plugin-sdk/dist/cjs/dom-element-manipulation/user-camera/types';
 import Session from '/imports/ui/services/storage/in-memory';
 import UserActions from '/imports/ui/components/video-provider/video-list/video-list-item/user-actions/component';
@@ -21,7 +21,6 @@ import Styled from './styles';
 import withDragAndDrop from './drag-and-drop/component';
 import Auth from '/imports/ui/services/auth';
 import { VideoItem } from '/imports/ui/components/video-provider/types';
-import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
 import PluginButtonContainer from '../../../plugins/plugin-button/container';
 import { UserCameraHelperAreas } from '../../../plugins-engine/extensible-areas/components/user-camera-helper/types';
@@ -36,6 +35,11 @@ import {
   VideoPlaybackState,
   VIDEO_PLAYBACK_STALL_GRACE_MS,
 } from '/imports/ui/components/video-provider/video-playback-utils';
+import {
+  isVideoPlaybackPageActive,
+  subscribeToVideoPlaybackPageLifecycle,
+} from '/imports/ui/components/video-provider/video-playback-page-lifecycle';
+import { VideoListCurrentUser } from '../shared-state-context';
 
 const intlMessages = defineMessages({
   disableDesc: {
@@ -46,8 +50,9 @@ const intlMessages = defineMessages({
 const VIDEO_CONTAINER_WIDTH_BOUND = 125;
 const VIDEO_CONTAINER_PLUGIN_HELPERS_WIDTH_BOUND = 175;
 
-interface VideoListItemProps {
+export interface VideoListItemProps {
   pluginUserCameraHelperPerPosition: UserCameraHelperAreas;
+  userCameraDomElementRequested: boolean;
   isFullscreenContext: boolean;
   setUserCamerasRequestedFromPlugin: React.Dispatch<React.SetStateAction<UpdatedDataForUserCameraDomElement[]>>;
   layoutContextDispatch: (...args: unknown[]) => void;
@@ -55,6 +60,9 @@ interface VideoListItemProps {
   amIModerator: boolean;
   cameraId: string;
   disabledCams: string[];
+  currentUser: VideoListCurrentUser | null;
+  userCameraDropdownItems: UserCameraDropdownInterface[];
+  setCameraPinned: (userId: string, pinned: boolean) => void;
   focused: boolean;
   isStream: boolean;
   name: string;
@@ -65,13 +73,13 @@ interface VideoListItemProps {
   onVideoPlaybackStateChange: (state: VideoPlaybackState) => void;
   settingsSelfViewDisable: boolean;
   stream: VideoItem;
-  makeDragOperations: (userId?: string) => {
-    onDragOver: (e: DragEvent) => void,
-    onDrop: (e: DragEvent) => void,
-    onDragLeave: (e: DragEvent) => void,
+  makeDragOperations?: (userId?: string) => {
+    onDragOver?: (e: DragEvent) => void,
+    onDrop?: (e: DragEvent) => void,
+    onDragLeave?: (e: DragEvent) => void,
   };
-  dragging: boolean;
-  draggingOver: boolean;
+  dragging?: boolean;
+  draggingOver?: boolean;
   voiceUser: {
     muted: boolean;
     listenOnly: boolean;
@@ -129,14 +137,23 @@ const renderPluginItems = (
   return (<></>);
 };
 
-const VideoListItem: React.FC<VideoListItemProps> = (props) => {
+type DragOperations = {
+  onDragOver?: (e: DragEvent) => void;
+  onDrop?: (e: DragEvent) => void;
+  onDragLeave?: (e: DragEvent) => void;
+};
+
+const noDragOperations = (): DragOperations => ({});
+
+export const VideoListItem: React.FC<VideoListItemProps> = (props) => {
   const {
     name, voiceUser, isFullscreenContext, layoutContextDispatch, onHandleVideoFocus,
     cameraId, numOfStreams, focused, onVideoItemMount, onVideoItemUnmount,
-    onVideoPlaybackStateChange,
-    makeDragOperations, dragging, draggingOver, isRTL, isStream, settingsSelfViewDisable,
-    disabledCams, amIModerator, stream, setUserCamerasRequestedFromPlugin,
-    pluginUserCameraHelperPerPosition, raisedHandPosition,
+    onVideoPlaybackStateChange, isRTL, isStream, settingsSelfViewDisable,
+    disabledCams, amIModerator, stream, currentUser, setUserCamerasRequestedFromPlugin,
+    userCameraDropdownItems, setCameraPinned,
+    pluginUserCameraHelperPerPosition, userCameraDomElementRequested, raisedHandPosition,
+    makeDragOperations = noDragOperations, dragging = false, draggingOver = false,
   } = props;
 
   const intl = useIntl();
@@ -149,20 +166,6 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
   const [isSelfViewDisabled, setIsSelfViewDisabled] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
-  const pluginSqueezedResizeObserver = new ResizeObserver((entry) => {
-    if (entry && entry[0]?.contentRect?.width < VIDEO_CONTAINER_PLUGIN_HELPERS_WIDTH_BOUND) {
-      return setIsVideoPluginHelperSqueezed(true);
-    }
-    return setIsVideoPluginHelperSqueezed(false);
-  });
-
-  const resizeObserver = new ResizeObserver((entry) => {
-    if (entry && entry[0]?.contentRect?.width < VIDEO_CONTAINER_WIDTH_BOUND) {
-      return setIsVideoSqueezed(true);
-    }
-    return setIsVideoSqueezed(false);
-  });
-
   const videoTag = useRef<HTMLVideoElement | null>(null);
   const videoContainer = useRef<HTMLDivElement | null>(null);
   const webcamMenuRef = useRef<HTMLDivElement | null>(null);
@@ -173,41 +176,32 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
   const playbackDisabledRef = useRef(false);
 
   useEffect(() => {
+    if (!userCameraDomElementRequested || !videoContainer.current) return undefined;
+
     setUserCamerasRequestedFromPlugin((userCamera) => {
-      if (videoContainer.current && !userCamera.some((uc) => uc.streamId === cameraId)) {
-        userCamera.push({
+      if (!userCamera.some((uc) => uc.streamId === cameraId)) {
+        return [...userCamera, {
           streamId: cameraId,
-          userCameraDomElement: videoContainer.current,
-        });
+          userCameraDomElement: videoContainer.current!,
+        }];
       }
       return userCamera;
     });
-  }, [videoContainer]);
+
+    return () => {
+      setUserCamerasRequestedFromPlugin((userCamera) => (
+        userCamera.filter((camera) => camera.streamId !== cameraId)
+      ));
+    };
+  }, [cameraId, setUserCamerasRequestedFromPlugin, userCameraDomElementRequested]);
 
   const videoDataLoaded = playbackState === 'playing';
   const videoIsReady = isStreamHealthy && videoDataLoaded && !isSelfViewDisabled;
   const Settings = getSettingsSingletonInstance();
   const { animations, webcamBorderHighlightColor } = Settings.application;
-  const talking = voiceUser?.talking;
+  const { talking } = voiceUser;
   const raiseHand = (stream.type === VIDEO_TYPES.GRID && stream?.raiseHand)
     || (stream.type === VIDEO_TYPES.STREAM && stream.user?.raiseHand);
-  const { data: currentUser } = useCurrentUser((u) => ({
-    userId: u.userId,
-    pinned: u.pinned,
-    nameSortable: u.nameSortable,
-    name: u.name,
-    away: u.away,
-    disconnected: u.disconnected,
-    role: u.role,
-    avatar: u.avatar,
-    color: u.color,
-    presenter: u.presenter,
-    clientType: u.clientType,
-    raiseHand: u.raiseHand,
-    isModerator: u.isModerator,
-    reactionEmoji: u.reactionEmoji,
-  }));
-
   let user;
   let streamId = '';
   switch (stream.type) {
@@ -232,6 +226,9 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
       break;
     }
   }
+  const isModeratorWebcam = Boolean(
+    user?.isModerator || user?.role === VideoService.getRoleModerator(),
+  );
 
   const onStreamStateChange = (e: CustomEvent) => {
     const { streamState } = e.detail;
@@ -265,7 +262,8 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
   // Attach listeners before srcObject so a local MediaStream that already has
   // frames cannot fire loadeddata before we observe it (stuck avatar overlay).
   useEffect(() => {
-    const isAudioOnly = stream.type === VIDEO_TYPES.AUDIO_ONLY;
+    const hasVideoMedia = stream.type === VIDEO_TYPES.STREAM
+      || stream.type === VIDEO_TYPES.CONNECTING;
     const videoEl = videoTag.current;
     let lastObservedCurrentTime = videoEl?.currentTime || 0;
 
@@ -292,10 +290,7 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
       clearPlaybackInterruptTimeout();
       playbackInterruptTimeoutRef.current = setTimeout(() => {
         playbackInterruptTimeoutRef.current = null;
-        if (document.visibilityState === 'hidden' || !document.hasFocus() || playbackDisabledRef.current) {
-          armPlaybackLivenessTimeout();
-          return;
-        }
+        if (!isVideoPlaybackPageActive() || playbackDisabledRef.current) return;
 
         // requestVideoFrameCallback can be throttled in a background browser
         // tab even while MediaStream playback is healthy. currentTime is the
@@ -338,7 +333,7 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
     };
 
     const confirmDecodedFrame = () => {
-      if (!videoEl) return;
+      if (!videoEl?.srcObject) return;
       clearVideoFrameCallback();
 
       if (typeof videoEl.requestVideoFrameCallback === 'function') {
@@ -360,13 +355,13 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
     };
 
     const onPlaybackInterrupted = () => {
-      if (!videoEl || document.visibilityState === 'hidden' || !document.hasFocus()
+      if (!videoEl || !isVideoPlaybackPageActive()
         || playbackDisabledRef.current) return;
       clearPlaybackInterruptTimeout();
       const previousTime = videoEl.currentTime;
       playbackInterruptTimeoutRef.current = setTimeout(() => {
         playbackInterruptTimeoutRef.current = null;
-        if (document.visibilityState === 'hidden' || !document.hasFocus()
+        if (!isVideoPlaybackPageActive()
           || playbackDisabledRef.current) return;
 
         if (!videoEl.paused && videoEl.currentTime > previousTime) {
@@ -382,65 +377,80 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
       clearVideoFrameCallback();
       playbackInterruptTimeoutRef.current = setTimeout(() => {
         playbackInterruptTimeoutRef.current = null;
-        if (document.visibilityState !== 'hidden' && document.hasFocus()
+        if (isVideoPlaybackPageActive()
           && !playbackDisabledRef.current) reportPlaybackState('ended');
       }, VIDEO_PLAYBACK_STALL_GRACE_MS);
     };
 
-    const resumePlayback = () => {
-      if (!videoEl || document.visibilityState === 'hidden' || !document.hasFocus()
-        || playbackDisabledRef.current) return;
+    const handlePageLifecycleChange = () => {
+      if (!videoEl || !isVideoPlaybackPageActive() || playbackDisabledRef.current) {
+        clearPlaybackInterruptTimeout();
+        clearVideoFrameCallback();
+        return;
+      }
       reportPlaybackState('waiting');
       onVideoItemMount(videoEl);
+      if (!videoEl.srcObject) return;
       playElement(videoEl);
       confirmDecodedFrame();
     };
 
-    if (!isAudioOnly && videoEl) {
+    const onTimeUpdate = () => {
+      // While playing, the bounded liveness watchdog verifies currentTime.
+      // Avoid canceling/re-registering a frame callback on every timeupdate
+      // event for every visible camera.
+      if (playbackStateRef.current !== 'playing') confirmDecodedFrame();
+    };
+
+    const resizeObserver = typeof ResizeObserver === 'function'
+      ? new ResizeObserver((entries) => {
+        const width = entries[0]?.contentRect?.width;
+        if (typeof width !== 'number') return;
+        setIsVideoSqueezed(width < VIDEO_CONTAINER_WIDTH_BOUND);
+        setIsVideoPluginHelperSqueezed(width < VIDEO_CONTAINER_PLUGIN_HELPERS_WIDTH_BOUND);
+      })
+      : null;
+    let unsubscribePageLifecycle = () => {};
+
+    if (hasVideoMedia && videoEl) {
       subscribeToStreamStateChange(cameraId, onStreamStateChange);
       videoEl.addEventListener('loadeddata', onPlaybackCandidate);
       videoEl.addEventListener('loadedmetadata', onLoadedMetadata);
       videoEl.addEventListener('canplay', onPlaybackCandidate);
       videoEl.addEventListener('playing', onPlaybackCandidate);
-      videoEl.addEventListener('timeupdate', onPlaybackCandidate);
+      videoEl.addEventListener('timeupdate', onTimeUpdate);
       videoEl.addEventListener('waiting', onPlaybackInterrupted);
       videoEl.addEventListener('stalled', onPlaybackInterrupted);
       videoEl.addEventListener('emptied', onPlaybackInterrupted);
       videoEl.addEventListener('ended', onPlaybackEnded);
-      document.addEventListener('visibilitychange', resumePlayback);
-      window.addEventListener('focus', resumePlayback);
-      window.addEventListener('pageshow', resumePlayback);
+      unsubscribePageLifecycle = subscribeToVideoPlaybackPageLifecycle(handlePageLifecycleChange);
       onVideoPlaybackStateChange('waiting');
       onVideoItemMount(videoEl);
-      confirmDecodedFrame();
+      if (videoEl.srcObject) confirmDecodedFrame();
     }
 
     if (videoContainer.current) {
-      resizeObserver.observe(videoContainer.current);
-      pluginSqueezedResizeObserver.observe(videoContainer.current);
+      resizeObserver?.observe(videoContainer.current);
     }
 
     return () => {
-      if (!isAudioOnly && videoEl) {
+      if (hasVideoMedia && videoEl) {
         unsubscribeFromStreamStateChange(cameraId, onStreamStateChange);
         videoEl.removeEventListener('loadeddata', onPlaybackCandidate);
         videoEl.removeEventListener('loadedmetadata', onLoadedMetadata);
         videoEl.removeEventListener('canplay', onPlaybackCandidate);
         videoEl.removeEventListener('playing', onPlaybackCandidate);
-        videoEl.removeEventListener('timeupdate', onPlaybackCandidate);
+        videoEl.removeEventListener('timeupdate', onTimeUpdate);
         videoEl.removeEventListener('waiting', onPlaybackInterrupted);
         videoEl.removeEventListener('stalled', onPlaybackInterrupted);
         videoEl.removeEventListener('emptied', onPlaybackInterrupted);
         videoEl.removeEventListener('ended', onPlaybackEnded);
-        document.removeEventListener('visibilitychange', resumePlayback);
-        window.removeEventListener('focus', resumePlayback);
-        window.removeEventListener('pageshow', resumePlayback);
+        unsubscribePageLifecycle();
         clearPlaybackInterruptTimeout();
         clearVideoFrameCallback();
         onVideoItemUnmount(cameraId);
       }
-      pluginSqueezedResizeObserver.disconnect();
-      resizeObserver.disconnect();
+      resizeObserver?.disconnect();
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     };
   }, []);
@@ -479,6 +489,8 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
       onHandleDisableCam={() => setIsSelfViewDisabled((value) => !value)}
       isSelfViewDisabled={isSelfViewDisabled}
       amIModerator={amIModerator}
+      userCameraDropdownItems={userCameraDropdownItems}
+      setCameraPinned={setCameraPinned}
       isFullscreenContext={isFullscreenContext}
       layoutContextDispatch={layoutContextDispatch}
     />
@@ -541,6 +553,7 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
         <PinArea
           stream={stream}
           amIModerator={amIModerator}
+          setCameraPinned={setCameraPinned}
         />
       </Styled.TopBar>
       <Styled.BottomBar>
@@ -562,6 +575,8 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
           menuTriggerRef={webcamMenuRef}
           isFullscreenContext={isFullscreenContext}
           layoutContextDispatch={layoutContextDispatch}
+          userCameraDropdownItems={userCameraDropdownItems}
+          setCameraPinned={setCameraPinned}
         />
         <UserStatus
           voiceUser={voiceUser}
@@ -643,7 +658,7 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
   } = makeDragOperations(stream.userId);
 
   return (
-    // @ts-expect-error -> Until everything in Typescript.
+    // @ts-expect-error -> Upstream drag wrapper uses DOM DragEvent handlers.
     <Styled.Content
       ref={videoContainer}
       talking={talking}
@@ -651,6 +666,7 @@ const VideoListItem: React.FC<VideoListItemProps> = (props) => {
       /* Skyroom uses layout CSS overlay (data attr); BBB fixed styles block taps after exit. */
       fullscreen={isSkyroomColumnLayout() ? false : isFullscreenContext}
       data-skyroom-webcam-fs-active={isFullscreenContext ? 'true' : undefined}
+      data-skyroom-moderator-webcam={isModeratorWebcam ? 'true' : undefined}
       data-test={talking ? 'webcamItemTalkingUser' : 'webcamItem'}
       animations={animations}
       isStream={isStream}

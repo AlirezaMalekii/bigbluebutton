@@ -331,7 +331,7 @@ const createEndpointTableData = [
     "name": "userCameraCap",
     "required": false,
     "type": "Number",
-    "default": 3,
+    "default": 0,
     "description": (<>Setting to <code className="language-plaintext highlighter-rouge">0</code> will disable this threshold. Defines the max number of webcams a single user can share simultaneously. (added 2.4.5)</>)
   },
   {

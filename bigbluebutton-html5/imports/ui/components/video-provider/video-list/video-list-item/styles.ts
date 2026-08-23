@@ -242,6 +242,10 @@ const BottomBar = styled.div`
   bottom: 0;
   padding: 1px 7px;
   justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  white-space: nowrap;
 `;
 
 const SqueezedName = styled(TextElipsis)`

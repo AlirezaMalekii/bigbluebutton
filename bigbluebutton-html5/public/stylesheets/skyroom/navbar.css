@@ -487,8 +487,47 @@
   background-color: transparent !important;
 }
 
+.MuiModal-root.skyroom-webcam-actions-menu .MuiBackdrop-root,
 .MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiBackdrop-root {
   background-color: transparent !important;
+}
+
+/* Webcam menus are portalled to document.body, outside #layout. Target the
+   actual modal root so stage/whiteboard stacking and clipping cannot cover it. */
+html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu:not([aria-hidden="true"]),
+html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu):not([aria-hidden="true"]) {
+  z-index: 2700 !important;
+  pointer-events: auto !important;
+}
+
+html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu[aria-hidden="true"],
+html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu)[aria-hidden="true"] {
+  pointer-events: none !important;
+}
+
+html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu:not([aria-hidden="true"]) .MuiPaper-root,
+html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu):not([aria-hidden="true"]) .MuiPaper-root {
+  z-index: 2701 !important;
+  pointer-events: auto !important;
+  min-width: 168px !important;
+  max-width: min(260px, calc(100vw - 24px)) !important;
+  padding: 6px !important;
+  border: 1px solid rgba(218, 230, 245, 0.12) !important;
+  border-radius: 12px !important;
+  background:
+    linear-gradient(165deg, rgba(22, 34, 54, 0.98) 0%, rgba(12, 18, 30, 0.99) 100%) !important;
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(32, 199, 187, 0.08) inset !important;
+}
+
+html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu:not([aria-hidden="true"]) .MuiBackdrop-root,
+html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu):not([aria-hidden="true"]) .MuiBackdrop-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu:not([aria-hidden="true"]) .MuiList-root,
+html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu):not([aria-hidden="true"]) .MuiList-root,
+html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu:not([aria-hidden="true"]) [data-key^="menuItem-"],
+html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu):not([aria-hidden="true"]) [data-key^="menuItem-"] {
+  pointer-events: auto !important;
 }
 
 .MuiModal-root:has(.skyroom-audio-settings-menu) .MuiBackdrop-root {
@@ -620,7 +659,8 @@ html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hi
   padding: 6px !important;
 }
 
-#layout[data-skyroom-column="true"] .skyroom-webcam-actions-menu .MuiPaper-root {
+html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu .MuiPaper-root,
+html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu) .MuiPaper-root {
   min-width: 168px !important;
   max-width: min(260px, 92vw) !important;
   border-radius: 12px !important;
@@ -662,7 +702,8 @@ html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hi
 #layout[data-skyroom-column="true"] .skyroom-actions-menu [data-key^="menuItem-"],
 #layout[data-skyroom-column="true"] #audio-selector-dropdown-menu [data-key^="menuItem-"],
 #layout[data-skyroom-column="true"] .skyroom-audio-settings-menu [data-key^="menuItem-"],
-#layout[data-skyroom-column="true"] .skyroom-webcam-actions-menu [data-key^="menuItem-"] {
+html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu [data-key^="menuItem-"],
+html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu) [data-key^="menuItem-"] {
   border-radius: 8px !important;
   margin: 2px 0 !important;
   min-height: 38px !important;
@@ -678,7 +719,8 @@ html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hi
 #layout[data-skyroom-column="true"] .skyroom-actions-menu [data-key^="menuItem-"]:hover,
 #layout[data-skyroom-column="true"] #audio-selector-dropdown-menu [data-key^="menuItem-"]:hover,
 #layout[data-skyroom-column="true"] .skyroom-audio-settings-menu [data-key^="menuItem-"]:hover,
-#layout[data-skyroom-column="true"] .skyroom-webcam-actions-menu [data-key^="menuItem-"]:hover {
+html[data-skyroom="true"] .MuiModal-root.skyroom-webcam-actions-menu [data-key^="menuItem-"]:hover,
+html[data-skyroom="true"] .MuiModal-root:has(.skyroom-webcam-actions-menu) [data-key^="menuItem-"]:hover {
   background: var(--skyroom-accent-soft, rgba(32, 199, 187, 0.12)) !important;
 }
 
@@ -691,50 +733,54 @@ html[data-skyroom="true"] .MuiModal-root.skyroom-leave-meeting-menu:not([aria-hi
   }
 
   /* Mobile header — theme logo replaces panel toggle chips.
-     Keep overflow visible: the SafeMeet leaf (and RooMeet heads) sit
-     near the top of the lockup; clipping here cut the icon while the
-     wordmark still looked fine. */
+     Compact SafeMeet lockup is ~7.2:1; keep the used box under the
+     recording chip and do not let overflow:visible paint over it. */
   #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] {
     display: inline-flex !important;
     align-items: center !important;
     flex: 0 0 auto !important;
     min-width: 0 !important;
-    max-width: min(42vw, 168px) !important;
-    overflow: visible !important;
+    max-width: min(34vw, 132px) !important;
+    overflow: hidden !important;
     padding-block: 2px !important;
-    box-sizing: content-box !important;
+    margin-inline-end: 6px !important;
+    box-sizing: border-box !important;
+  }
+
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"],
+  #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"] a {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    align-items: center !important;
   }
 
   #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"] a {
-    height: 26px !important;
-    max-width: min(42vw, 168px) !important;
-    overflow: visible !important;
-    align-items: center !important;
+    height: 22px !important;
   }
 
   #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"] img,
   #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"] object {
-    height: 26px !important;
-    max-height: 26px !important;
-    max-width: min(42vw, 168px) !important;
-    min-width: 72px !important;
+    height: 22px !important;
+    max-height: 22px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
     aspect-ratio: auto !important;
     object-fit: contain !important;
     object-position: left center !important;
-    overflow: visible !important;
   }
 
   #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"][data-logo-source="roomeet"] a {
-    height: 28px !important;
-    max-width: min(44vw, 176px) !important;
+    height: 24px !important;
   }
 
   #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"][data-logo-source="roomeet"] img,
   #layout[data-skyroom-column="true"] #Navbar [data-test="skyroomMobileHeaderLogo"] [data-test="skyroomPlatformLogo"][data-logo-source="roomeet"] object {
-    height: 28px !important;
-    max-height: 28px !important;
-    max-width: min(44vw, 176px) !important;
-    min-width: 96px !important;
+    height: 24px !important;
+    max-height: 24px !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
   }
 
   #layout[data-skyroom-column="true"] [data-test="presentationTitle"] {

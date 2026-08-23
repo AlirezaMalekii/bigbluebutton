@@ -743,6 +743,7 @@ apply_safemeet_config() {
     [[ -n "$DEFAULT_PDF_URL" ]] && log "DRY RUN: would download default PDF and refresh persisted class defaults"
     [[ -n "$LOGO_LINK_URL" ]] && log "DRY RUN: would set branding.logoLinkUrl=${LOGO_LINK_URL}"
     log "DRY RUN: would set the default meeting locale to ${DEFAULT_MEETING_LOCALE}"
+    log "DRY RUN: would remove server-default meeting and per-user camera caps"
     log "DRY RUN: would register the SafeMeet data-channel manifest in ${BBB_WEB_PROPS}"
     apply_theme_config "$host" "$stamp"
     return 0
@@ -765,6 +766,10 @@ apply_safemeet_config() {
   # both SafeMeet and RooMeet themes inherit useful fallback copy.
   upsert_property "$BBB_WEB_PROPS" "defaultWelcomeMessage" "$DEFAULT_WELCOME_MESSAGE"
   upsert_property "$BBB_WEB_PROPS" "defaultWelcomeMessageFooter" "$DEFAULT_WELCOME_MESSAGE_FOOTER"
+  # Zero is BBB's documented unlimited value. Keep both defaults explicit so
+  # fresh installs and upgrades do not inherit the upstream per-user cap.
+  upsert_property "$BBB_WEB_PROPS" "meetingCameraCap" "0"
+  upsert_property "$BBB_WEB_PROPS" "userCameraCap" "0"
   upsert_html5_yaml_string ".public.app.defaultSettings.application.overrideLocale" "$DEFAULT_MEETING_LOCALE"
   changed=1
 

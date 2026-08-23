@@ -219,6 +219,7 @@
     "app.skyroom.speedTest.phaseDownload": "Measuring download…",
     "app.skyroom.speedTest.phaseUpload": "Measuring upload…",
     "app.skyroom.speedTest.phaseDone": "Test complete",
+    "app.skyroom.speedTest.phaseFailed": "Test didn't finish",
     "app.skyroom.speedTest.ping": "Ping",
     "app.skyroom.speedTest.jitter": "Jitter",
     "app.skyroom.speedTest.download": "Download",

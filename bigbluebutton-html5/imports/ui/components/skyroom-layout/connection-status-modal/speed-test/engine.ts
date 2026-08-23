@@ -11,9 +11,10 @@ import {
   type SpeedTestSnapshot,
 } from './types';
 
-const SLOW_START_MS = 2000;
-const UPLOAD_BLOB_BYTES = 4 * 1024 * 1024;
+const SLOW_START_MS = 1500;
+const UPLOAD_BLOB_BYTES = 1024 * 1024;
 const MIN_PING_SAMPLES = 3;
+const MIN_TRANSFER_BYTES = 16 * 1024;
 
 export class SpeedTestRunError extends Error {
   code: SpeedTestErrorCode;
@@ -50,8 +51,7 @@ const isAbortError = (error: unknown, signal: AbortSignal): boolean => {
 
 const throwIfAborted = (signal: AbortSignal) => {
   if (signal.aborted) {
-    const abortError = new DOMException('Aborted', 'AbortError');
-    throw abortError;
+    throw new DOMException('Aborted', 'AbortError');
   }
 };
 
@@ -67,7 +67,9 @@ const fetchNoStore = (
 ): Promise<Response> => fetch(url, {
   cache: 'no-store',
   credentials: 'omit',
-  redirect: 'error',
+  redirect: 'follow',
+  // Keep GraphQL/WebRTC ahead of this bulk transfer when the browser supports it.
+  priority: 'low',
   signal,
   ...init,
   headers: {
@@ -75,7 +77,7 @@ const fetchNoStore = (
     'Cache-Control': 'no-store',
     ...(init.headers || {}),
   },
-});
+} as RequestInit);
 
 const measurePingSample = async (url: string, signal: AbortSignal): Promise<number> => {
   const startedAt = performance.now();
@@ -101,6 +103,7 @@ const probeServer = async (pingUrl: string, signal: AbortSignal): Promise<void> 
 };
 
 type ThroughputTracker = {
+  bytes: () => number;
   addBytes: (bytes: number) => number;
   finalize: () => number;
 };
@@ -121,6 +124,7 @@ const createThroughputTracker = (durationMs: number): ThroughputTracker => {
   };
 
   return {
+    bytes: () => totalBytes,
     addBytes: (bytes: number) => {
       if (bytes <= 0) return compute();
       totalBytes += bytes;
@@ -137,6 +141,14 @@ const createThroughputTracker = (durationMs: number): ThroughputTracker => {
   };
 };
 
+const silentCancel = async (reader: ReadableStreamDefaultReader<Uint8Array>) => {
+  try {
+    await reader.cancel();
+  } catch {
+    // Ignore cancel races after abort or completion.
+  }
+};
+
 const runDownloadStream = async (
   url: string,
   until: number,
@@ -145,9 +157,16 @@ const runDownloadStream = async (
 ): Promise<void> => {
   while (performance.now() < until) {
     throwIfAborted(signal);
-    // Sequential chunks until the phase timer ends.
-    // eslint-disable-next-line no-await-in-loop
-    const response = await fetchNoStore(`${url}?r=${Math.random()}`, signal, { method: 'GET' });
+    let response: Response;
+    try {
+      // Sequential chunks until the phase timer ends.
+      // eslint-disable-next-line no-await-in-loop
+      response = await fetchNoStore(`${url}?r=${Math.random()}`, signal, { method: 'GET' });
+    } catch (error) {
+      if (isAbortError(error, signal)) throw error;
+      if (performance.now() >= until) return;
+      throw new SpeedTestRunError('network');
+    }
     if (!response.ok) {
       throw new SpeedTestRunError(classifyHttpStatus(response.status));
     }
@@ -164,19 +183,21 @@ const runDownloadStream = async (
         if (done) break;
         if (value?.byteLength) onBytes(value.byteLength);
       }
+    } catch (error) {
+      if (isAbortError(error, signal)) throw error;
+      if (performance.now() >= until) return;
+      throw error instanceof SpeedTestRunError
+        ? error
+        : new SpeedTestRunError('network');
     } finally {
-      try {
-        // eslint-disable-next-line no-await-in-loop
-        await reader.cancel();
-      } catch {
-        // Ignore cancel races after abort or completion.
-      }
+      // eslint-disable-next-line no-await-in-loop
+      await silentCancel(reader);
     }
   }
 };
 
 const createUploadBlob = (): Blob => {
-  const unit = new Uint8Array(1024 * 1024);
+  const unit = new Uint8Array(256 * 1024);
   crypto.getRandomValues(unit);
   const copies = Math.max(1, Math.round(UPLOAD_BLOB_BYTES / unit.byteLength));
   return new Blob(Array.from({ length: copies }, () => unit), {
@@ -187,6 +208,7 @@ const createUploadBlob = (): Blob => {
 const uploadOnce = (
   url: string,
   body: Blob,
+  until: number,
   signal: AbortSignal,
   onDelta: (bytes: number) => void,
 ): Promise<void> => new Promise((resolve, reject) => {
@@ -212,13 +234,16 @@ const uploadOnce = (
   xhr.open('POST', `${url}?r=${Math.random()}`);
   xhr.setRequestHeader('Content-Type', 'application/octet-stream');
   xhr.setRequestHeader('Cache-Control', 'no-store');
-  xhr.timeout = 20000;
+  xhr.timeout = Math.max(8000, Math.ceil(until - performance.now()) + 4000);
 
   xhr.upload.onprogress = (event) => {
     const loaded = event.loaded || 0;
     const delta = loaded - lastLoaded;
     lastLoaded = loaded;
     if (delta > 0) onDelta(delta);
+    if (performance.now() >= until) {
+      xhr.abort();
+    }
   };
 
   xhr.onload = () => {
@@ -232,14 +257,26 @@ const uploadOnce = (
   };
 
   xhr.onerror = () => {
+    if (performance.now() >= until) {
+      finish(resolve);
+      return;
+    }
     finish(() => reject(new SpeedTestRunError('network')));
   };
 
   xhr.onabort = () => {
+    if (performance.now() >= until && !signal.aborted) {
+      finish(resolve);
+      return;
+    }
     finish(() => reject(new DOMException('Aborted', 'AbortError')));
   };
 
   xhr.ontimeout = () => {
+    if (performance.now() >= until) {
+      finish(resolve);
+      return;
+    }
     finish(() => reject(new SpeedTestRunError('network')));
   };
 
@@ -263,42 +300,38 @@ const runUploadStream = async (
   while (performance.now() < until) {
     throwIfAborted(signal);
     // eslint-disable-next-line no-await-in-loop
-    await uploadOnce(url, body, signal, onBytes);
+    await uploadOnce(url, body, until, signal, onBytes);
   }
 };
 
-const runParallel = async (
+const runParallelSettled = async (
   count: number,
   worker: (index: number) => Promise<void>,
 ): Promise<void> => {
-  const tasks = Array.from({ length: count }, (_, index) => worker(index));
-  await Promise.all(tasks);
+  const results = await Promise.allSettled(
+    Array.from({ length: count }, (_, index) => worker(index)),
+  );
+  const rejection = results.find((result): result is PromiseRejectedResult => (
+    result.status === 'rejected'
+  ));
+  if (!rejection) return;
+
+  const allFailed = results.every((result) => result.status === 'rejected');
+  if (allFailed) throw rejection.reason;
 };
 
-const withTimedPhase = async (
-  durationMs: number,
-  parentSignal: AbortSignal,
-  work: (phaseSignal: AbortSignal) => Promise<void>,
-): Promise<void> => {
-  const phaseController = new AbortController();
-  const stopPhase = () => phaseController.abort();
-  const onParentAbort = () => stopPhase();
-  parentSignal.addEventListener('abort', onParentAbort);
-  const timer = window.setTimeout(stopPhase, durationMs);
-
-  try {
-    await work(phaseController.signal);
-  } catch (error) {
-    if (isAbortError(error, phaseController.signal) && !parentSignal.aborted) {
-      return;
-    }
-    throw error;
-  } finally {
-    window.clearTimeout(timer);
-    parentSignal.removeEventListener('abort', onParentAbort);
-    stopPhase();
+const sleep = (ms: number, signal: AbortSignal): Promise<void> => new Promise((resolve, reject) => {
+  if (signal.aborted) {
+    reject(new DOMException('Aborted', 'AbortError'));
+    return;
   }
-};
+  const timer = window.setTimeout(resolve, ms);
+  const onAbort = () => {
+    window.clearTimeout(timer);
+    reject(new DOMException('Aborted', 'AbortError'));
+  };
+  signal.addEventListener('abort', onAbort, { once: true });
+});
 
 export const runSpeedTest = async (
   config: SpeedTestConfig,
@@ -309,7 +342,10 @@ export const runSpeedTest = async (
     ...DEFAULT_SPEED_TEST_CONFIG,
     ...config,
     pingCount: Math.max(MIN_PING_SAMPLES, config.pingCount || DEFAULT_SPEED_TEST_CONFIG.pingCount),
-    parallelStreams: Math.max(1, config.parallelStreams || DEFAULT_SPEED_TEST_CONFIG.parallelStreams),
+    parallelStreams: Math.max(1, Math.min(
+      2,
+      config.parallelStreams || DEFAULT_SPEED_TEST_CONFIG.parallelStreams,
+    )),
   };
   const endpoints = getSpeedTestEndpoints();
   const serverHost = getSpeedTestServerHost();
@@ -364,31 +400,52 @@ export const runSpeedTest = async (
   const jitterMs = meanAbsoluteDeviation(pingSamples, pingMs);
   emit({ pingMs, jitterMs });
 
+  // Brief yield so GraphQL/WebRTC can drain before the bulk transfer.
+  await sleep(120, signal);
+
   emit({ phase: 'download', liveMbps: 0 });
   const downloadTracker = createThroughputTracker(resolved.downloadDurationMs);
-  await withTimedPhase(resolved.downloadDurationMs, signal, async (phaseSignal) => {
-    const downloadUntil = performance.now() + resolved.downloadDurationMs;
-    await runParallel(resolved.parallelStreams, async () => {
-      await runDownloadStream(endpoints.download, downloadUntil, phaseSignal, (bytes) => {
+  const downloadUntil = performance.now() + resolved.downloadDurationMs;
+  try {
+    await runParallelSettled(resolved.parallelStreams, async () => {
+      await runDownloadStream(endpoints.download, downloadUntil, signal, (bytes) => {
         emit({ liveMbps: downloadTracker.addBytes(bytes) });
       });
     });
-  });
+  } catch (error) {
+    if (isAbortError(error, signal)) throw error;
+    if (downloadTracker.bytes() < MIN_TRANSFER_BYTES) {
+      throw error instanceof SpeedTestRunError ? error : new SpeedTestRunError('network');
+    }
+  }
   const downloadMbps = downloadTracker.finalize();
+  if (downloadTracker.bytes() < MIN_TRANSFER_BYTES) {
+    throw new SpeedTestRunError('network');
+  }
   emit({ downloadMbps, liveMbps: downloadMbps });
+
+  await sleep(150, signal);
 
   emit({ phase: 'upload', liveMbps: 0 });
   const uploadBlob = createUploadBlob();
   const uploadTracker = createThroughputTracker(resolved.uploadDurationMs);
-  await withTimedPhase(resolved.uploadDurationMs, signal, async (phaseSignal) => {
-    const uploadUntil = performance.now() + resolved.uploadDurationMs;
-    await runParallel(resolved.parallelStreams, async () => {
-      await runUploadStream(endpoints.upload, uploadBlob, uploadUntil, phaseSignal, (bytes) => {
+  const uploadUntil = performance.now() + resolved.uploadDurationMs;
+  try {
+    await runParallelSettled(resolved.parallelStreams, async () => {
+      await runUploadStream(endpoints.upload, uploadBlob, uploadUntil, signal, (bytes) => {
         emit({ liveMbps: uploadTracker.addBytes(bytes) });
       });
     });
-  });
+  } catch (error) {
+    if (isAbortError(error, signal)) throw error;
+    if (uploadTracker.bytes() < MIN_TRANSFER_BYTES) {
+      throw error instanceof SpeedTestRunError ? error : new SpeedTestRunError('network');
+    }
+  }
   const uploadMbps = uploadTracker.finalize();
+  if (uploadTracker.bytes() < MIN_TRANSFER_BYTES) {
+    throw new SpeedTestRunError('network');
+  }
   const doneSnapshot: SpeedTestSnapshot = {
     ...snapshot,
     phase: 'done',

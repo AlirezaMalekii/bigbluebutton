@@ -183,11 +183,11 @@ public:
     # Same-origin HTTP speed test against this meeting node (not a public speed-test CDN)
     enableSpeedTest: true
     speedTest:
-      pingCount: 10
-      downloadDurationMs: 8000
-      uploadDurationMs: 8000
-      parallelStreams: 4
-      mobileParallelStreams: 3
+      pingCount: 6
+      downloadDurationMs: 5000
+      uploadDurationMs: 4000
+      parallelStreams: 2
+      mobileParallelStreams: 1
     # where should client settings be stored? if you run a single BBB server or
     # a cluster with a reverse proxy in front of it, you may set this to 'local'
     # See See https://docs.bigbluebutton.org/administration/cluster-proxy
@@ -426,26 +426,50 @@ public:
         name: low-u30
         bitrate: 30
         hidden: true
+        constraints:
+          width: 320
+          height: 180
+          frameRate: 6
       - id: low-u25
         name: low-u25
         bitrate: 40
         hidden: true
+        constraints:
+          width: 320
+          height: 180
+          frameRate: 8
       - id: low-u20
         name: low-u20
         bitrate: 50
         hidden: true
+        constraints:
+          width: 480
+          height: 270
+          frameRate: 8
       - id: low-u15
         name: low-u15
         bitrate: 70
         hidden: true
+        constraints:
+          width: 480
+          height: 270
+          frameRate: 10
       - id: low-u12
         name: low-u12
         bitrate: 90
         hidden: true
+        constraints:
+          width: 640
+          height: 360
+          frameRate: 10
       - id: low-u8
         name: low-u8
         bitrate: 100
         hidden: true
+        constraints:
+          width: 640
+          height: 360
+          frameRate: 12
       - id: low
         name: Low
         default: false
@@ -521,7 +545,7 @@ public:
     cameraQualityThresholds:
       enabled: true
       # applyConstraints: whether profile constraints should be applied on profile changes
-      applyConstraints: false
+      applyConstraints: true
       # privilegedStreams: whether cameras should revert to their original profile on
       # certain actions (eg floor changes, pin)
       privilegedStreams: true
@@ -539,6 +563,14 @@ public:
           profile: low-u25
         - threshold: 30
           profile: low-u30
+    # SafeMeet keeps every webcam tile discoverable while subscribing only to
+    # streams in (or just outside) the viewport. This bounds browser decode and
+    # compositor work in large meetings without imposing a camera-share cap.
+    viewportSubscription:
+      enabled: true
+      activationThreshold: 5
+      overscanPixels: 24
+      releaseDelay: 2500
     pagination:
       # WARNING: the pagination.enabled setting has moved to
       # public.app.defaultSettings.application.paginationEnabled

@@ -325,9 +325,17 @@ export interface Kurento {
   skipVideoPreviewOnFirstJoin: boolean
   cameraSortingModes: CameraSortingModes
   cameraQualityThresholds: CameraQualityThresholds
+  viewportSubscription: ViewportSubscription
   pagination: Pagination
   paginationThresholds: PaginationThresholds
   videoMediaServer?: string
+}
+
+export interface ViewportSubscription {
+  enabled: boolean
+  activationThreshold: number
+  overscanPixels: number
+  releaseDelay: number
 }
 
 export interface CameraWsOptions {

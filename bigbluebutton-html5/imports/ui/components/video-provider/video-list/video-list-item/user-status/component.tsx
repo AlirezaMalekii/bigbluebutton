@@ -25,9 +25,11 @@ const UserStatus: React.FC<UserStatusProps> = (props) => {
   const away = data?.away;
 
   return (
-    <div>
-      {away && <span>⏰</span>}
-      {(emoji && emoji !== 'none' && !away) && <span>{emoji}</span>}
+    <Styled.StatusRow data-test="webcamUserStatus" dir="ltr">
+      {away && <Styled.Away data-test="webcamAway">⏰</Styled.Away>}
+      {(emoji && emoji !== 'none' && !away) && (
+        <Styled.Reaction data-test="webcamReaction">{emoji}</Styled.Reaction>
+      )}
 
       {voiceUserJoined && (
         <>
@@ -36,7 +38,7 @@ const UserStatus: React.FC<UserStatusProps> = (props) => {
           {!muted && <Styled.Voice iconName="unmute" />}
         </>
       )}
-    </div>
+    </Styled.StatusRow>
   );
 };
 

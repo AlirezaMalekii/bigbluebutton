@@ -17,10 +17,11 @@ import { isPrivilegedStream } from './camera-placement';
 export const SKYROOM_MOBILE_STAGE_MAX_REMOTE_WEBCAMS = 1;
 
 /**
- * Cap while the mobile webcams box is open (2×2 viewport + scroll).
- * Keeps decode cost bounded on low-end phones without BBB pagination.
+ * The mobile webcams box is scrollable and must expose every active camera.
+ * Decode cost is bounded by the SafeMeet viewport subscriber, not by removing
+ * tiles from the list.
  */
-export const SKYROOM_MOBILE_WEBCAMS_TAB_MAX_REMOTE_WEBCAMS = 16;
+export const SKYROOM_MOBILE_WEBCAMS_TAB_MAX_REMOTE_WEBCAMS = Number.POSITIVE_INFINITY;
 
 /**
  * Sticky high-water mark so leaving the webcams tab does not immediately tear

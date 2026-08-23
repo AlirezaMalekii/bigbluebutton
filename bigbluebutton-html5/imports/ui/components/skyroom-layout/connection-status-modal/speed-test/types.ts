@@ -31,10 +31,10 @@ export interface SpeedTestSnapshot {
 }
 
 export const DEFAULT_SPEED_TEST_CONFIG: SpeedTestConfig = {
-  pingCount: 10,
-  downloadDurationMs: 8000,
-  uploadDurationMs: 8000,
-  parallelStreams: 4,
+  pingCount: 6,
+  downloadDurationMs: 5000,
+  uploadDurationMs: 4000,
+  parallelStreams: 2,
 };
 
 export const IDLE_SPEED_TEST_SNAPSHOT: SpeedTestSnapshot = {
