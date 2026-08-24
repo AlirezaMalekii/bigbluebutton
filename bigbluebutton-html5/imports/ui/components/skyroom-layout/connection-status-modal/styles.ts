@@ -665,12 +665,12 @@ const GaugeWrap = styled.div`
 
 const GaugeStage = styled.div`
   position: relative;
-  width: min(100%, 280px);
+  width: min(100%, 300px);
   display: flex;
   justify-content: center;
 
   @media (max-width: 560px) {
-    width: min(100%, 228px);
+    width: min(100%, 252px);
   }
 `;
 
@@ -679,39 +679,54 @@ const GaugeSvg = styled.svg`
   height: auto;
   display: block;
   overflow: visible;
+  font-family: inherit;
+
+  text {
+    font-variant-numeric: tabular-nums;
+  }
+
+  &[data-animate="true"] .skyroom-speedtest-progress {
+    transition: stroke-dasharray 180ms linear;
+  }
 `;
 
 const GaugeReadout = styled.div`
   position: absolute;
   left: 50%;
-  top: 48%;
-  transform: translate(-50%, -50%);
+  top: 62%;
+  transform: translate(-50%, 0);
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 4px;
   pointer-events: none;
 `;
 
 const GaugeValue = styled.div`
-  font-size: 2.15rem;
+  font-size: 2.55rem;
   font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.03em;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
   color: #fff;
   direction: ltr;
   unicode-bidi: isolate;
   font-variant-numeric: tabular-nums;
 
   @media (max-width: 560px) {
-    font-size: 1.85rem;
+    font-size: 2.15rem;
   }
 `;
 
 const GaugeUnit = styled.div`
-  margin-top: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--skyroom-brand-400, #14a99e);
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(32, 199, 187, 0.14);
+  border: 1px solid rgba(32, 199, 187, 0.22);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--skyroom-brand-300, #7ee7de);
   direction: ltr;
   unicode-bidi: isolate;
 `;
@@ -773,6 +788,49 @@ const SpeedMetricUnit = styled.span`
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--skyroom-text-secondary, #8d9aad);
+`;
+
+const SpeedFitRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+`;
+
+const SpeedFitChip = styled.span<{ $level: 'good' | 'ok' | 'poor' | 'unknown' }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  border: 1px solid transparent;
+
+  ${({ $level }) => $level === 'good' && `
+    color: #d8f8e8;
+    background: rgba(46, 204, 113, 0.14);
+    border-color: rgba(46, 204, 113, 0.28);
+  `}
+
+  ${({ $level }) => $level === 'ok' && `
+    color: #f8e7b8;
+    background: rgba(240, 180, 41, 0.14);
+    border-color: rgba(240, 180, 41, 0.28);
+  `}
+
+  ${({ $level }) => $level === 'poor' && `
+    color: #f8d4d2;
+    background: rgba(223, 39, 33, 0.14);
+    border-color: rgba(223, 39, 33, 0.28);
+  `}
+
+  ${({ $level }) => $level === 'unknown' && `
+    color: var(--skyroom-text-secondary, #8d9aad);
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(218, 230, 245, 0.1);
+  `}
 `;
 
 const SpeedTestVerdict = styled.div`
@@ -931,6 +989,8 @@ export default {
   SpeedMetricValue,
   SpeedMetricUnit,
   SpeedTestVerdict,
+  SpeedFitRow,
+  SpeedFitChip,
   SpeedTestWarning,
   SpeedTestError,
   SpeedTestActions,

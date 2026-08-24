@@ -28,6 +28,7 @@ export interface SpeedTestSnapshot {
   errorCode: SpeedTestErrorCode | null;
   serverHost: string;
   verdict: SpeedTestVerdict | null;
+  uploadIncomplete: boolean;
 }
 
 export const DEFAULT_SPEED_TEST_CONFIG: SpeedTestConfig = {
@@ -47,4 +48,5 @@ export const IDLE_SPEED_TEST_SNAPSHOT: SpeedTestSnapshot = {
   errorCode: null,
   serverHost: '',
   verdict: null,
+  uploadIncomplete: false,
 };

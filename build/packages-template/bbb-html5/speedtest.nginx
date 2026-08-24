@@ -16,6 +16,7 @@ location = /html5client/speedtest/upload {
     client_body_buffer_size 64k;
     client_body_timeout 30s;
     lingering_close on;
+    lingering_time 5s;
     default_type text/plain;
     add_header Cache-Control "no-store, no-cache, must-revalidate";
     add_header Pragma "no-cache";

@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { formatMbps, formatMs, mbpsToGauge } from './format';
 import type { SpeedTestPhase } from './types';
 import Styled from '../styles';
 
-const CX = 110;
-const CY = 100;
+const CX = 120;
+const CY = 104;
 const RADIUS = 78;
-const START_ANGLE = 225;
-const SWEEP = 270;
+const START_ANGLE = 150;
+const SWEEP = 240;
+const TRACK_WIDTH = 16;
 
 const polar = (cx: number, cy: number, r: number, angleDeg: number) => {
   const rad = ((angleDeg - 90) * Math.PI) / 180;
@@ -50,53 +51,73 @@ const SkyroomSpeedTestGauge: React.FC<SkyroomSpeedTestGaugeProps> = ({
   gaugeLabel,
   animate,
 }) => {
+  const reactId = useId().replace(/:/g, '');
+  const gradientId = `skyroomSpeedArc-${reactId}`;
+  const glowId = `skyroomSpeedGlow-${reactId}`;
   const pingPhase = phase === 'ping' || phase === 'probing';
-  const progress = pingPhase ? 0 : mbpsToGauge(mbps);
+  const idle = phase === 'idle';
+  const progress = pingPhase || idle ? 0 : mbpsToGauge(mbps);
   const endAngle = START_ANGLE + SWEEP * progress;
-  const needle = polar(CX, CY, RADIUS - 18, endAngle);
-  const running = phase !== 'idle' && phase !== 'done' && phase !== 'error';
+  const tip = polar(CX, CY, RADIUS, endAngle);
   const displayValue = pingPhase
     ? formatMs(pingMs)
-    : formatMbps(mbps ?? 0);
+    : formatMbps(idle ? null : mbps);
   const displayUnit = pingPhase ? pingUnitLabel : unitLabel;
 
   return (
     <Styled.GaugeWrap>
       <Styled.GaugeStage>
         <Styled.GaugeSvg
-          viewBox="0 0 220 186"
+          viewBox="0 0 240 168"
           role="img"
           aria-label={`${gaugeLabel} ${displayValue} ${displayUnit}`}
           data-animate={animate ? 'true' : 'false'}
         >
           <defs>
-            <linearGradient id="skyroomSpeedTestArc" x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#0D887E" />
-              <stop offset="55%" stopColor="#20C7BB" />
-              <stop offset="100%" stopColor="#7EE7DE" />
+            <linearGradient id={gradientId} x1="8%" y1="92%" x2="92%" y2="8%">
+              <stop offset="0%" stopColor="var(--skyroom-brand-600, #0A6F67)" />
+              <stop offset="50%" stopColor="var(--skyroom-accent, #20C7BB)" />
+              <stop offset="100%" stopColor="var(--skyroom-brand-200, #8CDDD6)" />
             </linearGradient>
+            <filter id={glowId} x="-25%" y="-25%" width="150%" height="150%">
+              <feGaussianBlur stdDeviation="1.8" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
           <path
             d={arcPath(RADIUS, START_ANGLE, START_ANGLE + SWEEP)}
             fill="none"
-            stroke="rgba(218, 230, 245, 0.12)"
-            strokeWidth="14"
+            stroke="rgba(218, 230, 245, 0.1)"
+            strokeWidth={TRACK_WIDTH}
+            strokeLinecap="round"
+          />
+          <path
+            d={arcPath(RADIUS - 12, START_ANGLE, START_ANGLE + SWEEP)}
+            fill="none"
+            stroke="rgba(218, 230, 245, 0.045)"
+            strokeWidth="3"
             strokeLinecap="round"
           />
           {progress > 0.004 ? (
             <path
-              d={arcPath(RADIUS, START_ANGLE, endAngle)}
+              d={arcPath(RADIUS, START_ANGLE, START_ANGLE + SWEEP)}
               fill="none"
-              stroke="url(#skyroomSpeedTestArc)"
-              strokeWidth="14"
+              stroke={`url(#${gradientId})`}
+              strokeWidth={TRACK_WIDTH}
               strokeLinecap="round"
+              pathLength={1}
+              strokeDasharray={`${progress} 1`}
+              filter={`url(#${glowId})`}
               className="skyroom-speedtest-progress"
             />
           ) : null}
           {TICK_MBPS.map((tick) => {
             const angle = START_ANGLE + SWEEP * mbpsToGauge(tick);
-            const inner = polar(CX, CY, RADIUS - 11, angle);
-            const outer = polar(CX, CY, RADIUS + 6, angle);
+            const inner = polar(CX, CY, RADIUS - 10, angle);
+            const outer = polar(CX, CY, RADIUS + 1, angle);
             return (
               <line
                 key={tick}
@@ -104,29 +125,49 @@ const SkyroomSpeedTestGauge: React.FC<SkyroomSpeedTestGaugeProps> = ({
                 y1={inner.y}
                 x2={outer.x}
                 y2={outer.y}
-                stroke="rgba(218, 230, 245, 0.28)"
+                stroke="rgba(218, 230, 245, 0.22)"
                 strokeWidth="1.5"
+                strokeLinecap="round"
               />
             );
           })}
-          <circle cx={CX} cy={CY} r="7" fill="#0F141C" stroke="#20C7BB" strokeWidth="2" />
-          {running || progress > 0 ? (
-            <line
-              x1={CX}
-              y1={CY}
-              x2={needle.x}
-              y2={needle.y}
-              stroke="#E6EDF7"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              className="skyroom-speedtest-needle"
+          {progress > 0.004 ? (
+            <circle
+              cx={tip.x}
+              cy={tip.y}
+              r="6"
+              fill="var(--skyroom-brand-200, #8CDDD6)"
+              stroke="rgba(7, 11, 20, 0.65)"
+              strokeWidth="2"
             />
           ) : null}
+          <text
+            x={CX}
+            y={CY - 8}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="var(--skyroom-text-primary, #E6EDF7)"
+            fontSize="32"
+            fontWeight="700"
+            letterSpacing="-0.05em"
+            direction="ltr"
+          >
+            {displayValue}
+          </text>
+          <text
+            x={CX}
+            y={CY + 26}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="var(--skyroom-brand-300, #3FC2B8)"
+            fontSize="10"
+            fontWeight="700"
+            letterSpacing="0.12em"
+            direction="ltr"
+          >
+            {displayUnit.toUpperCase()}
+          </text>
         </Styled.GaugeSvg>
-        <Styled.GaugeReadout>
-          <Styled.GaugeValue>{displayValue}</Styled.GaugeValue>
-          <Styled.GaugeUnit>{displayUnit}</Styled.GaugeUnit>
-        </Styled.GaugeReadout>
       </Styled.GaugeStage>
       <Styled.GaugePhase aria-live="polite">{phaseLabel}</Styled.GaugePhase>
     </Styled.GaugeWrap>

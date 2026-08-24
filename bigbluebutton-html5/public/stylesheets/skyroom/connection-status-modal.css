@@ -213,6 +213,6 @@
   }
 }
 
-[data-test="connectionStatusModal"] [data-animate="true"] .skyroom-speedtest-needle {
-  transition: x2 160ms linear, y2 160ms linear;
+[data-test="connectionStatusModal"] [data-animate="true"] .skyroom-speedtest-progress {
+  transition: stroke-dasharray 180ms linear;
 }

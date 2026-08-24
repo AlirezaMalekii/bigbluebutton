@@ -5,8 +5,13 @@ import { SETTINGS } from '/imports/ui/services/settings/enums';
 import Styled from './styles';
 import useSpeedTest from './speed-test/useSpeedTest';
 import SkyroomSpeedTestGauge from './speed-test/SkyroomSpeedTestGauge';
-import { formatMbps, formatMs } from './speed-test/format';
-import type { SpeedTestErrorCode, SpeedTestPhase, SpeedTestVerdict } from './speed-test/types';
+import {
+  formatMbps,
+  formatMs,
+  getMeetingAdvice,
+} from './speed-test/format';
+import type { MeetingFitLevel } from './speed-test/format';
+import type { SpeedTestErrorCode, SpeedTestPhase } from './speed-test/types';
 
 const intlMessages = defineMessages({
   server: {
@@ -113,6 +118,58 @@ const intlMessages = defineMessages({
     id: 'app.skyroom.speedTest.phaseFailed',
     description: 'Short failed phase label',
   },
+  fitWatch: {
+    id: 'app.skyroom.speedTest.fitWatch',
+    description: 'Watching capability',
+  },
+  fitPresent: {
+    id: 'app.skyroom.speedTest.fitPresent',
+    description: 'Presenting capability',
+  },
+  fitShare: {
+    id: 'app.skyroom.speedTest.fitShare',
+    description: 'Screenshare capability',
+  },
+  fitGood: {
+    id: 'app.skyroom.speedTest.fitGood',
+    description: 'Good fit',
+  },
+  fitOk: {
+    id: 'app.skyroom.speedTest.fitOk',
+    description: 'Acceptable fit',
+  },
+  fitPoor: {
+    id: 'app.skyroom.speedTest.fitPoor',
+    description: 'Poor fit',
+  },
+  fitUnknown: {
+    id: 'app.skyroom.speedTest.fitUnknown',
+    description: 'Unknown fit',
+  },
+  reportExcellent: {
+    id: 'app.skyroom.speedTest.reportExcellent',
+    description: 'Excellent meeting fit',
+  },
+  reportGood: {
+    id: 'app.skyroom.speedTest.reportGood',
+    description: 'Good meeting fit',
+  },
+  reportWatchOk: {
+    id: 'app.skyroom.speedTest.reportWatchOk',
+    description: 'Viewer-only meeting fit',
+  },
+  reportLimited: {
+    id: 'app.skyroom.speedTest.reportLimited',
+    description: 'Limited meeting fit',
+  },
+  reportPoor: {
+    id: 'app.skyroom.speedTest.reportPoor',
+    description: 'Poor meeting fit',
+  },
+  reportPartial: {
+    id: 'app.skyroom.speedTest.reportPartial',
+    description: 'Partial test meeting fit',
+  },
 });
 
 const PHASE_MESSAGE: Record<SpeedTestPhase, keyof typeof intlMessages> = {
@@ -125,17 +182,29 @@ const PHASE_MESSAGE: Record<SpeedTestPhase, keyof typeof intlMessages> = {
   error: 'phaseFailed',
 };
 
-const VERDICT_MESSAGE: Record<SpeedTestVerdict, keyof typeof intlMessages> = {
-  excellent: 'verdictExcellent',
-  good: 'verdictGood',
-  fair: 'verdictFair',
-  poor: 'verdictPoor',
-};
-
 const ERROR_MESSAGE: Record<SpeedTestErrorCode, keyof typeof intlMessages> = {
   notConfigured: 'errorNotConfigured',
   network: 'errorNetwork',
   offline: 'errorOffline',
+};
+
+const FIT_LEVEL_MESSAGE: Record<MeetingFitLevel, keyof typeof intlMessages> = {
+  good: 'fitGood',
+  ok: 'fitOk',
+  poor: 'fitPoor',
+  unknown: 'fitUnknown',
+};
+
+const REPORT_MESSAGE: Record<
+  ReturnType<typeof getMeetingAdvice>['summaryKey'],
+  keyof typeof intlMessages
+> = {
+  reportExcellent: 'reportExcellent',
+  reportGood: 'reportGood',
+  reportWatchOk: 'reportWatchOk',
+  reportLimited: 'reportLimited',
+  reportPoor: 'reportPoor',
+  reportPartial: 'reportPartial',
 };
 
 const SkyroomSpeedTestTab: React.FC = () => {
@@ -184,6 +253,24 @@ const SkyroomSpeedTestTab: React.FC = () => {
       {value}
       <Styled.SpeedMetricUnit>{unit}</Styled.SpeedMetricUnit>
     </>
+  );
+
+  const hasPartialResult = snapshot.pingMs != null || snapshot.downloadMbps != null;
+  const advice = snapshot.phase === 'done'
+    || (snapshot.phase === 'error' && hasPartialResult)
+    ? getMeetingAdvice({
+      ...snapshot,
+      uploadIncomplete: snapshot.uploadIncomplete || snapshot.uploadMbps == null,
+    })
+    : null;
+  const showHardError = snapshot.phase === 'error' && snapshot.errorCode && !advice;
+
+  const fitChip = (labelKey: keyof typeof intlMessages, level: MeetingFitLevel) => (
+    <Styled.SpeedFitChip $level={level}>
+      {intl.formatMessage(intlMessages[labelKey])}
+      {' · '}
+      {intl.formatMessage(intlMessages[FIT_LEVEL_MESSAGE[level]])}
+    </Styled.SpeedFitChip>
   );
 
   return (
@@ -244,13 +331,20 @@ const SkyroomSpeedTestTab: React.FC = () => {
           </Styled.SpeedMetricCard>
         </Styled.SpeedMetricGrid>
 
-        {snapshot.verdict ? (
-          <Styled.SpeedTestVerdict data-level={snapshot.verdict} aria-live="polite">
-            {intl.formatMessage(intlMessages[VERDICT_MESSAGE[snapshot.verdict]])}
-          </Styled.SpeedTestVerdict>
+        {advice ? (
+          <>
+            <Styled.SpeedFitRow>
+              {fitChip('fitWatch', advice.watching)}
+              {fitChip('fitPresent', advice.presenting)}
+              {fitChip('fitShare', advice.screenshare)}
+            </Styled.SpeedFitRow>
+            <Styled.SpeedTestVerdict data-level={advice.tone} aria-live="polite">
+              {intl.formatMessage(intlMessages[REPORT_MESSAGE[advice.summaryKey]])}
+            </Styled.SpeedTestVerdict>
+          </>
         ) : null}
 
-        {snapshot.phase === 'error' && snapshot.errorCode ? (
+        {showHardError && snapshot.errorCode ? (
           <Styled.SpeedTestError role="alert">
             {intl.formatMessage(intlMessages[ERROR_MESSAGE[snapshot.errorCode]])}
           </Styled.SpeedTestError>

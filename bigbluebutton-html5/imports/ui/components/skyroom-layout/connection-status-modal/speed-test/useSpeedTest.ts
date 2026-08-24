@@ -43,6 +43,7 @@ const toErrorSnapshot = (
   liveMbps: previous.downloadMbps ?? previous.liveMbps,
   verdict: null,
   serverHost,
+  uploadIncomplete: previous.uploadIncomplete,
 });
 
 const useSpeedTest = () => {

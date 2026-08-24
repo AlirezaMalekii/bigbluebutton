@@ -12,7 +12,8 @@ import {
 } from './types';
 
 const SLOW_START_MS = 1500;
-const UPLOAD_BLOB_BYTES = 1024 * 1024;
+// nginx `return 204` on HTTP/2 resets POST bodies larger than ~64KB. Stay under that.
+const UPLOAD_BLOB_SIZES = [32 * 1024, 16 * 1024, 8 * 1024];
 const MIN_PING_SAMPLES = 3;
 const MIN_TRANSFER_BYTES = 16 * 1024;
 
@@ -196,11 +197,10 @@ const runDownloadStream = async (
   }
 };
 
-const createUploadBlob = (): Blob => {
-  const unit = new Uint8Array(256 * 1024);
+const createUploadBlob = (byteLength: number): Blob => {
+  const unit = new Uint8Array(byteLength);
   crypto.getRandomValues(unit);
-  const copies = Math.max(1, Math.round(UPLOAD_BLOB_BYTES / unit.byteLength));
-  return new Blob(Array.from({ length: copies }, () => unit), {
+  return new Blob([unit], {
     type: 'application/octet-stream',
   });
 };
@@ -292,15 +292,24 @@ const uploadOnce = (
 
 const runUploadStream = async (
   url: string,
-  body: Blob,
   until: number,
   signal: AbortSignal,
   onBytes: (bytes: number) => void,
 ): Promise<void> => {
+  let sizeIndex = 0;
+  let body = createUploadBlob(UPLOAD_BLOB_SIZES[sizeIndex]);
   while (performance.now() < until) {
     throwIfAborted(signal);
-    // eslint-disable-next-line no-await-in-loop
-    await uploadOnce(url, body, until, signal, onBytes);
+    try {
+      // Sequential POSTs until the phase timer ends.
+      // eslint-disable-next-line no-await-in-loop
+      await uploadOnce(url, body, until, signal, onBytes);
+    } catch (error) {
+      if (isAbortError(error, signal)) throw error;
+      if (sizeIndex >= UPLOAD_BLOB_SIZES.length - 1) throw error;
+      sizeIndex += 1;
+      body = createUploadBlob(UPLOAD_BLOB_SIZES[sizeIndex]);
+    }
   }
 };
 
@@ -360,6 +369,7 @@ export const runSpeedTest = async (
     errorCode: null,
     serverHost,
     verdict: null,
+    uploadIncomplete: false,
   };
 
   const emit = (partial: Partial<SpeedTestSnapshot>) => {
@@ -427,24 +437,24 @@ export const runSpeedTest = async (
   await sleep(150, signal);
 
   emit({ phase: 'upload', liveMbps: 0 });
-  const uploadBlob = createUploadBlob();
   const uploadTracker = createThroughputTracker(resolved.uploadDurationMs);
   const uploadUntil = performance.now() + resolved.uploadDurationMs;
+  let uploadIncomplete = false;
   try {
     await runParallelSettled(resolved.parallelStreams, async () => {
-      await runUploadStream(endpoints.upload, uploadBlob, uploadUntil, signal, (bytes) => {
+      await runUploadStream(endpoints.upload, uploadUntil, signal, (bytes) => {
         emit({ liveMbps: uploadTracker.addBytes(bytes) });
       });
     });
   } catch (error) {
     if (isAbortError(error, signal)) throw error;
-    if (uploadTracker.bytes() < MIN_TRANSFER_BYTES) {
-      throw error instanceof SpeedTestRunError ? error : new SpeedTestRunError('network');
-    }
+    uploadIncomplete = true;
   }
-  const uploadMbps = uploadTracker.finalize();
-  if (uploadTracker.bytes() < MIN_TRANSFER_BYTES) {
-    throw new SpeedTestRunError('network');
+  const uploadMbps = uploadTracker.bytes() >= MIN_TRANSFER_BYTES
+    ? uploadTracker.finalize()
+    : null;
+  if (uploadMbps == null) {
+    uploadIncomplete = true;
   }
   const doneSnapshot: SpeedTestSnapshot = {
     ...snapshot,
@@ -458,6 +468,7 @@ export const runSpeedTest = async (
       uploadMbps,
     }),
     errorCode: null,
+    uploadIncomplete,
   };
   onSnapshot(doneSnapshot);
   return doneSnapshot;
