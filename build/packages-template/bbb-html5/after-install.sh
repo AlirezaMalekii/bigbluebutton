@@ -56,6 +56,14 @@ if [ ! -f "$SPEEDTEST_PAYLOAD" ] || [ "$CURRENT_SIZE" -lt "$SPEEDTEST_BYTES" ]; 
   chmod 644 "$SPEEDTEST_PAYLOAD"
 fi
 
+if [ -f /usr/share/bigbluebutton/speedtest-discard.py ]; then
+  chmod 755 /usr/share/bigbluebutton/speedtest-discard.py
+fi
+if [ -f /usr/lib/systemd/system/bbb-speedtest-discard.service ]; then
+  systemctl daemon-reload
+  systemctl enable --now bbb-speedtest-discard.service || true
+fi
+
 #
 # Restart nginx to take advantage of the updates to nginx configuration
 #

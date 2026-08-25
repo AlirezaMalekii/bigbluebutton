@@ -7,6 +7,7 @@ import Styled from './styles';
 import { RAISED_HAND_USERS, RaisedHandUser, RaisedHandUsersSubscriptionResponse } from '/imports/ui/core/graphql/queries/users';
 import { filterByMeetingId } from '/imports/ui/core/utils/subscriptionFilters';
 import { SET_RAISE_HAND } from '/imports/ui/core/graphql/mutations/userMutations';
+import { lowerAllRaisedHands } from '/imports/ui/components/user-list/service/lowerAllRaisedHands';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
 import UserListStyles from '../user-participants/user-list-participants/list-item/styles';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
@@ -40,7 +41,7 @@ const intlMessages = defineMessages({
 
 interface RaisedHandsComponentProps {
   raisedHands: RaisedHandUser[];
-  lowerUserHands: (userId: string) => void;
+  lowerAllHands: () => void;
   meeting: {
     meetingId: string;
     isBreakout: boolean;
@@ -60,7 +61,7 @@ interface EmojiProps {
 
 const RaisedHandsComponent: React.FC<RaisedHandsComponentProps> = ({
   raisedHands,
-  lowerUserHands,
+  lowerAllHands,
   meeting,
   pageId,
   currentUser,
@@ -170,9 +171,7 @@ const RaisedHandsComponent: React.FC<RaisedHandsComponentProps> = ({
           label={intl.formatMessage(intlMessages.lowerHandsLabel)}
           color="default"
           size="md"
-          onClick={() => {
-            raisedHands.map((u) => lowerUserHands(u.userId));
-          }}
+          onClick={lowerAllHands}
           data-test="raiseHandRejection"
         />
       )}
@@ -187,15 +186,6 @@ const RaisedHandsContainer: React.FC = () => {
   } = useDeduplicatedSubscription<RaisedHandUsersSubscriptionResponse>(RAISED_HAND_USERS);
 
   const [setRaiseHand] = useMutation(SET_RAISE_HAND);
-
-  const lowerUserHands = (userId: string) => {
-    setRaiseHand({
-      variables: {
-        userId,
-        raiseHand: false,
-      },
-    });
-  };
 
   const {
     data: meeting,
@@ -251,10 +241,17 @@ const RaisedHandsContainer: React.FC = () => {
     ? [currentUser as RaisedHandUser, ...raisedHands]
     : raisedHands;
 
+  const lowerAllHands = () => {
+    lowerAllRaisedHands(
+      setRaiseHand,
+      raisedHands.map((u) => u.userId),
+    );
+  };
+
   return (
     <RaisedHandsComponent
       raisedHands={displayedRaisedHands}
-      lowerUserHands={lowerUserHands}
+      lowerAllHands={lowerAllHands}
       pageId={pageId ?? ''}
       meeting={{
         meetingId: meeting.meetingId!,

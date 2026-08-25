@@ -487,13 +487,13 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
   isViewportSubscriptionEnabled() {
     const {
       enabled = true,
-      activationThreshold = 5,
+      activationThreshold = 3,
     } = window.meetingClientSettings.public.kurento.viewportSubscription || {};
     const { totalNumberOfStreams } = this.props;
 
     return enabled
       && isSkyroomTheme()
-      && totalNumberOfStreams >= Math.max(1, Number(activationThreshold) || 5);
+      && totalNumberOfStreams >= Math.max(1, Number(activationThreshold) || 3);
   }
 
   shouldKeepRemoteStream(stream: VideoItem) {
@@ -1552,15 +1552,19 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     }
   }
 
-  destroyVideoTag(stream: string) {
-    const videoElement = this.videoTags[stream];
+  destroyVideoTag(stream: string, videoElement: HTMLVideoElement) {
+    const registeredVideoElement = this.videoTags[stream];
+    const detachedVideoElement = videoElement;
 
-    if (videoElement == null) return;
-
-    if (typeof videoElement.pause === 'function') {
-      videoElement.pause();
-      videoElement.srcObject = null;
+    if (typeof detachedVideoElement.pause === 'function') {
+      detachedVideoElement.pause();
+      detachedVideoElement.srcObject = null;
     }
+
+    // A Skyroom layout transition can mount the replacement portal before the
+    // previous tile unmounts. Never let the stale cleanup erase the new tag or
+    // its playback watchdog state.
+    if (registeredVideoElement !== detachedVideoElement) return;
 
     delete this.videoTags[stream];
     this.clearPlaybackTimeout(stream);

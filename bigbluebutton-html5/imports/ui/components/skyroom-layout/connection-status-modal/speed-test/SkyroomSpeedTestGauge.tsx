@@ -4,11 +4,11 @@ import type { SpeedTestPhase } from './types';
 import Styled from '../styles';
 
 const CX = 120;
-const CY = 104;
-const RADIUS = 78;
-const START_ANGLE = 150;
-const SWEEP = 240;
-const TRACK_WIDTH = 16;
+const CY = 112;
+const RADIUS = 86;
+const START_ANGLE = 270;
+const SWEEP = 179;
+const TRACK_WIDTH = 14;
 
 const polar = (cx: number, cy: number, r: number, angleDeg: number) => {
   const rad = ((angleDeg - 90) * Math.PI) / 180;
@@ -53,7 +53,6 @@ const SkyroomSpeedTestGauge: React.FC<SkyroomSpeedTestGaugeProps> = ({
 }) => {
   const reactId = useId().replace(/:/g, '');
   const gradientId = `skyroomSpeedArc-${reactId}`;
-  const glowId = `skyroomSpeedGlow-${reactId}`;
   const pingPhase = phase === 'ping' || phase === 'probing';
   const idle = phase === 'idle';
   const progress = pingPhase || idle ? 0 : mbpsToGauge(mbps);
@@ -68,37 +67,23 @@ const SkyroomSpeedTestGauge: React.FC<SkyroomSpeedTestGaugeProps> = ({
     <Styled.GaugeWrap>
       <Styled.GaugeStage>
         <Styled.GaugeSvg
-          viewBox="0 0 240 168"
+          viewBox="0 0 240 128"
           role="img"
           aria-label={`${gaugeLabel} ${displayValue} ${displayUnit}`}
           data-animate={animate ? 'true' : 'false'}
         >
           <defs>
-            <linearGradient id={gradientId} x1="8%" y1="92%" x2="92%" y2="8%">
+            <linearGradient id={gradientId} x1="0%" y1="80%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="var(--skyroom-brand-600, #0A6F67)" />
               <stop offset="50%" stopColor="var(--skyroom-accent, #20C7BB)" />
               <stop offset="100%" stopColor="var(--skyroom-brand-200, #8CDDD6)" />
             </linearGradient>
-            <filter id={glowId} x="-25%" y="-25%" width="150%" height="150%">
-              <feGaussianBlur stdDeviation="1.8" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
           </defs>
           <path
             d={arcPath(RADIUS, START_ANGLE, START_ANGLE + SWEEP)}
             fill="none"
             stroke="rgba(218, 230, 245, 0.1)"
             strokeWidth={TRACK_WIDTH}
-            strokeLinecap="round"
-          />
-          <path
-            d={arcPath(RADIUS - 12, START_ANGLE, START_ANGLE + SWEEP)}
-            fill="none"
-            stroke="rgba(218, 230, 245, 0.045)"
-            strokeWidth="3"
             strokeLinecap="round"
           />
           {progress > 0.004 ? (
@@ -110,13 +95,12 @@ const SkyroomSpeedTestGauge: React.FC<SkyroomSpeedTestGaugeProps> = ({
               strokeLinecap="round"
               pathLength={1}
               strokeDasharray={`${progress} 1`}
-              filter={`url(#${glowId})`}
               className="skyroom-speedtest-progress"
             />
           ) : null}
           {TICK_MBPS.map((tick) => {
             const angle = START_ANGLE + SWEEP * mbpsToGauge(tick);
-            const inner = polar(CX, CY, RADIUS - 10, angle);
+            const inner = polar(CX, CY, RADIUS - 9, angle);
             const outer = polar(CX, CY, RADIUS + 1, angle);
             return (
               <line
@@ -135,7 +119,7 @@ const SkyroomSpeedTestGauge: React.FC<SkyroomSpeedTestGaugeProps> = ({
             <circle
               cx={tip.x}
               cy={tip.y}
-              r="6"
+              r="5.5"
               fill="var(--skyroom-brand-200, #8CDDD6)"
               stroke="rgba(7, 11, 20, 0.65)"
               strokeWidth="2"
@@ -143,11 +127,11 @@ const SkyroomSpeedTestGauge: React.FC<SkyroomSpeedTestGaugeProps> = ({
           ) : null}
           <text
             x={CX}
-            y={CY - 8}
+            y={CY - 22}
             textAnchor="middle"
             dominantBaseline="middle"
             fill="var(--skyroom-text-primary, #E6EDF7)"
-            fontSize="32"
+            fontSize="30"
             fontWeight="700"
             letterSpacing="-0.05em"
             direction="ltr"
@@ -156,7 +140,7 @@ const SkyroomSpeedTestGauge: React.FC<SkyroomSpeedTestGaugeProps> = ({
           </text>
           <text
             x={CX}
-            y={CY + 26}
+            y={CY - 4}
             textAnchor="middle"
             dominantBaseline="middle"
             fill="var(--skyroom-brand-300, #3FC2B8)"
@@ -168,8 +152,8 @@ const SkyroomSpeedTestGauge: React.FC<SkyroomSpeedTestGaugeProps> = ({
             {displayUnit.toUpperCase()}
           </text>
         </Styled.GaugeSvg>
+        <Styled.GaugePhase aria-live="polite">{phaseLabel}</Styled.GaugePhase>
       </Styled.GaugeStage>
-      <Styled.GaugePhase aria-live="polite">{phaseLabel}</Styled.GaugePhase>
     </Styled.GaugeWrap>
   );
 };

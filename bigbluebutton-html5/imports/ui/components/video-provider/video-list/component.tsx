@@ -28,11 +28,15 @@ import {
   partitionSkyroomStreams,
   computeSkyroomStripGrid,
   computeSkyroomSidebarGrid,
+  expandSkyroomScrollableGrid,
   buildSkyroomFixedGridStyle,
   SKYROOM_SIDEBAR_WEBCAM_H,
   SKYROOM_STAGE_WEBCAM_GUTTER,
   SKYROOM_WEBCAM_TILE_W,
   SKYROOM_WEBCAM_TILE_H,
+  SKYROOM_HIGH_CAMERA_LOAD_THRESHOLD,
+  SKYROOM_DENSE_WEBCAM_THRESHOLD,
+  SKYROOM_DESKTOP_VISIBLE_WEBCAM_BUDGET,
 } from '/imports/ui/components/skyroom-layout/camera-placement';
 import SkyroomWebcamDragLayer from '/imports/ui/components/skyroom-layout/webcam-zone-drag/SkyroomWebcamDragLayer';
 import SkyroomWebcamDropZones from '/imports/ui/components/skyroom-layout/webcam-zone-drag/SkyroomWebcamDropZones';
@@ -102,6 +106,32 @@ const findOptimalGrid = (
 const ASPECT_RATIO = 4 / 3;
 // const ACTION_NAME_BACKGROUND = 'blurBackground';
 
+const getSkyroomViewportLayoutKey = () => {
+  const layout = getSkyroomWebcamLayout();
+  if (!layout) return 'none';
+
+  const boundsKey = (bounds: {
+    top?: number;
+    left?: number;
+    right?: number;
+    width?: number;
+    height?: number;
+  } | null | undefined) => (
+    bounds
+      ? [bounds.top, bounds.left, bounds.right, bounds.width, bounds.height].join(':')
+      : '-'
+  );
+
+  return [
+    layout.stageMediaOpen ? 1 : 0,
+    layout.centerDropEnabled ? 1 : 0,
+    layout.sidebarStackVisible === false ? 0 : 1,
+    boundsKey(layout.sidebar),
+    boundsKey(layout.stage),
+    boundsKey(layout.center),
+  ].join('|');
+};
+
 interface VideoListProps {
   pluginUserCameraHelperPerPosition: UserCameraHelperAreas;
   userCameraDomElementIds: string[];
@@ -119,7 +149,7 @@ interface VideoListProps {
   intl: IntlShape;
   setUserCamerasRequestedFromPlugin: React.Dispatch<React.SetStateAction<UpdatedDataForUserCameraDomElement[]>>;
   onVideoItemMount: (stream: string, video: HTMLVideoElement) => void;
-  onVideoItemUnmount: (stream: string) => void;
+  onVideoItemUnmount: (stream: string, video: HTMLVideoElement) => void;
   onVideoPlaybackStateChange: (stream: string, state: VideoPlaybackState) => void;
   onVideoVisibilityChange?: (changes: { stream: string; visible: boolean }[]) => void;
   onVirtualBgDrop: (stream: string, type: string, name: string, data: string) => Promise<unknown>;
@@ -184,6 +214,10 @@ class VideoList extends Component<VideoListProps, VideoListState> {
 
   private viewportReportFrame: number | null;
 
+  private viewportSyncFrame: number | null;
+
+  private skyroomViewportLayoutKey: string;
+
   private unsubscribeSkyroomZones: (() => void) | null;
 
   private failedMediaElements: unknown[];
@@ -236,6 +270,8 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     this.reportedStreamVisibility = new Map();
     this.pendingViewportStreams = new Set();
     this.viewportReportFrame = null;
+    this.viewportSyncFrame = null;
+    this.skyroomViewportLayoutKey = getSkyroomViewportLayoutKey();
     this.unsubscribeSkyroomZones = null;
     this.failedMediaElements = [];
     this.handleCanvasResize = throttle(this.handleCanvasResize.bind(this), 66,
@@ -248,6 +284,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     this.handlePlayElementFailed = this.handlePlayElementFailed.bind(this);
     this.handleViewportIntersections = this.handleViewportIntersections.bind(this);
     this.syncViewportTargets = this.syncViewportTargets.bind(this);
+    this.scheduleViewportTargetSync = this.scheduleViewportTargetSync.bind(this);
     this.autoplayWasHandled = false;
   }
 
@@ -261,7 +298,8 @@ class VideoList extends Component<VideoListProps, VideoListState> {
         () => this.handleCanvasResize(),
       );
     });
-    this.syncViewportTargets();
+    this.skyroomViewportLayoutKey = getSkyroomViewportLayoutKey();
+    this.scheduleViewportTargetSync();
   }
 
   componentDidUpdate(prevProps: VideoListProps, prevState: VideoListState) {
@@ -288,13 +326,18 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       .join('|');
     const nextLayoutKey = layoutKey(streams);
     const previousLayoutKey = layoutKey(prevStreams);
+    const nextSkyroomViewportLayoutKey = getSkyroomViewportLayoutKey();
+    const skyroomViewportLayoutChanged = nextSkyroomViewportLayoutKey
+      !== this.skyroomViewportLayoutKey;
+    this.skyroomViewportLayoutKey = nextSkyroomViewportLayoutKey;
 
     if (layoutType !== prevLayoutType
       || focusedId !== prevFocusedId
       || cameraDockWidth !== prevCameraDockWidth
       || cameraDockHeight !== prevCameraDockHeight
       || streams.length !== prevStreams.length
-      || nextLayoutKey !== previousLayoutKey) {
+      || nextLayoutKey !== previousLayoutKey
+      || skyroomViewportLayoutChanged) {
       this.handleCanvasResize();
     }
 
@@ -302,8 +345,9 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       || nextLayoutKey !== previousLayoutKey
       || skyroomZoneRevision !== prevState.skyroomZoneRevision
       || webcamsVisible !== prevWebcamsVisible
-      || onVideoVisibilityChange !== prevProps.onVideoVisibilityChange) {
-      this.syncViewportTargets();
+      || onVideoVisibilityChange !== prevProps.onVideoVisibilityChange
+      || skyroomViewportLayoutChanged) {
+      this.scheduleViewportTargetSync();
     }
   }
 
@@ -320,6 +364,17 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     this.pendingViewportStreams.clear();
     if (this.viewportReportFrame !== null) cancelAnimationFrame(this.viewportReportFrame);
     this.viewportReportFrame = null;
+    if (this.viewportSyncFrame !== null) cancelAnimationFrame(this.viewportSyncFrame);
+    this.viewportSyncFrame = null;
+  }
+
+  scheduleViewportTargetSync() {
+    this.syncViewportTargets();
+    if (this.viewportSyncFrame !== null) cancelAnimationFrame(this.viewportSyncFrame);
+    this.viewportSyncFrame = requestAnimationFrame(() => {
+      this.viewportSyncFrame = null;
+      this.syncViewportTargets();
+    });
   }
 
   static getViewportObserverRoot(target: Element) {
@@ -496,6 +551,13 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       observer.observe(target);
     });
 
+    const activeObservers = new Set(this.viewportTargetObservers.values());
+    this.viewportObservers.forEach((observer, root) => {
+      if (activeObservers.has(observer)) return;
+      observer.disconnect();
+      this.viewportObservers.delete(root);
+    });
+
     // IntersectionObserver does not guarantee a new entry when only an
     // ancestor's CSS visibility changes (mobile tab/zone switches). Refresh
     // the current geometry on those bounded layout updates so hidden docks do
@@ -582,6 +644,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     canvasHeight: number,
     gridGutter: number,
     focusedId: string,
+    maxGridSlots = Number.POSITIVE_INFINITY,
   ) {
     let numItems = visibleStreams.length;
     if (numItems < 1) {
@@ -603,8 +666,9 @@ class VideoList extends Component<VideoListProps, VideoListState> {
           ASPECT_RATIO, numItems, col,
         );
         const focusedConstraint = hasFocusedItem ? testGrid.rows > 1 && testGrid.columns > 1 : true;
+        const withinSlotBudget = (testGrid.rows * testGrid.columns) <= maxGridSlots;
         const betterThanCurrent = testGrid.filledArea > currentGrid.filledArea;
-        return focusedConstraint && betterThanCurrent ? testGrid : currentGrid;
+        return focusedConstraint && withinSlotBudget && betterThanCurrent ? testGrid : currentGrid;
       }, { filledArea: 0 } as {
         columns: number;
         rows: number;
@@ -626,6 +690,15 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     if (isSkyroomWebcamLayoutActive()) {
       const { sidebar, stage, center } = this.getSkyroomPartition();
       const dockStreams = stage;
+      const visibleCameraCount = streams.filter(
+        (item) => item.type === VIDEO_TYPES.GRID || !('render' in item) || item.render !== false,
+      ).length;
+      const useDenseDesktopGrid = !isSkyroomMobileViewport()
+        && visibleCameraCount >= SKYROOM_DENSE_WEBCAM_THRESHOLD;
+      const mainViewportBudget = Math.max(
+        4,
+        SKYROOM_DESKTOP_VISIBLE_WEBCAM_BUDGET - (sidebar.length > 0 ? 2 : 0),
+      );
       const sidebarBounds = skyroomLayout.sidebar;
       const centerBounds = skyroomLayout.center;
       let { sidebarGrid, centerGrid } = this.state;
@@ -669,6 +742,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
             stageBoundsWidth,
             stageBoundsHeight,
             gridGutter,
+            useDenseDesktopGrid ? mainViewportBudget : Number.POSITIVE_INFINITY,
           );
         if (computedStageGrid) {
           optimalGrid = computedStageGrid;
@@ -682,13 +756,33 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       if (visibleCenter.length > 0 && centerBounds && this.centerGrid) {
         const centerGutter = parseInt(window.getComputedStyle(this.centerGrid)
           .getPropertyValue('grid-row-gap'), 10) || 2;
-        const computedCenterGrid = VideoList.computeOptimalGrid(
-          visibleCenter,
+        const focusedStream = visibleCenter.find(
+          (item) => item.type !== VIDEO_TYPES.GRID && item.stream === focusedId,
+        );
+        const focusExtraSlots = focusedStream && visibleCenter.length > 2 ? 3 : 0;
+        const viewportStreamCount = useDenseDesktopGrid
+          ? Math.max(1, mainViewportBudget - focusExtraSlots)
+          : visibleCenter.length;
+        const viewportStreams = visibleCenter.slice(0, viewportStreamCount);
+        if (focusedStream && !viewportStreams.includes(focusedStream)) {
+          viewportStreams[Math.max(0, viewportStreams.length - 1)] = focusedStream;
+        }
+        const viewportGrid = VideoList.computeOptimalGrid(
+          viewportStreams,
           centerBounds.width,
           centerBounds.height,
           centerGutter,
           focusedId,
+          useDenseDesktopGrid ? mainViewportBudget : Number.POSITIVE_INFINITY,
         );
+        const computedCenterGrid = useDenseDesktopGrid
+          ? expandSkyroomScrollableGrid(
+            viewportGrid,
+            visibleCenter.length,
+            centerGutter,
+            focusExtraSlots,
+          )
+          : viewportGrid;
         if (computedCenterGrid) {
           centerGrid = computedCenterGrid;
         }
@@ -996,6 +1090,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       intl,
       cameraDock,
       isGridEnabled,
+      streams,
     } = this.props;
     const {
       optimalGrid, sidebarGrid, centerGrid, autoplayBlocked,
@@ -1008,6 +1103,22 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     const centerBounds = skyroomLayout?.center;
     const { position } = cameraDock;
     const stageInPortal = dockStreams.length > 0 && Boolean(stageBounds);
+    const visibleCameraCount = streams.filter(
+      (item) => item.type === VIDEO_TYPES.GRID || !('render' in item) || item.render !== false,
+    ).length;
+    const webcamLoad = visibleCameraCount >= SKYROOM_HIGH_CAMERA_LOAD_THRESHOLD
+      ? 'high'
+      : 'normal';
+    const useDenseDesktopGrid = !isSkyroomMobileViewport()
+      && visibleCameraCount >= SKYROOM_DENSE_WEBCAM_THRESHOLD;
+    const centerGridStyle = useDenseDesktopGrid
+      ? buildSkyroomFixedGridStyle(centerGrid)
+      : {
+        width: '100%',
+        height: '100%',
+        gridTemplateColumns: `repeat(${centerGrid.columns}, 1fr)`,
+        gridTemplateRows: `repeat(${centerGrid.rows}, 1fr)`,
+      };
 
     const sidebarDockStyle: React.CSSProperties = sidebarBounds ? {
       position: 'fixed',
@@ -1031,6 +1142,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       <div
         id="skyroom-sidebar-webcam-dock"
         data-test="skyroomSidebarWebcamDock"
+        data-skyroom-webcam-load={webcamLoad}
         style={sidebarDockStyle}
       >
         <Styled.VideoList
@@ -1066,6 +1178,8 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       <div
         id="skyroom-stage-webcam-dock"
         data-test="skyroomStageWebcamDock"
+        data-skyroom-webcam-load={webcamLoad}
+        data-skyroom-webcam-density={useDenseDesktopGrid ? 'dense' : 'standard'}
         style={stageDockStyle}
       >
         <Styled.VideoList
@@ -1084,6 +1198,8 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       <div
         id="skyroom-center-webcam-dock"
         data-test="skyroomCenterWebcamDock"
+        data-skyroom-webcam-load={webcamLoad}
+        data-skyroom-webcam-density={useDenseDesktopGrid ? 'dense' : 'standard'}
         style={{
           position: 'fixed',
           top: centerBounds.top,
@@ -1093,10 +1209,12 @@ class VideoList extends Component<VideoListProps, VideoListState> {
           height: centerBounds.height,
           zIndex: centerBounds.zIndex ?? 7,
           display: 'flex',
-          alignItems: 'center',
+          alignItems: useDenseDesktopGrid ? 'flex-start' : 'center',
           justifyContent: 'center',
           pointerEvents: 'auto',
           margin: 0,
+          overflowX: 'hidden',
+          overflowY: useDenseDesktopGrid ? 'auto' : 'hidden',
         }}
       >
         <Styled.VideoList
@@ -1104,12 +1222,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
             this.centerGrid = ref;
           }}
           className="video-provider_list skyroom-center-webcam-list"
-          style={{
-            width: '100%',
-            height: '100%',
-            gridTemplateColumns: `repeat(${centerGrid.columns}, 1fr)`,
-            gridTemplateRows: `repeat(${centerGrid.rows}, 1fr)`,
-          }}
+          style={centerGridStyle ?? undefined}
         >
           {this.renderVideoList(center, true, SKYROOM_WEBCAM_ZONES.CENTER)}
         </Styled.VideoList>
@@ -1133,6 +1246,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
           : centerDock}
         <Styled.VideoCanvas
           $position={position}
+          data-skyroom-webcam-load={webcamLoad}
           ref={(ref) => {
             this.canvas = ref;
           }}

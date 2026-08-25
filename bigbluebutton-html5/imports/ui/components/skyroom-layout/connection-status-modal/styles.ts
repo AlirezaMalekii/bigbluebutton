@@ -667,7 +667,9 @@ const GaugeStage = styled.div`
   position: relative;
   width: min(100%, 300px);
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
 
   @media (max-width: 560px) {
     width: min(100%, 252px);
@@ -678,7 +680,7 @@ const GaugeSvg = styled.svg`
   width: 100%;
   height: auto;
   display: block;
-  overflow: visible;
+  overflow: hidden;
   font-family: inherit;
 
   text {
@@ -732,8 +734,10 @@ const GaugeUnit = styled.div`
 `;
 
 const GaugePhase = styled.p`
-  margin: 6px 0 0;
-  min-height: 2.4em;
+  position: relative;
+  z-index: 1;
+  margin: 2px 0 0;
+  min-height: 2.2em;
   max-width: 16.5rem;
   padding: 0 10px;
   font-size: 0.8125rem;

@@ -1,0 +1,16 @@
+[Unit]
+Description=SafeMeet speed-test upload discard sink
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/share/bigbluebutton/speedtest-discard.py
+Restart=always
+RestartSec=1
+User=bigbluebutton
+Group=bigbluebutton
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

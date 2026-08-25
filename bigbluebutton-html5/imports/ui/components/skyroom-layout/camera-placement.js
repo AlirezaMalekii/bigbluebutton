@@ -17,6 +17,12 @@ export const SKYROOM_STAGE_WEBCAM_MAX_H = 160;
 export const SKYROOM_STAGE_WEBCAM_MAX_ROWS = 2;
 /** Default grid gap for stage strip height/column math (matches layout.css --space-2). */
 export const SKYROOM_STAGE_WEBCAM_GUTTER = 8;
+/** Decorative media effects are simplified as soon as multiple videos compete for composition. */
+export const SKYROOM_HIGH_CAMERA_LOAD_THRESHOLD = 2;
+/** Preserve the current desktop mosaic through twelve cameras. */
+export const SKYROOM_DENSE_WEBCAM_THRESHOLD = 13;
+/** Target number of simultaneously visible desktop camera tiles in dense mode. */
+export const SKYROOM_DESKTOP_VISIBLE_WEBCAM_BUDGET = 12;
 
 const WEBCAM_TILE_ASPECT = 4 / 3;
 
@@ -227,8 +233,13 @@ export const computeSkyroomStripGrid = (
   canvasWidth,
   canvasHeight,
   gutter = SKYROOM_STAGE_WEBCAM_GUTTER,
+  maxVisibleItems = Number.POSITIVE_INFINITY,
 ) => {
-  const maxColumns = calcStageWebcamColumns(canvasWidth, gutter);
+  const availableColumns = calcStageWebcamColumns(canvasWidth, gutter);
+  const viewportColumnCap = Number.isFinite(maxVisibleItems)
+    ? Math.max(1, Math.floor(maxVisibleItems / SKYROOM_STAGE_WEBCAM_MAX_ROWS))
+    : availableColumns;
+  const maxColumns = Math.min(availableColumns, viewportColumnCap);
   // Use at least the content height so preserveTileSize math has a valid container.
   const contentRows = Math.ceil(numItems / Math.max(1, Math.min(numItems, maxColumns)));
   const contentHeight = (contentRows * SKYROOM_WEBCAM_TILE_H)
@@ -246,6 +257,32 @@ export const computeSkyroomStripGrid = (
       preserveTileSize: true,
     },
   );
+};
+
+/**
+ * Grow an optimal viewport-sized grid to contain every mounted tile while
+ * preserving its cell size. The owning dock supplies vertical scrolling, so
+ * IntersectionObserver can release media outside the visible rows.
+ */
+export const expandSkyroomScrollableGrid = (
+  viewportGrid,
+  numItems,
+  gutter = 2,
+  extraSlots = 0,
+) => {
+  if (!viewportGrid?.cellWidth || !viewportGrid?.cellHeight || viewportGrid.columns < 1) {
+    return viewportGrid;
+  }
+
+  const rows = Math.ceil((numItems + extraSlots) / viewportGrid.columns);
+  return {
+    ...viewportGrid,
+    rows,
+    width: (viewportGrid.cellWidth * viewportGrid.columns)
+      + (Math.max(0, viewportGrid.columns - 1) * gutter),
+    height: (viewportGrid.cellHeight * rows) + (Math.max(0, rows - 1) * gutter),
+    filledArea: viewportGrid.cellWidth * viewportGrid.cellHeight * numItems,
+  };
 };
 
 export const computeSkyroomSidebarGrid = (numItems, canvasWidth, canvasHeight, gutter = 4) => (

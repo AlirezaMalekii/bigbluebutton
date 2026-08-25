@@ -29,8 +29,6 @@ const Overlay = styled.div`
     max(16px, env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
   background-color: rgba(7, 11, 20, 0.62);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
 `;
 
 // ─── Main card ──────────────────────────────────────────────────────────────

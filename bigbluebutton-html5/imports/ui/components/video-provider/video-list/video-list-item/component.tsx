@@ -39,7 +39,7 @@ import {
   isVideoPlaybackPageActive,
   subscribeToVideoPlaybackPageLifecycle,
 } from '/imports/ui/components/video-provider/video-playback-page-lifecycle';
-import { VideoListCurrentUser } from '../shared-state-context';
+import { VideoListCurrentUser, useVideoListSharedState } from '../shared-state-context';
 
 const intlMessages = defineMessages({
   disableDesc: {
@@ -69,7 +69,7 @@ export interface VideoListItemProps {
   numOfStreams: number;
   onHandleVideoFocus: ((id: string) => void) | null;
   onVideoItemMount: (ref: HTMLVideoElement) => void;
-  onVideoItemUnmount: (stream: string) => void;
+  onVideoItemUnmount: (stream: string, video: HTMLVideoElement) => void;
   onVideoPlaybackStateChange: (state: VideoPlaybackState) => void;
   settingsSelfViewDisable: boolean;
   stream: VideoItem;
@@ -157,6 +157,7 @@ export const VideoListItem: React.FC<VideoListItemProps> = (props) => {
   } = props;
 
   const intl = useIntl();
+  const observeVideoTile = useVideoListSharedState((state) => state.observeVideoTile);
 
   const [playbackState, setPlaybackState] = useState<VideoPlaybackState>('waiting');
   const [isStreamHealthy, setIsStreamHealthy] = useState(false);
@@ -402,14 +403,11 @@ export const VideoListItem: React.FC<VideoListItemProps> = (props) => {
       if (playbackStateRef.current !== 'playing') confirmDecodedFrame();
     };
 
-    const resizeObserver = typeof ResizeObserver === 'function'
-      ? new ResizeObserver((entries) => {
-        const width = entries[0]?.contentRect?.width;
-        if (typeof width !== 'number') return;
-        setIsVideoSqueezed(width < VIDEO_CONTAINER_WIDTH_BOUND);
-        setIsVideoPluginHelperSqueezed(width < VIDEO_CONTAINER_PLUGIN_HELPERS_WIDTH_BOUND);
-      })
-      : null;
+    let unsubscribeTileResize = () => {};
+    const handleTileResize = (width: number) => {
+      setIsVideoSqueezed(width < VIDEO_CONTAINER_WIDTH_BOUND);
+      setIsVideoPluginHelperSqueezed(width < VIDEO_CONTAINER_PLUGIN_HELPERS_WIDTH_BOUND);
+    };
     let unsubscribePageLifecycle = () => {};
 
     if (hasVideoMedia && videoEl) {
@@ -430,7 +428,7 @@ export const VideoListItem: React.FC<VideoListItemProps> = (props) => {
     }
 
     if (videoContainer.current) {
-      resizeObserver?.observe(videoContainer.current);
+      unsubscribeTileResize = observeVideoTile(videoContainer.current, handleTileResize);
     }
 
     return () => {
@@ -448,9 +446,9 @@ export const VideoListItem: React.FC<VideoListItemProps> = (props) => {
         unsubscribePageLifecycle();
         clearPlaybackInterruptTimeout();
         clearVideoFrameCallback();
-        onVideoItemUnmount(cameraId);
+        onVideoItemUnmount(cameraId, videoEl);
       }
-      resizeObserver?.disconnect();
+      unsubscribeTileResize();
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     };
   }, []);

@@ -21,12 +21,22 @@ import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import {
   useIsBreakoutRoomsEnabled,
   useIsLearningDashboardEnabled,
+  useIsRaiseHandEnabled,
   useIsReactionsEnabled,
 } from '/imports/ui/services/features';
 import { useMutation, useLazyQuery } from '@apollo/client';
 import { SET_MUTED } from './mutations';
-import { CLEAR_ALL_REACTION } from '/imports/ui/core/graphql/mutations/userMutations';
-import { GET_USER_NAMES } from '/imports/ui/core/graphql/queries/users';
+import {
+  CLEAR_ALL_REACTION,
+  SET_RAISE_HAND,
+} from '/imports/ui/core/graphql/mutations/userMutations';
+import {
+  GET_USER_NAMES,
+  RAISED_HAND_USERS,
+  RaisedHandUsersSubscriptionResponse,
+} from '/imports/ui/core/graphql/queries/users';
+import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
+import { lowerAllRaisedHands } from '/imports/ui/components/user-list/service/lowerAllRaisedHands';
 import logger from '/imports/startup/client/logger';
 import { filterByMeetingId } from '/imports/ui/core/utils/subscriptionFilters';
 import { notify } from '/imports/ui/services/notification';
@@ -120,6 +130,18 @@ const intlMessages = defineMessages({
     id: 'app.userList.userOptions.clearedReactions',
     description: 'Used in toast notification when reactions have been cleared',
   },
+  lowerAllHandsLabel: {
+    id: 'app.userList.userOptions.lowerAllHandsLabel',
+    description: 'Lower all raised hands label',
+  },
+  lowerAllHandsDesc: {
+    id: 'app.userList.userOptions.lowerAllHandsDesc',
+    description: 'Lower all raised hands description',
+  },
+  clearedHandsMessage: {
+    id: 'app.userList.userOptions.clearedHands',
+    description: 'Used in toast notification when all raised hands have been lowered',
+  },
 });
 
 interface UserTitleOptionsProps {
@@ -142,6 +164,7 @@ interface UserOptionAction {
   iconRight?: string;
   dataTest?: string;
   isSeparator?: boolean;
+  disabled?: boolean;
 }
 
 const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
@@ -164,6 +187,7 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
     uid(8, 'options-'),
     uid(8, 'options-'),
     uid(8, 'options-'),
+    uid(8, 'options-'),
   ]);
 
   const createBreakoutRoomModal = useModalRegistration({ id: 'createBreakoutRoomModal', priority: 'medium' });
@@ -172,11 +196,25 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
 
   const [setMuted] = useMutation(SET_MUTED);
   const [clearAllReaction] = useMutation(CLEAR_ALL_REACTION);
+  const [setRaiseHand] = useMutation(SET_RAISE_HAND);
   const [getUsers, { data: usersData, error: usersError }] = useLazyQuery<GetUserNamesResponse>(GET_USER_NAMES, { fetchPolicy: 'no-cache' });
   const users = usersData?.user || [];
   const isLearningDashboardEnabled = useIsLearningDashboardEnabled();
   const isBreakoutRoomsEnabled = useIsBreakoutRoomsEnabled();
   const isReactionsEnabled = useIsReactionsEnabled();
+  const isRaiseHandEnabled = useIsRaiseHandEnabled();
+  const {
+    data: raisedHandsData,
+  } = useDeduplicatedSubscription<RaisedHandUsersSubscriptionResponse>(RAISED_HAND_USERS);
+  const raisedHandUsers = meetingId
+    ? filterByMeetingId(
+      raisedHandsData?.user,
+      meetingId,
+      RAISED_HAND_USERS,
+      (u) => ({ mismatchedUserId: u.userId, mismatchedName: u.name }),
+    )
+    : [];
+  const hasRaisedHands = raisedHandUsers.length > 0;
   const canInviteUsers = isModerator
   && !isBreakout
   && hasBreakoutRooms;
@@ -249,6 +287,22 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
     notify(intl.formatMessage(intlMessages.clearReactionsMessage), 'info', 'clear_status');
   };
 
+  const clearAllHands = () => {
+    if (!hasRaisedHands) return;
+    lowerAllRaisedHands(
+      setRaiseHand,
+      raisedHandUsers.map((u) => u.userId),
+    );
+    notify(intl.formatMessage(intlMessages.clearedHandsMessage), 'info', 'hand');
+    logger.info(
+      {
+        logCode: 'useroptions_lower_all_hands',
+        extraInfo: { logType: 'moderator_action', count: raisedHandUsers.length },
+      },
+      'moderator lowered all raised hands',
+    );
+  };
+
   const { dynamicGuestPolicy } = window.meetingClientSettings.public.app;
 
   const actions = useMemo<UserOptionAction[]>(() => {
@@ -302,6 +356,16 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         dataTest: 'clearStatus',
       },
       {
+        allow: isRaiseHandEnabled && isModerator,
+        key: uuids.current[8],
+        label: intl.formatMessage(intlMessages.lowerAllHandsLabel),
+        description: intl.formatMessage(intlMessages.lowerAllHandsDesc),
+        onClick: () => clearAllHands(),
+        icon: 'hand',
+        dataTest: 'lowerAllHands',
+        disabled: !hasRaisedHands,
+      },
+      {
         key: 'separator-01',
         isSeparator: true,
         allow: true,
@@ -341,7 +405,17 @@ const UserTitleOptions: React.FC<UserTitleOptionsProps> = ({
         dataTest: 'learningDashboard',
       },
     ].filter(({ allow }) => allow);
-  }, [isModerator, hasBreakoutRooms, locale, intl, isBreakoutRoomsEnabled, isLearningDashboardEnabled]);
+  }, [
+    isModerator,
+    hasBreakoutRooms,
+    locale,
+    intl,
+    isBreakoutRoomsEnabled,
+    isLearningDashboardEnabled,
+    isRaiseHandEnabled,
+    hasRaisedHands,
+    raisedHandUsers,
+  ]);
 
   return (
     <Styled.OptionsGroup data-test="user-management-options">

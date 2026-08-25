@@ -588,15 +588,16 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
   }, []);
 
   // Downstream prop - useCallback to make it stable
-  const destroyVideoTag = useCallback((stream: string) => {
-    const videoElement = bridgeRefs.current.videoTags[stream];
+  const destroyVideoTag = useCallback((stream: string, videoElement: HTMLVideoElement) => {
+    const registeredVideoElement = bridgeRefs.current.videoTags[stream];
+    const detachedVideoElement = videoElement;
 
-    if (videoElement == null) return;
-
-    if (typeof videoElement.pause === 'function') {
-      videoElement.pause();
-      videoElement.srcObject = null;
+    if (typeof detachedVideoElement.pause === 'function') {
+      detachedVideoElement.pause();
+      detachedVideoElement.srcObject = null;
     }
+
+    if (registeredVideoElement !== detachedVideoElement) return;
 
     delete bridgeRefs.current.videoTags[stream];
   }, []);

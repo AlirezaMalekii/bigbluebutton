@@ -44,7 +44,7 @@ import {
   PRESENTATION_SET_PAGE,
   PRESENTATION_PUBLISH_CURSOR,
 } from '../presentation/mutations';
-import { useMergedCursorData } from './hooks.ts';
+import WhiteboardCursorPresenceSync from './cursor-presence-sync';
 import useDeduplicatedSubscription from '../../core/hooks/useDeduplicatedSubscription';
 import MediaService from '/imports/ui/components/media/service';
 import { debounce } from '/imports/utils/debounce';
@@ -254,7 +254,6 @@ const WhiteboardContainer = (props) => {
   ), [publishCursorUpdate]);
 
   const isMultiUserActive = whiteboardWriters.filter((u) => !u.presenter)?.length > 0;
-  const cursorArray = useMergedCursorData();
 
   const connectedStatus = useReactiveVar(connectionStatus.getConnectedStatusVar());
 
@@ -387,9 +386,7 @@ const WhiteboardContainer = (props) => {
         annotationsToBeRemoved.push(item.annotationId);
       } else {
         const annotationInfoParsed = JSON.parse(item.annotationInfo);
-        const existingShape = editor?.getCurrentPageShapes().find(
-          (s) => s.id === item.annotationId,
-        );
+        const existingShape = editor?.getShape?.(item.annotationId);
         if (existingShape) {
           updatedAnnotations.push({
             ...item,
@@ -501,65 +498,73 @@ const WhiteboardContainer = (props) => {
 
   return (
     <ErrorBoundaryWithReload>
-      <Whiteboard
-        key={presentationId}
-        {...{
-          isPresenter,
-          isModerator,
-          currentUser,
-          isRTL,
-          width,
-          height,
-          maxStickyNoteLength,
-          maxNumberOfAnnotations,
-          lockToolbarTools,
-          pointerDiameter,
-          fontFamily,
-          colorStyle,
-          dashStyle,
-          fillStyle,
-          fontStyle,
-          sizeStyle,
-          handleToggleFullScreen,
-          sidebarNavigationWidth,
-          layoutContextDispatch,
-          initDefaultPages,
-          persistShapeWrapper,
-          isMultiUserActive,
-          shapes,
-          removedShapes,
-          bgShape,
-          assets,
-          removeShapes,
-          zoomSlide,
-          notifyNotAllowedChange,
-          notifyShapeNumberExceeded,
-          whiteboardToolbarAutoHide: Settings?.application?.whiteboardToolbarAutoHide,
-          animations: Settings?.application?.animations,
-          toggleToolsAnimations,
-          isIphone,
-          isPhone,
-          currentPresentationPage,
-          numberOfPages: currentPresentationPage?.totalPages,
-          presentationId,
-          hasWBAccess,
-          whiteboardWriters,
-          zoomChanger,
-          skipToSlide,
-          locale: Settings?.application?.locale,
-          darkTheme: Settings?.application?.darkTheme,
-          selectedLayout: Settings?.application?.selectedLayout,
-          isInfiniteWhiteboard,
-          curPageNum,
-          setEditor,
-          layoutChanged,
-        }}
-        {...props}
-        meetingId={Auth.meetingID}
-        publishCursorUpdate={throttledPublishCursorUpdate}
-        otherCursors={cursorArray}
-        hideViewersCursor={userLocks?.hideViewersCursor}
-      />
+      <>
+        <Whiteboard
+          key={presentationId}
+          {...{
+            isPresenter,
+            isModerator,
+            currentUser,
+            isRTL,
+            width,
+            height,
+            maxStickyNoteLength,
+            maxNumberOfAnnotations,
+            lockToolbarTools,
+            pointerDiameter,
+            fontFamily,
+            colorStyle,
+            dashStyle,
+            fillStyle,
+            fontStyle,
+            sizeStyle,
+            handleToggleFullScreen,
+            sidebarNavigationWidth,
+            layoutContextDispatch,
+            initDefaultPages,
+            persistShapeWrapper,
+            isMultiUserActive,
+            shapes,
+            removedShapes,
+            bgShape,
+            assets,
+            removeShapes,
+            zoomSlide,
+            notifyNotAllowedChange,
+            notifyShapeNumberExceeded,
+            whiteboardToolbarAutoHide: Settings?.application?.whiteboardToolbarAutoHide,
+            animations: Settings?.application?.animations,
+            toggleToolsAnimations,
+            isIphone,
+            isPhone,
+            currentPresentationPage,
+            numberOfPages: currentPresentationPage?.totalPages,
+            presentationId,
+            hasWBAccess,
+            zoomChanger,
+            skipToSlide,
+            locale: Settings?.application?.locale,
+            darkTheme: Settings?.application?.darkTheme,
+            selectedLayout: Settings?.application?.selectedLayout,
+            isInfiniteWhiteboard,
+            curPageNum,
+            setEditor,
+            layoutChanged,
+          }}
+          {...props}
+          meetingId={Auth.meetingID}
+          publishCursorUpdate={throttledPublishCursorUpdate}
+        />
+        <WhiteboardCursorPresenceSync
+          editor={editor}
+          currentPageId={curPageId}
+          currentUserId={currentUser?.userId}
+          currentUserIsPresenter={Boolean(currentUser?.presenter)}
+          hideViewersCursor={userLocks?.hideViewersCursor}
+          isMultiUserActive={isMultiUserActive}
+          whiteboardWriters={whiteboardWriters}
+        />
+      </>
     </ErrorBoundaryWithReload>
   );
 };
@@ -570,6 +575,12 @@ WhiteboardContainer.propTypes = {
   }).isRequired,
   zoomChanger: PropTypes.func.isRequired,
   fitToWidth: PropTypes.bool.isRequired,
+  initialPageAnnotations: PropTypes.shape({
+    pres_annotation_curr: PropTypes.arrayOf(PropTypes.shape()),
+  }),
+  refetchInitialPageAnnotations: PropTypes.func,
+  annotationStreamData: PropTypes.arrayOf(PropTypes.shape()),
+  restoreOnUpdate: PropTypes.bool,
 };
 
 export default WhiteboardContainer;

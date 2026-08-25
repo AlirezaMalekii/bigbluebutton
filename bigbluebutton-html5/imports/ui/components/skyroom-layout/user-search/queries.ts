@@ -12,6 +12,8 @@ export const SKYROOM_USER_SEARCH_SUBSCRIPTION = gql`
       },
       limit: $limit,
       order_by: [
+        { raiseHand: desc },
+        { raiseHandTime: asc_nulls_last },
         { presenter: desc },
         { role: asc },
         { isDialIn: desc },
@@ -32,6 +34,7 @@ export const SKYROOM_USER_SEARCH_SUBSCRIPTION = gql`
       avatar
       away
       raiseHand
+      raiseHandTime
       reactionEmoji
       presenter
       pinned

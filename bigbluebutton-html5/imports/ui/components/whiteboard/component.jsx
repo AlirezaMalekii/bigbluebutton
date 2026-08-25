@@ -13,7 +13,6 @@ import {
   DefaultSizeStyle,
   DefaultHorizontalAlignStyle,
   DefaultVerticalAlignStyle,
-  InstancePresenceRecordType,
   setDefaultUiAssetUrls,
   setDefaultEditorAssetUrls,
   toolbarItem,
@@ -302,11 +301,6 @@ const createCamera = (pageId, zoomLevel) => ({
   z: zoomLevel,
 });
 
-const createLookup = (arr) => arr.reduce((acc, entry) => {
-  acc[entry.id] = entry;
-  return acc;
-}, {});
-
 const defaultUser = {
   userId: '',
 };
@@ -377,8 +371,6 @@ const Whiteboard = React.memo((props) => {
     hasWBAccess,
     bgShape,
     publishCursorUpdate,
-    otherCursors,
-    hideViewersCursor,
     presentationWidth,
     presentationHeight,
     skipToSlide,
@@ -387,7 +379,6 @@ const Whiteboard = React.memo((props) => {
     notifyNotAllowedChange,
     locale,
     isInfiniteWhiteboard,
-    whiteboardWriters,
     isPhone,
     setEditor,
     lockToolbarTools,
@@ -406,7 +397,11 @@ const Whiteboard = React.memo((props) => {
     && !isModerator
     && hasWBAccess;
 
-  clearTldrawCache();
+  const tldrawCacheClearedRef = React.useRef(false);
+  if (!tldrawCacheClearedRef.current) {
+    clearTldrawCache();
+    tldrawCacheClearedRef.current = true;
+  }
 
   const [isMounting, setIsMounting] = React.useState(true);
   const [cursorType, setCursorType] = React.useState('');
@@ -1739,11 +1734,10 @@ const Whiteboard = React.memo((props) => {
         }
 
         // Update existing shapes and add them to the batch
-        Object.values(updated).forEach(([, record]) => {
+        Object.values(updated).forEach(([previousRecord, record]) => {
           if (isBackgroundShape(record)) return;
 
-          const formattedLookup = createLookup(editor.getCurrentPageShapes());
-          const createdBy = formattedLookup[record?.id]?.meta?.createdBy || currentUser?.userId;
+          const createdBy = previousRecord?.meta?.createdBy || currentUser?.userId;
           const updatedRecord = {
             ...record,
             meta: {
@@ -2025,18 +2019,16 @@ const Whiteboard = React.memo((props) => {
 
           if (isPresenterRef.current || isModeratorRef.current) return newNext;
 
-          const formattedLookup = createLookup(editor.getCurrentPageShapes());
-
           // Filter selectedShapeIds based on shape owner
           if (newNext.selectedShapeIds?.length > 0) {
             newNext.selectedShapeIds = newNext.selectedShapeIds.filter((shapeId) => {
-              const shapeOwner = formattedLookup[shapeId]?.meta?.createdBy;
+              const shapeOwner = editor.getShape(shapeId)?.meta?.createdBy;
               return !shapeOwner || shapeOwner === currentUser?.userId;
             });
           }
 
           if (!isEqual(prev.hoveredShapeId, newNext.hoveredShapeId)) {
-            const hoveredShapeOwner = formattedLookup[newNext.hoveredShapeId]?.meta?.createdBy;
+            const hoveredShapeOwner = editor.getShape(newNext.hoveredShapeId)?.meta?.createdBy;
             if (hoveredShapeOwner !== currentUser?.userId || isBackgroundShapeId(newNext.hoveredShapeId)) {
               newNext.hoveredShapeId = null;
             }
@@ -2776,73 +2768,8 @@ const Whiteboard = React.memo((props) => {
       } else if (useElement) {
         useElement.setAttribute('href', '#cursor');
       }
-
-      const idsToRemove = [];
-
-      // Get all presence records from the store
-      const allRecords = tlEditorRef.current.store.allRecords();
-      const presenceRecords = allRecords.filter((record) => record.id.startsWith('instance_presence:'));
-
-      // Check if any presence records correspond to users not in whiteboardWriters
-      presenceRecords.forEach((record) => {
-        const userId = record.userId.split('instance_presence:')[1];
-        const hasAccessToWhiteboard = whiteboardWriters.some((writer) => writer.userId === userId);
-
-        if (!hasAccessToWhiteboard) {
-          idsToRemove.push(record.id);
-        }
-      });
-
-      const updatedPresences = otherCursors
-        .map(({
-          userId, xPercent, yPercent, presenter, name, isModerator: cursorIsModerator,
-        }) => {
-          const id = InstancePresenceRecordType.createId(userId);
-          const active = xPercent !== -1 && yPercent !== -1;
-          // if cursor is not active remove it from tldraw store
-          if (
-            !active
-            || (hideViewersCursor
-              && !cursorIsModerator
-              && !currentUser?.presenter)
-            || (!presenter && !isMultiUserActive)
-          ) {
-            idsToRemove.push(id);
-            return null;
-          }
-
-          const cursor = {
-            x: xPercent,
-            y: yPercent,
-            type: 'default',
-            rotation: 0,
-          };
-          const color = presenter ? '#FF0000' : '#70DB70';
-          const c = {
-            ...InstancePresenceRecordType.create({
-              id,
-              currentPageId: `page:${curPageIdRef.current}`,
-              userId,
-              userName: name,
-              cursor,
-              color,
-            }),
-            lastActivityTimestamp: Date.now(),
-          };
-          return c;
-        })
-        .filter((cursor) => cursor && cursor.userId !== currentUser?.userId);
-
-      if (idsToRemove.length) {
-        tlEditorRef.current?.store.remove(idsToRemove);
-      }
-
-      // If there are any updated presences, put them all in the store
-      if (updatedPresences.length) {
-        tlEditorRef.current?.store.put(updatedPresences);
-      }
     }
-  }, [otherCursors, whiteboardWriters]);
+  }, [isMultiUserActive, isPresenter]);
 
   const updateStore = (pages, cameras) => {
     tlEditorRef.current.store.put(pages);
@@ -3122,10 +3049,7 @@ Whiteboard.propTypes = {
   hasWBAccess: PropTypes.bool,
   bgShape: PropTypes.arrayOf(PropTypes.shape).isRequired,
   publishCursorUpdate: PropTypes.func.isRequired,
-  otherCursors: PropTypes.arrayOf(PropTypes.shape).isRequired,
-  hideViewersCursor: PropTypes.bool,
   skipToSlide: PropTypes.func.isRequired,
   locale: PropTypes.string.isRequired,
   isInfiniteWhiteboard: PropTypes.bool,
-  whiteboardWriters: PropTypes.arrayOf(PropTypes.shape).isRequired,
 };

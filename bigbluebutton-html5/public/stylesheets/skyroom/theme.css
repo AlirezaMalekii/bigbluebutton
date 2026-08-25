@@ -640,6 +640,31 @@ header[role="banner"]::after,
   50%      { opacity: 1; }
 }
 
+/*
+ * High camera load: keep every semantic indicator, but avoid per-frame blur,
+ * filter animation and deep shadows over moving video surfaces.
+ */
+[data-skyroom-webcam-load="high"] [data-test="webcamVideoItem"] {
+  box-shadow: none !important;
+}
+
+[data-skyroom-webcam-load="high"] [data-test="webcamVideoItem"] [class*="Dropdown"],
+[data-skyroom-webcam-load="high"] [data-test="webcamVideoItem"] [class*="MenuWrapper"] > [class*="Dropdown"],
+[data-skyroom-webcam-load="high"] [data-test="webcamVideoItem"] [class*="UserName"],
+[data-skyroom-webcam-load="high"] [data-test="webcamVideoItem"] [class*="DropdownTrigger"],
+[data-skyroom-webcam-load="high"] [data-test="webcamSelfViewDisabled"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+[data-skyroom-webcam-load="high"] [data-test="webcamVideoItem"].talking::before,
+[data-skyroom-webcam-load="high"] [data-test="webcamVideoItem"][data-talking="true"]::before {
+  filter: none;
+  animation: none;
+  opacity: 1;
+}
+
 
 /* ---------------------------------------------------------------------
    8) ACTIONS BAR — pill cluster, elevated mic button
@@ -1534,4 +1559,3 @@ textarea::placeholder {
 #layout[data-skyroom-column="true"] a[href*="bigbluebutton.org"] {
   display: none !important;
 }
-

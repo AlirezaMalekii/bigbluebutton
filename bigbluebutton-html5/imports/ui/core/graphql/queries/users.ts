@@ -13,6 +13,8 @@ export const USER_LIST_SUBSCRIPTION = gql`
 subscription UserListSubscription($offset: Int!, $limit: Int!) {
   user(limit:$limit, offset: $offset,
                 order_by: [
+                  {raiseHand: desc},
+                  {raiseHandTime: asc_nulls_last},
                   {presenter: desc},
                   {role: asc},
                   {isDialIn: desc},
@@ -32,6 +34,7 @@ subscription UserListSubscription($offset: Int!, $limit: Int!) {
     avatar
     away
     raiseHand
+    raiseHandTime
     reactionEmoji
     avatar
     presenter

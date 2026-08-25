@@ -74,6 +74,7 @@ const PresentationUploaderContainer = (props) => {
     } catch (e) {
       // Still set current presentation even if stop races or fails.
     }
+    if (!presentationId) return undefined;
     return presentationSetCurrent({ variables: { presentationId } });
   };
 

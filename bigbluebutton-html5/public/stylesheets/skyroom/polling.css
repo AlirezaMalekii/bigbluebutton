@@ -2,10 +2,22 @@
    Skyroom — Participant poll / quiz overlay
    ===================================================================== */
 
+html[data-skyroom="true"] #polling-container {
+  position: fixed;
+  inset: 0;
+  z-index: 3200;
+  isolation: isolate;
+  pointer-events: none;
+}
+
 #polling-container [data-test="pollingOverlay"] {
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 0 !important;
+  pointer-events: auto;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 #polling-container [data-test="pollingContainer"] {

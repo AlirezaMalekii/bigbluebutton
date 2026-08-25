@@ -11,6 +11,7 @@ import {
   DEFAULT_SPEED_TEST_CONFIG,
   IDLE_SPEED_TEST_SNAPSHOT,
   type SpeedTestConfig,
+  type SpeedTestPhase,
   type SpeedTestSnapshot,
 } from './types';
 import { runSpeedTest, SpeedTestRunError } from './engine';
@@ -88,10 +89,21 @@ const useSpeedTest = () => {
       serverHost,
     });
 
+    const lastPhaseRef = { current: 'probing' as SpeedTestPhase };
     try {
       const result = await runSpeedTest(
         readConfig(),
-        (next) => emitThrottled(next, runId),
+        (next) => {
+          const phaseChanged = next.phase !== lastPhaseRef.current;
+          lastPhaseRef.current = next.phase;
+          if (phaseChanged || next.phase === 'done' || next.phase === 'error') {
+            if (mountedRef.current && runIdRef.current === runId) {
+              setSnapshot(next);
+            }
+            return;
+          }
+          emitThrottled(next, runId);
+        },
         controller.signal,
       );
       if (mountedRef.current && runIdRef.current === runId && !controller.signal.aborted) {

@@ -34,6 +34,8 @@ const FILTER_VIDEO_STATS = [
 class VideoService {
   private static originalCameraConstraints = new WeakMap<MediaStreamTrack, Constraints2>();
 
+  private static originalCameraEncodingFrameRates = new WeakMap<RTCRtpSender, number | null>();
+
   public isMobile: boolean;
 
   public webRtcPeersRef: Record<string, WebRtcPeer>;
@@ -327,7 +329,12 @@ class VideoService {
       > CAMERA_PROFILES.findIndex(({ id }) => id === originalProfileId);
   }
 
-  static applyBitrate(peer: WebRtcPeer, bitrate: number) {
+  static applyBitrate(
+    peer: WebRtcPeer,
+    bitrate: number,
+    maxFramerate?: number,
+    restoreOriginalFrameRate = false,
+  ) {
     const { peerConnection } = peer;
     if ('RTCRtpSender' in window
       && 'setParameters' in window.RTCRtpSender.prototype
@@ -342,20 +349,57 @@ class VideoService {
             parameters.encodings = [{}];
           }
 
-          if (parameters.encodings[0].maxBitrate !== normalizedBitrate) {
-            parameters.encodings[0].maxBitrate = normalizedBitrate;
+          const encoding = parameters.encodings[0];
+          if (!VideoService.originalCameraEncodingFrameRates.has(sender)) {
+            VideoService.originalCameraEncodingFrameRates.set(
+              sender,
+              typeof encoding.maxFramerate === 'number' ? encoding.maxFramerate : null,
+            );
+          }
+
+          const originalMaxFramerate = VideoService.originalCameraEncodingFrameRates.get(sender);
+          const targetMaxFramerate = restoreOriginalFrameRate
+            ? originalMaxFramerate
+            : maxFramerate;
+          let changed = false;
+
+          if (encoding.maxBitrate !== normalizedBitrate) {
+            encoding.maxBitrate = normalizedBitrate;
+            changed = true;
+          }
+
+          if (typeof targetMaxFramerate === 'number'
+            && encoding.maxFramerate !== targetMaxFramerate) {
+            encoding.maxFramerate = targetMaxFramerate;
+            changed = true;
+          } else if (restoreOriginalFrameRate
+            && targetMaxFramerate == null
+            && encoding.maxFramerate != null) {
+            delete encoding.maxFramerate;
+            changed = true;
+          }
+
+          if (changed) {
             sender.setParameters(parameters)
               .then(() => {
                 logger.info({
                   logCode: 'video_provider_bitratechange',
-                  extraInfo: { bitrate },
-                }, `Bitrate changed: ${bitrate}`);
+                  extraInfo: {
+                    bitrate,
+                    maxFramerate: targetMaxFramerate,
+                  },
+                }, `Camera encoding limits changed: ${bitrate}kbps`);
               })
               .catch((error) => {
                 logger.warn({
                   logCode: 'video_provider_bitratechange_failed',
-                  extraInfo: { bitrate, errorMessage: error.message, errorCode: error.code },
-                }, 'Bitrate change failed.');
+                  extraInfo: {
+                    bitrate,
+                    maxFramerate: targetMaxFramerate,
+                    errorMessage: error.message,
+                    errorCode: error.code,
+                  },
+                }, 'Camera encoding limit change failed.');
               });
           }
         }
@@ -397,13 +441,19 @@ class VideoService {
     }
 
     const { bitrate, constraints } = profile;
+    // @ts-expect-error -> Untyped WebRtcPeer profile metadata.
+    const restoringOriginalProfile = profileId === peer.originalProfileId;
 
-    if (bitrate) VideoService.applyBitrate(peer, bitrate);
+    if (bitrate) {
+      VideoService.applyBitrate(
+        peer,
+        bitrate,
+        CAMERA_QUALITY_THR_CONSTRAINTS ? constraints?.frameRate : undefined,
+        restoringOriginalProfile,
+      );
+    }
 
-    if (CAMERA_QUALITY_THR_CONSTRAINTS
-      && constraints
-      && typeof constraints === 'object'
-    ) {
+    if (CAMERA_QUALITY_THR_CONSTRAINTS) {
       peer.peerConnection.getSenders().forEach((sender: RTCRtpSender) => {
         const { track } = sender;
         if (track && track.kind === 'video' && typeof track.applyConstraints === 'function') {
@@ -414,10 +464,11 @@ class VideoService {
               VideoService.originalCameraConstraints.set(track, originalConstraints);
             }
           }
-          // @ts-expect-error -> Untyped WebRtcPeer profile metadata.
-          const targetConstraints = profileId === peer.originalProfileId
-            ? originalConstraints || constraints
+          const targetConstraints = restoringOriginalProfile
+            ? originalConstraints
             : constraints;
+          if (!targetConstraints || typeof targetConstraints !== 'object') return;
+
           track.applyConstraints(targetConstraints)
             .catch((error) => {
               logger.warn({

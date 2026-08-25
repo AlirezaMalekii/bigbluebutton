@@ -362,7 +362,11 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
       <Styled.PollingContainer
         autoWidth={poll.stackOptions}
         data-test="pollingContainer"
-        role="complementary"
+        role="dialog"
+        aria-modal="true"
+        aria-label={intl.formatMessage(
+          poll.quiz ? intlMessages.quizTitleLabel : intlMessages.pollQuestionTitle,
+        )}
         ref={pollingContainer}
         tabIndex={-1}
       >

@@ -28,6 +28,10 @@ cp bbb-html5.nginx.dev staging/usr/share/bigbluebutton/nginx
 cp bbb-html5.nginx.static staging/usr/share/bigbluebutton/nginx
 cp sip.nginx staging/usr/share/bigbluebutton/nginx
 cp speedtest.nginx staging/usr/share/bigbluebutton/nginx
+cp speedtest-discard.py staging/usr/share/bigbluebutton/speedtest-discard.py
+chmod 755 staging/usr/share/bigbluebutton/speedtest-discard.py
+mkdir -p staging/usr/lib/systemd/system
+cp bbb-speedtest-discard.service staging/usr/lib/systemd/system/bbb-speedtest-discard.service
 
 # SafeMeet product version for About modal (not Debian $BUILD — that showed as "1").
 # Canonical: SAFEMEET_VERSION (copied into package build dir by setup-inside-docker).

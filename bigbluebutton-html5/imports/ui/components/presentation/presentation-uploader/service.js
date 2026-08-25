@@ -262,7 +262,6 @@ const persistPresentationChanges = (
   let currentPresentation = newState.find((p) => p?.current);
   return uploadAndConvertPresentations(presentationsToUpload, Auth.meetingID, uploadEndpoint)
     .then((presentations) => {
-      if (!presentations.length && !currentPresentation) return Promise.resolve();
       // Update the presentation with their new ids
       presentations.forEach((p, i) => {
         if (p === undefined) return;
@@ -273,7 +272,7 @@ const persistPresentationChanges = (
     })
     .then((presentations) => {
       if (currentPresentation === undefined) {
-        setPresentation('');
+        // No current file is valid (empty stage). Do not send an empty id.
         return Promise.resolve();
       }
 
@@ -288,7 +287,11 @@ const persistPresentationChanges = (
         return Promise.resolve();
       }
 
-      return setPresentation(currentPresentation?.presentationId);
+      if (!currentPresentation?.presentationId) {
+        return Promise.resolve();
+      }
+
+      return setPresentation(currentPresentation.presentationId);
     })
     .then(removePresentations.bind(null, presentationsToRemove, removePresentation));
 };

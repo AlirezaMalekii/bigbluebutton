@@ -7,6 +7,18 @@ export const getPinnedPrivateChatSenderIds = (
   .sort(([, a], [, b]) => b.lastActivityAt - a.lastActivityAt)
   .map(([userId]) => userId);
 
+const sortRaisedHandsFifo = (a: User, b: User): number => {
+  const aTime = a.raiseHandTime ? Date.parse(a.raiseHandTime) : Number.MAX_SAFE_INTEGER;
+  const bTime = b.raiseHandTime ? Date.parse(b.raiseHandTime) : Number.MAX_SAFE_INTEGER;
+  if (aTime < bTime) return -1;
+  if (aTime > bTime) return 1;
+  return 0;
+};
+
+/**
+ * Raised-hand FIFO stays above private-chat pinning so the speak queue
+ * is not buried under unread DMs or "current user first".
+ */
 export const reorderUsersForPrivateMessages = (
   users: User[],
   currentUser: User | null | undefined,
@@ -19,31 +31,52 @@ export const reorderUsersForPrivateMessages = (
     return users.filter((user) => !pinnedSet.has(user.userId));
   }
 
+  const raisedHands = users
+    .filter((user) => user.raiseHand)
+    .slice()
+    .sort(sortRaisedHandsFifo);
+  const raisedHandIds = new Set(raisedHands.map((user) => user.userId));
+
+  const nonRaisedUsers = users.filter((user) => !raisedHandIds.has(user.userId));
+  const nonRaisedExtraPinned = extraPinnedUsers.filter(
+    (user) => !raisedHandIds.has(user.userId) && !user.raiseHand,
+  );
+
   if (!currentUser?.userId || pinnedSenderIds.length === 0) {
-    return users;
+    return raisedHands.length > 0 ? [...raisedHands, ...nonRaisedUsers] : users;
   }
 
   const pinnedSet = new Set(pinnedSenderIds);
   const userById = new Map<string, User>();
 
-  users.forEach((user) => {
+  nonRaisedUsers.forEach((user) => {
     userById.set(user.userId, user);
   });
-  extraPinnedUsers.forEach((user) => {
+  nonRaisedExtraPinned.forEach((user) => {
     userById.set(user.userId, user);
   });
 
   const pinnedUsers = pinnedSenderIds
     .map((userId) => userById.get(userId))
-    .filter((user): user is User => Boolean(user));
+    .filter((user): user is User => {
+      if (!user) return false;
+      return !raisedHandIds.has(user.userId);
+    });
 
-  const rest = users.filter(
-    (user) => user.userId !== currentUser.userId && !pinnedSet.has(user.userId),
+  const currentUserInRaisedQueue = raisedHandIds.has(currentUser.userId);
+  const rest = nonRaisedUsers.filter(
+    (user) => (currentUserInRaisedQueue || user.userId !== currentUser.userId)
+      && !pinnedSet.has(user.userId),
   );
 
-  const currentUserEntry = userById.get(currentUser.userId) ?? currentUser;
+  const reorderedNonRaised: User[] = [];
+  if (!currentUserInRaisedQueue) {
+    const currentUserEntry = userById.get(currentUser.userId) ?? currentUser;
+    reorderedNonRaised.push(currentUserEntry as User);
+  }
+  reorderedNonRaised.push(...pinnedUsers, ...rest);
 
-  return [currentUserEntry as User, ...pinnedUsers, ...rest];
+  return [...raisedHands, ...reorderedNonRaised];
 };
 
 export const reorderSearchUsersForPrivateMessages = (
@@ -51,13 +84,20 @@ export const reorderSearchUsersForPrivateMessages = (
   currentUser: User | null | undefined,
   pinnedSenderIds: string[],
 ): User[] => {
+  const raisedHands = users
+    .filter((user) => user.raiseHand)
+    .slice()
+    .sort(sortRaisedHandsFifo);
+  const raisedHandIds = new Set(raisedHands.map((user) => user.userId));
+  const nonRaisedUsers = users.filter((user) => !raisedHandIds.has(user.userId));
+
   if (!currentUser?.userId || pinnedSenderIds.length === 0) {
-    return users;
+    return raisedHands.length > 0 ? [...raisedHands, ...nonRaisedUsers] : users;
   }
 
   const pinnedSet = new Set(pinnedSenderIds);
   const userById = new Map<string, User>();
-  users.forEach((user) => {
+  nonRaisedUsers.forEach((user) => {
     userById.set(user.userId, user);
   });
 
@@ -66,29 +106,33 @@ export const reorderSearchUsersForPrivateMessages = (
     .filter((user): user is User => Boolean(user));
 
   if (pinnedUsers.length === 0) {
-    return users;
+    return raisedHands.length > 0 ? [...raisedHands, ...nonRaisedUsers] : users;
   }
 
-  const rest = users.filter(
-    (user) => user.userId !== currentUser.userId && !pinnedSet.has(user.userId),
+  const currentUserInRaisedQueue = raisedHandIds.has(currentUser.userId);
+  const rest = nonRaisedUsers.filter(
+    (user) => (currentUserInRaisedQueue || user.userId !== currentUser.userId)
+      && !pinnedSet.has(user.userId),
   );
 
-  const currentUserIndex = users.findIndex((user) => user.userId === currentUser.userId);
-  const ordered: User[] = [];
-
-  if (currentUserIndex >= 0) {
-    ordered.push(users[currentUserIndex]);
-  } else if (currentUser.name) {
-    ordered.push(currentUser as User);
+  const reorderedNonRaised: User[] = [];
+  if (!currentUserInRaisedQueue) {
+    const currentUserIndex = nonRaisedUsers.findIndex(
+      (user) => user.userId === currentUser.userId,
+    );
+    if (currentUserIndex >= 0) {
+      reorderedNonRaised.push(nonRaisedUsers[currentUserIndex]);
+    } else if (currentUser.name) {
+      reorderedNonRaised.push(currentUser as User);
+    }
   }
 
-  ordered.push(...pinnedUsers);
-
+  reorderedNonRaised.push(...pinnedUsers);
   rest.forEach((user) => {
-    if (!ordered.some((entry) => entry.userId === user.userId)) {
-      ordered.push(user);
+    if (!reorderedNonRaised.some((entry) => entry.userId === user.userId)) {
+      reorderedNonRaised.push(user);
     }
   });
 
-  return ordered.length > 0 ? ordered : users;
+  return [...raisedHands, ...reorderedNonRaised];
 };

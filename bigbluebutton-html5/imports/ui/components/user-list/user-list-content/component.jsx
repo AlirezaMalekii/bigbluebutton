@@ -67,7 +67,7 @@ class UserContent extends PureComponent {
               <UserPollsContainer isPresenter={currentUser?.presenter} />
               <BreakoutRoomContainer />
               <GenericSidekickContentNavButtonContainer />
-              <RaisedHandsContainer />
+              {!skyroomColumn ? <RaisedHandsContainer /> : null}
               <UserTitleContainer />
               <SkyroomUserSearch />
               <UserListParticipants compact={compact} />
@@ -82,7 +82,7 @@ class UserContent extends PureComponent {
             <UserPollsContainer isPresenter={currentUser?.presenter} />
             <BreakoutRoomContainer />
             <GenericSidekickContentNavButtonContainer />
-            <RaisedHandsContainer />
+            {!skyroomColumn ? <RaisedHandsContainer /> : null}
             <UserTitleContainer />
             <SkyroomUserSearch />
             <UserListParticipants compact={compact} />

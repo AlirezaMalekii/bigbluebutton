@@ -22,7 +22,7 @@ interface VideoListItemContainerProps {
   onHandleVideoFocus: ((id: string) => void) | null;
   stream: VideoItem;
   setUserCamerasRequestedFromPlugin: React.Dispatch<React.SetStateAction<UpdatedDataForUserCameraDomElement[]>>;
-  onVideoItemUnmount: (stream: string) => void;
+  onVideoItemUnmount: (stream: string, video: HTMLVideoElement) => void;
   onVideoPlaybackStateChange: (state: VideoPlaybackState) => void;
   onVirtualBgDrop: (type: string, name: string, data: string) => void;
   onVideoItemMount: (ref: HTMLVideoElement) => void;

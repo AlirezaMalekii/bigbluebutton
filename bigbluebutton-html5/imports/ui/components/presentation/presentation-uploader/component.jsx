@@ -487,6 +487,9 @@ class PresentationUploader extends Component {
     const { presentations } = this.state;
     const selectedItem = this.getSelectedPresentation();
 
+    // Empty list is a valid confirm: remove every file, including the current one.
+    if (!presentations.length) return false;
+
     if (selectedItem) {
       if (selectedItem.uploadErrorMsgKey || selectedItem.uploadErrorDetailsJson) return true;
       if (isPresentationUploadPending(selectedItem)) return true;
@@ -1050,7 +1053,11 @@ class PresentationUploader extends Component {
     }
 
     const selectedItem = this.getSelectedPresentation();
-    if (!selectedItem?.uploadCompleted || selectedItem?.uploadInProgress) {
+    const clearingAllPresentations = presentations.length === 0;
+    if (
+      !clearingAllPresentations
+      && (!selectedItem?.uploadCompleted || selectedItem?.uploadInProgress)
+    ) {
       return null;
     }
 
@@ -1087,12 +1094,16 @@ class PresentationUploader extends Component {
         mergedPresentations.push(presentation);
       }
     });
-    const resolvedId = resolvePresentationId(selectedItem, mergedPresentations);
-    const resolvedSelected = mergedPresentations.find(
-      (p) => p.presentationId === resolvedId,
-    ) || (selectedItem && resolvedId ? { ...selectedItem, presentationId: resolvedId } : null);
+    const resolvedId = clearingAllPresentations
+      ? ''
+      : resolvePresentationId(selectedItem, mergedPresentations);
+    const resolvedSelected = clearingAllPresentations
+      ? null
+      : (mergedPresentations.find(
+        (p) => p.presentationId === resolvedId,
+      ) || (selectedItem && resolvedId ? { ...selectedItem, presentationId: resolvedId } : null));
 
-    return Promise.resolve(setPresentation(resolvedId || ''))
+    return Promise.resolve(resolvedId ? setPresentation(resolvedId) : undefined)
       .then(() => Service.applyPresentationSelection(
         propPresentations,
         presentations,

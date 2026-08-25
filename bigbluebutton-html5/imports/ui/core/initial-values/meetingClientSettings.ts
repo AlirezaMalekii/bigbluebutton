@@ -345,6 +345,28 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
           bitrate: 100,
         },
         {
+          id: 'low-u3',
+          name: 'low-u3',
+          bitrate: 150,
+          hidden: true,
+          constraints: {
+            width: 640,
+            height: 360,
+            frameRate: 15,
+          },
+        },
+        {
+          id: 'low-u2',
+          name: 'low-u2',
+          bitrate: 180,
+          hidden: true,
+          constraints: {
+            width: 640,
+            height: 360,
+            frameRate: 20,
+          },
+        },
+        {
           id: 'medium',
           name: 'Medium',
           default: true,
@@ -405,23 +427,31 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
         debounceTime: 2500,
         thresholds: [
           {
-            threshold: 8,
+            threshold: 2,
+            profile: 'low-u2',
+          },
+          {
+            threshold: 3,
+            profile: 'low-u3',
+          },
+          {
+            threshold: 5,
             profile: 'low-u8',
           },
           {
-            threshold: 12,
+            threshold: 8,
             profile: 'low-u12',
           },
           {
-            threshold: 15,
+            threshold: 12,
             profile: 'low-u15',
           },
           {
-            threshold: 20,
+            threshold: 16,
             profile: 'low-u20',
           },
           {
-            threshold: 25,
+            threshold: 24,
             profile: 'low-u25',
           },
           {
@@ -432,7 +462,7 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
       },
       viewportSubscription: {
         enabled: true,
-        activationThreshold: 5,
+        activationThreshold: 3,
         overscanPixels: 24,
         releaseDelay: 2500,
       },

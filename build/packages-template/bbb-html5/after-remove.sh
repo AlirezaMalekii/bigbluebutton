@@ -31,6 +31,11 @@ case "$1" in
       rm -rf /var/bigbluebutton/speedtest
       log "Removed directory /var/bigbluebutton/speedtest"
     fi
+
+    if [ -f /usr/lib/systemd/system/bbb-speedtest-discard.service ]; then
+      systemctl disable --now bbb-speedtest-discard.service || true
+    fi
+    rm -f /usr/share/bigbluebutton/speedtest-discard.py
   ;;
   upgrade)
     log "Upgrade argument received. No action taken."

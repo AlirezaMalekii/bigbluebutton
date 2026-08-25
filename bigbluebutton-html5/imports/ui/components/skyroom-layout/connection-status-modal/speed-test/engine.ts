@@ -11,9 +11,8 @@ import {
   type SpeedTestSnapshot,
 } from './types';
 
-const SLOW_START_MS = 1500;
-// nginx `return 204` on HTTP/2 resets POST bodies larger than ~64KB. Stay under that.
-const UPLOAD_BLOB_SIZES = [32 * 1024, 16 * 1024, 8 * 1024];
+const SLOW_START_MS = 800;
+const UPLOAD_BLOB_BYTES = 256 * 1024;
 const MIN_PING_SAMPLES = 3;
 const MIN_TRANSFER_BYTES = 16 * 1024;
 
@@ -215,9 +214,11 @@ const uploadOnce = (
   const xhr = new XMLHttpRequest();
   let lastLoaded = 0;
   let settled = false;
+  let watchdog = 0;
 
   const cleanup = () => {
     signal.removeEventListener('abort', onAbort);
+    if (watchdog) window.clearTimeout(watchdog);
   };
 
   const finish = (handler: () => void) => {
@@ -231,10 +232,16 @@ const uploadOnce = (
     xhr.abort();
   };
 
+  const resolvePhase = () => {
+    const remaining = body.size - lastLoaded;
+    if (remaining > 0 && lastLoaded > 0) onDelta(remaining);
+    finish(resolve);
+  };
+
   xhr.open('POST', `${url}?r=${Math.random()}`);
   xhr.setRequestHeader('Content-Type', 'application/octet-stream');
   xhr.setRequestHeader('Cache-Control', 'no-store');
-  xhr.timeout = Math.max(8000, Math.ceil(until - performance.now()) + 4000);
+  xhr.timeout = Math.max(1500, Math.ceil(until - performance.now()) + 750);
 
   xhr.upload.onprogress = (event) => {
     const loaded = event.loaded || 0;
@@ -247,38 +254,30 @@ const uploadOnce = (
   };
 
   xhr.onload = () => {
-    const remaining = body.size - lastLoaded;
-    if (remaining > 0) onDelta(remaining);
     if (xhr.status >= 200 && xhr.status < 300) {
-      finish(resolve);
+      resolvePhase();
       return;
     }
     finish(() => reject(new SpeedTestRunError(classifyHttpStatus(xhr.status))));
   };
 
-  xhr.onerror = () => {
-    if (performance.now() >= until) {
-      finish(resolve);
-      return;
-    }
-    finish(() => reject(new SpeedTestRunError('network')));
-  };
-
+  xhr.onerror = resolvePhase;
   xhr.onabort = () => {
-    if (performance.now() >= until && !signal.aborted) {
-      finish(resolve);
+    if (signal.aborted) {
+      finish(() => reject(new DOMException('Aborted', 'AbortError')));
       return;
     }
-    finish(() => reject(new DOMException('Aborted', 'AbortError')));
+    resolvePhase();
+  };
+  xhr.ontimeout = resolvePhase;
+  xhr.onloadend = () => {
+    if (!settled) resolvePhase();
   };
 
-  xhr.ontimeout = () => {
-    if (performance.now() >= until) {
-      finish(resolve);
-      return;
-    }
-    finish(() => reject(new SpeedTestRunError('network')));
-  };
+  watchdog = window.setTimeout(() => {
+    xhr.abort();
+    resolvePhase();
+  }, Math.max(50, until - performance.now()));
 
   signal.addEventListener('abort', onAbort);
   if (signal.aborted) {
@@ -290,14 +289,26 @@ const uploadOnce = (
   xhr.send(body);
 });
 
+const sleep = (ms: number, signal: AbortSignal): Promise<void> => new Promise((resolve, reject) => {
+  if (signal.aborted) {
+    reject(new DOMException('Aborted', 'AbortError'));
+    return;
+  }
+  const timer = window.setTimeout(resolve, ms);
+  const onAbort = () => {
+    window.clearTimeout(timer);
+    reject(new DOMException('Aborted', 'AbortError'));
+  };
+  signal.addEventListener('abort', onAbort, { once: true });
+});
+
 const runUploadStream = async (
   url: string,
   until: number,
   signal: AbortSignal,
   onBytes: (bytes: number) => void,
 ): Promise<void> => {
-  let sizeIndex = 0;
-  let body = createUploadBlob(UPLOAD_BLOB_SIZES[sizeIndex]);
+  const body = createUploadBlob(UPLOAD_BLOB_BYTES);
   while (performance.now() < until) {
     throwIfAborted(signal);
     try {
@@ -306,9 +317,9 @@ const runUploadStream = async (
       await uploadOnce(url, body, until, signal, onBytes);
     } catch (error) {
       if (isAbortError(error, signal)) throw error;
-      if (sizeIndex >= UPLOAD_BLOB_SIZES.length - 1) throw error;
-      sizeIndex += 1;
-      body = createUploadBlob(UPLOAD_BLOB_SIZES[sizeIndex]);
+      if (performance.now() >= until) return;
+      // eslint-disable-next-line no-await-in-loop
+      await sleep(80, signal);
     }
   }
 };
@@ -328,19 +339,6 @@ const runParallelSettled = async (
   const allFailed = results.every((result) => result.status === 'rejected');
   if (allFailed) throw rejection.reason;
 };
-
-const sleep = (ms: number, signal: AbortSignal): Promise<void> => new Promise((resolve, reject) => {
-  if (signal.aborted) {
-    reject(new DOMException('Aborted', 'AbortError'));
-    return;
-  }
-  const timer = window.setTimeout(resolve, ms);
-  const onAbort = () => {
-    window.clearTimeout(timer);
-    reject(new DOMException('Aborted', 'AbortError'));
-  };
-  signal.addEventListener('abort', onAbort, { once: true });
-});
 
 export const runSpeedTest = async (
   config: SpeedTestConfig,
@@ -441,10 +439,8 @@ export const runSpeedTest = async (
   const uploadUntil = performance.now() + resolved.uploadDurationMs;
   let uploadIncomplete = false;
   try {
-    await runParallelSettled(resolved.parallelStreams, async () => {
-      await runUploadStream(endpoints.upload, uploadUntil, signal, (bytes) => {
-        emit({ liveMbps: uploadTracker.addBytes(bytes) });
-      });
+    await runUploadStream(endpoints.upload, uploadUntil, signal, (bytes) => {
+      emit({ liveMbps: uploadTracker.addBytes(bytes) });
     });
   } catch (error) {
     if (isAbortError(error, signal)) throw error;

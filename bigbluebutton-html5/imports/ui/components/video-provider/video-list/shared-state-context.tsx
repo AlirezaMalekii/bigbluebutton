@@ -1,4 +1,9 @@
-import React, { useCallback, useMemo } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { createContext, useContextSelector } from 'use-context-selector';
 import { useMutation } from '@apollo/client';
 import { UserCameraDropdownInterface } from 'bigbluebutton-html-plugin-sdk';
@@ -48,13 +53,17 @@ type VideoListSharedState = {
   hideNotifications: boolean;
   userCameraDropdownItems: UserCameraDropdownInterface[];
   setCameraPinned: (userId: string, pinned: boolean) => void;
+  observeVideoTile: (element: Element, callback: (width: number) => void) => () => void;
 };
 
 type RaisedHandUser = {
   userId: string;
 };
 
+type TileResizeCallback = (width: number) => void;
+
 const noop = () => {};
+const noopObserveVideoTile = () => noop;
 const EMPTY_USER_STATE: Record<string, boolean> = {};
 
 const VideoListSharedStateContext = createContext<VideoListSharedState>({
@@ -71,6 +80,7 @@ const VideoListSharedStateContext = createContext<VideoListSharedState>({
   hideNotifications: false,
   userCameraDropdownItems: [],
   setCameraPinned: noop,
+  observeVideoTile: noopObserveVideoTile,
 });
 
 interface VideoListSharedStateProviderProps {
@@ -119,12 +129,48 @@ const VideoListSharedStateProvider: React.FC<VideoListSharedStateProviderProps> 
   const { data: unmutedUsers } = useWhoIsUnmuted();
   const { data: usersData } = useDeduplicatedSubscription<{ user: RaisedHandUser[] }>(RAISED_HAND_USERS);
   const [setCameraPinnedMutation] = useMutation(SET_CAMERA_PINNED);
+  const tileResizeObserverRef = useRef<ResizeObserver | null>(null);
+  const tileResizeCallbacksRef = useRef<Map<Element, TileResizeCallback>>(new Map());
   const { hideNotificationToasts } = layoutSelectInput((i: Input) => i.notificationsBar);
   const setCameraPinned = useCallback((userId: string, pinned: boolean) => {
     setCameraPinnedMutation({
       variables: { userId, pinned },
     });
   }, [setCameraPinnedMutation]);
+  const observeVideoTile = useCallback((element: Element, callback: (width: number) => void) => {
+    if (typeof ResizeObserver !== 'function') {
+      callback(element.getBoundingClientRect().width);
+      return noop;
+    }
+
+    if (!tileResizeObserverRef.current) {
+      tileResizeObserverRef.current = new ResizeObserver((entries) => {
+        entries.forEach((entry) => {
+          tileResizeCallbacksRef.current.get(entry.target)?.(entry.contentRect.width);
+        });
+      });
+    }
+
+    tileResizeCallbacksRef.current.set(element, callback);
+    tileResizeObserverRef.current.observe(element);
+    callback(element.getBoundingClientRect().width);
+
+    return () => {
+      if (tileResizeCallbacksRef.current.get(element) !== callback) return;
+      tileResizeObserverRef.current?.unobserve(element);
+      tileResizeCallbacksRef.current.delete(element);
+      if (tileResizeCallbacksRef.current.size === 0) {
+        tileResizeObserverRef.current?.disconnect();
+        tileResizeObserverRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => () => {
+    tileResizeObserverRef.current?.disconnect();
+    tileResizeObserverRef.current = null;
+    tileResizeCallbacksRef.current.clear();
+  }, []);
 
   const hideUserList = Boolean(
     currentUser?.locked && currentMeeting?.lockSettings?.hideUserList,
@@ -160,6 +206,7 @@ const VideoListSharedStateProvider: React.FC<VideoListSharedStateProviderProps> 
     hideNotifications,
     userCameraDropdownItems,
     setCameraPinned,
+    observeVideoTile,
   }), [
     fullscreenElement,
     isRTL,
@@ -173,6 +220,7 @@ const VideoListSharedStateProvider: React.FC<VideoListSharedStateProviderProps> 
     hideNotifications,
     userCameraDropdownItems,
     setCameraPinned,
+    observeVideoTile,
   ]);
 
   return (

@@ -33,7 +33,7 @@ interface VideoListContainerProps {
   overflowCount: number;
   webcamsVisible: boolean;
   onVideoItemMount: (stream: string, video: HTMLVideoElement) => void;
-  onVideoItemUnmount: (stream: string) => void;
+  onVideoItemUnmount: (stream: string, video: HTMLVideoElement) => void;
   onVideoPlaybackStateChange: (stream: string, state: VideoPlaybackState) => void;
   onVideoVisibilityChange?: (changes: { stream: string; visible: boolean }[]) => void;
   onVirtualBgDrop: (stream: string, type: string, name: string, data: string) => Promise<unknown>;
