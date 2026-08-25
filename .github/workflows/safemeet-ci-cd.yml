@@ -368,9 +368,11 @@ jobs:
         needs.publish-packages.result == 'failure'
       )
     runs-on: ubuntu-latest
+    continue-on-error: true
     permissions:
       contents: read
       issues: write
+      actions: read
     env:
       PROJECT_NAME: bigbluebutton
       PRODUCTION_BRANCH: safemeet

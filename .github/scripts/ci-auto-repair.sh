@@ -35,9 +35,11 @@ if [[ "${HEAD_BRANCH}" != "${PRODUCTION_BRANCH}" ]]; then
 fi
 
 echo "Fetching failed job logs for run ${RUN_ID}..."
-LOGS="$(gh run view "${RUN_ID}" --repo "${REPO_SLUG}" --log-failed 2>/dev/null | tail -c 120000 || true)"
+LOGS="$(gh run view "${RUN_ID}" --repo "${REPO_SLUG}" --log-failed | tail -c 120000 || true)"
 if [[ -z "${LOGS}" ]]; then
-  LOGS="(failed to fetch logs — inspect ${RUN_URL})"
+  echo "Could not fetch failed logs (need actions:read on GITHUB_TOKEN) — skip auto-repair."
+  echo "Inspect: ${RUN_URL}"
+  exit 0
 fi
 
 INFRA_PATTERNS=(
@@ -217,7 +219,7 @@ AGENT_ID="$(echo "${RESPONSE}" | jq -r '.id // .agentId // empty')"
 AGENT_URL="$(echo "${RESPONSE}" | jq -r '.url // empty')"
 
 if [[ -z "${AGENT_ID}" ]]; then
-  echo "Cursor API error:"
+  echo "Cursor API error (auto-repair skipped; this is not a code failure):"
   echo "${RESPONSE}" | jq . 2>/dev/null || echo "${RESPONSE}"
   if [[ -n "${ISSUE_NUMBER}" ]]; then
     gh issue comment "${ISSUE_NUMBER}" --repo "${REPO_SLUG}" --body "Cursor agent launch failed. Response logged in workflow.
@@ -227,7 +229,7 @@ ${RESPONSE}
 \`\`\`
 " || true
   fi
-  exit 1
+  exit 0
 fi
 
 echo "Agent started: ${AGENT_ID}"
