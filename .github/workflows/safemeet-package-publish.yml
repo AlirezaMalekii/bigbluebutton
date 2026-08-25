@@ -41,19 +41,7 @@ jobs:
         env:
           REPO_HOST: ${{ secrets.SAFEMEET_BBB_REPO_HOST || '78.157.39.4' }}
           REPO_PORT: ${{ secrets.SAFEMEET_BBB_REPO_PORT || '3698' }}
-        run: |
-          set -euo pipefail
-          mkdir -p ~/.ssh
-          for attempt in 1 2 3 4 5; do
-            if ssh-keyscan -T 15 -p "$REPO_PORT" -H "$REPO_HOST" >> ~/.ssh/known_hosts 2>/dev/null; then
-              echo "ssh-keyscan succeeded on attempt ${attempt}"
-              exit 0
-            fi
-            echo "ssh-keyscan attempt ${attempt} failed, retrying..."
-            sleep $((attempt * 3))
-          done
-          echo "ssh-keyscan failed after retries for ${REPO_HOST}:${REPO_PORT}" >&2
-          exit 1
+        run: bash scripts/safemeet-wait-repo-ssh.sh
 
       - name: Build selected packages
         env:

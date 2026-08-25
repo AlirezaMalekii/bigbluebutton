@@ -45,6 +45,11 @@ INFRA_PATTERNS=(
   'Host key verification failed'
   'Could not resolve host'
   'ssh: connect to host'
+  'ssh-keyscan'
+  'Repo SSH probe'
+  'No route to host'
+  'Destination Host Unreachable'
+  'Connection timed out'
   'Broken pipe'
   'client_loop: send disconnect'
   'DEPLOY_SSH_PRIVATE_KEY'
@@ -54,21 +59,38 @@ INFRA_PATTERNS=(
   'composer.*401'
 )
 
+try_create_issue() {
+  local title="$1"
+  local labels="$2"
+  local body="$3"
+  local url=""
+  url="$(gh issue create \
+    --repo "${REPO_SLUG}" \
+    --title "${title}" \
+    --label "${labels}" \
+    --body "${body}" 2>/dev/null || true)"
+  if [[ "${url}" == https://* ]]; then
+    printf '%s\n' "${url}"
+    return 0
+  fi
+  echo "Could not open GitHub issue (issues may be disabled on ${REPO_SLUG})." >&2
+  return 1
+}
+
 for pattern in "${INFRA_PATTERNS[@]}"; do
   if echo "${LOGS}" | grep -qiE "${pattern}"; then
     echo "Infrastructure/credentials failure detected (${pattern}) — auto-repair will not help."
-    gh issue create \
-      --repo "${REPO_SLUG}" \
-      --title "[ci-auto-repair] infra failure ${HEAD_SHA:0:7}" \
-      --label "ci-auto-repair,ci-auto-repair-skipped" \
-      --body "CI failed with likely infra/secret issue. Manual intervention required.
+    try_create_issue \
+      "[ci-auto-repair] infra failure ${HEAD_SHA:0:7}" \
+      "ci-auto-repair,ci-auto-repair-skipped" \
+      "CI failed with likely infra/secret issue. Manual intervention required.
 
 Run: ${RUN_URL}
 Commit: ${HEAD_SHA}
 Branch: ${HEAD_BRANCH}
 
 Pattern matched: ${pattern}
-" 2>/dev/null || echo "Could not open GitHub issue (issues may be disabled on ${REPO_SLUG})."
+" || true
     exit 0
   fi
 done
@@ -84,8 +106,11 @@ if [[ "${COMMIT_MSG}" =~ ci-auto-repair:\ chain=([a-f0-9]+) ]]; then
   CHAIN_SHORT="${CHAIN_SHA:0:7}"
 fi
 
-ISSUE_JSON="$(gh issue list --repo "${REPO_SLUG}" --label "ci-auto-repair" --state open --json number,title,body --limit 20 2>/dev/null || echo '[]')"
-ISSUE_NUMBER="$(echo "${ISSUE_JSON}" | jq -r --arg chain "${CHAIN_SHORT}" '.[] | select(.title | contains($chain)) | .number' | head -1)"
+ISSUE_JSON="$(gh issue list --repo "${REPO_SLUG}" --label "ci-auto-repair" --state open --json number,title,body --limit 20 2>/dev/null || true)"
+if ! echo "${ISSUE_JSON}" | jq -e . >/dev/null 2>&1; then
+  ISSUE_JSON='[]'
+fi
+ISSUE_NUMBER="$(echo "${ISSUE_JSON}" | jq -r --arg chain "${CHAIN_SHORT}" '.[] | select(.title | contains($chain)) | .number' | head -1 || true)"
 
 if [[ -n "${ISSUE_NUMBER}" && "${ISSUE_NUMBER}" != "null" ]]; then
   BODY="$(echo "${ISSUE_JSON}" | jq -r --arg n "${ISSUE_NUMBER}" '.[] | select(.number == ($n | tonumber)) | .body')"
@@ -95,32 +120,36 @@ if [[ -n "${ISSUE_NUMBER}" && "${ISSUE_NUMBER}" != "null" ]]; then
     ATTEMPT=2
   fi
 else
-  ISSUE_URL="$(gh issue create \
-    --repo "${REPO_SLUG}" \
-    --title "[ci-auto-repair] ${PROJECT_NAME} chain=${CHAIN_SHORT}" \
-    --label "ci-auto-repair" \
-    --body "Auto-repair chain for failed CI/CD on production branch.
+  ISSUE_NUMBER=""
+  if ISSUE_URL="$(try_create_issue \
+    "[ci-auto-repair] ${PROJECT_NAME} chain=${CHAIN_SHORT}" \
+    "ci-auto-repair" \
+    "Auto-repair chain for failed CI/CD on production branch.
 
 chain_sha: ${CHAIN_SHA}
 branch: ${HEAD_BRANCH}
 attempt: 0
 run: ${RUN_URL}
-")"
-  ISSUE_NUMBER="${ISSUE_URL##*/}"
+")"; then
+    ISSUE_NUMBER="${ISSUE_URL##*/}"
+  fi
   ATTEMPT=1
 fi
 
 if [[ "${ATTEMPT}" -gt "${MAX_ATTEMPTS}" ]]; then
   echo "Max attempts (${MAX_ATTEMPTS}) reached for chain ${CHAIN_SHA}."
-  gh issue comment "${ISSUE_NUMBER}" --repo "${REPO_SLUG}" --body "Stopped after ${MAX_ATTEMPTS} auto-repair attempts. Manual fix required.
+  if [[ -n "${ISSUE_NUMBER}" ]]; then
+    gh issue comment "${ISSUE_NUMBER}" --repo "${REPO_SLUG}" --body "Stopped after ${MAX_ATTEMPTS} auto-repair attempts. Manual fix required.
 
 Last run: ${RUN_URL}
 " || true
-  gh issue edit "${ISSUE_NUMBER}" --repo "${REPO_SLUG}" --add-label "ci-auto-repair-exhausted" || true
+    gh issue edit "${ISSUE_NUMBER}" --repo "${REPO_SLUG}" --add-label "ci-auto-repair-exhausted" || true
+  fi
   exit 0
 fi
 
-gh issue edit "${ISSUE_NUMBER}" --repo "${REPO_SLUG}" --body "Auto-repair chain for failed CI/CD on production branch.
+if [[ -n "${ISSUE_NUMBER}" ]]; then
+  gh issue edit "${ISSUE_NUMBER}" --repo "${REPO_SLUG}" --body "Auto-repair chain for failed CI/CD on production branch.
 
 chain_sha: ${CHAIN_SHA}
 branch: ${HEAD_BRANCH}
@@ -128,6 +157,7 @@ attempt: ${ATTEMPT}
 last_run: ${RUN_URL}
 last_sha: ${HEAD_SHA}
 " || true
+fi
 
 PROMPT="$(cat <<EOF
 You are repairing a failed CI/CD pipeline for SafeMeet **${PROJECT_NAME}**.
@@ -189,21 +219,25 @@ AGENT_URL="$(echo "${RESPONSE}" | jq -r '.url // empty')"
 if [[ -z "${AGENT_ID}" ]]; then
   echo "Cursor API error:"
   echo "${RESPONSE}" | jq . 2>/dev/null || echo "${RESPONSE}"
-  gh issue comment "${ISSUE_NUMBER}" --repo "${REPO_SLUG}" --body "Cursor agent launch failed. Response logged in workflow.
+  if [[ -n "${ISSUE_NUMBER}" ]]; then
+    gh issue comment "${ISSUE_NUMBER}" --repo "${REPO_SLUG}" --body "Cursor agent launch failed. Response logged in workflow.
 
 \`\`\`
 ${RESPONSE}
 \`\`\`
 " || true
+  fi
   exit 1
 fi
 
 echo "Agent started: ${AGENT_ID}"
 [[ -n "${AGENT_URL}" ]] && echo "Dashboard: ${AGENT_URL}"
 
-gh issue comment "${ISSUE_NUMBER}" --repo "${REPO_SLUG}" --body "Launched Cursor auto-repair agent (attempt ${ATTEMPT}/${MAX_ATTEMPTS}).
+if [[ -n "${ISSUE_NUMBER}" ]]; then
+  gh issue comment "${ISSUE_NUMBER}" --repo "${REPO_SLUG}" --body "Launched Cursor auto-repair agent (attempt ${ATTEMPT}/${MAX_ATTEMPTS}).
 
 - Agent: \`${AGENT_ID}\`
 - Run: ${RUN_URL}
 ${AGENT_URL:+- Dashboard: ${AGENT_URL}}
 " || true
+fi
