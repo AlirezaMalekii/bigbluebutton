@@ -8,6 +8,12 @@ test.describe.parallel('Connection Status', { tag: '@ci' }, () => {
     await connectionStatus.connectionStatusModal();
   });
 
+  test('Complete same-server speed test and show analysis', async ({ browser, context, page }, testInfo) => {
+    const connectionStatus = new ConnectionStatus(browser, context);
+    await connectionStatus.initModPage(page, { testInfo });
+    await connectionStatus.speedTestCompletes();
+  });
+
   test('Show network data in Connection Status', async ({ browser, context, page }, testInfo) => {
     const connectionStatus = new ConnectionStatus(browser, context);
     await connectionStatus.initModPage(page, { testInfo });

@@ -285,6 +285,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     this.handleViewportIntersections = this.handleViewportIntersections.bind(this);
     this.syncViewportTargets = this.syncViewportTargets.bind(this);
     this.scheduleViewportTargetSync = this.scheduleViewportTargetSync.bind(this);
+    this.handlePageLifecycleChange = this.handlePageLifecycleChange.bind(this);
     this.autoplayWasHandled = false;
   }
 
@@ -292,6 +293,9 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     this.handleCanvasResize();
     window.addEventListener('resize', this.handleCanvasResize, false);
     window.addEventListener('videoPlayFailed', this.handlePlayElementFailed);
+    document.addEventListener('visibilitychange', this.handlePageLifecycleChange);
+    window.addEventListener('focus', this.handlePageLifecycleChange);
+    window.addEventListener('pageshow', this.handlePageLifecycleChange);
     this.unsubscribeSkyroomZones = subscribeSkyroomWebcamZones(() => {
       this.setState(
         (prev) => ({ skyroomZoneRevision: prev.skyroomZoneRevision + 1 }),
@@ -354,6 +358,9 @@ class VideoList extends Component<VideoListProps, VideoListState> {
   componentWillUnmount() {
     window.removeEventListener('resize', this.handleCanvasResize, false);
     window.removeEventListener('videoPlayFailed', this.handlePlayElementFailed);
+    document.removeEventListener('visibilitychange', this.handlePageLifecycleChange);
+    window.removeEventListener('focus', this.handlePageLifecycleChange);
+    window.removeEventListener('pageshow', this.handlePageLifecycleChange);
     this.unsubscribeSkyroomZones?.();
     this.viewportObservers.forEach((observer) => observer.disconnect());
     this.viewportObservers.clear();
@@ -369,12 +376,19 @@ class VideoList extends Component<VideoListProps, VideoListState> {
   }
 
   scheduleViewportTargetSync() {
-    this.syncViewportTargets();
-    if (this.viewportSyncFrame !== null) cancelAnimationFrame(this.viewportSyncFrame);
+    if (this.viewportSyncFrame !== null) return;
     this.viewportSyncFrame = requestAnimationFrame(() => {
       this.viewportSyncFrame = null;
       this.syncViewportTargets();
     });
+  }
+
+  handlePageLifecycleChange() {
+    // A hidden browser tab must keep its last visibility snapshot. Chromium can
+    // emit all-false IntersectionObserver entries while backgrounded; applying
+    // them disconnects every subscriber with no guaranteed entry on return.
+    if (document.visibilityState === 'hidden') return;
+    this.scheduleViewportTargetSync();
   }
 
   static getViewportObserverRoot(target: Element) {
@@ -437,14 +451,17 @@ class VideoList extends Component<VideoListProps, VideoListState> {
   reportViewportVisibility(streams: Set<string>) {
     const { onVideoVisibilityChange } = this.props;
     const changes: { stream: string; visible: boolean }[] = [];
+    const streamsWithTargets = new Set<string>();
+    const visibleStreams = new Set<string>();
+
+    this.viewportTargets.forEach((stream, target) => {
+      streamsWithTargets.add(stream);
+      if (this.visibleViewportTargets.has(target)) visibleStreams.add(stream);
+    });
 
     streams.forEach((stream) => {
-      const hasTarget = Array.from(this.viewportTargets.values()).some((targetStream) => (
-        targetStream === stream
-      ));
-      const visible = hasTarget && Array.from(this.viewportTargets.entries()).some(([target, targetStream]) => (
-        targetStream === stream && this.visibleViewportTargets.has(target)
-      ));
+      const hasTarget = streamsWithTargets.has(stream);
+      const visible = hasTarget && visibleStreams.has(stream);
       if (this.reportedStreamVisibility.get(stream) === visible) return;
       if (hasTarget) {
         this.reportedStreamVisibility.set(stream, visible);
@@ -470,6 +487,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
   }
 
   handleViewportIntersections(entries: IntersectionObserverEntry[]) {
+    if (document.visibilityState === 'hidden') return;
     const affectedStreams = new Set<string>();
 
     entries.forEach((entry) => {
@@ -485,6 +503,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       } else {
         this.visibleViewportTargets.delete(entry.target);
       }
+      VideoList.setViewportTargetPlayback(entry.target, visible);
       affectedStreams.add(stream);
     });
 
@@ -494,6 +513,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
   syncViewportTargets() {
     const { onVideoVisibilityChange } = this.props;
     if (!isSkyroomTheme() || !onVideoVisibilityChange) return;
+    if (document.visibilityState === 'hidden') return;
 
     const {
       enabled = true,
@@ -509,6 +529,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       if (nextTargets.has(target)) return;
       this.viewportTargetObservers.get(target)?.unobserve(target);
       this.viewportTargetObservers.delete(target);
+      VideoList.setViewportTargetPlayback(target, false);
       this.viewportTargets.delete(target);
       this.visibleViewportTargets.delete(target);
       removedStreams.add(stream);
@@ -520,9 +541,11 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       nextTargets.forEach((target) => {
         const stream = target.getAttribute('data-skyroom-viewport-stream');
         if (stream) currentStreams.add(stream);
-        if (!stream || this.reportedStreamVisibility.get(stream) === true) return;
-        this.reportedStreamVisibility.set(stream, true);
-        fallbackChanges.push({ stream, visible: true });
+        const visible = Boolean(stream) && this.isViewportTargetVisible(target);
+        VideoList.setViewportTargetPlayback(target, visible);
+        if (!stream || this.reportedStreamVisibility.get(stream) === visible) return;
+        this.reportedStreamVisibility.set(stream, visible);
+        fallbackChanges.push({ stream, visible });
       });
       this.reportedStreamVisibility.forEach((visible, stream) => {
         if (!visible || currentStreams.has(stream)) return;
@@ -568,13 +591,35 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       if (!stream) return;
       if (this.isViewportTargetVisible(target)) {
         this.visibleViewportTargets.add(target);
+        VideoList.setViewportTargetPlayback(target, true);
       } else {
         this.visibleViewportTargets.delete(target);
+        VideoList.setViewportTargetPlayback(target, false);
       }
       layoutAffectedStreams.add(stream);
     });
 
     this.queueViewportVisibilityReport(layoutAffectedStreams);
+  }
+
+  static setViewportTargetPlayback(target: Element, shouldPlay: boolean) {
+    const videoElement = target.querySelector('video');
+    if (!(videoElement instanceof HTMLVideoElement)) return;
+
+    if (!shouldPlay) {
+      if (!videoElement.paused) videoElement.pause();
+      return;
+    }
+
+    if (!videoElement.srcObject || !videoElement.paused) return;
+    videoElement.play().catch((error) => {
+      if (error.name === 'NotAllowedError') {
+        const tagFailedEvent = new CustomEvent('videoPlayFailed', {
+          detail: { mediaElement: videoElement },
+        });
+        window.dispatchEvent(tagFailedEvent);
+      }
+    });
   }
 
   getSkyroomPartition() {

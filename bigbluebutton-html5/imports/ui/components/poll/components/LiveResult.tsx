@@ -18,6 +18,11 @@ import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedS
 import connectionStatus from '/imports/ui/core/graphql/singletons/connectionStatus';
 import Tooltip from '../../common/tooltip/component';
 import PollResultsChart from './PollResultsChart';
+import {
+  isSkyroomMobileViewport,
+  isSkyroomTheme,
+  openSkyroomMobileBox,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const intlMessages = defineMessages({
   usersTitle: {
@@ -200,6 +205,13 @@ const LiveResult: React.FC<LiveResultProps> = ({
                 Session.setItem('pollInitiated', false);
                 publishPoll(pollId, shouldShowCorrectAnswer);
                 stopPoll();
+                if (isSkyroomTheme() && isSkyroomMobileViewport()) {
+                  // Publishing a result opens public chat. Use the mobile box
+                  // coordinator so camera-dock visibility and chat id move as
+                  // one transition instead of leaving two layout states active.
+                  openSkyroomMobileBox(layoutContextDispatch, 'chat');
+                  return;
+                }
                 layoutContextDispatch({
                   type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN,
                   value: true,

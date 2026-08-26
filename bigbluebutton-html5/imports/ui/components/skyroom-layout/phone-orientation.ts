@@ -49,12 +49,21 @@ const LOCK_ATTR = 'data-skyroom-phone-portrait-lock';
 const LANDSCAPE_ATTR = 'data-skyroom-phone-landscape';
 const OVERLAY_ID = 'skyroom-phone-portrait-overlay';
 
-const getViewportSize = () => {
-  const viewport = window.visualViewport;
-  return {
-    width: Math.round(viewport?.width || window.innerWidth),
-    height: Math.round(viewport?.height || window.innerHeight),
-  };
+/**
+ * visualViewport shrinks to the keyboard viewport on mobile. Using its aspect
+ * ratio here makes a portrait phone look landscape as soon as the chat input
+ * opens. The orientation media query describes the physical/layout
+ * orientation and is unaffected by the soft keyboard.
+ */
+export const isSkyroomPhoneLandscape = (): boolean => {
+  const orientationQuery = window.matchMedia?.('(orientation: landscape)');
+  if (orientationQuery) return orientationQuery.matches;
+
+  const screenWidth = window.screen?.width || 0;
+  const screenHeight = window.screen?.height || 0;
+  if (screenWidth > 0 && screenHeight > 0) return screenWidth > screenHeight;
+
+  return window.innerWidth > window.innerHeight;
 };
 
 const getLockTarget = (): HTMLElement => document.body || document.documentElement;
@@ -83,8 +92,7 @@ const ensureOverlay = (): HTMLElement | null => {
 const applyVisualState = () => {
   const html = document.documentElement;
   const target = getLockTarget();
-  const { width, height } = getViewportSize();
-  const isLandscape = width > height;
+  const isLandscape = isSkyroomPhoneLandscape();
   ensureOverlay();
 
   if (isLandscape) {
@@ -134,8 +142,6 @@ export const startSkyroomPhonePortraitLock = () => {
   }
 
   window.addEventListener('resize', onChange);
-  window.visualViewport?.addEventListener('resize', onChange);
-  window.visualViewport?.addEventListener('scroll', onChange);
 
   cleanup = () => {
     if (mql.removeEventListener) {
@@ -144,8 +150,6 @@ export const startSkyroomPhonePortraitLock = () => {
       mql.removeListener(onChange);
     }
     window.removeEventListener('resize', onChange);
-    window.visualViewport?.removeEventListener('resize', onChange);
-    window.visualViewport?.removeEventListener('scroll', onChange);
     clearVisualState();
     tryNativeUnlock();
     cleanup = null;

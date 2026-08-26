@@ -13,8 +13,13 @@ import {
 
 const SLOW_START_MS = 800;
 const UPLOAD_BLOB_BYTES = 256 * 1024;
+const MAX_RANDOM_VALUES_BYTES = 64 * 1024;
 const MIN_PING_SAMPLES = 3;
+const MAX_PING_SAMPLES = 12;
 const MIN_TRANSFER_BYTES = 16 * 1024;
+const MIN_TRANSFER_DURATION_MS = 1000;
+const MAX_TRANSFER_DURATION_MS = 15000;
+const PING_TIMEOUT_MS = 4000;
 
 export class SpeedTestRunError extends Error {
   code: SpeedTestErrorCode;
@@ -55,6 +60,36 @@ const throwIfAborted = (signal: AbortSignal) => {
   }
 };
 
+type Deadline = {
+  signal: AbortSignal;
+  expired: () => boolean;
+  cleanup: () => void;
+};
+
+const createDeadline = (parentSignal: AbortSignal, durationMs: number): Deadline => {
+  const controller = new AbortController();
+  let deadlineExpired = false;
+
+  const abortFromParent = () => controller.abort();
+  const timer = window.setTimeout(() => {
+    deadlineExpired = true;
+    controller.abort();
+  }, durationMs);
+
+  parentSignal.addEventListener('abort', abortFromParent, { once: true });
+  if (parentSignal.aborted) abortFromParent();
+
+  return {
+    signal: controller.signal,
+    expired: () => deadlineExpired,
+    cleanup: () => {
+      window.clearTimeout(timer);
+      parentSignal.removeEventListener('abort', abortFromParent);
+      controller.abort();
+    },
+  };
+};
+
 const classifyHttpStatus = (status: number): SpeedTestErrorCode => {
   if (status === 404 || status === 405 || status === 501) return 'notConfigured';
   return 'network';
@@ -79,14 +114,25 @@ const fetchNoStore = (
   },
 } as RequestInit);
 
-const measurePingSample = async (url: string, signal: AbortSignal): Promise<number> => {
-  const startedAt = performance.now();
-  const response = await fetchNoStore(`${url}?r=${Math.random()}`, signal, { method: 'GET' });
-  const elapsed = performance.now() - startedAt;
-  if (!response.ok && response.status !== 204) {
-    throw new SpeedTestRunError(classifyHttpStatus(response.status));
+const measurePingSample = async (url: string, parentSignal: AbortSignal): Promise<number> => {
+  const deadline = createDeadline(parentSignal, PING_TIMEOUT_MS);
+  try {
+    const startedAt = performance.now();
+    const response = await fetchNoStore(`${url}?r=${Math.random()}`, deadline.signal, { method: 'GET' });
+    const elapsed = performance.now() - startedAt;
+    if (!response.ok && response.status !== 204) {
+      throw new SpeedTestRunError(classifyHttpStatus(response.status));
+    }
+    return elapsed;
+  } catch (error) {
+    if (parentSignal.aborted) throw new DOMException('Aborted', 'AbortError');
+    if (deadline.expired() && isAbortError(error, deadline.signal)) {
+      throw new SpeedTestRunError('network');
+    }
+    throw error;
+  } finally {
+    deadline.cleanup();
   }
-  return elapsed;
 };
 
 const probeServer = async (pingUrl: string, signal: AbortSignal): Promise<void> => {
@@ -141,13 +187,34 @@ const createThroughputTracker = (durationMs: number): ThroughputTracker => {
   };
 };
 
-const silentCancel = async (reader: ReadableStreamDefaultReader<Uint8Array>) => {
-  try {
-    await reader.cancel();
-  } catch {
-    // Ignore cancel races after abort or completion.
-  }
+const cancelReader = (reader: ReadableStreamDefaultReader<Uint8Array>) => {
+  // Cancellation can itself remain pending on some HTTP/2 implementations.
+  // Fetch abort owns transport cleanup, so never block phase completion on it.
+  reader.cancel().catch(() => undefined);
 };
+
+const readStreamChunk = (
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  signal: AbortSignal,
+): Promise<ReadableStreamReadResult<Uint8Array>> => new Promise((resolve, reject) => {
+  if (signal.aborted) {
+    reject(new DOMException('Aborted', 'AbortError'));
+    return;
+  }
+
+  const onAbort = () => reject(new DOMException('Aborted', 'AbortError'));
+  signal.addEventListener('abort', onAbort, { once: true });
+  reader.read().then(
+    (result) => {
+      signal.removeEventListener('abort', onAbort);
+      resolve(result);
+    },
+    (error) => {
+      signal.removeEventListener('abort', onAbort);
+      reject(error);
+    },
+  );
+});
 
 const runDownloadStream = async (
   url: string,
@@ -179,7 +246,7 @@ const runDownloadStream = async (
       while (performance.now() < until) {
         throwIfAborted(signal);
         // eslint-disable-next-line no-await-in-loop
-        const { done, value } = await reader.read();
+        const { done, value } = await readStreamChunk(reader, signal);
         if (done) break;
         if (value?.byteLength) onBytes(value.byteLength);
       }
@@ -190,15 +257,21 @@ const runDownloadStream = async (
         ? error
         : new SpeedTestRunError('network');
     } finally {
-      // eslint-disable-next-line no-await-in-loop
-      await silentCancel(reader);
+      cancelReader(reader);
     }
   }
 };
 
 const createUploadBlob = (byteLength: number): Blob => {
   const unit = new Uint8Array(byteLength);
-  crypto.getRandomValues(unit);
+  // Web Crypto rejects getRandomValues calls larger than 65,536 bytes.
+  // Fill the incompressible payload in bounded views while retaining one Blob.
+  for (let offset = 0; offset < unit.byteLength; offset += MAX_RANDOM_VALUES_BYTES) {
+    crypto.getRandomValues(unit.subarray(
+      offset,
+      Math.min(offset + MAX_RANDOM_VALUES_BYTES, unit.byteLength),
+    ));
+  }
   return new Blob([unit], {
     type: 'application/octet-stream',
   });
@@ -232,11 +305,15 @@ const uploadOnce = (
     xhr.abort();
   };
 
-  const resolvePhase = () => {
+  const resolveSuccessfulUpload = () => {
     const remaining = body.size - lastLoaded;
-    if (remaining > 0 && lastLoaded > 0) onDelta(remaining);
+    if (remaining > 0) onDelta(remaining);
     finish(resolve);
   };
+
+  const resolvePartialUpload = () => finish(resolve);
+
+  const rejectNetwork = () => finish(() => reject(new SpeedTestRunError('network')));
 
   xhr.open('POST', `${url}?r=${Math.random()}`);
   xhr.setRequestHeader('Content-Type', 'application/octet-stream');
@@ -255,28 +332,51 @@ const uploadOnce = (
 
   xhr.onload = () => {
     if (xhr.status >= 200 && xhr.status < 300) {
-      resolvePhase();
+      resolveSuccessfulUpload();
       return;
     }
     finish(() => reject(new SpeedTestRunError(classifyHttpStatus(xhr.status))));
   };
 
-  xhr.onerror = resolvePhase;
+  xhr.onerror = () => {
+    if (performance.now() >= until) {
+      resolvePartialUpload();
+      return;
+    }
+    rejectNetwork();
+  };
   xhr.onabort = () => {
     if (signal.aborted) {
       finish(() => reject(new DOMException('Aborted', 'AbortError')));
       return;
     }
-    resolvePhase();
+    if (performance.now() >= until) {
+      resolvePartialUpload();
+      return;
+    }
+    rejectNetwork();
   };
-  xhr.ontimeout = resolvePhase;
+  xhr.ontimeout = () => {
+    if (performance.now() >= until) {
+      resolvePartialUpload();
+      return;
+    }
+    rejectNetwork();
+  };
   xhr.onloadend = () => {
-    if (!settled) resolvePhase();
+    if (settled) return;
+    if (xhr.status >= 200 && xhr.status < 300) {
+      resolveSuccessfulUpload();
+    } else if (performance.now() >= until) {
+      resolvePartialUpload();
+    } else {
+      rejectNetwork();
+    }
   };
 
   watchdog = window.setTimeout(() => {
     xhr.abort();
-    resolvePhase();
+    resolvePartialUpload();
   }, Math.max(50, until - performance.now()));
 
   signal.addEventListener('abort', onAbort);
@@ -294,12 +394,21 @@ const sleep = (ms: number, signal: AbortSignal): Promise<void> => new Promise((r
     reject(new DOMException('Aborted', 'AbortError'));
     return;
   }
-  const timer = window.setTimeout(resolve, ms);
+
+  let timer = 0;
+  const cleanup = () => {
+    if (timer) window.clearTimeout(timer);
+    signal.removeEventListener('abort', onAbort);
+  };
   const onAbort = () => {
-    window.clearTimeout(timer);
+    cleanup();
     reject(new DOMException('Aborted', 'AbortError'));
   };
   signal.addEventListener('abort', onAbort, { once: true });
+  timer = window.setTimeout(() => {
+    cleanup();
+    resolve();
+  }, ms);
 });
 
 const runUploadStream = async (
@@ -340,6 +449,29 @@ const runParallelSettled = async (
   if (allFailed) throw rejection.reason;
 };
 
+const runTimedTransferPhase = async (
+  durationMs: number,
+  parentSignal: AbortSignal,
+  work: (phaseSignal: AbortSignal, until: number) => Promise<void>,
+): Promise<void> => {
+  const deadline = createDeadline(parentSignal, durationMs);
+  const until = performance.now() + durationMs;
+  try {
+    await work(deadline.signal, until);
+  } catch (error) {
+    if (parentSignal.aborted) throw new DOMException('Aborted', 'AbortError');
+    if (deadline.expired() && isAbortError(error, deadline.signal)) return;
+    throw error;
+  } finally {
+    deadline.cleanup();
+  }
+};
+
+const clampDuration = (durationMs: number, fallback: number): number => {
+  const resolved = Number.isFinite(durationMs) ? durationMs : fallback;
+  return Math.max(MIN_TRANSFER_DURATION_MS, Math.min(MAX_TRANSFER_DURATION_MS, resolved));
+};
+
 export const runSpeedTest = async (
   config: SpeedTestConfig,
   onSnapshot: (snapshot: SpeedTestSnapshot) => void,
@@ -348,7 +480,18 @@ export const runSpeedTest = async (
   const resolved: SpeedTestConfig = {
     ...DEFAULT_SPEED_TEST_CONFIG,
     ...config,
-    pingCount: Math.max(MIN_PING_SAMPLES, config.pingCount || DEFAULT_SPEED_TEST_CONFIG.pingCount),
+    pingCount: Math.max(MIN_PING_SAMPLES, Math.min(
+      MAX_PING_SAMPLES,
+      config.pingCount || DEFAULT_SPEED_TEST_CONFIG.pingCount,
+    )),
+    downloadDurationMs: clampDuration(
+      config.downloadDurationMs,
+      DEFAULT_SPEED_TEST_CONFIG.downloadDurationMs,
+    ),
+    uploadDurationMs: clampDuration(
+      config.uploadDurationMs,
+      DEFAULT_SPEED_TEST_CONFIG.uploadDurationMs,
+    ),
     parallelStreams: Math.max(1, Math.min(
       2,
       config.parallelStreams || DEFAULT_SPEED_TEST_CONFIG.parallelStreams,
@@ -413,13 +556,18 @@ export const runSpeedTest = async (
 
   emit({ phase: 'download', liveMbps: 0 });
   const downloadTracker = createThroughputTracker(resolved.downloadDurationMs);
-  const downloadUntil = performance.now() + resolved.downloadDurationMs;
   try {
-    await runParallelSettled(resolved.parallelStreams, async () => {
-      await runDownloadStream(endpoints.download, downloadUntil, signal, (bytes) => {
-        emit({ liveMbps: downloadTracker.addBytes(bytes) });
-      });
-    });
+    await runTimedTransferPhase(
+      resolved.downloadDurationMs,
+      signal,
+      async (phaseSignal, downloadUntil) => {
+        await runParallelSettled(resolved.parallelStreams, async () => {
+          await runDownloadStream(endpoints.download, downloadUntil, phaseSignal, (bytes) => {
+            emit({ liveMbps: downloadTracker.addBytes(bytes) });
+          });
+        });
+      },
+    );
   } catch (error) {
     if (isAbortError(error, signal)) throw error;
     if (downloadTracker.bytes() < MIN_TRANSFER_BYTES) {
@@ -436,12 +584,17 @@ export const runSpeedTest = async (
 
   emit({ phase: 'upload', liveMbps: 0 });
   const uploadTracker = createThroughputTracker(resolved.uploadDurationMs);
-  const uploadUntil = performance.now() + resolved.uploadDurationMs;
   let uploadIncomplete = false;
   try {
-    await runUploadStream(endpoints.upload, uploadUntil, signal, (bytes) => {
-      emit({ liveMbps: uploadTracker.addBytes(bytes) });
-    });
+    await runTimedTransferPhase(
+      resolved.uploadDurationMs,
+      signal,
+      async (phaseSignal, uploadUntil) => {
+        await runUploadStream(endpoints.upload, uploadUntil, phaseSignal, (bytes) => {
+          emit({ liveMbps: uploadTracker.addBytes(bytes) });
+        });
+      },
+    );
   } catch (error) {
     if (isAbortError(error, signal)) throw error;
     uploadIncomplete = true;

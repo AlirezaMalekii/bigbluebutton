@@ -130,6 +130,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 10px !important;
   box-shadow: none !important;
+  box-sizing: border-box !important;
   color: var(--skyroom-panel-text-muted) !important;
   display: inline-flex !important;
   flex: 0 0 auto !important;
@@ -148,18 +149,46 @@
     transform 120ms ease !important;
 }
 
+/* Keep icon glyph optically centered inside the fixed 28×28 hit target */
+#layout[data-skyroom-column="true"] [data-test="manageUsers"] > span,
+#layout[data-skyroom-column="true"] [data-test="chatOptionsMenu"] > span,
+#layout[data-skyroom-column="true"] [data-test="notesOptionsMenu"] > span {
+  align-items: center !important;
+  display: inline-flex !important;
+  height: 100% !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+
 #layout[data-skyroom-column="true"] [data-test="manageUsers"] i,
 #layout[data-skyroom-column="true"] [data-test="manageUsers"] svg,
 #layout[data-skyroom-column="true"] [data-test="chatOptionsMenu"] i,
 #layout[data-skyroom-column="true"] [data-test="chatOptionsMenu"] svg,
 #layout[data-skyroom-column="true"] [data-test="notesOptionsMenu"] i,
 #layout[data-skyroom-column="true"] [data-test="notesOptionsMenu"] svg {
+  align-items: center !important;
   color: currentColor !important;
+  display: inline-flex !important;
   fill: currentColor !important;
   font-size: 0.9rem !important;
   height: 1em !important;
+  justify-content: center !important;
   line-height: 1 !important;
   margin: 0 !important;
+  padding: 0 !important;
+  width: 1em !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="manageUsers"] i::before,
+#layout[data-skyroom-column="true"] [data-test="chatOptionsMenu"] i::before,
+#layout[data-skyroom-column="true"] [data-test="notesOptionsMenu"] i::before {
+  display: block !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: center !important;
   width: 1em !important;
 }
 
@@ -168,7 +197,11 @@
 #layout[data-skyroom-column="true"] [data-test="chatOptionsMenu"]:hover,
 #layout[data-skyroom-column="true"] [data-test="chatOptionsMenu"]:focus,
 #layout[data-skyroom-column="true"] [data-test="notesOptionsMenu"]:hover,
-#layout[data-skyroom-column="true"] [data-test="notesOptionsMenu"]:focus {
+#layout[data-skyroom-column="true"] [data-test="notesOptionsMenu"]:focus,
+#layout[data-skyroom-column="true"] [data-test="userActionsMenuTrigger"]:hover,
+#layout[data-skyroom-column="true"] [data-test="userActionsMenuTrigger"]:focus,
+#layout[data-skyroom-column="true"] .skyroom-user-actions-trigger:hover,
+#layout[data-skyroom-column="true"] .skyroom-user-actions-trigger:focus {
   background: linear-gradient(180deg, var(--skyroom-accent-hover-bg, rgba(32, 199, 187, 0.18)), rgba(32, 199, 187, 0.08)) !important;
   border-color: var(--skyroom-accent-border, rgba(32, 199, 187, 0.30)) !important;
   box-shadow: 0 0 0 2px var(--skyroom-accent-glow, rgba(32, 199, 187, 0.08)) !important;
@@ -178,7 +211,9 @@
 
 #layout[data-skyroom-column="true"] [data-test="manageUsers"]:active,
 #layout[data-skyroom-column="true"] [data-test="chatOptionsMenu"]:active,
-#layout[data-skyroom-column="true"] [data-test="notesOptionsMenu"]:active {
+#layout[data-skyroom-column="true"] [data-test="notesOptionsMenu"]:active,
+#layout[data-skyroom-column="true"] [data-test="userActionsMenuTrigger"]:active,
+#layout[data-skyroom-column="true"] .skyroom-user-actions-trigger:active {
   background: linear-gradient(180deg, rgba(32, 199, 187, 0.16), rgba(32, 199, 187, 0.07)) !important;
   transform: translateY(0);
 }

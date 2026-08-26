@@ -1,6 +1,9 @@
 export type VideoPlaybackState = 'waiting' | 'playing' | 'stalled' | 'ended';
 
-export const VIDEO_PLAYBACK_STALL_GRACE_MS = 3000;
+export const VIDEO_PLAYBACK_STALL_GRACE_MS = 5000;
+
+const VIDEO_PLAYBACK_STALLED_RECOVERY_MS = 10000;
+const VIDEO_PLAYBACK_ENDED_RECOVERY_MS = 5000;
 
 type MediaStreamIdentity = Pick<MediaStream, 'id'>;
 type VideoAttachmentTarget = Pick<HTMLVideoElement, 'paused' | 'srcObject'>;
@@ -33,11 +36,11 @@ export const videoHasRenderableFrame = (
 export const getPlaybackRecoveryDelay = (
   state: VideoPlaybackState,
   baseTimeout: number,
-): number => (
-  state === 'stalled' || state === 'ended'
-    ? VIDEO_PLAYBACK_STALL_GRACE_MS
-    : baseTimeout
-);
+): number => {
+  if (state === 'stalled') return VIDEO_PLAYBACK_STALLED_RECOVERY_MS;
+  if (state === 'ended') return VIDEO_PLAYBACK_ENDED_RECOVERY_MS;
+  return baseTimeout;
+};
 
 /** Only recreate publishers that were not already rebuilt by the stream update cycle. */
 export const getMissingWebcamStreamsForRestore = (

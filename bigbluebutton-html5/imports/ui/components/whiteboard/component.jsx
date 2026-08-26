@@ -2022,14 +2022,27 @@ const Whiteboard = React.memo((props) => {
           // Filter selectedShapeIds based on shape owner
           if (newNext.selectedShapeIds?.length > 0) {
             newNext.selectedShapeIds = newNext.selectedShapeIds.filter((shapeId) => {
-              const shapeOwner = editor.getShape(shapeId)?.meta?.createdBy;
-              return !shapeOwner || shapeOwner === currentUser?.userId;
+              const selectedShape = editor.getShape(shapeId);
+              // A remote annotation delete may land between pointer hit-testing
+              // and this page-state update. Never retain an id whose shape is no
+              // longer in the store; tldraw assumes selected ids are resolvable.
+              if (!selectedShape) return false;
+              const shapeOwner = selectedShape.meta?.createdBy;
+              return !shapeOwner || shapeOwner === currentUserRef.current?.userId;
             });
           }
 
-          if (!isEqual(prev.hoveredShapeId, newNext.hoveredShapeId)) {
-            const hoveredShapeOwner = editor.getShape(newNext.hoveredShapeId)?.meta?.createdBy;
-            if (hoveredShapeOwner !== currentUser?.userId || isBackgroundShapeId(newNext.hoveredShapeId)) {
+          if (!isEqual(prev.hoveredShapeId, newNext.hoveredShapeId)
+            && newNext.hoveredShapeId) {
+            const hoveredShape = editor.getShape(newNext.hoveredShapeId);
+            const hoveredShapeOwner = hoveredShape?.meta?.createdBy;
+            // setHoveredShape(null) is the normal pointer-leave path. Do not pass
+            // that null through editor.getShape: this tldraw version dereferences
+            // non-string inputs as shape objects. Also clear stale ids produced by
+            // a concurrent remote deletion before the next pointer event sees them.
+            if (!hoveredShape
+              || hoveredShapeOwner !== currentUserRef.current?.userId
+              || isBackgroundShapeId(newNext.hoveredShapeId)) {
               newNext.hoveredShapeId = null;
             }
           }

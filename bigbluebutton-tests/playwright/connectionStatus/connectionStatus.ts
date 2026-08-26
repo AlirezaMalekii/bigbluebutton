@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 
-import { ELEMENT_WAIT_TIME, ELEMENT_WAIT_EXTRA_LONG_TIME } from '../core/constants';
+import { ELEMENT_WAIT_EXTRA_LONG_TIME, ELEMENT_WAIT_TIME } from '../core/constants';
 import { elements as e } from '../core/elements';
 import { MultiUsers } from '../user/multiusers';
 import { checkNetworkStatus, openConnectionStatus } from './util';
@@ -9,6 +9,28 @@ export class ConnectionStatus extends MultiUsers {
   async connectionStatusModal() {
     await openConnectionStatus(this.modPage);
     await this.modPage.hasElement(e.connectionStatusModal, 'should display the connection status modal');
+  }
+
+  async speedTestCompletes() {
+    await openConnectionStatus(this.modPage);
+    await this.modPage.waitAndClick(e.speedTestTab);
+
+    const uploadRequest = this.modPage.page.waitForRequest(
+      (request) => request.method() === 'POST' && request.url().includes('/speedtest/upload'),
+      { timeout: ELEMENT_WAIT_EXTRA_LONG_TIME },
+    );
+    await this.modPage.waitAndClick(e.speedTestStart);
+    await uploadRequest;
+
+    await this.modPage.waitForSelector(e.speedTestPanelDone, ELEMENT_WAIT_EXTRA_LONG_TIME);
+    await expect(
+      this.modPage.page.locator(e.speedTestUploadMetric),
+      'should measure upload after the download phase finishes',
+    ).not.toContainText('—');
+    await expect(
+      this.modPage.page.locator(e.speedTestAnalysis),
+      'should display the meeting suitability analysis',
+    ).toBeVisible();
   }
 
   async usersConnectionStatus() {
@@ -31,7 +53,9 @@ export class ConnectionStatus extends MultiUsers {
 
     // Delay /rtt-check responses to simulate ~1500ms RTT ('danger' status).
     await this.modPage.page.route('**/rtt-check**', async (route) => {
-      await new Promise<void>((resolve) => { setTimeout(resolve, 1500); });
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 1500);
+      });
       await route.continue();
     });
 
@@ -41,7 +65,11 @@ export class ConnectionStatus extends MultiUsers {
         'should not display empty item element with connection issues',
         ELEMENT_WAIT_EXTRA_LONG_TIME,
       );
-      await this.modPage.hasElementCount(e.connectionStatusItemUser, 1, 'should display one user with connection issues');
+      await this.modPage.hasElementCount(
+        e.connectionStatusItemUser,
+        1,
+        'should display one user with connection issues',
+      );
     } finally {
       await this.modPage.page.unroute('**/rtt-check**');
     }

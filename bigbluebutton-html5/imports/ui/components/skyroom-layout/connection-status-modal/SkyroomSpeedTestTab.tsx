@@ -275,7 +275,7 @@ const SkyroomSpeedTestTab: React.FC = () => {
 
   return (
     <Styled.PanelScroll>
-      <Styled.SpeedTestRoot data-test="speedTestPanel">
+      <Styled.SpeedTestRoot data-test="speedTestPanel" data-phase={snapshot.phase}>
         <Styled.SpeedTestServer>
           <Styled.SpeedTestServerLabel>
             {intl.formatMessage(intlMessages.server)}
@@ -321,7 +321,7 @@ const SkyroomSpeedTestTab: React.FC = () => {
               {withUnit(formatMbps(snapshot.downloadMbps), intl.formatMessage(intlMessages.mbps))}
             </Styled.SpeedMetricValue>
           </Styled.SpeedMetricCard>
-          <Styled.SpeedMetricCard $tone="upload">
+          <Styled.SpeedMetricCard $tone="upload" data-test="speedTestUploadMetric">
             <Styled.SpeedMetricLabel>
               {intl.formatMessage(intlMessages.upload)}
             </Styled.SpeedMetricLabel>
@@ -338,7 +338,11 @@ const SkyroomSpeedTestTab: React.FC = () => {
               {fitChip('fitPresent', advice.presenting)}
               {fitChip('fitShare', advice.screenshare)}
             </Styled.SpeedFitRow>
-            <Styled.SpeedTestVerdict data-level={advice.tone} aria-live="polite">
+            <Styled.SpeedTestVerdict
+              data-level={advice.tone}
+              data-test="speedTestAnalysis"
+              aria-live="polite"
+            >
               {intl.formatMessage(intlMessages[REPORT_MESSAGE[advice.summaryKey]])}
             </Styled.SpeedTestVerdict>
           </>

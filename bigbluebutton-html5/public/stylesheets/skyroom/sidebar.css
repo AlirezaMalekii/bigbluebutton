@@ -163,8 +163,9 @@
   padding-inline-start: var(--space-1) !important;
 }
 
-/* Toolbar buttons (exclude user-management dropdown trigger) */
-#layout[data-skyroom-column="true"] [data-test="userListContainer"] button:not([data-test="manageUsers"]),
+/* Toolbar buttons — exclude panel options triggers (manageUsers / per-user ⋯)
+   so they keep the shared PanelOptionsButton / panel-chrome hover chrome. */
+#layout[data-skyroom-column="true"] [data-test="userListContainer"] button:not([data-test="manageUsers"]):not([data-test="userActionsMenuTrigger"]):not(.skyroom-user-actions-trigger),
 #layout[data-skyroom-column="true"] [data-test="waitingUsersBtn"] {
   background: rgba(255, 255, 255, 0.055) !important;
   color: var(--skyroom-panel-text-muted) !important;
@@ -174,7 +175,7 @@
   box-shadow: none !important;
 }
 
-#layout[data-skyroom-column="true"] [data-test="userListContainer"] button:not([data-test="manageUsers"]):hover,
+#layout[data-skyroom-column="true"] [data-test="userListContainer"] button:not([data-test="manageUsers"]):not([data-test="userActionsMenuTrigger"]):not(.skyroom-user-actions-trigger):hover,
 #layout[data-skyroom-column="true"] [data-test="waitingUsersBtn"]:hover {
   border-color: var(--skyroom-panel-accent) !important;
   color: var(--skyroom-panel-accent) !important;
@@ -879,11 +880,12 @@
 #layout[data-skyroom-column="true"] [data-test="userActionsMenuTrigger"] i::before,
 #layout[data-skyroom-column="true"] .skyroom-user-actions-trigger i::before,
 #layout[data-skyroom-column="true"] .skyroom-user-actions-trigger [class^="icon-bbb-"]::before {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  display: block !important;
   line-height: 1 !important;
   margin: 0 !important;
+  padding: 0 !important;
+  text-align: center !important;
+  width: 1em !important;
 }
 
 /* ===================================================================
@@ -1414,18 +1416,18 @@
   width: 1em !important;
   height: 1em !important;
   line-height: 1 !important;
-  margin-right: 4px !important;
 }
 
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] .skyroom-user-actions-trigger i::before,
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] .skyroom-user-actions-trigger [class^="icon-bbb-"]::before,
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [data-test="userActionsMenuTrigger"] i::before,
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [data-test="userActionsMenuTrigger"] [class^="icon-bbb-"]::before {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  display: block !important;
   line-height: 1 !important;
-  margin-left: 6px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 1em !important;
+  text-align: center !important;
 }
 
 #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) [data-test="userListContent"] [data-test="moderatorAvatar"] i,
@@ -1894,17 +1896,16 @@
   width: 1em !important;
   height: 1em !important;
   line-height: 1 !important;
-  margin-right: 8px !important;
 }
 
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] .skyroom-user-actions-trigger i::before,
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] .skyroom-user-actions-trigger [class^="icon-bbb-"]::before,
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="userActionsMenuTrigger"] i::before,
 #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="userListContent"] [data-test="userActionsMenuTrigger"] [class^="icon-bbb-"]::before {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  display: block !important;
   line-height: 1 !important;
   margin: 0 !important;
-  margin-left: 15px !important;
+  padding: 0 !important;
+  width: 1em !important;
+  text-align: center !important;
 }

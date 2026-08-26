@@ -185,6 +185,8 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
   private playbackState: Record<string, VideoPlaybackState>;
 
+  private playbackSoftRecoveryAttempted: Set<string>;
+
   private videoTags: Record<string, HTMLVideoElement>;
 
   private localStreamsPendingWsRestore: Map<string, BBBVideoStream | null>;
@@ -215,6 +217,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     this.restartTimer = {};
     this.playbackTimeout = {};
     this.playbackState = {};
+    this.playbackSoftRecoveryAttempted = new Set();
     this.webRtcPeers = {};
     this.outboundIceQueues = {};
     this.videoTags = {};
@@ -510,6 +513,14 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       ));
   }
 
+  isPlaybackRecoveryEligible(stream: string) {
+    if (!this.isRemoteStreamEligibleForSubscription(stream)) return false;
+    if (!this.isViewportSubscriptionEnabled() || !this.hasViewportVisibilitySnapshot) return true;
+
+    const { focusedId } = this.props;
+    return this.visibleVideoStreams.has(stream) || focusedId === stream;
+  }
+
   getStreamsForMediaSubscription(streams: VideoItem[]) {
     if (!this.isViewportSubscriptionEnabled()) return streams;
     // Do not create a full-meeting burst while IntersectionObserver is taking
@@ -559,8 +570,13 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
         if (!this.visibleVideoStreams.has(stream)) becameVisible = true;
         this.visibleVideoStreams.add(stream);
         this.viewportRetainedStreams.add(stream);
-      } else if (this.visibleVideoStreams.delete(stream)) {
-        becameHidden = true;
+        if (this.playbackState[stream] && this.playbackState[stream] !== 'playing') {
+          this.setPlaybackRecoveryTimeout(stream, this.playbackState[stream]);
+        }
+      } else {
+        if (this.visibleVideoStreams.delete(stream)) becameHidden = true;
+        this.clearPlaybackTimeout(stream);
+        this.playbackSoftRecoveryAttempted.delete(stream);
       }
     });
 
@@ -859,23 +875,62 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     }
   }
 
+  static getPlaybackRecoveryJitter(stream: string) {
+    let hash = 0;
+    for (let index = 0; index < stream.length; index += 1) {
+      hash = ((hash * 31) + stream.charCodeAt(index)) % 2147483647;
+    }
+    return hash % 1500;
+  }
+
+  attemptSoftPlaybackRecovery(stream: string, peer: WebRtcPeer) {
+    if (this.playbackSoftRecoveryAttempted.has(stream)) return false;
+
+    const videoElement = this.videoTags[stream];
+    const remoteStream = peer?.getRemoteStream?.();
+    if (!videoElement || !remoteStream) return false;
+
+    this.playbackSoftRecoveryAttempted.add(stream);
+    logger.warn({
+      logCode: 'video_provider_playback_soft_recovery',
+      extraInfo: {
+        cameraId: stream,
+        connectionState: peer.peerConnection?.connectionState,
+        role: VideoService.getRole(false),
+      },
+    }, 'Camera has no decoded frame. Reattaching media before reconnecting viewer.');
+
+    VideoProvider.attach(peer, videoElement);
+    videoElement.play().catch((error) => {
+      if (error.name === 'NotAllowedError') {
+        const tagFailedEvent = new CustomEvent('videoPlayFailed', {
+          detail: { mediaElement: videoElement },
+        });
+        window.dispatchEvent(tagFailedEvent);
+      }
+    });
+    this.playbackState[stream] = 'waiting';
+    return true;
+  }
+
   setPlaybackRecoveryTimeout(stream: string, state: VideoPlaybackState) {
+    this.clearPlaybackTimeout(stream);
     const peer = this.webRtcPeers[stream];
     if (!peer || peer.isPublisher || !peer.started
-      || !this.isRemoteStreamEligibleForSubscription(stream)) return;
+      || !this.isPlaybackRecoveryEligible(stream)
+      || document.visibilityState === 'hidden') return;
 
     const {
       baseTimeout: CAMERA_VIEW_FAILED_WAIT_TIME = 30000,
     } = window.meetingClientSettings.public.kurento.cameraTimeouts || {};
-    const timeout = getPlaybackRecoveryDelay(state, CAMERA_VIEW_FAILED_WAIT_TIME);
+    const timeout = getPlaybackRecoveryDelay(state, CAMERA_VIEW_FAILED_WAIT_TIME)
+      + VideoProvider.getPlaybackRecoveryJitter(stream);
 
-    this.clearPlaybackTimeout(stream);
     this.playbackTimeout[stream] = setTimeout(() => {
       delete this.playbackTimeout[stream];
 
       if (!this.mounted || this.playbackState[stream] === 'playing') return;
-      if (document.visibilityState === 'hidden' || !document.hasFocus()) {
-        this.setPlaybackRecoveryTimeout(stream, 'waiting');
+      if (document.visibilityState === 'hidden') {
         return;
       }
 
@@ -885,7 +940,12 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
         (item) => item.type === VIDEO_TYPES.STREAM && item.stream === stream,
       );
       if (!currentPeer || currentPeer.isPublisher || !currentPeer.started || !stillExists
-        || !this.isRemoteStreamEligibleForSubscription(stream)) return;
+        || !this.isPlaybackRecoveryEligible(stream)) return;
+
+      if (this.attemptSoftPlaybackRecovery(stream, currentPeer)) {
+        this.setPlaybackRecoveryTimeout(stream, 'stalled');
+        return;
+      }
 
       logger.error({
         logCode: 'video_provider_playback_watchdog_timeout',
@@ -906,6 +966,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
     if (state === 'playing') {
       this.clearPlaybackTimeout(stream);
+      this.playbackSoftRecoveryAttempted.delete(stream);
       return;
     }
 
@@ -986,6 +1047,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     delete this.wsQueues[stream];
     this.clearPlaybackTimeout(stream);
     delete this.playbackState[stream];
+    this.playbackSoftRecoveryAttempted.delete(stream);
 
     return stopped;
   }
@@ -1034,6 +1096,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     this.clearRestartTimers(stream);
     this.clearPlaybackTimeout(stream);
     delete this.playbackState[stream];
+    this.playbackSoftRecoveryAttempted.delete(stream);
 
     return true;
   }
@@ -1569,6 +1632,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     delete this.videoTags[stream];
     this.clearPlaybackTimeout(stream);
     delete this.playbackState[stream];
+    this.playbackSoftRecoveryAttempted.delete(stream);
   }
 
   handlePlayStop(message: { cameraId: string; role: string }) {

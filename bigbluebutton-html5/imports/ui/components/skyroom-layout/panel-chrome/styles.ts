@@ -131,10 +131,16 @@ export const PanelOptionsButton = styled(Button)`
     justify-content: center;
     line-height: 1 !important;
     margin: 0 !important;
+    padding: 0 !important;
     width: 1em;
 
     &::before {
+      display: block;
       line-height: 1;
+      margin: 0 !important;
+      padding: 0;
+      text-align: center;
+      width: 1em;
     }
   }
 

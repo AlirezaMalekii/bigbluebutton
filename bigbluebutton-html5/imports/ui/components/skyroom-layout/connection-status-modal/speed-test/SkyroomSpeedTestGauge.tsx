@@ -152,7 +152,9 @@ const SkyroomSpeedTestGauge: React.FC<SkyroomSpeedTestGaugeProps> = ({
             {displayUnit.toUpperCase()}
           </text>
         </Styled.GaugeSvg>
-        <Styled.GaugePhase aria-live="polite">{phaseLabel}</Styled.GaugePhase>
+        <Styled.GaugePhase aria-live="polite" data-test="speedTestPhase">
+          {phaseLabel}
+        </Styled.GaugePhase>
       </Styled.GaugeStage>
     </Styled.GaugeWrap>
   );

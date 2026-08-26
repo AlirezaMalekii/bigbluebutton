@@ -603,16 +603,49 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
   }, []);
 
   const handleVideoPlaybackStateChange = useCallback((stream: string, state: VideoPlaybackState) => {
-    if (state === 'playing' || document.visibilityState === 'hidden') return;
+    // Mount/page-resume already calls createVideoTag, which attaches the current
+    // track. Reattaching again for the normal `waiting` state doubles work for
+    // every camera. Reserve this recovery for an actual visible stall/end.
+    if ((state !== 'stalled' && state !== 'ended')
+      || !webcamsVisible
+      || document.visibilityState === 'hidden') return;
 
     const videoElement = bridgeRefs.current.videoTags[stream];
     if (!videoElement) return;
+
+    const viewportTarget = videoElement.closest<HTMLElement>('[data-skyroom-viewport-stream]');
+    if (viewportTarget) {
+      const styles = window.getComputedStyle(viewportTarget);
+      const targetRect = viewportTarget.getBoundingClientRect();
+      const root = viewportTarget.closest<HTMLElement>([
+        '#skyroom-stage-webcam-dock',
+        '#skyroom-sidebar-webcam-dock',
+        '#skyroom-center-webcam-dock',
+        '#cameraDock',
+      ].join(', '));
+      const rootRect = root?.getBoundingClientRect() || {
+        top: 0,
+        right: window.innerWidth,
+        bottom: window.innerHeight,
+        left: 0,
+      };
+      const visible = viewportTarget.offsetParent !== null
+        && styles.visibility !== 'hidden'
+        && styles.display !== 'none'
+        && targetRect.width > 0
+        && targetRect.height > 0
+        && targetRect.bottom >= rootRect.top
+        && targetRect.top <= rootRect.bottom
+        && targetRect.right >= rootRect.left
+        && targetRect.left <= rootRect.right;
+      if (!visible) return;
+    }
 
     if (!VideoService.isLocalStream(stream)) {
       bridgeRefs.current.remoteTracks[stream]?.detach(videoElement);
     }
     attachLiveKitStream(stream);
-  }, []);
+  }, [webcamsVisible]);
 
   const startVirtualBackgroundByDrop = useCallback(async (
     stream: string,
