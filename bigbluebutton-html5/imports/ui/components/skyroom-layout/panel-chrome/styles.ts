@@ -101,6 +101,7 @@ export const PanelOptionsButton = styled(Button)`
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 10px !important;
   box-shadow: none !important;
+  box-sizing: border-box !important;
   color: var(--skyroom-panel-text-muted, #aab6c7) !important;
   display: inline-flex !important;
   flex: 0 0 auto;
@@ -111,6 +112,7 @@ export const PanelOptionsButton = styled(Button)`
   min-height: 28px !important;
   min-width: 28px !important;
   padding: 0 !important;
+  position: relative !important;
   width: 28px !important;
   transition:
     background-color 130ms ease,
@@ -120,27 +122,35 @@ export const PanelOptionsButton = styled(Button)`
     transform 120ms ease;
 
   span {
-    padding: 0;
+    /* hideLabel span — keep collapsed so the icon stays centered */
+    clip: rect(0, 0, 0, 0) !important;
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    position: absolute !important;
+    width: 0 !important;
   }
 
   i {
     align-items: center;
-    display: inline-flex !important;
+    display: flex !important;
     font-size: calc(${fontSizeBase} * 0.88) !important;
-    height: 1em;
+    height: auto;
+    inset: 0;
     justify-content: center;
-    line-height: 1 !important;
+    line-height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
-    width: 1em;
+    position: absolute;
+    width: auto;
 
     &::before {
       display: block;
       line-height: 1;
       margin: 0 !important;
       padding: 0;
-      text-align: center;
-      width: 1em;
     }
   }
 

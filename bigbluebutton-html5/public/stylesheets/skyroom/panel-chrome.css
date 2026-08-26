@@ -97,6 +97,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 10px !important;
   box-shadow: none !important;
+  box-sizing: border-box !important;
   color: var(--skyroom-panel-text-muted) !important;
   display: inline-flex !important;
   flex: 0 0 auto !important;
@@ -106,7 +107,46 @@
   min-height: 28px !important;
   min-width: 28px !important;
   padding: 0 !important;
+  position: relative !important;
   width: 28px !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="moveNotesToWhiteboard"] > span,
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="exportNotesAsPDF"] > span,
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="pinNotes"] > span {
+  clip: rect(0, 0, 0, 0) !important;
+  display: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  position: absolute !important;
+  width: 0 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="moveNotesToWhiteboard"] i,
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="exportNotesAsPDF"] i,
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="pinNotes"] i {
+  align-items: center !important;
+  display: flex !important;
+  font-size: 0.9rem !important;
+  height: auto !important;
+  inset: 0 !important;
+  justify-content: center !important;
+  line-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: absolute !important;
+  width: auto !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="moveNotesToWhiteboard"] i::before,
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="exportNotesAsPDF"] i::before,
+#layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="pinNotes"] i::before {
+  display: block !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="sharedNotesHeaderOptions"] [data-test="moveNotesToWhiteboard"]:hover,
@@ -121,7 +161,7 @@
   color: #ffffff !important;
 }
 
-/* --- Settings / options trigger --- */
+/* --- Settings / options trigger (icon-only BBB Button) --- */
 #layout[data-skyroom-column="true"] [data-test="manageUsers"],
 #layout[data-skyroom-column="true"] [data-test="chatOptionsMenu"],
 #layout[data-skyroom-column="true"] [data-test="notesOptionsMenu"] {
@@ -140,6 +180,7 @@
   min-height: 28px !important;
   min-width: 28px !important;
   padding: 0 !important;
+  position: relative !important;
   width: 28px !important;
   transition:
     background-color 130ms ease,
@@ -149,19 +190,25 @@
     transform 120ms ease !important;
 }
 
-/* Keep icon glyph optically centered inside the fixed 28×28 hit target */
+/*
+  BBB hideLabel still renders a <span> label. Never expand it — that pushes
+  the icon into a corner and makes the hover ring look uneven.
+*/
 #layout[data-skyroom-column="true"] [data-test="manageUsers"] > span,
 #layout[data-skyroom-column="true"] [data-test="chatOptionsMenu"] > span,
 #layout[data-skyroom-column="true"] [data-test="notesOptionsMenu"] > span {
-  align-items: center !important;
-  display: inline-flex !important;
-  height: 100% !important;
-  justify-content: center !important;
+  border: 0 !important;
+  clip: rect(0, 0, 0, 0) !important;
+  display: none !important;
+  height: 0 !important;
   margin: 0 !important;
+  overflow: hidden !important;
   padding: 0 !important;
-  width: 100% !important;
+  position: absolute !important;
+  width: 0 !important;
 }
 
+/* Pin glyph dead-center inside the fixed hit target */
 #layout[data-skyroom-column="true"] [data-test="manageUsers"] i,
 #layout[data-skyroom-column="true"] [data-test="manageUsers"] svg,
 #layout[data-skyroom-column="true"] [data-test="chatOptionsMenu"] i,
@@ -170,15 +217,17 @@
 #layout[data-skyroom-column="true"] [data-test="notesOptionsMenu"] svg {
   align-items: center !important;
   color: currentColor !important;
-  display: inline-flex !important;
+  display: flex !important;
   fill: currentColor !important;
   font-size: 0.9rem !important;
-  height: 1em !important;
+  height: auto !important;
+  inset: 0 !important;
   justify-content: center !important;
-  line-height: 1 !important;
+  line-height: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
-  width: 1em !important;
+  position: absolute !important;
+  width: auto !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="manageUsers"] i::before,
@@ -188,8 +237,6 @@
   line-height: 1 !important;
   margin: 0 !important;
   padding: 0 !important;
-  text-align: center !important;
-  width: 1em !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="manageUsers"]:hover,

@@ -1,7 +1,6 @@
 import React from 'react';
 import { FormattedTime, defineMessages, IntlShape } from 'react-intl';
 import UserAvatar from '/imports/ui/components/user-avatar/component';
-import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import Icon from '/imports/ui/components/connection-status/icon/component';
 import Auth from '/imports/ui/services/auth';
 import connectionStatus from '/imports/ui/core/graphql/singletons/connectionStatus';
@@ -115,14 +114,6 @@ const intlMessages = defineMessages({
     id: 'app.connection-status.qualitySection',
     description: 'Network quality section',
   },
-  clientNotResponding: {
-    id: 'app.connection-status.clientNotRespondingWarning',
-    description: 'Text for Client not responding warning',
-  },
-  lastTimeActive: {
-    id: 'app.connection-status.lastTimeActive',
-    description: 'Last time the client confirmed its connection was alive',
-  },
   statusExcellent: {
     id: 'app.connection-status.statusExcellent',
     description: 'Excellent connection quality',
@@ -189,6 +180,17 @@ const isConnectionStatusEmpty = (data: ConnectionEntry[] | null | undefined) => 
   if (!data || !Array.isArray(data) || data.length === 0) return true;
   return false;
 };
+
+/*
+  BBB flags clientNotResponding after ~12s without a heartbeat
+  (stats.interval + rtt.critical). Mobile browsers often delay that
+  ping while the user is still in the meeting, which produced a
+  false "participant is not responding" log. Only surface entries
+  that have a real unstable quality event.
+*/
+const hasUnstableStatus = (conn: ConnectionEntry) => Boolean(
+  conn.lastUnstableStatus && conn.lastUnstableStatus !== 'normal',
+);
 
 const LEVEL_LABELS: Record<string, keyof typeof intlMessages> = {
   normal: 'statusExcellent',
@@ -259,13 +261,17 @@ const SkyroomConnectionStatusModal: React.FC<SkyroomConnectionStatusModalProps> 
   const getConnectionsForTab = (): ConnectionEntry[] => {
     if (selectedTab === 0 || selectedTab === speedTestTabIndex) return [];
     if (selectedTab === myLogsTabIndex) {
-      let connections = connectionData.filter((c) => c.user.userId === Auth.userID);
+      let connections = connectionData
+        .filter((c) => c.user.userId === Auth.userID)
+        .filter(hasUnstableStatus);
       if (isConnectionStatusEmpty(connections)) {
-        connections = connectionStatus.getUserNetworkHistory() as unknown as ConnectionEntry[];
+        connections = (
+          connectionStatus.getUserNetworkHistory() as unknown as ConnectionEntry[]
+        ).filter(hasUnstableStatus);
       }
       return connections;
     }
-    return connectionData;
+    return connectionData.filter(hasUnstableStatus);
   };
 
   const renderLogEntries = () => {
@@ -279,9 +285,6 @@ const SkyroomConnectionStatusModal: React.FC<SkyroomConnectionStatusModalProps> 
       <Styled.LogList>
         {connections.map((conn) => {
           const dateTime = new Date(conn.lastUnstableStatusAt);
-          const lastActiveConnection = conn.connectionAliveAt
-            ? new Date(conn.connectionAliveAt)
-            : new Date();
           const level = conn.lastUnstableStatus || 'normal';
           const statusLabel = LEVEL_LABELS[level]
             ? intl.formatMessage(intlMessages[LEVEL_LABELS[level]])
@@ -314,38 +317,19 @@ const SkyroomConnectionStatusModal: React.FC<SkyroomConnectionStatusModalProps> 
                       : null}
                   </Styled.LogName>
 
-                  {!conn.clientNotResponding ? (
-                    <Styled.StatusBadge $level={level}>
-                      <Styled.BadgeIcon>
-                        <Icon level={level} grayscale={false} />
-                      </Styled.BadgeIcon>
-                      {statusLabel}
-                    </Styled.StatusBadge>
-                  ) : null}
+                  <Styled.StatusBadge $level={level}>
+                    <Styled.BadgeIcon>
+                      <Icon level={level} grayscale={false} />
+                    </Styled.BadgeIcon>
+                    {statusLabel}
+                  </Styled.StatusBadge>
                 </Styled.LogNameRow>
-
-                {conn.clientNotResponding && conn.user.currentlyInMeeting ? (
-                  <Styled.LogWarning>
-                    {intl.formatMessage(intlMessages.clientNotResponding)}
-                  </Styled.LogWarning>
-                ) : null}
               </Styled.LogMain>
 
               <Styled.LogTime>
-                {!conn.clientNotResponding ? (
-                  <Styled.LogTimeValue dateTime={dateTime.toISOString()}>
-                    <FormattedTime value={dateTime} />
-                  </Styled.LogTimeValue>
-                ) : (
-                  <TooltipContainer
-                    placement="top"
-                    title={intl.formatMessage(intlMessages.lastTimeActive)}
-                  >
-                    <Styled.LogTimeActive dateTime={lastActiveConnection.toISOString()}>
-                      <FormattedTime value={lastActiveConnection} />
-                    </Styled.LogTimeActive>
-                  </TooltipContainer>
-                )}
+                <Styled.LogTimeValue dateTime={dateTime.toISOString()}>
+                  <FormattedTime value={dateTime} />
+                </Styled.LogTimeValue>
               </Styled.LogTime>
             </Styled.LogCard>
           );

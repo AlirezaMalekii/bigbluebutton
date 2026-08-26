@@ -1977,9 +1977,9 @@
     justify-content: center !important;
   }
 
-  /* Connection status (Skyroom custom modal) — let metric grid stack */
+  /* Connection status (Skyroom custom modal) — keep 2-col metrics so stats fit without scroll */
   html[data-skyroom="true"] [data-test="connectionStatusModal"] [class*="MetricGrid"] {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
   /* ---- Mic / audio settings modal: stacked layout, fits without scrolling ---- */
@@ -3309,16 +3309,42 @@
     background: rgba(16, 24, 36, 0.88);
     color: #eef4fb;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+    box-sizing: border-box;
     cursor: pointer;
+    line-height: 1;
     -webkit-tap-highlight-color: transparent;
   }
 
   #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn i,
-  #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn svg {
+  #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn svg,
+  #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn [class^="icon-bbb-"] {
+    align-items: center;
+    color: #eef4fb;
+    display: flex;
     font-size: 0.78rem;
+    height: auto;
+    inset: 0;
+    justify-content: center;
+    line-height: 0;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    width: auto;
+  }
+
+  #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn i::before,
+  #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn [class^="icon-bbb-"]::before {
+    display: block;
+    line-height: 1;
+    margin: 0;
+    padding: 0;
+  }
+
+  #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn svg {
     width: 13px;
     height: 13px;
-    color: #eef4fb;
+    inset: auto;
+    position: static;
   }
 
   #layout[data-skyroom-mobile="true"] .skyroom-mobile-zone-fs-btn:active {

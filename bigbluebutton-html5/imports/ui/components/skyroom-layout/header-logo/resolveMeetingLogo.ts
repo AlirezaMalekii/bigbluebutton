@@ -45,16 +45,32 @@ const isInstallerDefaultLogo = (url: string) => (
 );
 
 /**
+ * Logo click URL priority:
+ * 1. Per-meeting create param `loginURL` (SafeMeet panel `logo_link` / web service)
+ * 2. Server install/update branding `logoLinkUrl` (bbb-html5.yml / repo theme)
+ * 3. Packaged brand homepage for the active themeId
+ */
+export const resolveLogoClickHref = (loginUrl = ''): string => {
+  const meetingLoginUrl = loginUrl.trim();
+  if (meetingLoginUrl) return meetingLoginUrl;
+
+  const installLogoLinkUrl = getConfiguredLogoLinkUrl();
+  if (installLogoLinkUrl) return installLogoLinkUrl;
+
+  return getBrandingThemeId() === 'roomeet'
+    ? SKYROOM_ROOMEET_URL
+    : SKYROOM_PLATFORM_URL;
+};
+
+/**
  * One meeting logo:
- * 1. `--logo-url` / meeting customLogoUrl replaces the platform mark
+ * 1. create `logo` / meeting customLogoUrl replaces the platform mark
  *    unless it is the installer default `/safemeet/logo.svg` (often the
  *    light lockup, unreadable on the dark meeting UI)
  * 2. else `--theme-id roomeet` uses the packaged RooMeet dark lockup
- * 3. else the packaged SafeMeet lockup
+ * 3. else the packaged SafeMeet lockup (install default)
  *
- * Click target: per-meeting loginURL (panel logo_link) wins; server-wide
- * logoLinkUrl applies only to the default platform logo; custom logo with
- * no meeting link stays non-clickable.
+ * Click target follows {@link resolveLogoClickHref}.
  */
 export const resolveSkyroomMeetingLogo = ({
   customLogoUrl = '',
@@ -66,12 +82,8 @@ export const resolveSkyroomMeetingLogo = ({
 }: ResolveMeetingLogoArgs): MeetingLogoResolution => {
   const rawCustom = (darkMode && customDarkLogoUrl ? customDarkLogoUrl : customLogoUrl).trim();
   const customSrc = (rawCustom && !isInstallerDefaultLogo(rawCustom)) ? rawCustom : '';
-  const meetingLoginUrl = loginUrl.trim();
-  const globalLogoLinkUrl = getConfiguredLogoLinkUrl();
   const isRoomeet = getBrandingThemeId() === 'roomeet';
-  const packagedHref = isRoomeet ? SKYROOM_ROOMEET_URL : SKYROOM_PLATFORM_URL;
-  const href = meetingLoginUrl
-    || (!customSrc ? (globalLogoLinkUrl || packagedHref) : '');
+  const href = resolveLogoClickHref(loginUrl);
 
   if (customSrc) {
     return {

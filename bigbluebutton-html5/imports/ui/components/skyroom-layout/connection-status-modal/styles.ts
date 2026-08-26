@@ -10,11 +10,15 @@ const Shell = styled.div`
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  padding: 14px 16px;
+  padding: 10px 14px 12px;
   box-sizing: border-box;
 
   @media (min-width: 561px) {
     padding: 8px 16px 12px;
+  }
+
+  @media (max-width: 560px) {
+    padding: 8px 12px 10px;
   }
 `;
 
@@ -37,6 +41,12 @@ const TopBar = styled.div`
     padding-bottom: 8px;
     padding-inline-end: 0;
     padding-inline-start: 0;
+  }
+
+  @media (max-width: 560px) {
+    gap: 8px;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
   }
 `;
 
@@ -97,6 +107,11 @@ const ModalDescription = styled.p`
   @media (min-width: 561px) {
     display: none;
   }
+
+  @media (max-width: 560px) {
+    font-size: 0.6875rem;
+    line-height: 1.25;
+  }
 `;
 
 const Body = styled.div`
@@ -107,6 +122,7 @@ const Body = styled.div`
 
   @media (max-width: 560px) {
     flex-direction: column;
+    gap: 8px;
   }
 `;
 
@@ -176,7 +192,7 @@ const NavButton = styled.button<{ $active?: boolean }>`
     flex: 1 1 0;
     min-width: 0;
     justify-content: center;
-    padding: 10px 8px;
+    padding: 7px 6px;
 
     span {
       display: none;
@@ -230,6 +246,13 @@ const Hero = styled.div`
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(218, 230, 245, 0.08);
 
+  @media (max-width: 560px) {
+    gap: 8px;
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+  }
+
   &[data-tone="excellent"] {
     border-color: rgba(46, 204, 113, 0.22);
     background: linear-gradient(135deg, rgba(46, 204, 113, 0.08), rgba(0, 0, 0, 0.18));
@@ -262,6 +285,12 @@ const HeroRing = styled.div`
   background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.08), transparent 60%);
   border: 2px solid rgba(32, 199, 187, 0.25);
   box-shadow: 0 0 0 4px rgba(32, 199, 187, 0.06);
+
+  @media (max-width: 560px) {
+    width: 44px;
+    height: 44px;
+    box-shadow: 0 0 0 3px rgba(32, 199, 187, 0.06);
+  }
 `;
 
 const HeroIconWrap = styled.div`
@@ -270,6 +299,11 @@ const HeroIconWrap = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+
+  @media (max-width: 560px) {
+    width: 24px;
+    height: 24px;
+  }
 `;
 
 const HeroBody = styled.div`
@@ -304,6 +338,11 @@ const HeroTitle = styled.div`
   color: var(--skyroom-text-primary, #eef4fb);
   line-height: 1.3;
   margin-bottom: 2px;
+
+  @media (max-width: 560px) {
+    font-size: 0.875rem;
+    margin-bottom: 0;
+  }
 `;
 
 const HeroSubtitle = styled.div`
@@ -335,6 +374,10 @@ const SectionLabel = styled.div`
   text-transform: uppercase;
   color: var(--skyroom-text-secondary, #7b8798);
   margin: 0 0 6px;
+
+  @media (max-width: 560px) {
+    margin: 0 0 4px;
+  }
 `;
 
 const MetricGrid = styled.div`
@@ -343,8 +386,9 @@ const MetricGrid = styled.div`
   gap: 6px;
   margin-bottom: 10px;
 
-  @media (max-width: 420px) {
-    grid-template-columns: 1fr;
+  @media (max-width: 560px) {
+    gap: 5px;
+    margin-bottom: 8px;
   }
 `;
 
@@ -357,6 +401,13 @@ const MetricCard = styled.div`
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(218, 230, 245, 0.07);
   transition: border-color 140ms ease, background 140ms ease;
+
+  @media (max-width: 560px) {
+    align-items: center;
+    gap: 6px;
+    padding: 6px 7px;
+    border-radius: 10px;
+  }
 
   &:hover {
     background: rgba(255, 255, 255, 0.05);
@@ -399,6 +450,17 @@ const MetricIcon = styled.div<{ $variant?: 'upload' | 'download' | 'neutral' }>`
     width: 14px;
     height: 14px;
   }
+
+  @media (max-width: 560px) {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+
+    svg {
+      width: 12px;
+      height: 12px;
+    }
+  }
 `;
 
 const MetricContent = styled.div`
@@ -412,6 +474,12 @@ const MetricLabel = styled.div`
   color: var(--skyroom-text-secondary, #8d9aad);
   line-height: 1.35;
   margin-bottom: 2px;
+
+  @media (max-width: 560px) {
+    font-size: 0.625rem;
+    line-height: 1.25;
+    margin-bottom: 0;
+  }
 `;
 
 const MetricValue = styled.div`
@@ -421,6 +489,10 @@ const MetricValue = styled.div`
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
   line-height: 1.2;
+
+  @media (max-width: 560px) {
+    font-size: 0.8125rem;
+  }
 `;
 
 const CopyButton = styled.button<{ $copied?: boolean }>`
@@ -432,6 +504,7 @@ const CopyButton = styled.button<{ $copied?: boolean }>`
   min-height: 36px;
   margin-top: auto;
   padding: 0 14px;
+  flex-shrink: 0;
   border-radius: 10px;
   border: 1px solid rgba(32, 199, 187, 0.35);
   background: rgba(32, 199, 187, 0.1);
@@ -462,6 +535,12 @@ const CopyButton = styled.button<{ $copied?: boolean }>`
     background: rgba(46, 204, 113, 0.12);
     color: #2ecc71;
   `}
+
+  @media (max-width: 560px) {
+    min-height: 32px;
+    margin-top: 4px;
+    font-size: 0.75rem;
+  }
 `;
 
 const LogList = styled.ul`
@@ -623,6 +702,11 @@ const SpeedTestRoot = styled.div`
   gap: 12px;
   min-height: 100%;
   padding-bottom: 4px;
+
+  @media (max-width: 560px) {
+    gap: 6px;
+    padding-bottom: 0;
+  }
 `;
 
 const SpeedTestServer = styled.div`
@@ -634,6 +718,11 @@ const SpeedTestServer = styled.div`
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.18);
   border: 1px solid rgba(218, 230, 245, 0.08);
+
+  @media (max-width: 560px) {
+    padding: 6px 8px;
+    border-radius: 10px;
+  }
 `;
 
 const SpeedTestServerLabel = styled.span`
@@ -661,6 +750,10 @@ const GaugeWrap = styled.div`
   justify-content: center;
   padding: 4px 0 0;
   gap: 0;
+
+  @media (max-width: 560px) {
+    padding: 0;
+  }
 `;
 
 const GaugeStage = styled.div`
@@ -672,7 +765,7 @@ const GaugeStage = styled.div`
   overflow: hidden;
 
   @media (max-width: 560px) {
-    width: min(100%, 252px);
+    width: min(100%, 176px);
   }
 `;
 
@@ -744,12 +837,23 @@ const GaugePhase = styled.p`
   line-height: 1.35;
   color: var(--skyroom-text-secondary, #8d9aad);
   text-align: center;
+
+  @media (max-width: 560px) {
+    min-height: 1.4em;
+    margin: 0;
+    padding: 0 6px;
+    font-size: 0.75rem;
+  }
 `;
 
 const SpeedMetricGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+
+  @media (max-width: 560px) {
+    gap: 5px;
+  }
 `;
 
 const SpeedMetricCard = styled.div<{ $tone?: 'download' | 'upload' | 'neutral' }>`
@@ -760,6 +864,11 @@ const SpeedMetricCard = styled.div<{ $tone?: 'download' | 'upload' | 'neutral' }
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.035);
   border: 1px solid rgba(218, 230, 245, 0.08);
+
+  @media (max-width: 560px) {
+    padding: 6px 8px;
+    border-radius: 10px;
+  }
 
   ${({ $tone }) => $tone === 'download' && `
     border-color: rgba(32, 199, 187, 0.22);
@@ -785,6 +894,10 @@ const SpeedMetricValue = styled.span`
   direction: ltr;
   unicode-bidi: isolate;
   font-variant-numeric: tabular-nums;
+
+  @media (max-width: 560px) {
+    font-size: 0.9375rem;
+  }
 `;
 
 const SpeedMetricUnit = styled.span`
@@ -872,6 +985,15 @@ const SpeedTestWarning = styled.p`
   font-size: 0.75rem;
   line-height: 1.45;
   color: var(--skyroom-text-muted, #8b95a5);
+
+  @media (max-width: 560px) {
+    font-size: 0.6875rem;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 `;
 
 const SpeedTestError = styled.p`
@@ -889,6 +1011,11 @@ const SpeedTestActions = styled.div`
   display: flex;
   gap: 8px;
   margin-top: auto;
+  flex-shrink: 0;
+
+  @media (max-width: 560px) {
+    margin-top: 2px;
+  }
 `;
 
 const SpeedTestButton = styled.button<{ $secondary?: boolean }>`
@@ -896,6 +1023,7 @@ const SpeedTestButton = styled.button<{ $secondary?: boolean }>`
   min-height: 40px;
   padding: 8px 14px;
   border-radius: 12px;
+  flex-shrink: 0;
   border: 1px solid rgba(32, 199, 187, 0.35);
   background: linear-gradient(135deg, rgba(32, 199, 187, 0.88), rgba(13, 136, 126, 0.92));
   color: #fff;
@@ -929,6 +1057,12 @@ const SpeedTestButton = styled.button<{ $secondary?: boolean }>`
       background: rgba(255, 255, 255, 0.1);
     }
   `}
+
+  @media (max-width: 560px) {
+    min-height: 36px;
+    padding: 6px 12px;
+    font-size: 0.8125rem;
+  }
 `;
 
 export default {

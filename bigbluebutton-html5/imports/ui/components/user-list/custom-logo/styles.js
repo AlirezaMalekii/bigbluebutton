@@ -13,7 +13,8 @@ const Separator = styled.div`
 const Branding = styled.div`
   padding: ${smPaddingX};
   width: 100%;
-  & > img {
+  & > img,
+  & > a > img {
     max-height: 3rem;
     max-width: 100%;
     display: block;
@@ -22,7 +23,16 @@ const Branding = styled.div`
   }
 `;
 
+const BrandingLink = styled.a`
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+`;
+
 export default {
   Separator,
   Branding,
+  BrandingLink,
 };

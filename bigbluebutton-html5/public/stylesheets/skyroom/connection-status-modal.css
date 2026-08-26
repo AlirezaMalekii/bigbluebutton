@@ -35,38 +35,56 @@
   max-height: min(92vh, 720px) !important;
 }
 
-/* Close control */
-[data-test="connectionStatusModal"] > div > div > header:first-of-type {
+/* BBB ModalSimple wraps content in a FocusTrap child — keep it filling the shell. */
+[data-test="connectionStatusModal"] > div {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+/*
+  Close control — overlay only. Nested `> div > div > header` never matched
+  the actual ModalSimple DOM, so the empty BBB title row ate ~80px on mobile.
+*/
+[data-test="connectionStatusModal"] header:first-of-type {
   position: absolute !important;
-  top: 12px !important;
-  right: 12px !important;
+  top: 8px !important;
+  inset-inline-end: 8px !important;
+  inset-inline-start: auto !important;
   z-index: 8 !important;
   padding: 0 !important;
   margin: 0 !important;
   border: none !important;
   background: transparent !important;
-  height: auto !important;
+  width: auto !important;
+  height: 0 !important;
   min-height: 0 !important;
   overflow: visible !important;
+  display: block !important;
+  pointer-events: none !important;
 }
 
-[dir="rtl"] [data-test="connectionStatusModal"] > div > div > header:first-of-type {
-  right: auto !important;
-  left: 12px !important;
+[dir="rtl"] [data-test="connectionStatusModal"] header:first-of-type {
+  inset-inline-end: auto !important;
+  inset-inline-start: 8px !important;
 }
 
-[data-test="connectionStatusModal"] > div > div > header:first-of-type h2,
-[data-test="connectionStatusModal"] > div > div > header:first-of-type [class*="Title"] {
+[data-test="connectionStatusModal"] header:first-of-type h2,
+[data-test="connectionStatusModal"] header:first-of-type [class*="Title"] {
   display: none !important;
   height: 0 !important;
   min-height: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
   overflow: hidden !important;
+  line-height: 0 !important;
 }
 
-[data-test="connectionStatusModal"] > div > div > header:first-of-type button,
-[data-test="connectionStatusModal"] > div > div > header:first-of-type [data-test="closeModal"] {
+[data-test="connectionStatusModal"] header:first-of-type button,
+[data-test="connectionStatusModal"] header:first-of-type [data-test="closeModal"] {
+  pointer-events: auto !important;
   width: 34px !important;
   height: 34px !important;
   min-width: 34px !important;
@@ -78,14 +96,14 @@
   transition: background 140ms ease, border-color 140ms ease, color 140ms ease !important;
 }
 
-[data-test="connectionStatusModal"] > div > div > header:first-of-type button:hover,
-[data-test="connectionStatusModal"] > div > div > header:first-of-type [data-test="closeModal"]:hover {
+[data-test="connectionStatusModal"] header:first-of-type button:hover,
+[data-test="connectionStatusModal"] header:first-of-type [data-test="closeModal"]:hover {
   background: rgba(255, 255, 255, 0.12) !important;
   border-color: rgba(218, 230, 245, 0.22) !important;
   color: #fff !important;
 }
 
-[data-test="connectionStatusModal"] > div > div > [class*="Content"] {
+[data-test="connectionStatusModal"] [data-test="modalSimpleBody"] {
   padding: 0 !important;
   overflow: hidden !important;
   flex: 1 !important;
@@ -157,24 +175,22 @@
 }
 
 @media (min-width: 561px) {
-  [data-test="connectionStatusModal"] > div > div > header:first-of-type {
+  [data-test="connectionStatusModal"] header:first-of-type {
     top: 8px !important;
-    width: 28px !important;
-    height: 28px !important;
   }
 
-  [dir="rtl"] [data-test="connectionStatusModal"] > div > div > header:first-of-type {
-    right: auto !important;
-    left: 12px !important;
+  [dir="rtl"] [data-test="connectionStatusModal"] header:first-of-type {
+    inset-inline-end: auto !important;
+    inset-inline-start: 12px !important;
   }
 
-  [dir="ltr"] [data-test="connectionStatusModal"] > div > div > header:first-of-type {
-    right: 12px !important;
-    left: auto !important;
+  [dir="ltr"] [data-test="connectionStatusModal"] header:first-of-type {
+    inset-inline-end: 12px !important;
+    inset-inline-start: auto !important;
   }
 
-  [data-test="connectionStatusModal"] > div > div > header:first-of-type button,
-  [data-test="connectionStatusModal"] > div > div > header:first-of-type [data-test="closeModal"] {
+  [data-test="connectionStatusModal"] header:first-of-type button,
+  [data-test="connectionStatusModal"] header:first-of-type [data-test="closeModal"] {
     width: 32px !important;
     height: 32px !important;
     min-width: 32px !important;
@@ -200,16 +216,44 @@
 @media (max-width: 560px) {
   [data-test="connectionStatusModal"].ReactModal__Content {
     width: min(100vw - 16px, 100%) !important;
-    max-height: min(92vh, 680px) !important;
+    max-height: min(88dvh, 92vh) !important;
     border-radius: 16px !important;
   }
 
   [data-test="connectionStatusModal"]:has(.skyroom-conn-modal[data-speedtest-tab="true"]) {
-    max-height: min(94vh, 760px) !important;
+    max-height: min(90dvh, 94vh) !important;
+  }
+
+  [data-test="connectionStatusModal"] header:first-of-type {
+    top: 6px !important;
+  }
+
+  [data-test="connectionStatusModal"] header:first-of-type button,
+  [data-test="connectionStatusModal"] header:first-of-type [data-test="closeModal"] {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
   }
 
   .skyroom-conn-modal {
-    padding: 16px !important;
+    padding: 8px 12px 10px !important;
+  }
+
+  .skyroom-conn-modal__topbar {
+    margin-bottom: 6px !important;
+    padding-bottom: 6px !important;
+    padding-inline-end: 2.5rem !important;
+  }
+
+  [dir="rtl"] .skyroom-conn-modal__topbar {
+    padding-inline-end: 0 !important;
+    padding-inline-start: 2.5rem !important;
+  }
+
+  [data-test="connectionStatusModal"] [class*="HeroRing"] .skyroom-conn-icon {
+    width: 24px !important;
+    height: 24px !important;
   }
 }
 
