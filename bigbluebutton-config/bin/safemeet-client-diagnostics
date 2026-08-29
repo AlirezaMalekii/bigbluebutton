@@ -1,0 +1,78 @@
+#!/bin/bash
+set -euo pipefail
+
+HTML5_CONFIG=/etc/bigbluebutton/bbb-html5.yml
+NGINX_AVAILABLE=/usr/share/bigbluebutton/nginx/safemeet-client-diagnostics.nginx.disabled
+NGINX_ENABLED=/etc/bigbluebutton/nginx/safemeet-client-diagnostics.nginx
+SERVICE=safemeet-diagnostics-collector.service
+COLLECTOR=/usr/lib/bigbluebutton/safemeet-diagnostics-collector.py
+
+restart_html5() {
+  mapfile -t services < <(
+    systemctl list-units --type=service --state=running --no-legend \
+      'bbb-html5-frontend@*.service' 'bbb-html5-backend@*.service' \
+      | awk '{print $1}'
+  )
+  if ((${#services[@]} > 0)); then
+    systemctl restart "${services[@]}"
+  fi
+}
+
+enable_diagnostics() {
+  install -d -m 0750 -o bigbluebutton -g bigbluebutton /var/log/bigbluebutton
+  touch /var/log/bigbluebutton/safemeet-client-diagnostics.jsonl
+  chown bigbluebutton:bigbluebutton /var/log/bigbluebutton/safemeet-client-diagnostics.jsonl
+  chmod 0640 /var/log/bigbluebutton/safemeet-client-diagnostics.jsonl
+  touch "$HTML5_CONFIG"
+  yq e -i '.public.safemeetDiagnostics.enabled = true' "$HTML5_CONFIG"
+  yq e -i '.public.safemeetDiagnostics.endpoint = "/safemeet-client-log"' "$HTML5_CONFIG"
+  ln -sfn "$NGINX_AVAILABLE" "$NGINX_ENABLED"
+  systemctl enable --now "$SERVICE"
+  nginx -t
+  systemctl reload nginx
+  restart_html5
+  echo "SafeMeet client diagnostics enabled. New meetings will send local diagnostics."
+}
+
+disable_diagnostics() {
+  touch "$HTML5_CONFIG"
+  yq e -i '.public.safemeetDiagnostics.enabled = false' "$HTML5_CONFIG"
+  rm -f "$NGINX_ENABLED"
+  nginx -t
+  systemctl reload nginx
+  systemctl disable --now "$SERVICE" >/dev/null 2>&1 || true
+  restart_html5
+  echo "SafeMeet client diagnostics disabled. Existing log retention is unchanged."
+}
+
+status_diagnostics() {
+  enabled=$(yq e '.public.safemeetDiagnostics.enabled // false' "$HTML5_CONFIG" 2>/dev/null || echo false)
+  echo "client_enabled=$enabled"
+  echo "nginx_route=$([ -L "$NGINX_ENABLED" ] && echo enabled || echo disabled)"
+  echo "collector=$(systemctl is-active "$SERVICE" 2>/dev/null || true)"
+  if [ -f /var/log/bigbluebutton/safemeet-client-diagnostics.jsonl ]; then
+    stat --printf='log_bytes=%s\n' /var/log/bigbluebutton/safemeet-client-diagnostics.jsonl
+  else
+    echo "log_bytes=0"
+  fi
+}
+
+case "${1:-}" in
+  enable)
+    enable_diagnostics
+    ;;
+  disable)
+    disable_diagnostics
+    ;;
+  status)
+    status_diagnostics
+    ;;
+  tail)
+    shift
+    exec python3 "$COLLECTOR" tail "$@"
+    ;;
+  *)
+    echo "Usage: $0 {enable|disable|status|tail [--meeting ID] [--user ID] [--session ID] [--log-code CODE] [--since ISO] [--lines N]}" >&2
+    exit 2
+    ;;
+esac

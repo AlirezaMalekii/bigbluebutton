@@ -11,7 +11,6 @@ import PresentationMenu from './presentation-menu/container';
 import DownloadPresentationButton from './download-presentation-button/component';
 import Styled from './styles';
 import FullscreenService from '/imports/ui/components/common/fullscreen-button/service';
-import PollingContainer from '/imports/ui/components/polling/container';
 import { ACTIONS, LAYOUT_TYPE } from '../layout/enums';
 import DEFAULT_VALUES from '../layout/defaultValues';
 import { colorContentBackground } from '/imports/ui/stylesheets/styled-components/palette';
@@ -1075,7 +1074,6 @@ class Presentation extends PureComponent {
                     restoreOnUpdate={restoreOnUpdate}
                   />
                 </LocatedErrorBoundary>
-                {isFullscreen && <PollingContainer />}
               </div>
               {!tldrawIsMounting && stageReady && (
                 <Styled.PresentationToolbar

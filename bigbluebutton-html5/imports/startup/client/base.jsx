@@ -7,6 +7,10 @@ import useSettings from '/imports/ui/services/settings/hooks/useSettings';
 import { SETTINGS } from '/imports/ui/services/settings/enums';
 import { layoutDispatch } from '/imports/ui/components/layout/context';
 import logger from '/imports/startup/client/logger';
+import {
+  startSafeMeetDiagnostics,
+  stopSafeMeetDiagnostics,
+} from '/imports/ui/services/safemeet-diagnostics';
 
 const HTML = document.getElementsByTagName('html')[0];
 
@@ -37,6 +41,7 @@ class Base extends Component {
     });
     Session.setItem('isFullscreen', false);
     Session.setItem('audioCaptions', CAPTIONS_ALWAYS_VISIBLE);
+    startSafeMeetDiagnostics();
 
     const isLegacyBundle = HTML.classList.contains('legacy');
     if (isLegacyBundle) {
@@ -60,6 +65,7 @@ class Base extends Component {
   }
 
   componentWillUnmount() {
+    stopSafeMeetDiagnostics();
     fullscreenChangedEvents.forEach((event) => {
       document.removeEventListener(event, this.handleFullscreenChange);
     });

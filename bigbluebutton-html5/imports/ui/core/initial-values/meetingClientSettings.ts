@@ -1127,6 +1127,14 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
         logTag: '',
       },
     },
+    safemeetDiagnostics: {
+      enabled: false,
+      endpoint: '/safemeet-client-log',
+      sampleIntervalMs: 15000,
+      longTaskThresholdMs: 200,
+      eventLoopStallThresholdMs: 1000,
+      ringBufferSize: 200,
+    },
     virtualBackgrounds: {
       enabled: true,
       enableVirtualBackgroundUpload: true,

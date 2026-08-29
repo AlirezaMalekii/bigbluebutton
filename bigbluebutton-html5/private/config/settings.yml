@@ -1350,6 +1350,15 @@ public:
       throttleInterval: 400
       flushOnClose: true
       logTag: ''
+  # SafeMeet local diagnostics are opt-in. The server collector is installed
+  # disabled and the helper command enables both this flag and the Nginx route.
+  safemeetDiagnostics:
+    enabled: false
+    endpoint: /safemeet-client-log
+    sampleIntervalMs: 15000
+    longTaskThresholdMs: 200
+    eventLoopStallThresholdMs: 1000
+    ringBufferSize: 200
   virtualBackgrounds:
     enabled: true
     enableVirtualBackgroundUpload: true

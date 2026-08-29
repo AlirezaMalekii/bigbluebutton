@@ -1,14 +1,6 @@
 import { gql } from '@apollo/client';
 import { User } from '/imports/ui/components/video-provider/types';
 
-export interface ViewerVideoStreamsSubscriptionResponse {
-  user_camera_aggregate: {
-    aggregate: {
-      count: number;
-    };
-  };
-}
-
 export interface AudioOnlyUsersResponse {
   user: Array<User & {
     voice: {
@@ -24,7 +16,11 @@ export interface AudioOnlyUsersResponse {
 
 export const VIDEO_STREAMS_SUBSCRIPTION = gql`
   subscription VideoStreams {
-    user_camera {
+    user_camera(
+      order_by: {
+        userId: asc,
+      }
+    ) {
       meetingId
       streamId
       user {
@@ -55,39 +51,14 @@ export const VIDEO_STREAMS_SUBSCRIPTION = gql`
   }
 `;
 
-export const OWN_VIDEO_STREAMS_QUERY = gql`
-  query OwnVideoStreams($userId: String!, $streamIdPrefix: String!) {
-    user_camera(
-      where: {
-        userId: { _eq: $userId },
-        streamId: { _like: $streamIdPrefix }
-      },
-    ) {
-      streamId
-    }
-  }
-`;
-
-export const VIEWERS_IN_WEBCAM_COUNT_SUBSCRIPTION = gql`
-  subscription ViewerVideoStreams {
-    user_camera_aggregate(where: {
-      user: { role: { _eq: "VIEWER" }, presenter: { _eq: false } }
-    }) {
-      aggregate {
-        count
-      }
-    }
-  }
-`;
-
+// Camera state is materialized on v_user, avoiding a per-row aggregate in the hot query.
 export const GRID_USERS_SUBSCRIPTION = gql`
-  subscription GridUsers($limit: Int!) {
+  subscription GridUsers($limit: Int!, $excludedModeratorValues: [Boolean!]) {
     user(
       where: {
-        cameras_aggregate: {
-          count: {
-            predicate: { _eq: 0 },
-          },
+        _not: {
+          isSharingCamera: { _eq: true },
+          isModerator: { _in: $excludedModeratorValues },
         },
       },
       limit: $limit,
@@ -121,24 +92,18 @@ export const GRID_USERS_SUBSCRIPTION = gql`
 `;
 
 export const AUDIO_ONLY_USERS_SUBSCRIPTION = gql`
-  subscription AudioOnlyUsers {
+  subscription AudioOnlyUsers($excludedModeratorValues: [Boolean!]) {
     user(
       where: {
-        cameras_aggregate: {
-          count: {
-            predicate: { _eq: 0 },
-          },
+        _not: {
+          isSharingCamera: { _eq: true },
+          isModerator: { _in: $excludedModeratorValues },
         },
-        voice: {
-          lastFloorTime: {
-            _gt: "0",
-          },
-        },
+        lastFloorTime: { _neq: "0" },
       },
       order_by: {
-        voice: {
-          lastFloorTime: desc,
-        },
+        lastFloorTime: desc,
+        userId: asc,
       },
     ) {
       meetingId
@@ -169,9 +134,7 @@ export const AUDIO_ONLY_USERS_SUBSCRIPTION = gql`
 `;
 
 export default {
-  OWN_VIDEO_STREAMS_QUERY,
   VIDEO_STREAMS_SUBSCRIPTION,
-  VIEWERS_IN_WEBCAM_COUNT_SUBSCRIPTION,
   GRID_USERS_SUBSCRIPTION,
   AUDIO_ONLY_USERS_SUBSCRIPTION,
 };

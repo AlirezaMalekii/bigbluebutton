@@ -1229,8 +1229,8 @@
     box-shadow:
       0 3px 12px rgba(0, 0, 0, 0.36),
       inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
-    backdrop-filter: blur(10px) !important;
-    -webkit-backdrop-filter: blur(10px) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tlui-toolbar__tools {
@@ -1977,9 +1977,9 @@
     justify-content: center !important;
   }
 
-  /* Connection status (Skyroom custom modal) — keep 2-col metrics so stats fit without scroll */
+  /* Connection status (Skyroom custom modal) — let metric grid stack */
   html[data-skyroom="true"] [data-test="connectionStatusModal"] [class*="MetricGrid"] {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-columns: 1fr !important;
   }
 
   /* ---- Mic / audio settings modal: stacked layout, fits without scrolling ---- */
@@ -4485,12 +4485,9 @@
   }
 }
 
-/* Phone-only fallback for browsers that rotate the tab anyway. */
-html[data-skyroom="true"][data-skyroom-phone-portrait-lock="true"],
-html[data-skyroom="true"][data-skyroom-phone-portrait-lock="true"] body {
-  overflow: hidden !important;
-}
-
+/* Phone-only fallback for browsers that rotate the tab anyway. Portrait must
+   remain untouched so keyboards and browser chrome cannot lock document scroll. */
+html[data-skyroom="true"][data-skyroom-phone-landscape="true"],
 body[data-skyroom-phone-portrait-lock="true"][data-skyroom-phone-landscape="true"] {
   overflow: hidden !important;
 }
@@ -4502,18 +4499,23 @@ body[data-skyroom-phone-portrait-lock="true"][data-skyroom-phone-landscape="true
 body[data-skyroom-phone-portrait-lock="true"][data-skyroom-phone-landscape="true"] #skyroom-phone-portrait-overlay {
   position: fixed;
   inset: 0;
+  width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh;
   z-index: 2147483647;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding:
+    max(24px, env(safe-area-inset-top, 0px))
+    max(24px, env(safe-area-inset-right, 0px))
+    max(24px, env(safe-area-inset-bottom, 0px))
+    max(24px, env(safe-area-inset-left, 0px));
+  box-sizing: border-box;
   text-align: center;
+  overflow-wrap: anywhere;
   background: #101824;
   color: #eef4fb;
   font-size: clamp(1rem, 3.8vw, 1.2rem);
   line-height: 1.8;
-}
-
-body[data-skyroom-phone-portrait-lock="true"]:not([data-skyroom-phone-landscape="true"]) #skyroom-phone-portrait-overlay {
-  display: none !important;
 }

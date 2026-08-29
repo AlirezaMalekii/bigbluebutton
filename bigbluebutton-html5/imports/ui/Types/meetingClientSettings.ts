@@ -28,6 +28,7 @@ export interface Public {
   user: User
   whiteboard: Whiteboard
   clientLog: ClientLog
+  safemeetDiagnostics: SafeMeetDiagnostics
   virtualBackgrounds: VirtualBackgrounds
 }
 export interface Locales {
@@ -835,9 +836,19 @@ export interface ClientLog {
   external: External
 }
 
+export interface SafeMeetDiagnostics {
+  enabled: boolean
+  endpoint: string
+  sampleIntervalMs: number
+  longTaskThresholdMs: number
+  eventLoopStallThresholdMs: number
+  ringBufferSize: number
+}
+
 export interface Console {
   enabled: boolean
   level: string
+  enableRuntimeErrorLogging?: boolean
 }
 
 export interface External {

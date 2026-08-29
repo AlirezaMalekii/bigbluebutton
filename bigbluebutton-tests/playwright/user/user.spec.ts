@@ -345,5 +345,13 @@ test.describe.parallel('User', { tag: '@ci' }, () => {
       await mobileDevices.initModPage(mobilePage, { testInfo });
       await mobileDevices.mobileTagName();
     });
+
+    test('Portrait guard ignores keyboard resize and only blocks landscape', async ({ browser }, testInfo) => {
+      const context = await browser.newContext({ ...iPhone11 });
+      const mobilePage = await context.newPage();
+      const mobileDevices = new MobileDevices(browser, context);
+      await mobileDevices.initModPage(mobilePage, { testInfo });
+      await mobileDevices.portraitOrientationGuard();
+    });
   });
 });

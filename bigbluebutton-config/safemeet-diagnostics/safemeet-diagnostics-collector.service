@@ -1,0 +1,19 @@
+[Unit]
+Description=SafeMeet local browser diagnostics collector
+After=network.target
+
+[Service]
+Type=simple
+User=bigbluebutton
+Group=bigbluebutton
+ExecStart=/usr/bin/python3 /usr/lib/bigbluebutton/safemeet-diagnostics-collector.py serve
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/log/bigbluebutton
+
+[Install]
+WantedBy=multi-user.target

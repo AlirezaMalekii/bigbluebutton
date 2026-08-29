@@ -57,7 +57,6 @@ const VISIBILITY_REFETCH_DELAY_MS = 500;
 const WhiteboardContainer = (props) => {
   const {
     zoomChanger,
-    fitToWidth,
     initialPageAnnotations,
     refetchInitialPageAnnotations,
     annotationStreamData = [],
@@ -78,6 +77,7 @@ const WhiteboardContainer = (props) => {
   const shapesQueueRef = useRef([]);
   const removedQueueRef = useRef([]);
   const flushScheduledRef = useRef(false);
+  const flushFrameRef = useRef(null);
 
   const currentPresentationPageRef = useRef();
 
@@ -88,6 +88,8 @@ const WhiteboardContainer = (props) => {
     shapesQueueRef.current = [];
     removedQueueRef.current = [];
     flushScheduledRef.current = false;
+
+    if (bufferedShapes.length === 0 && bufferedRemovals.size === 0) return;
 
     setShapes((prevShapes) => {
       const lookup = new Map();
@@ -112,11 +114,16 @@ const WhiteboardContainer = (props) => {
   const scheduleFlush = useCallback(() => {
     if (!flushScheduledRef.current) {
       flushScheduledRef.current = true;
-      requestAnimationFrame(() => {
+      flushFrameRef.current = requestAnimationFrame(() => {
+        flushFrameRef.current = null;
         flushUpdates();
       });
     }
   }, [flushUpdates]);
+
+  useEffect(() => () => {
+    if (flushFrameRef.current !== null) cancelAnimationFrame(flushFrameRef.current);
+  }, []);
 
   const { data: currentUser } = useCurrentUser((user) => ({
     presenter: user.presenter,
@@ -196,9 +203,10 @@ const WhiteboardContainer = (props) => {
     });
   };
 
-  const zoomSlide = debounce((
-    widthRatio, heightRatio, xOffset, yOffset, currPage = currentPresentationPage,
+  const zoomSlide = useMemo(() => debounce((
+    widthRatio, heightRatio, xOffset, yOffset, currPage = currentPresentationPageRef.current,
   ) => {
+    if (!currPage) return;
     const { pageId, num } = currPage;
 
     presentationSetZoom({
@@ -212,7 +220,7 @@ const WhiteboardContainer = (props) => {
         heightRatio,
       },
     });
-  }, 500);
+  }, 500), [presentationId, presentationSetZoom]);
 
   const submitAnnotations = async (newAnnotations) => {
     if (!curPageIdRef.current) return false;
@@ -258,7 +266,7 @@ const WhiteboardContainer = (props) => {
   const connectedStatus = useReactiveVar(connectionStatus.getConnectedStatusVar());
 
   useEffect(() => {
-    setTimeout(async () => {
+    const reconnectTimer = setTimeout(async () => {
       if (!currentPresentationPageRef.current?.pageId || !editor || !connectedStatus) return;
       try {
         const result = await refetchInitialPageAnnotations();
@@ -297,8 +305,10 @@ const WhiteboardContainer = (props) => {
 
         if (shapesToResync.length > 0) {
           const newAnnotations = shapesToResync.map((shape) => ({
-            annotationId: shape.id,
-            annotationInfo: JSON.stringify(shape),
+            id: shape.id,
+            annotationInfo: shape,
+            wbId: currentPresentationPageRef.current.pageId,
+            userId: Auth.userID,
           }));
           try {
             await submitAnnotations(newAnnotations);
@@ -321,6 +331,7 @@ const WhiteboardContainer = (props) => {
         );
       }
     }, RECONNECT_SYNC_DELAY_MS);
+    return () => clearTimeout(reconnectTimer);
   }, [
     connectedStatus,
     isMultiUserActive,
@@ -369,12 +380,13 @@ const WhiteboardContainer = (props) => {
   }, [annotationStreamData]);
 
   useEffect(() => {
-    if (!isTabVisible || !curPageIdRef.current || !connectedStatus) return;
+    if (!isTabVisible || !curPageIdRef.current || !connectedStatus) return undefined;
 
-    setTimeout(() => {
+    const visibilityTimer = setTimeout(() => {
       refetchInitialPageAnnotations();
     }, VISIBILITY_REFETCH_DELAY_MS);
-  }, [isTabVisible, connectedStatus, fitToWidth]);
+    return () => clearTimeout(visibilityTimer);
+  }, [isTabVisible, connectedStatus]);
 
   const processAnnotations = (data) => {
     let annotationsToBeRemoved = [];

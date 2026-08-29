@@ -28,6 +28,7 @@ import { SET_PRESENTATION_FIT_TO_WIDTH } from './app-graphql/mutations';
 import { CURRENT_PRESENTATION_PAGE_SUBSCRIPTION } from '../whiteboard/queries';
 import { RAISED_HAND_USERS } from '/imports/ui/core/graphql/queries/users';
 import { filterByMeetingId } from '/imports/ui/core/utils/subscriptionFilters';
+import { setSafeMeetDiagnosticsContext } from '/imports/ui/services/safemeet-diagnostics';
 
 const AppContainer = (props) => {
   const {
@@ -44,6 +45,7 @@ const AppContainer = (props) => {
     raiseHand: u.raiseHand,
     userId: u.userId,
     presenter: u.presenter,
+    role: u.role,
     voice: u.voice,
   }));
 
@@ -122,6 +124,22 @@ const AppContainer = (props) => {
   const hasScreenshare = currentMeeting?.componentsFlags?.hasScreenshare;
   const hasScreenshareAsContent = currentMeeting?.componentsFlags?.hasScreenshareAsContent;
   const hasCameraAsContent = currentMeeting?.componentsFlags?.hasCameraAsContent;
+
+  useEffect(() => {
+    setSafeMeetDiagnosticsContext({
+      role: currentUser?.role || 'unknown',
+      presenter: Boolean(currentUser?.presenter),
+      hasScreenshare: Boolean(hasScreenshare),
+      hasCameraAsContent: Boolean(hasCameraAsContent),
+      hasExternalVideo: Boolean(isSharingVideo),
+    });
+  }, [
+    currentUser?.role,
+    currentUser?.presenter,
+    hasScreenshare,
+    hasCameraAsContent,
+    isSharingVideo,
+  ]);
   const showScreenshareInMainArea = swapShowsScreenshare
     || Boolean(hasScreenshare && !hasScreenshareAsContent && !hasCameraAsContent);
 

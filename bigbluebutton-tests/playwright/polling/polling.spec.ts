@@ -1,6 +1,10 @@
+import { devices } from '@playwright/test';
+
 import { initializePages } from '../core/helpers';
 import { test } from '../core/setup/fixtures';
 import { Polling } from './poll';
+
+const iPhone11 = devices['iPhone 11'];
 
 test.describe.parallel('Polling', { tag: '@ci' }, () => {
   let polling: Polling;
@@ -90,5 +94,15 @@ test.describe.parallel('Polling', { tag: '@ci' }, () => {
     test('Hiding poll - white box', async () => {
       await polling.whiteBox();
     });
+  });
+});
+
+test.describe('Mobile polling stability', { tag: '@ci' }, () => {
+  test('webcam stays responsive and a double tap submits one vote', async ({ browser, page }, testInfo) => {
+    const mobileContext = await browser.newContext({ ...iPhone11 });
+    const polling = new Polling(browser, page.context());
+    await polling.initModPage(page, { testInfo });
+    await polling.initUserPage(mobileContext, { testInfo });
+    await polling.mobileWebcamPollSubmitsOnce();
   });
 });

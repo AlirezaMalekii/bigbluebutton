@@ -25,7 +25,14 @@ import {
   shouldAttachMediaStream,
   VideoPlaybackState,
 } from './video-playback-utils';
-import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import {
+  isSkyroomMobileViewport,
+  isSkyroomTheme,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
+import { recordSafeMeetDiagnostic } from '/imports/ui/services/safemeet-diagnostics';
+
+const SKYROOM_MOBILE_ACTIVE_VIDEO_LIMIT = 4;
+const SKYROOM_MOBILE_VIEWPORT_SETTLE_MS = 120;
 
 const intlClientErrors = defineMessages({
   permissionError: {
@@ -193,11 +200,19 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
   private visibleVideoStreams: Set<string>;
 
+  private viewportCandidateStreams: Set<string>;
+
   private viewportRetainedStreams: Set<string>;
 
   private hasViewportVisibilitySnapshot: boolean;
 
   private viewportReleaseTimeout: NodeJS.Timeout | null;
+
+  private mobileViewportApplyTimeout: NodeJS.Timeout | null;
+
+  private diagnosticsStatsTimer: NodeJS.Timeout | null;
+
+  private diagnosticsStatsInFlight: boolean;
 
   private requestedCameraProfiles: WeakMap<WebRtcPeer, string>;
 
@@ -223,9 +238,13 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     this.videoTags = {};
     this.localStreamsPendingWsRestore = new Map();
     this.visibleVideoStreams = new Set();
+    this.viewportCandidateStreams = new Set();
     this.viewportRetainedStreams = new Set();
     this.hasViewportVisibilitySnapshot = false;
     this.viewportReleaseTimeout = null;
+    this.mobileViewportApplyTimeout = null;
+    this.diagnosticsStatsTimer = null;
+    this.diagnosticsStatsInFlight = false;
     this.requestedCameraProfiles = new WeakMap();
 
     this.createVideoTag = this.createVideoTag.bind(this);
@@ -243,6 +262,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     this.startVirtualBackgroundByDrop = this.startVirtualBackgroundByDrop.bind(this);
     this.handleVideoPlaybackStateChange = this.handleVideoPlaybackStateChange.bind(this);
     this.handleVideoVisibilityChange = this.handleVideoVisibilityChange.bind(this);
+    this.applyViewportCandidates = this.applyViewportCandidates.bind(this);
     this.onBeforeUnload = this.onBeforeUnload.bind(this);
   }
 
@@ -251,6 +271,13 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     VideoService.updatePeerDictionaryReference(this.webRtcPeers);
     this.ws = this.openWs();
     window.addEventListener('beforeunload', this.onBeforeUnload);
+    const diagnostics = window.meetingClientSettings.public.safemeetDiagnostics;
+    if (diagnostics?.enabled) {
+      this.diagnosticsStatsTimer = setInterval(
+        () => this.collectDiagnosticsStats(),
+        Math.max(5000, Number(diagnostics.sampleIntervalMs) || 15000),
+      );
+    }
   }
 
   componentDidUpdate(prevProps: VideoProviderProps) {
@@ -260,12 +287,20 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       currentVideoPageIndex,
       isClientConnected,
       lockUser,
+      focusedId,
     } = this.props;
     const { socketOpen } = this.state;
 
     // Only debounce when page changes to avoid unnecessary debouncing
     const shouldDebounce = VideoService.isPaginationEnabled()
       && prevProps.currentVideoPageIndex !== currentVideoPageIndex;
+
+    if (isSkyroomMobileViewport()
+      && this.hasViewportVisibilitySnapshot
+      && (prevProps.focusedId !== focusedId || prevProps.streams !== streams)) {
+      // componentDidUpdate performs the single media reconciliation below.
+      this.applyViewportCandidates(false, false);
+    }
 
     if (isClientConnected && socketOpen) this.updateStreams(streams, shouldDebounce);
     if (!prevProps.isUserLocked && isUserLocked) {
@@ -295,6 +330,10 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     window.removeEventListener('beforeunload', this.onBeforeUnload);
     if (this.viewportReleaseTimeout) clearTimeout(this.viewportReleaseTimeout);
     this.viewportReleaseTimeout = null;
+    if (this.mobileViewportApplyTimeout) clearTimeout(this.mobileViewportApplyTimeout);
+    this.mobileViewportApplyTimeout = null;
+    if (this.diagnosticsStatsTimer) clearInterval(this.diagnosticsStatsTimer);
+    this.diagnosticsStatsTimer = null;
     exitVideo();
     Object.keys(this.webRtcPeers).forEach((stream) => {
       this.stopWebRTCPeer(stream, false);
@@ -505,6 +544,10 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
     const { focusedId } = this.props;
     const user = stream.type === VIDEO_TYPES.STREAM ? stream.user : null;
+    if (isSkyroomMobileViewport()) {
+      return this.visibleVideoStreams.has(stream.stream)
+        || this.viewportRetainedStreams.has(stream.stream);
+    }
     return this.visibleVideoStreams.has(stream.stream)
       || this.viewportRetainedStreams.has(stream.stream)
       || focusedId === stream.stream
@@ -518,6 +561,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     if (!this.isViewportSubscriptionEnabled() || !this.hasViewportVisibilitySnapshot) return true;
 
     const { focusedId } = this.props;
+    if (isSkyroomMobileViewport()) return this.visibleVideoStreams.has(stream);
     return this.visibleVideoStreams.has(stream) || focusedId === stream;
   }
 
@@ -556,28 +600,89 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       const { socketOpen } = this.state;
       const { streams } = this.props;
       if (this.mounted && socketOpen) this.updateStreams(streams);
-    }, Math.max(0, Number(releaseDelay) || 0));
+    }, isSkyroomMobileViewport()
+      ? Math.min(250, Math.max(0, Number(releaseDelay) || 0))
+      : Math.max(0, Number(releaseDelay) || 0));
   }
 
   handleVideoVisibilityChange(changes: { stream: string; visible: boolean }[]) {
     const firstSnapshot = !this.hasViewportVisibilitySnapshot;
-    let becameVisible = false;
-    let becameHidden = false;
     this.hasViewportVisibilitySnapshot = true;
 
     changes.forEach(({ stream, visible }) => {
       if (visible) {
-        if (!this.visibleVideoStreams.has(stream)) becameVisible = true;
-        this.visibleVideoStreams.add(stream);
-        this.viewportRetainedStreams.add(stream);
-        if (this.playbackState[stream] && this.playbackState[stream] !== 'playing') {
-          this.setPlaybackRecoveryTimeout(stream, this.playbackState[stream]);
-        }
+        this.viewportCandidateStreams.add(stream);
       } else {
-        if (this.visibleVideoStreams.delete(stream)) becameHidden = true;
-        this.clearPlaybackTimeout(stream);
-        this.playbackSoftRecoveryAttempted.delete(stream);
+        this.viewportCandidateStreams.delete(stream);
       }
+    });
+
+    if (isSkyroomMobileViewport()) {
+      if (this.mobileViewportApplyTimeout) clearTimeout(this.mobileViewportApplyTimeout);
+      this.mobileViewportApplyTimeout = setTimeout(() => {
+        this.mobileViewportApplyTimeout = null;
+        this.applyViewportCandidates(firstSnapshot);
+      }, SKYROOM_MOBILE_VIEWPORT_SETTLE_MS);
+      return;
+    }
+
+    this.applyViewportCandidates(firstSnapshot);
+  }
+
+  applyViewportCandidates(firstSnapshot = false, reconcileMedia = true) {
+    const previousVisible = this.visibleVideoStreams;
+    let nextVisible = new Set(this.viewportCandidateStreams);
+
+    if (isSkyroomMobileViewport()) {
+      const { streams, focusedId } = this.props;
+      const localCount = streams.filter((item) => (
+        item.type !== VIDEO_TYPES.GRID
+        && item.type !== VIDEO_TYPES.AUDIO_ONLY
+        && VideoService.isLocalStream(item.stream)
+      )).length;
+      const remoteBudget = Math.max(0, SKYROOM_MOBILE_ACTIVE_VIDEO_LIMIT - localCount);
+      const candidates = streams.filter((item) => (
+        item.type !== VIDEO_TYPES.GRID
+        && item.type !== VIDEO_TYPES.AUDIO_ONLY
+        && !VideoService.isLocalStream(item.stream)
+        && this.viewportCandidateStreams.has(item.stream)
+      ));
+      const ranked = candidates.slice().sort((left, right) => {
+        const score = (item) => {
+          if (item.stream === focusedId) return 4;
+          if (item.user?.pinned) return 3;
+          if (item.floor || item.user?.presenter) return 2;
+          return 1;
+        };
+        return score(right) - score(left);
+      });
+      nextVisible = new Set(ranked.slice(0, remoteBudget).map((item) => item.stream));
+      // Mobile uses a settled switch rather than a retained overlap so no
+      // scroll transition can leave more than four active decoders.
+      this.viewportRetainedStreams = new Set(nextVisible);
+    }
+
+    const becameVisible = Array.from(nextVisible).some((stream) => !previousVisible.has(stream));
+    const becameHidden = Array.from(previousVisible).some((stream) => !nextVisible.has(stream));
+    this.visibleVideoStreams = nextVisible;
+
+    nextVisible.forEach((stream) => {
+      this.viewportRetainedStreams.add(stream);
+      if (this.playbackState[stream] && this.playbackState[stream] !== 'playing') {
+        this.setPlaybackRecoveryTimeout(stream, this.playbackState[stream]);
+      }
+    });
+    previousVisible.forEach((stream) => {
+      if (nextVisible.has(stream)) return;
+      this.clearPlaybackTimeout(stream);
+      this.playbackSoftRecoveryAttempted.delete(stream);
+    });
+
+    recordSafeMeetDiagnostic('webcam_viewport_selection', {
+      candidates: this.viewportCandidateStreams.size,
+      activeRemote: nextVisible.size,
+      peerCount: Object.keys(this.webRtcPeers).length,
+      mobile: isSkyroomMobileViewport(),
     });
 
     if (!this.isViewportSubscriptionEnabled()) {
@@ -589,10 +694,46 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
     const { socketOpen } = this.state;
     const { streams } = this.props;
-    if ((firstSnapshot || becameVisible) && this.mounted && socketOpen) {
+    if (reconcileMedia && (firstSnapshot || becameVisible) && this.mounted && socketOpen) {
       this.updateStreams(streams);
     }
     if (becameHidden) this.scheduleViewportRelease();
+  }
+
+  async collectDiagnosticsStats() {
+    if (this.diagnosticsStatsInFlight) return;
+    this.diagnosticsStatsInFlight = true;
+    let inboundVideoReports = 0;
+    let framesDecoded = 0;
+    let framesDropped = 0;
+    let bytesReceived = 0;
+    try {
+      await Promise.all(Object.values(this.webRtcPeers).map(async (peer) => {
+        if (!peer?.peerConnection || peer.isPublisher) return;
+        const reports = await peer.peerConnection.getStats();
+        reports.forEach((report) => {
+          if (report.type !== 'inbound-rtp' || report.kind !== 'video') return;
+          inboundVideoReports += 1;
+          framesDecoded += Number(report.framesDecoded) || 0;
+          framesDropped += Number(report.framesDropped) || 0;
+          bytesReceived += Number(report.bytesReceived) || 0;
+        });
+      }));
+      recordSafeMeetDiagnostic('webcam_webrtc_sample', {
+        peerCount: Object.keys(this.webRtcPeers).length,
+        activeRemote: this.visibleVideoStreams.size,
+        inboundVideoReports,
+        framesDecoded,
+        framesDropped,
+        bytesReceived,
+      });
+    } catch (error) {
+      recordSafeMeetDiagnostic('webcam_webrtc_sample_failed', {
+        errorName: error instanceof Error ? error.name : 'UnknownError',
+      });
+    } finally {
+      this.diagnosticsStatsInFlight = false;
+    }
   }
 
   updateQualityThresholds(numberOfPublishers: number) {

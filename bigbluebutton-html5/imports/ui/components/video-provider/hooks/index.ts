@@ -5,7 +5,6 @@ import {
 } from 'react';
 import {
   useReactiveVar,
-  useLazyQuery,
   useMutation,
   useSubscription,
 } from '@apollo/client';
@@ -26,12 +25,9 @@ import {
   getVideoState,
 } from '/imports/ui/components/video-provider/state';
 import {
-  OWN_VIDEO_STREAMS_QUERY,
   GRID_USERS_SUBSCRIPTION,
-  VIEWERS_IN_WEBCAM_COUNT_SUBSCRIPTION,
   VIDEO_STREAMS_SUBSCRIPTION,
   AUDIO_ONLY_USERS_SUBSCRIPTION,
-  ViewerVideoStreamsSubscriptionResponse,
   AudioOnlyUsersResponse,
 } from '/imports/ui/components/video-provider/queries';
 import videoService from '/imports/ui/components/video-provider/service';
@@ -41,7 +37,6 @@ import {
   StreamItem,
   AudioOnlyStream,
   GridUsersResponse,
-  OwnVideoStreamsResponse,
   StreamSubscriptionData,
 } from '/imports/ui/components/video-provider/types';
 import { DesktopPageSizes, MobilePageSizes } from '/imports/ui/Types/meetingClientSettings';
@@ -55,7 +50,7 @@ import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
 import { layoutSelect, layoutSelectInput } from '/imports/ui/components/layout/context';
 import { Input, Layout } from '/imports/ui/components/layout/layoutTypes';
 import { LAYOUT_TYPE } from '/imports/ui/components/layout/enums';
-import createUseSubscription from '/imports/ui/core/hooks/createUseSubscription';
+import createUseSubscription, { useCreateUseSubscription } from '/imports/ui/core/hooks/createUseSubscription';
 import { filterByMeetingId } from '/imports/ui/core/utils/subscriptionFilters';
 import {
   MEDIA_GROUP_STREAMS_SUBSCRIPTION,
@@ -368,6 +363,7 @@ export const useGridUsers = (visibleStreamCount: number) => {
   const gridSize = useGridSize();
   const userCount = getCountData();
   const isGridEnabled = useStorageKey('isGridEnabled');
+  const isUserLocked = useIsUserLocked();
   const gridItems = useRef<GridItem[]>([]);
   const overflowCount = useRef<number>(0);
 
@@ -382,7 +378,10 @@ export const useGridUsers = (visibleStreamCount: number) => {
   } = useSubscription<GridUsersResponse>(
     GRID_USERS_SUBSCRIPTION,
     {
-      variables: { limit: Math.max(gridSize - visibleStreamCount, 0) },
+      variables: {
+        limit: Math.max(gridSize - visibleStreamCount, 0),
+        excludedModeratorValues: isUserLocked ? [true] : [true, false],
+      },
       skip: !isGridEnabled,
     },
   );
@@ -470,12 +469,6 @@ export const useGridSize = () => {
   return size;
 };
 
-const useAudioOnlySubscription = createUseSubscription(
-  AUDIO_ONLY_USERS_SUBSCRIPTION,
-  {},
-  true,
-);
-
 const useMediaGroupStreamsSubscription = createUseSubscription(
   MEDIA_GROUP_STREAMS_SUBSCRIPTION,
   {},
@@ -484,6 +477,12 @@ const useMediaGroupStreamsSubscription = createUseSubscription(
 
 export const useAudioOnlyUsers = (): AudioOnlyStream[] => {
   const { data: meeting } = useMeeting((m) => ({ meetingId: m.meetingId }));
+  const isUserLocked = useIsUserLocked();
+  const useAudioOnlySubscription = useCreateUseSubscription(
+    AUDIO_ONLY_USERS_SUBSCRIPTION,
+    { excludedModeratorValues: isUserLocked ? [true] : [true, false] },
+    true,
+  );
   const { data, loading, errors } = useAudioOnlySubscription();
   const layoutType = layoutSelect((i: Layout) => i.layoutType);
   const {
@@ -773,24 +772,18 @@ export const useHasVideoStream = () => {
   return !!connectingStream || streams.some((s) => videoService.isLocalStream(s.stream));
 };
 
-const useOwnVideoStreamsQuery = () => useLazyQuery<OwnVideoStreamsResponse>(
-  OWN_VIDEO_STREAMS_QUERY,
-  {
-    variables: {
-      userId: Auth.userID,
-      streamIdPrefix: `${videoService.getPrefix()}%`,
-    },
-    // UID and prefix are stable, so for now we need to bust the cache. If we don't,
-    // users will hit issues where cannot unshare their webcam or unsharing deals
-    // with unexpected behavior. E.g.: a camera was first ejected server side (empty
-    // stream list), or multiple cameras were shared (just the first one is cached).
-    fetchPolicy: 'no-cache',
-  },
-);
+const useOwnStreamsRef = () => {
+  const streams = useStreams();
+  const ownStreamsRef = useRef<string[]>([]);
+  ownStreamsRef.current = streams
+    .filter((stream) => videoService.isLocalStream(stream.stream))
+    .map((stream) => stream.stream);
+  return ownStreamsRef;
+};
 
 export const useExitVideo = (forceExit = false) => {
   const [cameraBroadcastStop] = useMutation(CAMERA_BROADCAST_STOP);
-  const [getOwnVideoStreams] = useOwnVideoStreamsQuery();
+  const ownStreamsRef = useOwnStreamsRef();
 
   const exitVideo = useCallback(async () => {
     const { isConnected } = getVideoState();
@@ -800,26 +793,19 @@ export const useExitVideo = (forceExit = false) => {
         return cameraBroadcastStop({ variables: { cameraId } });
       };
 
-      return getOwnVideoStreams().then(async ({ data }) => {
-        if (data) {
-          const streams = data.user_camera || [];
-          const results = streams.map((s) => sendUserUnshareWebcam(s.streamId));
-
-          return Promise.all(results).then(() => {
-            videoService.exitedVideo();
-            return true;
-          }).catch((e) => {
-            logger.warn({
-              logCode: 'exit_video_error',
-              extraInfo: {
-                errorMessage: e.message,
-                errorStack: e.stack,
-              },
-            }, `Failed to exit video: ${e.message}`);
-            return false;
-          });
-        }
+      const results = ownStreamsRef.current.map((streamId) => sendUserUnshareWebcam(streamId));
+      return Promise.all(results).then(() => {
+        videoService.exitedVideo();
         return true;
+      }).catch((e) => {
+        logger.warn({
+          logCode: 'exit_video_error',
+          extraInfo: {
+            errorMessage: e.message,
+            errorStack: e.stack,
+          },
+        }, `Failed to exit video: ${e.message}`);
+        return false;
       });
     }
     return true;
@@ -829,10 +815,11 @@ export const useExitVideo = (forceExit = false) => {
 };
 
 export const useViewersInWebcamCount = (): number => {
-  const { data } = useDeduplicatedSubscription<ViewerVideoStreamsSubscriptionResponse>(
-    VIEWERS_IN_WEBCAM_COUNT_SUBSCRIPTION,
-  );
-  return data?.user_camera_aggregate?.aggregate?.count || 0;
+  const streams = useStreams();
+  const viewerRole = videoService.getRoleViewer();
+  return streams.filter(
+    (stream) => stream.user?.role === viewerRole && stream.user?.presenter === false,
+  ).length;
 };
 
 export const useLockUser = () => {
@@ -847,14 +834,13 @@ export const useLockUser = () => {
 
 export const useStopVideo = () => {
   const [cameraBroadcastStop] = useMutation(CAMERA_BROADCAST_STOP);
-  const [getOwnVideoStreams] = useOwnVideoStreamsQuery();
+  const ownStreamsRef = useOwnStreamsRef();
 
   return useCallback(async (cameraId?: string) => {
-    const { data } = await getOwnVideoStreams();
-    const streams = data?.user_camera ?? [];
+    const streams = ownStreamsRef.current;
     const connectingStream = getConnectingStream();
-    const hasTargetStream = streams.some((s) => s.streamId === cameraId);
-    const hasOtherStream = streams.some((s) => s.streamId !== cameraId);
+    const hasTargetStream = streams.some((streamId) => streamId === cameraId);
+    const hasOtherStream = streams.some((streamId) => streamId !== cameraId);
     // On a camera switch the previous stream is stopped while the new device is
     // already connecting. Only drop the pending stream when it is the target,
     // otherwise the replacement camera would never be published.

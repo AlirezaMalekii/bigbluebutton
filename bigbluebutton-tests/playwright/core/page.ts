@@ -48,6 +48,7 @@ interface JoinMicrophoneOptions {
 
 interface ShareWebcamOptions {
   shouldConfirmSharing?: boolean;
+  shouldWaitForRemoteVideoConnections?: boolean;
   videoPreviewTimeout?: number;
 }
 
@@ -226,7 +227,11 @@ export class Page {
   }
 
   async shareWebcam(options: ShareWebcamOptions = {}): Promise<void> {
-    const { shouldConfirmSharing = true, videoPreviewTimeout = ELEMENT_WAIT_TIME } = options;
+    const {
+      shouldConfirmSharing = true,
+      shouldWaitForRemoteVideoConnections = true,
+      videoPreviewTimeout = ELEMENT_WAIT_TIME,
+    } = options;
     const { webcamSharingEnabled } = this.settings || (await generateSettingsData(this.page)) || {};
 
     test.fail(!webcamSharingEnabled, 'Webcam sharing is disabled');
@@ -235,7 +240,7 @@ export class Page {
       await this.wasRemoved(e.joinVideo, 'should not display the join video button');
       return;
     }
-    await this.waitAndClick(e.joinVideo);
+    await this.waitAndClick(e.joinVideo, videoPreviewTimeout);
     if (shouldConfirmSharing) {
       await this.page.bringToFront();
       await this.hasElement(
@@ -243,15 +248,20 @@ export class Page {
         'should display the video preview when sharing webcam ',
         videoPreviewTimeout,
       );
-      await this.waitAndClick(e.startSharingWebcam);
+      await this.waitAndClick(e.startSharingWebcam, videoPreviewTimeout);
     }
-    await this.waitForSelector(e.webcamMirroredVideoContainer, VIDEO_LOADING_WAIT_TIME);
+    await this.page
+      .locator(`${e.webcamMirroredVideoContainer}:visible`)
+      .first()
+      .waitFor({ state: 'visible', timeout: VIDEO_LOADING_WAIT_TIME });
     await this.waitForSelector(e.leaveVideo, VIDEO_LOADING_WAIT_TIME);
-    await this.wasRemoved(
-      e.webcamConnecting,
-      'should stop showing the webcam sharing element after full connection',
-      VIDEO_LOADING_WAIT_TIME,
-    );
+    if (shouldWaitForRemoteVideoConnections) {
+      await this.wasRemoved(
+        e.webcamConnecting,
+        'should stop showing the webcam sharing element after full connection',
+        VIDEO_LOADING_WAIT_TIME,
+      );
+    }
   }
 
   getVisibleLocator(selector: string): Locator {

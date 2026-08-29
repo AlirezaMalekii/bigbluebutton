@@ -8,6 +8,34 @@ import * as util from './util';
 const newInputText = 'new option';
 
 export class Polling extends MultiUsers {
+  async mobileWebcamPollSubmitsOnce() {
+    await this.userPage.shareWebcam();
+    await this.userPage.hasElement(e.webcamMirroredVideoContainer, 'mobile webcam should remain visible');
+
+    await this.modPage.waitAndClick(e.actions);
+    await this.modPage.waitAndClick(e.polling);
+    await this.modPage.waitAndClick(e.pollLetterAlternatives);
+    await this.modPage.hasElementCount(e.pollOptionItem, 4, 'poll should expose four answer options');
+    await this.modPage.waitAndClick(e.startPoll);
+    await this.userPage.hasElement(e.pollingContainer, 'mobile poll should render over the active webcam');
+    await expect(this.userPage.page.locator(e.pollingContainer)).toHaveCount(1);
+
+    const answer = this.userPage.page.locator(e.pollAnswerOptionBtn).first();
+    const startedAt = Date.now();
+    await answer.evaluate((button: HTMLButtonElement) => {
+      button.click();
+      button.click();
+    });
+    await expect(answer).toBeDisabled({ timeout: 200 });
+    expect(Date.now() - startedAt, 'poll should react to touch/click within 200ms').toBeLessThanOrEqual(200);
+    await this.modPage.waitAndClick('button[data-test="skyroom-poll-summary"]');
+    await this.modPage.hasElementCount(
+      e.userVoteLiveResult,
+      1,
+      'double tap must register exactly one participant response',
+    );
+  }
+
   async createPoll() {
     await util.startPoll(this.modPage);
     await this.modPage.hasElement(e.pollMenuButton, 'should display the poll menu button after starting the poll');

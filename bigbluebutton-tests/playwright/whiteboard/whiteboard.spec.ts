@@ -7,6 +7,7 @@ import { ChangeStyles } from './changeStyles';
 import { DrawShape } from './drawShape';
 import { ShapeOptions } from './shapeOptions';
 import { ShapeTools } from './shapeTools';
+import { SlideChangeWhileEditing } from './slideChangeWhileEditing';
 import { TextShape } from './textShape';
 import { WhiteboardResize } from './whiteboardResize';
 
@@ -163,6 +164,13 @@ test.describe.parallel('Whiteboard tools', { tag: '@ci' }, () => {
     await textShape.initModPage(page, { testInfo });
     await textShape.initUserPage(context, { testInfo });
     await textShape.realTimeTextTyping();
+  });
+
+  test('No crash on slide change while a viewer is editing', async ({ browser, context, page }, testInfo) => {
+    const slideChange = new SlideChangeWhileEditing(browser, context);
+    await slideChange.initModPage(page, { testInfo });
+    await slideChange.initUserPage(context, { testInfo });
+    await slideChange.doesNotCrashOnSlideChange();
   });
 
   test.describe.parallel('Shape Options', () => {

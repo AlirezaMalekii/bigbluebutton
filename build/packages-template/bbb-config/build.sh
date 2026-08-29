@@ -35,6 +35,19 @@ mkdir -p staging/usr/bin
 cp bin/bbb-conf bin/bbb-record staging/usr/bin
 chmod +x staging/usr/bin/bbb-conf
 
+# SafeMeet local diagnostics are installed disabled. The helper enables the
+# collector and Nginx route explicitly when debugging is required.
+mkdir -p staging/usr/local/sbin staging/usr/lib/bigbluebutton staging/etc/logrotate.d
+cp bin/safemeet-client-diagnostics staging/usr/local/sbin/
+cp bin/safemeet-diagnostics-collector.py staging/usr/lib/bigbluebutton/
+chmod 0755 staging/usr/local/sbin/safemeet-client-diagnostics
+chmod 0755 staging/usr/lib/bigbluebutton/safemeet-diagnostics-collector.py
+cp safemeet-diagnostics/safemeet-diagnostics-collector.service staging/usr/lib/systemd/system/
+cp safemeet-diagnostics/safemeet-client-diagnostics.nginx \
+  staging/usr/share/bigbluebutton/nginx/safemeet-client-diagnostics.nginx.disabled
+cp safemeet-diagnostics/safemeet-client-diagnostics.logrotate \
+  staging/etc/logrotate.d/safemeet-client-diagnostics
+
 mkdir -p staging/etc/bigbluebutton/bbb-conf
 mkdir -p staging/usr/lib/bbb-conf
 cp bin/apply-lib.sh staging/usr/lib/bbb-conf

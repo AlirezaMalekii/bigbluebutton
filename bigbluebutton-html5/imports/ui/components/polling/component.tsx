@@ -3,6 +3,7 @@ import React, {
 } from 'react';
 import ReactDOM from 'react-dom';
 import { useMutation } from '@apollo/client';
+import FocusTrap from 'focus-trap-react';
 import { defineMessages, useIntl } from 'react-intl';
 import Checkbox from '/imports/ui/components/common/checkbox/component';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
@@ -21,6 +22,10 @@ import { useIsPollingEnabled } from '../../services/features';
 import logger from '/imports/startup/client/logger';
 import connectionStatus from '../../core/graphql/singletons/connectionStatus';
 import useMeeting from '../../core/hooks/useMeeting';
+import {
+  flushSafeMeetDiagnostics,
+  recordSafeMeetDiagnostic,
+} from '../../services/safemeet-diagnostics';
 import {
   dismissPollParticipation,
   isPollParticipationDismissed,
@@ -84,6 +89,7 @@ interface PollingGraphqlProps {
   pollTypes: Record<string, string>;
   isDefaultPoll: (pollType: string) => boolean;
   playAlert: () => void;
+  submitting: boolean;
   poll: {
     quiz: boolean;
     pollId: string;
@@ -109,6 +115,7 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
     pollTypes,
     isDefaultPoll,
     playAlert,
+    submitting,
   } = props;
 
   const [typedAns, setTypedAns] = useState('');
@@ -120,6 +127,11 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
 
   useEffect(() => {
     playAlert();
+    recordSafeMeetDiagnostic('poll_modal_rendered', {
+      pollId: poll.pollId,
+      optionCount: poll.options.length,
+      multipleResponses: poll.multipleResponses,
+    });
     if (pollingContainer.current) {
       pollingContainer.current.focus();
     }
@@ -140,6 +152,7 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
   const dismissed = isPollParticipationDismissed(poll.pollId);
 
   const handleDismiss = () => {
+    recordSafeMeetDiagnostic('poll_modal_dismissed', { pollId: poll.pollId });
     dismissPollParticipation(poll.pollId);
   };
 
@@ -217,6 +230,7 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
                       label={label}
                       key={option.optionDesc}
                       onClick={() => handleVote(poll.pollId, [option.optionId])}
+                      disabled={submitting}
                       aria-labelledby={`pollAnswerLabel${option.optionDesc}`}
                       aria-describedby={`pollAnswerDesc${option.optionDesc}`}
                       data-test="pollAnswerOption"
@@ -263,7 +277,7 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
             />
             <Styled.SubmitVoteButton
               data-test="submitAnswer"
-              disabled={typedAns.length === 0}
+              disabled={typedAns.length === 0 || submitting}
               color="primary"
               size="sm"
               label={intl.formatMessage(intlMessages.submitLabel)}
@@ -340,7 +354,7 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
         </Styled.MultipleResponseAnswersTable>
         <div>
           <Styled.SubmitVoteButton
-            disabled={checkedAnswers.length === 0}
+            disabled={checkedAnswers.length === 0 || submitting}
             color="primary"
             size="sm"
             label={intl.formatMessage(intlMessages.submitLabel)}
@@ -358,45 +372,56 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
   }
 
   return ReactDOM.createPortal(
-    <Styled.Overlay data-test="pollingOverlay">
-      <Styled.PollingContainer
-        autoWidth={poll.stackOptions}
-        data-test="pollingContainer"
-        role="dialog"
-        aria-modal="true"
-        aria-label={intl.formatMessage(
-          poll.quiz ? intlMessages.quizTitleLabel : intlMessages.pollQuestionTitle,
-        )}
-        ref={pollingContainer}
-        tabIndex={-1}
-      >
-        <Styled.CloseButton
-          type="button"
-          data-test="dismissPoll"
-          aria-label={intl.formatMessage(intlMessages.dismissLabel)}
-          onClick={handleDismiss}
+    <FocusTrap
+      focusTrapOptions={{
+        initialFocus: () => pollingContainer.current as HTMLElement,
+        fallbackFocus: () => pollingContainer.current as HTMLElement,
+        escapeDeactivates: false,
+        clickOutsideDeactivates: false,
+        returnFocusOnDeactivate: true,
+      }}
+    >
+      <Styled.Overlay data-test="pollingOverlay">
+        <Styled.PollingContainer
+          autoWidth={poll.stackOptions}
+          data-test="pollingContainer"
+          role="dialog"
+          aria-modal="true"
+          aria-busy={submitting}
+          aria-label={intl.formatMessage(
+            poll.quiz ? intlMessages.quizTitleLabel : intlMessages.pollQuestionTitle,
+          )}
+          ref={pollingContainer}
+          tabIndex={-1}
         >
-          ×
-        </Styled.CloseButton>
-        {poll.questionText.length > 0 && (
-          <Styled.QHeader>
-            <Styled.QTitle>
-              {
-                poll.quiz
-                  ? intl.formatMessage(intlMessages.quizTitleLabel)
-                  : intl.formatMessage(intlMessages.pollQuestionTitle)
-              }
-            </Styled.QTitle>
-            <Styled.QText data-test="pollQuestion">
-              {poll.questionText}
-            </Styled.QText>
-          </Styled.QHeader>
-        )}
-        {poll.multipleResponses
-          ? renderCheckboxAnswers()
-          : renderButtonAnswers()}
-      </Styled.PollingContainer>
-    </Styled.Overlay>,
+          <Styled.CloseButton
+            type="button"
+            data-test="dismissPoll"
+            aria-label={intl.formatMessage(intlMessages.dismissLabel)}
+            onClick={handleDismiss}
+          >
+            ×
+          </Styled.CloseButton>
+          {poll.questionText.length > 0 && (
+            <Styled.QHeader>
+              <Styled.QTitle>
+                {
+                  poll.quiz
+                    ? intl.formatMessage(intlMessages.quizTitleLabel)
+                    : intl.formatMessage(intlMessages.pollQuestionTitle)
+                }
+              </Styled.QTitle>
+              <Styled.QText data-test="pollQuestion">
+                {poll.questionText}
+              </Styled.QText>
+            </Styled.QHeader>
+          )}
+          {poll.multipleResponses
+            ? renderCheckboxAnswers()
+            : renderButtonAnswers()}
+        </Styled.PollingContainer>
+      </Styled.Overlay>
+    </FocusTrap>,
     document.getElementById('polling-container') || document.body,
   );
 };
@@ -423,6 +448,9 @@ const PollingGraphqlContainer: React.FC = () => {
   );
   const [pollSubmitUserTypedVote] = useMutation(POLL_SUBMIT_TYPED_VOTE);
   const [pollSubmitUserVote] = useMutation(POLL_SUBMIT_VOTE);
+  const [submitting, setSubmitting] = useState(false);
+  const submittingPollRef = useRef<string | null>(null);
+  const submittedPollRef = useRef<string | null>(null);
   const isPollingEnabled = useIsPollingEnabled();
 
   const meetingData = hasPendingPollData && hasPendingPollData.meeting[0];
@@ -435,25 +463,49 @@ const PollingGraphqlContainer: React.FC = () => {
     [pollData],
   );
 
-  const handleTypedVote = (pollId: string, answer: string) => {
-    pollSubmitUserTypedVote({
-      variables: {
+  useEffect(() => {
+    if (submittedPollRef.current !== pollData?.pollId) submittedPollRef.current = null;
+    if (submittingPollRef.current !== pollData?.pollId) submittingPollRef.current = null;
+  }, [pollData?.pollId]);
+
+  const submitOnce = async (pollId: string, submit: () => Promise<unknown>) => {
+    if (submittingPollRef.current === pollId || submittedPollRef.current === pollId) return;
+    submittingPollRef.current = pollId;
+    setSubmitting(true);
+    const startedAt = performance.now();
+    recordSafeMeetDiagnostic('poll_option_tapped', { pollId });
+    recordSafeMeetDiagnostic('poll_vote_submitted', { pollId });
+    try {
+      await submit();
+      submittedPollRef.current = pollId;
+      recordSafeMeetDiagnostic('poll_vote_succeeded', {
         pollId,
-        answer,
-      },
-    });
+        durationMs: Math.round(performance.now() - startedAt),
+      });
+      flushSafeMeetDiagnostics();
+    } catch (mutationError) {
+      recordSafeMeetDiagnostic('poll_vote_failed', {
+        pollId,
+        durationMs: Math.round(performance.now() - startedAt),
+        errorName: mutationError instanceof Error ? mutationError.name : 'UnknownError',
+      });
+    } finally {
+      submittingPollRef.current = null;
+      setSubmitting(false);
+    }
+  };
+
+  const handleTypedVote = (pollId: string, answer: string) => {
+    submitOnce(pollId, () => pollSubmitUserTypedVote({
+      variables: { pollId, answer },
+    }));
   };
 
   const handleVote = (pollId: string, answerIds: Array<number>) => {
-    pollSubmitUserVote({
-      variables: {
-        pollId,
-        answerIds,
-      },
-    });
+    submitOnce(pollId, () => pollSubmitUserVote({
+      variables: { pollId, answerIds },
+    }));
   };
-
-  if (!showPolling || error || loading) return null;
 
   if (error) {
     connectionStatus.setSubscriptionFailed(true);
@@ -469,6 +521,8 @@ const PollingGraphqlContainer: React.FC = () => {
     return null;
   }
 
+  if (!showPolling || loading) return null;
+
   return (
     <PollingGraphql
       handleTypedVote={handleTypedVote}
@@ -481,6 +535,7 @@ const PollingGraphqlContainer: React.FC = () => {
       isDefaultPoll={Service.isDefaultPoll}
       pollTypes={Service.pollTypes}
       playAlert={Service.playAlert}
+      submitting={submitting}
     />
   );
 };

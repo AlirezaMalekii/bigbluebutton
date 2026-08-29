@@ -2,6 +2,14 @@
 
 set +x
 
+# Provision SafeMeet diagnostics without enabling collection. Existing local
+# opt-in state is preserved across package upgrades.
+install -d -m 0750 -o bigbluebutton -g bigbluebutton /var/log/bigbluebutton
+touch /var/log/bigbluebutton/safemeet-client-diagnostics.jsonl
+chown bigbluebutton:bigbluebutton /var/log/bigbluebutton/safemeet-client-diagnostics.jsonl
+chmod 0640 /var/log/bigbluebutton/safemeet-client-diagnostics.jsonl
+systemctl daemon-reload
+
 removeOldOverride() {
     service_name=$1
     # check if override file has been modified. If not it can be safely removed

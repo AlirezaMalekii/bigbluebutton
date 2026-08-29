@@ -3,7 +3,6 @@ import PollService from '/imports/ui/components/poll/service';
 import { defineMessages } from 'react-intl';
 import { notify } from '/imports/ui/services/notification';
 import caseInsensitiveReducer from '/imports/utils/caseInsensitiveReducer';
-import { debounce } from '/imports/utils/debounce';
 
 const intlMessages = defineMessages({
   notifyNotAllowedChange: {
@@ -406,7 +405,7 @@ const sanitizeShape = (shape) => {
   };
 };
 
-const debouncedUpdateShapes = debounce((
+const updateShapes = (
   shapes, tlEditorRef, presentationIdRef, pageChanged, assets, bgShape,
 ) => {
   if (shapes && Object.keys(shapes).length > 0) {
@@ -429,7 +428,7 @@ const debouncedUpdateShapes = debounce((
       tlEditorRef.current?.store.put(remoteShapesArray);
     });
   }
-}, 175);
+};
 
 export {
   initDefaultPages,
@@ -441,6 +440,6 @@ export {
   formatAnnotations,
   getCustomEditorAssetUrls,
   getCustomAssetUrls,
-  debouncedUpdateShapes,
+  updateShapes,
   sanitizeShape,
 };

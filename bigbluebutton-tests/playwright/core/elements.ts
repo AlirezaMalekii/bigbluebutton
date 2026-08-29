@@ -583,6 +583,7 @@ export const elements = {
   wbMoveToFront: 'button[data-testid="menu-item.bring-to-front"]',
   wbPaste: 'button[data-testid="menu-item.paste"]',
   wbTextTrue: 'div[data-hastext="true"]',
+  wbEditingTextArea: 'textarea.tl-text-input',
   wbDrawnArrow: 'div[data-shape-type="arrow"]',
   wbAutoHideToggleBtn: 'input[data-test="autoHideToolbarToggleBtn"]',
   turnInfiniteWhiteboardOn: 'button[data-test="turnInfiniteWhiteboardOn"]',

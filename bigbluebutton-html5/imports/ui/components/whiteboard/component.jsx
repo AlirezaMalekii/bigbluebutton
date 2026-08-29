@@ -43,8 +43,12 @@ import {
 } from './hooks';
 import {
   notifyShapeNumberExceeded, getCustomEditorAssetUrls, getCustomAssetUrls,
-  debouncedUpdateShapes, sanitizeShape,
+  updateShapes, sanitizeShape,
 } from './service';
+import {
+  flushSafeMeetDiagnostics,
+  recordSafeMeetDiagnostic,
+} from '/imports/ui/services/safemeet-diagnostics';
 import NoopTool from './custom-tools/noop-tool/component';
 import DeleteSelectedItemsTool from './custom-tools/delete-selected-items/component';
 import SessionStorage from '/imports/ui/services/storage/session';
@@ -423,6 +427,8 @@ const Whiteboard = React.memo((props) => {
   const initialZoomRef = useRef(null);
   const isMouseDownRef = useRef(false);
   const shapeBatchRef = useRef({});
+  const shapeBatchFlushTimerRef = useRef(null);
+  const flushShapeBatchRef = useRef(() => {});
   const isMountedRef = useRef(false);
   const isWheelZoomRef = useRef(false);
   const isUserPanningRef = useRef(false);
@@ -447,8 +453,6 @@ const Whiteboard = React.memo((props) => {
   const lastVisibilityStateRef = React.useRef('');
   const mountedTimeoutIdRef = useRef(null);
   const presentationIdRef = React.useRef(presentationId);
-  const innerWrapperPollingFrameRef = React.useRef(null);
-  const isMountedPollingFrameRef = React.useRef(null);
   const hasZoomSyncedRef = useRef(false);
   const lastForcedViewRef = useRef(null);
   const currentUserRef = useRef(currentUser);
@@ -740,9 +744,17 @@ const Whiteboard = React.memo((props) => {
     if (shapes && Object.keys(shapes).length > 0) {
       prevShapesRef.current = shapes;
     }
-    debouncedUpdateShapes(
-      shapes, tlEditorRef, presentationIdRef, pageChanged, assets, bgShape,
-    );
+    const frameId = requestAnimationFrame(() => {
+      const startedAt = performance.now();
+      updateShapes(
+        shapes, tlEditorRef, presentationIdRef, pageChanged, assets, bgShape,
+      );
+      recordSafeMeetDiagnostic('whiteboard_remote_shapes_applied', {
+        shapeCount: Object.keys(shapes || {}).length,
+        durationMs: Math.round(performance.now() - startedAt),
+      });
+    });
+    return () => cancelAnimationFrame(frameId);
   }, [shapes]);
 
   React.useEffect(() => {
@@ -1507,90 +1519,23 @@ const Whiteboard = React.memo((props) => {
 
   const pollInnerWrapperDimensionsUntilStable = (
     onReady,
-    options = {
-      maxTries: 120,
-      stabilityFrames: 50,
-    },
+    options = {},
     frameIdRef = null,
-    currentTry = 0,
-    stableCount = 0,
-    lastDimensions = { width: 0, height: 0 },
   ) => {
-    const container = document.querySelector('[data-test="presentationContainer"]');
-    const innerWrapper = document.getElementById('presentationInnerWrapper');
-
-    const containerWidth = container ? container.offsetWidth : 0;
-    const containerHeight = container ? container.offsetHeight : 0;
-    const innerWrapperWidth = innerWrapper ? innerWrapper.offsetWidth : 0;
-    const innerWrapperHeight = innerWrapper ? innerWrapper.offsetHeight : 0;
-
-    let _stableCount = stableCount;
-    let _lastDimensions = lastDimensions;
-    const _frameIdRef = frameIdRef;
-
-    if (innerWrapperWidth <= 0 || innerWrapperHeight <= 0) {
-      _stableCount = 0;
-    } else if (
-      innerWrapperWidth === lastDimensions.width
-        && innerWrapperHeight === lastDimensions.height
-    ) {
-      _stableCount += 1;
-    } else {
-      _stableCount = 0;
-      _lastDimensions = { width: innerWrapperWidth, height: innerWrapperHeight };
-    }
-
-    if (_stableCount >= options.stabilityFrames) {
+    if (options?.maxTries === 0) return;
+    const frameId = requestAnimationFrame(() => {
+      const container = document.querySelector('[data-test="presentationContainer"]');
+      const innerWrapper = document.getElementById('presentationInnerWrapper');
       onReady({
-        containerWidth, containerHeight, innerWrapperWidth, innerWrapperHeight,
+        containerWidth: container?.offsetWidth || 0,
+        containerHeight: container?.offsetHeight || 0,
+        innerWrapperWidth: innerWrapper?.offsetWidth || 0,
+        innerWrapperHeight: innerWrapper?.offsetHeight || 0,
       });
-      return;
-    }
-
-    if (currentTry < options.maxTries) {
-      const frameId = requestAnimationFrame(() => {
-        pollInnerWrapperDimensionsUntilStable(
-          onReady,
-          options,
-          _frameIdRef,
-          currentTry + 1,
-          _stableCount,
-          _lastDimensions,
-        );
-      });
-      if (_frameIdRef) {
-        _frameIdRef.current = frameId;
-      }
-    } else {
-      logger.warn(
-        { logCode: 'pollInnerWrapperDimensionsUntilStable' },
-        'Failed to store viewbox dimensions',
-      );
-      onReady({
-        containerWidth, containerHeight, innerWrapperWidth, innerWrapperHeight,
-      });
-    }
-  };
-
-  const pollUntilMounted = (
-    onReady,
-    onFail,
-    ref = null,
-    options = { maxTries: 240 },
-    currentTry = 0,
-  ) => {
-    const _ref = ref;
-    if (isMountedRef.current) {
-      onReady();
-    } else if (currentTry <= options.maxTries) {
-      const frameId = requestAnimationFrame(() => {
-        pollUntilMounted(onReady, onFail, ref, options, currentTry + 1);
-      });
-      if (_ref) {
-        _ref.current = frameId;
-      }
-    } else {
-      onFail();
+    });
+    if (frameIdRef) {
+      const targetRef = frameIdRef;
+      targetRef.current = frameId;
     }
   };
 
@@ -1689,6 +1634,48 @@ const Whiteboard = React.memo((props) => {
       return source === 'user' ? hasPermission : true;
     });
 
+    const flushShapeBatch = (reason = 'idle') => {
+      if (shapeBatchFlushTimerRef.current) {
+        clearTimeout(shapeBatchFlushTimerRef.current);
+        shapeBatchFlushTimerRef.current = null;
+      }
+      const shapeIds = Object.keys(shapeBatchRef.current);
+      if (shapeIds.length === 0) return;
+      const startedAt = performance.now();
+      shapeIds.forEach((shapeId) => {
+        const currentShape = editor.getShape(shapeId) || shapeBatchRef.current[shapeId];
+        if (!currentShape || isBackgroundShape(currentShape)) return;
+        persistShapeWrapper(
+          {
+            ...currentShape,
+            meta: {
+              ...currentShape.meta,
+              createdBy: currentShape.meta?.createdBy || currentUserRef.current?.userId,
+              updatedBy: currentUserRef.current?.userId,
+              presentationId: presentationIdRef.current,
+            },
+          },
+          whiteboardIdRef.current,
+          isModeratorRef.current,
+        );
+      });
+      shapeBatchRef.current = {};
+      recordSafeMeetDiagnostic('whiteboard_shape_batch_flushed', {
+        reason,
+        shapeCount: shapeIds.length,
+        durationMs: Math.round(performance.now() - startedAt),
+      });
+    };
+    flushShapeBatchRef.current = flushShapeBatch;
+
+    const scheduleLiveShapeFlush = () => {
+      if (shapeBatchFlushTimerRef.current) return;
+      shapeBatchFlushTimerRef.current = setTimeout(() => {
+        shapeBatchFlushTimerRef.current = null;
+        flushShapeBatch('active_stroke');
+      }, 100);
+    };
+
     editor.store.listen(
       (entry) => {
         const { changes } = entry;
@@ -1730,6 +1717,7 @@ const Whiteboard = React.memo((props) => {
               },
             };
             shapeBatchRef.current[updatedRecord.id] = updatedRecord;
+            scheduleLiveShapeFlush();
           });
         }
 
@@ -1755,6 +1743,7 @@ const Whiteboard = React.memo((props) => {
           } else {
             shapeBatchRef.current[updatedRecord.id] = updatedRecord;
           }
+          scheduleLiveShapeFlush();
         });
 
         // Handle removed shapes immediately (not batched). Never sync-remove the slide BG.
@@ -1872,18 +1861,7 @@ const Whiteboard = React.memo((props) => {
           || path === 'highlight.idle'
           || path === 'eraser.idle'
         ) {
-          if (Object.keys(shapeBatchRef.current).length > 0) {
-            const shapesToPersist = Object.values(shapeBatchRef.current);
-            shapesToPersist.forEach((shape) => {
-              persistShapeWrapper(
-                shape,
-                whiteboardIdRef.current,
-                isModeratorRef.current,
-              );
-            });
-
-            shapeBatchRef.current = {};
-          }
+          flushShapeBatch('idle');
         }
       },
       { source: 'user' },
@@ -2678,29 +2656,29 @@ const Whiteboard = React.memo((props) => {
   ]);
 
   React.useEffect(() => {
-    if (isMountedPollingFrameRef.current !== null) {
-      cancelAnimationFrame(isMountedPollingFrameRef.current);
-    }
-    isMountedPollingFrameRef.current = requestAnimationFrame(() => {
-      pollUntilMounted(() => {
-        if (innerWrapperPollingFrameRef.current !== null) {
-          cancelAnimationFrame(innerWrapperPollingFrameRef.current);
-        }
-        innerWrapperPollingFrameRef.current = requestAnimationFrame(() => {
-          pollInnerWrapperDimensionsUntilStable(() => {
-            syncCameraWithPresentationArea();
-          }, {
-            maxTries: 120,
-            stabilityFrames: 35,
-          }, innerWrapperPollingFrameRef);
-        });
-      }, () => {
-        logger.warn(
-          { logCode: 'pollUntilMounted' },
-          'Failed to wait for component to be mounted',
-        );
-      }, isMountedPollingFrameRef);
-    });
+    const container = document.querySelector('[data-test="presentationContainer"]');
+    const innerWrapper = document.getElementById('presentationInnerWrapper');
+    let frameId = null;
+    const scheduleSync = () => {
+      if (frameId !== null) cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(() => {
+        frameId = null;
+        if (isMountedRef.current) syncCameraWithPresentationArea();
+      });
+    };
+    const observer = typeof ResizeObserver === 'function'
+      ? new ResizeObserver(scheduleSync)
+      : null;
+    if (container) observer?.observe(container);
+    if (innerWrapper) observer?.observe(innerWrapper);
+    scheduleSync();
+    const initialTimer = setTimeout(scheduleSync, 250);
+
+    return () => {
+      observer?.disconnect();
+      if (frameId !== null) cancelAnimationFrame(frameId);
+      clearTimeout(initialTimer);
+    };
   }, [
     presentationHeight,
     presentationWidth,
@@ -2809,6 +2787,10 @@ const Whiteboard = React.memo((props) => {
   React.useEffect(() => {
     const formattedPageId = parseInt(curPageIdRef.current, 10);
     if (tlEditorRef.current && formattedPageId !== 0) {
+      flushShapeBatchRef.current('slide_change');
+      if (tlEditorRef.current.getEditingShape?.()) {
+        tlEditorRef.current.complete();
+      }
       tlEditorRef.current.store.mergeRemoteChanges(() => {
         tlEditorRef.current.batch(() => {
           const currentPageId = `page:${formattedPageId}`;
@@ -2846,8 +2828,29 @@ const Whiteboard = React.memo((props) => {
   }, [curPageId]);
 
   React.useEffect(() => {
+    const flushOnPointerEnd = () => flushShapeBatchRef.current('pointer_end');
+    const flushOnVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        flushShapeBatchRef.current('page_hidden');
+        flushSafeMeetDiagnostics();
+      }
+    };
+    window.addEventListener('pointerup', flushOnPointerEnd, true);
+    window.addEventListener('pointercancel', flushOnPointerEnd, true);
+    document.addEventListener('lostpointercapture', flushOnPointerEnd, true);
+    document.addEventListener('visibilitychange', flushOnVisibility);
+    return () => {
+      window.removeEventListener('pointerup', flushOnPointerEnd, true);
+      window.removeEventListener('pointercancel', flushOnPointerEnd, true);
+      document.removeEventListener('lostpointercapture', flushOnPointerEnd, true);
+      document.removeEventListener('visibilitychange', flushOnVisibility);
+    };
+  }, []);
+
+  React.useEffect(() => {
     setTldrawIsMounting(true);
     return () => {
+      flushShapeBatchRef.current('unmount');
       isMountedRef.current = false;
       localStorage.removeItem('initialViewBoxWidth');
       localStorage.removeItem('initialViewBoxHeight');
@@ -2855,6 +2858,10 @@ const Whiteboard = React.memo((props) => {
       localStorage.removeItem('pageActualZoomRatioMap');
       if (mountedTimeoutIdRef.current) {
         clearTimeout(mountedTimeoutIdRef.current);
+      }
+      if (shapeBatchFlushTimerRef.current) {
+        clearTimeout(shapeBatchFlushTimerRef.current);
+        shapeBatchFlushTimerRef.current = null;
       }
     };
   }, []);

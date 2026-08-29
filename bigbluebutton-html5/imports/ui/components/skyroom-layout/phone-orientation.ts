@@ -57,13 +57,7 @@ const OVERLAY_ID = 'skyroom-phone-portrait-overlay';
  */
 export const isSkyroomPhoneLandscape = (): boolean => {
   const orientationQuery = window.matchMedia?.('(orientation: landscape)');
-  if (orientationQuery) return orientationQuery.matches;
-
-  const screenWidth = window.screen?.width || 0;
-  const screenHeight = window.screen?.height || 0;
-  if (screenWidth > 0 && screenHeight > 0) return screenWidth > screenHeight;
-
-  return window.innerWidth > window.innerHeight;
+  return orientationQuery?.matches || false;
 };
 
 const getLockTarget = (): HTMLElement => document.body || document.documentElement;
@@ -93,15 +87,20 @@ const applyVisualState = () => {
   const html = document.documentElement;
   const target = getLockTarget();
   const isLandscape = isSkyroomPhoneLandscape();
-  ensureOverlay();
 
   if (isLandscape) {
     html.setAttribute(LOCK_ATTR, 'true');
+    html.setAttribute(LANDSCAPE_ATTR, 'true');
     target.setAttribute(LOCK_ATTR, 'true');
     target.setAttribute(LANDSCAPE_ATTR, 'true');
+    ensureOverlay();
     window.scrollTo(0, 0);
   } else {
+    html.removeAttribute(LOCK_ATTR);
+    html.removeAttribute(LANDSCAPE_ATTR);
+    target.removeAttribute(LOCK_ATTR);
     target.removeAttribute(LANDSCAPE_ATTR);
+    document.getElementById(OVERLAY_ID)?.remove();
   }
 };
 
@@ -109,6 +108,7 @@ const clearVisualState = () => {
   const html = document.documentElement;
   const target = getLockTarget();
   html.removeAttribute(LOCK_ATTR);
+  html.removeAttribute(LANDSCAPE_ATTR);
   target.removeAttribute(LOCK_ATTR);
   target.removeAttribute(LANDSCAPE_ATTR);
   const overlay = document.getElementById(OVERLAY_ID);
@@ -121,18 +121,17 @@ export const startSkyroomPhonePortraitLock = () => {
   if (cleanup || typeof window === 'undefined') return;
   if (!isPhoneClassDevice()) return;
 
-  const html = document.documentElement;
-  const target = getLockTarget();
-  html.setAttribute(LOCK_ATTR, 'true');
-  target.setAttribute(LOCK_ATTR, 'true');
-
   tryNativeLock();
   applyVisualState();
 
   const mql = window.matchMedia('(orientation: landscape)');
+  let debounceTimer: number | null = null;
   const onChange = () => {
-    tryNativeLock();
-    applyVisualState();
+    if (debounceTimer !== null) window.clearTimeout(debounceTimer);
+    debounceTimer = window.setTimeout(() => {
+      debounceTimer = null;
+      applyVisualState();
+    }, 120);
   };
 
   if (mql.addEventListener) {
@@ -141,15 +140,13 @@ export const startSkyroomPhonePortraitLock = () => {
     mql.addListener(onChange);
   }
 
-  window.addEventListener('resize', onChange);
-
   cleanup = () => {
     if (mql.removeEventListener) {
       mql.removeEventListener('change', onChange);
     } else if (mql.removeListener) {
       mql.removeListener(onChange);
     }
-    window.removeEventListener('resize', onChange);
+    if (debounceTimer !== null) window.clearTimeout(debounceTimer);
     clearVisualState();
     tryNativeUnlock();
     cleanup = null;
