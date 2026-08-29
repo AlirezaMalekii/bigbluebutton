@@ -1,0 +1,31 @@
+/* SafeMeet low-power tier: visual-only reductions. Media elements remain fully
+   mounted and are never subjected to content-visibility or strict containment. */
+html[data-skyroom-performance-tier="low"] #layout[data-skyroom-column="true"] header[role="banner"],
+html[data-skyroom-performance-tier="low"] #layout[data-skyroom-column="true"] #Navbar,
+html[data-skyroom-performance-tier="low"] #layout[data-skyroom-column="true"] #ActionsBar [class*="MuteWarning"],
+html[data-skyroom-performance-tier="low"] #layout[data-skyroom-column="true"] [class*="fullscreenModalOverlay"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-skyroom-performance-tier="low"] .MuiModal-root .MuiPaper-root,
+html[data-skyroom-performance-tier="low"] #layout[data-skyroom-column="true"] [role="dialog"],
+html[data-skyroom-performance-tier="low"] #layout[data-skyroom-column="true"] [class*="Dropdown"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28) !important;
+}
+
+html[data-skyroom-performance-tier="low"] #layout[data-skyroom-column="true"] #Navbar,
+html[data-skyroom-performance-tier="low"] #layout[data-skyroom-column="true"] #ActionsBar,
+html[data-skyroom-performance-tier="low"] #layout[data-skyroom-column="true"] [data-test="cameraDock"],
+html[data-skyroom-performance-tier="low"] #layout[data-skyroom-column="true"] #cameraDock {
+  box-shadow: none !important;
+}
+
+html[data-skyroom-performance-tier="low"] #layout[data-skyroom-column="true"] [data-test="stageReactionOverlay"] *,
+html[data-skyroom-performance-tier="low"] #layout[data-skyroom-column="true"] [data-test="pollSummary"] *,
+html[data-skyroom-performance-tier="low"] #layout[data-skyroom-column="true"] [class*="TalkingIndicator"] {
+  animation: none !important;
+  transition: none !important;
+}

@@ -1359,6 +1359,20 @@ public:
     longTaskThresholdMs: 200
     eventLoopStallThresholdMs: 1000
     ringBufferSize: 200
+  # SafeMeet's low-power profile is reversible and affects only client visual
+  # effects and viewport-based webcam subscription. It never hides users or
+  # prevents camera sharing.
+  safemeetPerformance:
+    enabled: true
+    # auto | standard | low
+    mode: auto
+    mobileDecoderBudget: 4
+    desktopLowPowerDecoderBudget: 6
+    lowPowerHardwareConcurrency: 4
+    lowPowerDeviceMemoryGb: 4
+    longTaskThresholdMs: 200
+    longTaskCountThreshold: 3
+    longTaskWindowMs: 30000
   virtualBackgrounds:
     enabled: true
     enableVirtualBackgroundUpload: true

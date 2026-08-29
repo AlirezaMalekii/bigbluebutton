@@ -1135,6 +1135,17 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
       eventLoopStallThresholdMs: 1000,
       ringBufferSize: 200,
     },
+    safemeetPerformance: {
+      enabled: true,
+      mode: 'auto',
+      mobileDecoderBudget: 4,
+      desktopLowPowerDecoderBudget: 6,
+      lowPowerHardwareConcurrency: 4,
+      lowPowerDeviceMemoryGb: 4,
+      longTaskThresholdMs: 200,
+      longTaskCountThreshold: 3,
+      longTaskWindowMs: 30000,
+    },
     virtualBackgrounds: {
       enabled: true,
       enableVirtualBackgroundUpload: true,

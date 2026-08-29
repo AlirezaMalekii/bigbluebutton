@@ -359,7 +359,7 @@ export const useIsPaginationEnabled = () => {
   return myPageSize > 0 && paginationEnabled;
 };
 
-export const useGridUsers = (visibleStreamCount: number) => {
+export const useGridUsers = (visibleStreamCount: number, visibleUserCount: number) => {
   const gridSize = useGridSize();
   const userCount = getCountData();
   const isGridEnabled = useStorageKey('isGridEnabled');
@@ -411,11 +411,15 @@ export const useGridUsers = (visibleStreamCount: number) => {
     }));
     gridItems.current = newGridUsers;
 
-    const overflow = Math.max(userCount - gridSize, 0);
-
-    // if there's overflow, we replace the last grid user with the overflow tile,
-    // so we need to add 1 to the overflow count to account for the replaced user
-    overflowCount.current = overflow > 0 ? overflow + 1 : 0;
+    // Count hidden users, not stream tiles: one user may publish more than one
+    // camera. The overflow tile replaces one avatar when an avatar exists; on
+    // a full-camera page it receives its own slot and replaces nobody.
+    const hiddenUsers = Math.max(
+      userCount - visibleUserCount - gridItems.current.length,
+      0,
+    );
+    const replacedAvatar = gridItems.current.length > 0 ? 1 : 0;
+    overflowCount.current = hiddenUsers > 0 ? hiddenUsers + replacedAvatar : 0;
   } else {
     gridItems.current = [];
     overflowCount.current = 0;
@@ -745,7 +749,14 @@ export const useVideoStreams = () => {
     }
   }
 
-  const { gridUsers, overflowCount } = useGridUsers(streams.length);
+  const renderedStreams = streams.filter((stream) => (
+    !('render' in stream) || stream.render !== false
+  ));
+  const renderedUserCount = new Set(renderedStreams.map((stream) => stream.userId)).size;
+  const { gridUsers, overflowCount } = useGridUsers(
+    renderedStreams.length,
+    renderedUserCount,
+  );
 
   // Keep the in-flight local share visible for WebcamContainer / LiveKit even when
   // mobile performance filters hide remote webcams on other tabs.

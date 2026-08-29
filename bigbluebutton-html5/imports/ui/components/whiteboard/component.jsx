@@ -43,7 +43,7 @@ import {
 } from './hooks';
 import {
   notifyShapeNumberExceeded, getCustomEditorAssetUrls, getCustomAssetUrls,
-  updateShapes, sanitizeShape,
+  updateShapes, sanitizeShape, flushAnnotations,
 } from './service';
 import {
   flushSafeMeetDiagnostics,
@@ -429,6 +429,7 @@ const Whiteboard = React.memo((props) => {
   const shapeBatchRef = useRef({});
   const shapeBatchFlushTimerRef = useRef(null);
   const flushShapeBatchRef = useRef(() => {});
+  const storeListenerDisposersRef = useRef([]);
   const isMountedRef = useRef(false);
   const isWheelZoomRef = useRef(false);
   const isUserPanningRef = useRef(false);
@@ -1540,6 +1541,14 @@ const Whiteboard = React.memo((props) => {
   };
 
   const handleTldrawMount = (editor) => {
+    storeListenerDisposersRef.current.forEach((dispose) => dispose());
+    storeListenerDisposersRef.current = [];
+
+    const registerStoreListener = (...args) => {
+      const dispose = editor.store.listen(...args);
+      if (typeof dispose === 'function') storeListenerDisposersRef.current.push(dispose);
+    };
+
     if (typeof editor.history.setMaxStackSize === 'function') {
       editor.history.setMaxStackSize(window.meetingClientSettings.public.whiteboard.maxHistoryStackSize);
     } else {
@@ -1625,7 +1634,7 @@ const Whiteboard = React.memo((props) => {
       editor.setStyleForNextShapes(DefaultSizeStyle, initialSizeStyle);
     }
 
-    editor.sideEffects.registerBeforeDeleteHandler('shape', (shape, source) => {
+    const disposeBeforeDeleteHandler = editor.sideEffects.registerBeforeDeleteHandler('shape', (shape, source) => {
       // Presentation slide image must never be deleted (select+move/undo used to wipe it).
       if (isBackgroundShape(shape)) return false;
       const { presenter, isModerator: userIsModerator, userId } = currentUserRef.current;
@@ -1633,6 +1642,9 @@ const Whiteboard = React.memo((props) => {
       const hasPermission = isOwn || presenter || userIsModerator;
       return source === 'user' ? hasPermission : true;
     });
+    if (typeof disposeBeforeDeleteHandler === 'function') {
+      storeListenerDisposersRef.current.push(disposeBeforeDeleteHandler);
+    }
 
     const flushShapeBatch = (reason = 'idle') => {
       if (shapeBatchFlushTimerRef.current) {
@@ -1676,18 +1688,28 @@ const Whiteboard = React.memo((props) => {
       }, 100);
     };
 
-    editor.store.listen(
+    registerStoreListener(
       (entry) => {
         const { changes } = entry;
         const { added, updated, removed } = changes;
 
         const addedIds = Object.keys(added).filter((id) => !isBackgroundShapeId(id));
         const addedCount = addedIds.length;
-        const localShapes = editor.getCurrentPageShapes();
-        const filteredShapes = localShapes?.filter((item) => item?.index !== 'a0' && !isBackgroundShape(item)) || [];
-        const shapeNumberExceeded = filteredShapes
-          .length + addedCount - 1 > maxNumberOfAnnotations;
-        const invalidShapeType = addedIds.find((id) => !isValidShapeType(added[id]));
+        let shapeNumberExceeded = false;
+        let invalidShapeType;
+
+        // Pointer updates only touch `updated`; scanning the whole page for
+        // every point made long strokes O(points × page shapes). The limit and
+        // type guards are only relevant when a user actually adds a record.
+        if (addedCount > 0) {
+          const localShapes = editor.getCurrentPageShapes();
+          const filteredShapes = localShapes?.filter(
+            (item) => item?.index !== 'a0' && !isBackgroundShape(item),
+          ) || [];
+          shapeNumberExceeded = filteredShapes.length + addedCount - 1
+            > maxNumberOfAnnotations;
+          invalidShapeType = addedIds.find((id) => !isValidShapeType(added[id]));
+        }
 
         if (addedCount > 0 && (shapeNumberExceeded || invalidShapeType)) {
           // notify and undo last command without persisting
@@ -1755,7 +1777,7 @@ const Whiteboard = React.memo((props) => {
       { source: 'user', scope: 'document' },
     );
 
-    editor.store.listen(
+    registerStoreListener(
       (entry) => {
         const { changes } = entry;
         const { updated } = changes;
@@ -1871,7 +1893,7 @@ const Whiteboard = React.memo((props) => {
     // that sync the viewer's camera to the presenter's zoom level).
     // No scope filter: camera records may not be in the 'document' scope in this
     // tldraw version, so omitting scope ensures the listener always fires.
-    editor.store.listen(
+    registerStoreListener(
       ({ changes, source }) => {
         const camKey = `camera:page:${curPageIdRef.current}`;
         if (changes?.updated?.[camKey]) {
@@ -2787,10 +2809,11 @@ const Whiteboard = React.memo((props) => {
   React.useEffect(() => {
     const formattedPageId = parseInt(curPageIdRef.current, 10);
     if (tlEditorRef.current && formattedPageId !== 0) {
-      flushShapeBatchRef.current('slide_change');
       if (tlEditorRef.current.getEditingShape?.()) {
         tlEditorRef.current.complete();
       }
+      flushShapeBatchRef.current('slide_change');
+      flushAnnotations();
       tlEditorRef.current.store.mergeRemoteChanges(() => {
         tlEditorRef.current.batch(() => {
           const currentPageId = `page:${formattedPageId}`;
@@ -2828,10 +2851,19 @@ const Whiteboard = React.memo((props) => {
   }, [curPageId]);
 
   React.useEffect(() => {
-    const flushOnPointerEnd = () => flushShapeBatchRef.current('pointer_end');
+    const flushOnPointerEnd = () => {
+      // This handler runs in capture phase. Wait until tldraw consumes the
+      // pointer end and writes its final point before persisting the full shape.
+      queueMicrotask(() => {
+        flushShapeBatchRef.current('pointer_end');
+        flushAnnotations();
+      });
+    };
     const flushOnVisibility = () => {
       if (document.visibilityState === 'hidden') {
+        if (tlEditorRef.current?.getEditingShape?.()) tlEditorRef.current.complete();
         flushShapeBatchRef.current('page_hidden');
+        flushAnnotations();
         flushSafeMeetDiagnostics();
       }
     };
@@ -2850,8 +2882,12 @@ const Whiteboard = React.memo((props) => {
   React.useEffect(() => {
     setTldrawIsMounting(true);
     return () => {
+      if (tlEditorRef.current?.getEditingShape?.()) tlEditorRef.current.complete();
       flushShapeBatchRef.current('unmount');
+      flushAnnotations();
       isMountedRef.current = false;
+      storeListenerDisposersRef.current.forEach((dispose) => dispose());
+      storeListenerDisposersRef.current = [];
       localStorage.removeItem('initialViewBoxWidth');
       localStorage.removeItem('initialViewBoxHeight');
       localStorage.removeItem('pageZoomMap');

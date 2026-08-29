@@ -3,6 +3,7 @@ import PollService from '/imports/ui/components/poll/service';
 import { defineMessages } from 'react-intl';
 import { notify } from '/imports/ui/services/notification';
 import caseInsensitiveReducer from '/imports/utils/caseInsensitiveReducer';
+import createAnnotationSender from './annotation-sender';
 
 const intlMessages = defineMessages({
   notifyNotAllowedChange: {
@@ -15,66 +16,13 @@ const intlMessages = defineMessages({
   },
 });
 
-const annotationsQueue = [];
-// How many packets we need to have to use annotationsBufferTimeMax
-const annotationsMaxDelayQueueSize = 60;
-// Minimum bufferTime
-const annotationsBufferTimeMin = 30;
-// Maximum bufferTime
-const annotationsBufferTimeMax = 200;
-// Time before running 'sendBulkAnnotations' again if user is offline
-const annotationsRetryDelay = 1000;
-
-let annotationsSenderIsRunning = false;
-
-const proccessAnnotationsQueue = async (submitAnnotations) => {
-  annotationsSenderIsRunning = true;
-  const queueSize = annotationsQueue.length;
-
-  if (!queueSize) {
-    annotationsSenderIsRunning = false;
-    return;
-  }
-
-  const annotations = annotationsQueue.splice(0, queueSize);
-
-  try {
-    const isAnnotationSent = await submitAnnotations(annotations);
-
-    if (!isAnnotationSent) {
-      // undo splice
-      annotationsQueue.splice(0, 0, ...annotations);
-      setTimeout(() => proccessAnnotationsQueue(submitAnnotations), annotationsRetryDelay);
-    } else {
-      // ask tiago
-      const delayPerc = Math.min(
-        annotationsMaxDelayQueueSize, queueSize,
-      ) / annotationsMaxDelayQueueSize;
-      const delayDelta = annotationsBufferTimeMax - annotationsBufferTimeMin;
-      const delayTime = annotationsBufferTimeMin + delayDelta * delayPerc;
-      setTimeout(() => proccessAnnotationsQueue(submitAnnotations), delayTime);
-    }
-  } catch (error) {
-    annotationsQueue.splice(0, 0, ...annotations);
-    setTimeout(() => proccessAnnotationsQueue(submitAnnotations), annotationsRetryDelay);
-  }
-};
+const annotationSender = createAnnotationSender();
 
 const sendAnnotation = (annotation, submitAnnotations) => {
-  // Prevent sending annotations while disconnected
-  // TODO: Change this to add the annotation, but delay the send until we're
-  // reconnected. With this it will miss things
-
-  const index = annotationsQueue.findIndex((ann) => ann.id === annotation.id);
-  if (index !== -1) {
-    annotationsQueue[index] = annotation;
-  } else {
-    annotationsQueue.push(annotation);
-  }
-  if (!annotationsSenderIsRunning) {
-    setTimeout(() => proccessAnnotationsQueue(submitAnnotations), annotationsBufferTimeMin);
-  }
+  annotationSender.enqueue(annotation, submitAnnotations);
 };
+
+const flushAnnotations = () => annotationSender.flush();
 
 const persistShape = async (shape, whiteboardId, isModerator, submitAnnotations) => {
   const annotation = {
@@ -433,6 +381,7 @@ const updateShapes = (
 export {
   initDefaultPages,
   sendAnnotation,
+  flushAnnotations,
   persistShape,
   notifyNotAllowedChange,
   notifyShapeNumberExceeded,

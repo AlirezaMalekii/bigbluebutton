@@ -29,6 +29,7 @@ export interface Public {
   whiteboard: Whiteboard
   clientLog: ClientLog
   safemeetDiagnostics: SafeMeetDiagnostics
+  safemeetPerformance: SafeMeetPerformance
   virtualBackgrounds: VirtualBackgrounds
 }
 export interface Locales {
@@ -843,6 +844,18 @@ export interface SafeMeetDiagnostics {
   longTaskThresholdMs: number
   eventLoopStallThresholdMs: number
   ringBufferSize: number
+}
+
+export interface SafeMeetPerformance {
+  enabled: boolean
+  mode: 'auto' | 'standard' | 'low'
+  mobileDecoderBudget: number
+  desktopLowPowerDecoderBudget: number
+  lowPowerHardwareConcurrency: number
+  lowPowerDeviceMemoryGb: number
+  longTaskThresholdMs: number
+  longTaskCountThreshold: number
+  longTaskWindowMs: number
 }
 
 export interface Console {

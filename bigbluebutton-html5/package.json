@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "lint:file": "eslint",
-    "tscheck:staged": "tsc --noEmit --incremental"
+    "tscheck:staged": "tsc --noEmit --incremental",
+    "test:safemeet-whiteboard-queue": "node imports/ui/components/whiteboard/annotation-sender.test.mjs"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

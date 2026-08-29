@@ -309,6 +309,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
   componentDidUpdate(prevProps: VideoListProps, prevState: VideoListState) {
     const {
       layoutType, cameraDock, streams, focusedId, onVideoVisibilityChange, webcamsVisible,
+      overflowCount,
     } = this.props;
     const { skyroomZoneRevision } = this.state;
     const { width: cameraDockWidth, height: cameraDockHeight } = cameraDock;
@@ -318,18 +319,31 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       streams: prevStreams,
       focusedId: prevFocusedId,
       webcamsVisible: prevWebcamsVisible,
+      overflowCount: prevOverflowCount,
     } = prevProps;
     const { width: prevCameraDockWidth, height: prevCameraDockHeight } = prevCameraDock;
 
-    const layoutKey = (list: VideoItem[]) => list
-      .map((s) => {
-        const id = getSkyroomStreamKey(s);
-        const render = s.type === VIDEO_TYPES.GRID || !('render' in s) || s.render !== false;
-        return `${id}:${s.type}:${render ? 1 : 0}:${getSkyroomStreamPrivilegeKey(s)}`;
+    // Compare the projection in-place. The previous implementation allocated
+    // two arrays plus two joined strings on every component update, including
+    // unrelated speaking/playback state changes in large meetings.
+    const streamLayoutChanged = streams !== prevStreams && (
+      streams.length !== prevStreams.length
+      || streams.some((stream, index) => {
+        const previous = prevStreams[index];
+        if (!previous) return true;
+        const render = stream.type === VIDEO_TYPES.GRID
+          || !('render' in stream)
+          || stream.render !== false;
+        const previousRender = previous.type === VIDEO_TYPES.GRID
+          || !('render' in previous)
+          || previous.render !== false;
+        return getSkyroomStreamKey(stream) !== getSkyroomStreamKey(previous)
+          || stream.type !== previous.type
+          || render !== previousRender
+          || getSkyroomStreamPrivilegeKey(stream)
+            !== getSkyroomStreamPrivilegeKey(previous);
       })
-      .join('|');
-    const nextLayoutKey = layoutKey(streams);
-    const previousLayoutKey = layoutKey(prevStreams);
+    );
     const nextSkyroomViewportLayoutKey = getSkyroomViewportLayoutKey();
     const skyroomViewportLayoutChanged = nextSkyroomViewportLayoutKey
       !== this.skyroomViewportLayoutKey;
@@ -339,14 +353,15 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       || focusedId !== prevFocusedId
       || cameraDockWidth !== prevCameraDockWidth
       || cameraDockHeight !== prevCameraDockHeight
-      || streams.length !== prevStreams.length
-      || nextLayoutKey !== previousLayoutKey
+      || streamLayoutChanged
+      || overflowCount !== prevOverflowCount
       || skyroomViewportLayoutChanged) {
       this.handleCanvasResize();
     }
 
     if (layoutType !== prevLayoutType
-      || nextLayoutKey !== previousLayoutKey
+      || streamLayoutChanged
+      || overflowCount !== prevOverflowCount
       || skyroomZoneRevision !== prevState.skyroomZoneRevision
       || webcamsVisible !== prevWebcamsVisible
       || onVideoVisibilityChange !== prevProps.onVideoVisibilityChange
@@ -1037,11 +1052,15 @@ class VideoList extends Component<VideoListProps, VideoListState> {
 
     let visibleStreams = listStreams;
     if (shouldShowOverflowTile) {
-      const lastGridUserIndex = listStreams.map((s, idx) => ({ s, idx }))
-        .reverse()
-        .find(({ s }) => s.type === VIDEO_TYPES.GRID)?.idx;
+      let lastGridUserIndex = -1;
+      for (let index = listStreams.length - 1; index >= 0; index -= 1) {
+        if (listStreams[index].type === VIDEO_TYPES.GRID) {
+          lastGridUserIndex = index;
+          break;
+        }
+      }
 
-      if (lastGridUserIndex !== undefined) {
+      if (lastGridUserIndex !== -1) {
         // remove the last grid user to replace it with the overflow tile
         visibleStreams = listStreams.filter((_, idx) => idx !== lastGridUserIndex);
       }

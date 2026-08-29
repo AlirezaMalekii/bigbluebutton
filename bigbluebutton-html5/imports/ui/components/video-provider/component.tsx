@@ -30,8 +30,12 @@ import {
   isSkyroomTheme,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import { recordSafeMeetDiagnostic } from '/imports/ui/services/safemeet-diagnostics';
+import {
+  getSkyroomActiveVideoLimit,
+  getSkyroomPerformanceTier,
+  SKYROOM_PERFORMANCE_TIER_EVENT,
+} from '/imports/ui/components/skyroom-layout/performance-profile';
 
-const SKYROOM_MOBILE_ACTIVE_VIDEO_LIMIT = 4;
 const SKYROOM_MOBILE_VIEWPORT_SETTLE_MS = 120;
 
 const intlClientErrors = defineMessages({
@@ -263,6 +267,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     this.handleVideoPlaybackStateChange = this.handleVideoPlaybackStateChange.bind(this);
     this.handleVideoVisibilityChange = this.handleVideoVisibilityChange.bind(this);
     this.applyViewportCandidates = this.applyViewportCandidates.bind(this);
+    this.handlePerformanceTierChange = this.handlePerformanceTierChange.bind(this);
     this.onBeforeUnload = this.onBeforeUnload.bind(this);
   }
 
@@ -271,6 +276,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     VideoService.updatePeerDictionaryReference(this.webRtcPeers);
     this.ws = this.openWs();
     window.addEventListener('beforeunload', this.onBeforeUnload);
+    window.addEventListener(SKYROOM_PERFORMANCE_TIER_EVENT, this.handlePerformanceTierChange);
     const diagnostics = window.meetingClientSettings.public.safemeetDiagnostics;
     if (diagnostics?.enabled) {
       this.diagnosticsStatsTimer = setInterval(
@@ -295,7 +301,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     const shouldDebounce = VideoService.isPaginationEnabled()
       && prevProps.currentVideoPageIndex !== currentVideoPageIndex;
 
-    if (isSkyroomMobileViewport()
+    if (Number.isFinite(getSkyroomActiveVideoLimit())
       && this.hasViewportVisibilitySnapshot
       && (prevProps.focusedId !== focusedId || prevProps.streams !== streams)) {
       // componentDidUpdate performs the single media reconciliation below.
@@ -328,6 +334,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     }
 
     window.removeEventListener('beforeunload', this.onBeforeUnload);
+    window.removeEventListener(SKYROOM_PERFORMANCE_TIER_EVENT, this.handlePerformanceTierChange);
     if (this.viewportReleaseTimeout) clearTimeout(this.viewportReleaseTimeout);
     this.viewportReleaseTimeout = null;
     if (this.mobileViewportApplyTimeout) clearTimeout(this.mobileViewportApplyTimeout);
@@ -544,7 +551,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
     const { focusedId } = this.props;
     const user = stream.type === VIDEO_TYPES.STREAM ? stream.user : null;
-    if (isSkyroomMobileViewport()) {
+    if (Number.isFinite(getSkyroomActiveVideoLimit())) {
       return this.visibleVideoStreams.has(stream.stream)
         || this.viewportRetainedStreams.has(stream.stream);
     }
@@ -561,7 +568,9 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     if (!this.isViewportSubscriptionEnabled() || !this.hasViewportVisibilitySnapshot) return true;
 
     const { focusedId } = this.props;
-    if (isSkyroomMobileViewport()) return this.visibleVideoStreams.has(stream);
+    if (Number.isFinite(getSkyroomActiveVideoLimit())) {
+      return this.visibleVideoStreams.has(stream);
+    }
     return this.visibleVideoStreams.has(stream) || focusedId === stream;
   }
 
@@ -617,7 +626,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       }
     });
 
-    if (isSkyroomMobileViewport()) {
+    if (Number.isFinite(getSkyroomActiveVideoLimit())) {
       if (this.mobileViewportApplyTimeout) clearTimeout(this.mobileViewportApplyTimeout);
       this.mobileViewportApplyTimeout = setTimeout(() => {
         this.mobileViewportApplyTimeout = null;
@@ -632,33 +641,45 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
   applyViewportCandidates(firstSnapshot = false, reconcileMedia = true) {
     const previousVisible = this.visibleVideoStreams;
     let nextVisible = new Set(this.viewportCandidateStreams);
+    const activeVideoLimit = getSkyroomActiveVideoLimit();
+    const hasHardDecoderBudget = Number.isFinite(activeVideoLimit);
 
-    if (isSkyroomMobileViewport()) {
+    if (hasHardDecoderBudget) {
       const { streams, focusedId } = this.props;
       const localCount = streams.filter((item) => (
         item.type !== VIDEO_TYPES.GRID
         && item.type !== VIDEO_TYPES.AUDIO_ONLY
         && VideoService.isLocalStream(item.stream)
       )).length;
-      const remoteBudget = Math.max(0, SKYROOM_MOBILE_ACTIVE_VIDEO_LIMIT - localCount);
+      const remoteBudget = Math.max(0, activeVideoLimit - localCount);
+      const mobile = isSkyroomMobileViewport();
       const candidates = streams.filter((item) => (
         item.type !== VIDEO_TYPES.GRID
         && item.type !== VIDEO_TYPES.AUDIO_ONLY
         && !VideoService.isLocalStream(item.stream)
-        && this.viewportCandidateStreams.has(item.stream)
+        && (
+          this.viewportCandidateStreams.has(item.stream)
+          || (!mobile && (
+            item.stream === focusedId
+            || item.user?.pinned
+            || item.floor
+            || item.user?.presenter
+          ))
+        )
       ));
       const ranked = candidates.slice().sort((left, right) => {
         const score = (item) => {
-          if (item.stream === focusedId) return 4;
-          if (item.user?.pinned) return 3;
-          if (item.floor || item.user?.presenter) return 2;
-          return 1;
+          const visibleScore = this.viewportCandidateStreams.has(item.stream) ? 100 : 0;
+          if (item.stream === focusedId) return visibleScore + 40;
+          if (item.user?.pinned) return visibleScore + 30;
+          if (item.floor || item.user?.presenter) return visibleScore + 20;
+          return visibleScore + 1;
         };
         return score(right) - score(left);
       });
       nextVisible = new Set(ranked.slice(0, remoteBudget).map((item) => item.stream));
-      // Mobile uses a settled switch rather than a retained overlap so no
-      // scroll transition can leave more than four active decoders.
+      // Hard-budget clients use a settled switch rather than retained overlap,
+      // so scroll/tier transitions cannot temporarily exceed the decoder cap.
       this.viewportRetainedStreams = new Set(nextVisible);
     }
 
@@ -683,6 +704,8 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       activeRemote: nextVisible.size,
       peerCount: Object.keys(this.webRtcPeers).length,
       mobile: isSkyroomMobileViewport(),
+      performanceTier: getSkyroomPerformanceTier(),
+      activeVideoLimit: hasHardDecoderBudget ? activeVideoLimit : 0,
     });
 
     if (!this.isViewportSubscriptionEnabled()) {
@@ -697,7 +720,15 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     if (reconcileMedia && (firstSnapshot || becameVisible) && this.mounted && socketOpen) {
       this.updateStreams(streams);
     }
-    if (becameHidden) this.scheduleViewportRelease();
+    if (becameHidden && !hasHardDecoderBudget) this.scheduleViewportRelease();
+  }
+
+  handlePerformanceTierChange() {
+    if (!this.hasViewportVisibilitySnapshot) return;
+    this.applyViewportCandidates(false, false);
+    const { socketOpen } = this.state;
+    const { streams } = this.props;
+    if (this.mounted && socketOpen) this.updateStreams(streams);
   }
 
   async collectDiagnosticsStats() {
