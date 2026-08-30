@@ -169,10 +169,17 @@ export const CURRENT_PAGE_ANNOTATIONS_QUERY = gql`query CurrentPageAnnotationsQu
 }`;
 
 export const ANNOTATION_HISTORY_STREAM = gql`
-  subscription annotationHistoryStream($updatedAt: timestamptz, $pageId: String!) {
+  subscription annotationHistoryStream(
+    $updatedAt: timestamptz,
+    $pageId: String!,
+    $currentUserId: String!,
+  ) {
     pres_annotation_history_curr_stream(
       batch_size: 1000,
-      where: {pageId: {_eq: $pageId}},
+      where: {
+        pageId: {_eq: $pageId},
+        userId: {_neq: $currentUserId},
+      },
       cursor: {initial_value: {updatedAt: $updatedAt}, ordering: ASC}
     ) {
       annotationId

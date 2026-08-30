@@ -45,49 +45,40 @@ const dedupeReactions = (reactions) => {
  * send. Prefer stream; drop fallback when a fresh stream event covers the key.
  */
 const mergeStreamAndFallback = (streamReactions, fallbackReactions) => {
-  const merged = [];
-  const recentByUserEmoji = new Map();
+  const stream = dedupeReactions(streamReactions).filter((reaction) => (
+    reaction?.reaction && reaction.reaction !== 'none'
+  ));
+  const merged = [...stream];
+  const mergedEventKeys = new Set(stream.map(getReactionDedupKey));
   const freshStreamUserEmojiKeys = new Set();
   const now = Date.now();
 
-  dedupeReactions(streamReactions).forEach((reaction) => {
+  stream.forEach((reaction) => {
     if (!reaction?.reaction || reaction.reaction === 'none') return;
     if (isFreshReaction(reaction.creationDate, now)) {
       freshStreamUserEmojiKeys.add(getUserEmojiKey(reaction));
     }
   });
 
-  const pushUnique = (reaction, { fromFallback = false } = {}) => {
+  const pushFallback = (reaction) => {
     if (!reaction?.reaction || reaction.reaction === 'none') return;
 
     const userEmojiKey = getUserEmojiKey(reaction);
-    const createdAt = reaction.creationDate?.getTime?.() || 0;
-
-    if (fromFallback && freshStreamUserEmojiKeys.has(userEmojiKey)) {
-      return;
-    }
-
-    const lastSeenAt = recentByUserEmoji.get(userEmojiKey);
-    if (
-      lastSeenAt != null
-      && Math.abs(createdAt - lastSeenAt) < DUPLICATE_WINDOW_MS
-    ) {
+    if (freshStreamUserEmojiKeys.has(userEmojiKey)) {
       return;
     }
 
     const eventKey = getReactionDedupKey(reaction);
-    if (merged.some((item) => getReactionDedupKey(item) === eventKey)) return;
+    if (mergedEventKeys.has(eventKey)) return;
 
-    recentByUserEmoji.set(userEmojiKey, createdAt);
+    mergedEventKeys.add(eventKey);
     merged.push(reaction);
   };
 
-  // Prefer canonical stream events first, then fill gaps via fallback.
-  dedupeReactions(streamReactions).forEach((reaction) => {
-    pushUnique(reaction, { fromFallback: false });
-  });
+  // Canonical stream rows are distinct sends, including repeated identical
+  // emoji. Fallback only fills a subscription gap and must not shadow them.
   dedupeReactions(fallbackReactions).forEach((reaction) => {
-    pushUnique(reaction, { fromFallback: true });
+    pushFallback(reaction);
   });
 
   return merged;

@@ -37,6 +37,12 @@ const PresentationContainer = (props) => {
   const presentationIsOpen = props?.presentationIsOpen ?? true;
   const layoutContextDispatch = layoutDispatch();
   const { selectedLayout } = useSettings(SETTINGS.APPLICATION);
+  const { data: currentUser } = useCurrentUser((user) => ({
+    presenter: user.presenter,
+    userId: user.userId,
+    isModerator: user.isModerator,
+    whiteboardWriteAccess: user.whiteboardWriteAccess,
+  }));
 
   const { data: presentationPageData } = useDeduplicatedSubscription(
     CURRENT_PRESENTATION_PAGE_SUBSCRIPTION,
@@ -94,8 +100,16 @@ const PresentationContainer = (props) => {
   const canStream = !!lastUpdatedAt;
 
   useSubscription(ANNOTATION_HISTORY_STREAM, {
-    variables: { pageId: currentPageId, updatedAt: lastUpdatedAt },
-    skip: !currentPageId || !canStream,
+    variables: {
+      pageId: currentPageId,
+      updatedAt: lastUpdatedAt,
+      currentUserId: currentUser?.userId,
+    },
+    // The local tldraw store is authoritative for this user's active stroke.
+    // Re-applying its delayed GraphQL echo can overwrite newer pointer points
+    // and make drawing look truncated or jittery. Other users still receive
+    // every streamed update; initial load/reconnect still query all shapes.
+    skip: !currentPageId || !canStream || !currentUser?.userId,
     onData: ({ data: subscriptionData }) => {
       const annotationStream = subscriptionData.data?.pres_annotation_history_curr_stream || [];
       if (annotationStream.length > 0 && restoreOnUpdate && !presentationIsOpen) {
@@ -231,12 +245,6 @@ const PresentationContainer = (props) => {
 
   const isIphone = !!(navigator.userAgent.match(/iPhone/i));
 
-  const { data: currentUser } = useCurrentUser((user) => ({
-    presenter: user.presenter,
-    userId: user.userId,
-    isModerator: user.isModerator,
-    whiteboardWriteAccess: user.whiteboardWriteAccess,
-  }));
   const userIsPresenter = currentUser?.presenter;
 
   const presentationAreaSize = {

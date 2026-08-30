@@ -23,7 +23,6 @@ html[data-skyroom-performance-tier="low"] #layout[data-skyroom-column="true"] #c
   box-shadow: none !important;
 }
 
-html[data-skyroom-performance-tier="low"] #layout[data-skyroom-column="true"] [data-test="stageReactionOverlay"] *,
 html[data-skyroom-performance-tier="low"] #layout[data-skyroom-column="true"] [data-test="pollSummary"] *,
 html[data-skyroom-performance-tier="low"] #layout[data-skyroom-column="true"] [class*="TalkingIndicator"] {
   animation: none !important;

@@ -68,6 +68,14 @@ const isBackgroundShapeId = (id) => typeof id === 'string' && id.startsWith(BG_S
 
 const isBackgroundShape = (shape) => isBackgroundShapeId(shape?.id);
 
+const indexShapesById = (shapeCollection) => {
+  const lookup = {};
+  Object.values(shapeCollection || {}).forEach((shape) => {
+    if (shape?.id) lookup[shape.id] = shape;
+  });
+  return lookup;
+};
+
 // Viewport for letterbox centering. Do NOT feed this into widthGap zoom math.
 // Skyroom uses a fitted svg box (#presentationInnerWrapper = slide size); prefer
 // that DOM size so hideUi / tldraw chrome cannot shift the camera origin.
@@ -419,7 +427,7 @@ const Whiteboard = React.memo((props) => {
 
   const whiteboardRef = React.useRef(null);
   const zoomValueRef = React.useRef(null);
-  const prevShapesRef = React.useRef(shapes);
+  const prevShapesRef = React.useRef({});
   const tlEditorRef = React.useRef(null);
   const slideChanged = React.useRef(false);
   const slideNext = React.useRef(null);
@@ -742,16 +750,28 @@ const Whiteboard = React.memo((props) => {
   }, [fitToWidth]);
 
   React.useEffect(() => {
-    if (shapes && Object.keys(shapes).length > 0) {
-      prevShapesRef.current = shapes;
+    const nextShapesById = indexShapesById(shapes);
+    const previousShapesById = prevShapesRef.current;
+    const changedShapesById = {};
+    if (pageChanged) {
+      Object.assign(changedShapesById, nextShapesById);
+    } else {
+      Object.values(nextShapesById).forEach((shape) => {
+        if (!isEqual(previousShapesById[shape.id], shape)) {
+          changedShapesById[shape.id] = shape;
+        }
+      });
     }
+    prevShapesRef.current = nextShapesById;
+
     const frameId = requestAnimationFrame(() => {
       const startedAt = performance.now();
       updateShapes(
-        shapes, tlEditorRef, presentationIdRef, pageChanged, assets, bgShape,
+        changedShapesById, tlEditorRef, presentationIdRef, pageChanged, assets, bgShape,
       );
       recordSafeMeetDiagnostic('whiteboard_remote_shapes_applied', {
-        shapeCount: Object.keys(shapes || {}).length,
+        shapeCount: Object.keys(changedShapesById).length,
+        totalShapeCount: Object.keys(nextShapesById).length,
         durationMs: Math.round(performance.now() - startedAt),
       });
     });

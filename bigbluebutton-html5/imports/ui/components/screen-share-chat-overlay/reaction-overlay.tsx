@@ -17,7 +17,6 @@ import {
 
 const MAX_VISIBLE_REACTIONS = 6;
 const REACTION_TTL_MS = 6800;
-const DUPLICATE_WINDOW_MS = 1500;
 
 interface FloatingReaction {
   id: string;
@@ -45,7 +44,6 @@ const ScreenShareChatReactionOverlay: React.FC = () => {
   const visibility = useReactiveVar(overlayVisibilityVar);
   const [floatingReactions, setFloatingReactions] = useState<FloatingReaction[]>([]);
   const seenReactionsRef = useRef<Set<string>>(new Set());
-  const recentReactionRef = useRef<Map<string, number>>(new Map());
   const expireTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const reactionsRef = useRef(reactions);
   reactionsRef.current = reactions;
@@ -99,16 +97,11 @@ const ScreenShareChatReactionOverlay: React.FC = () => {
     if (reactionsToShow.length === 0) return;
 
     const nextReactions = reactionsToShow.reduce<FloatingReaction[]>((acc, reaction) => {
-      const createdAt = reaction.creationDate.getTime();
       const key = getReactionKey(reaction);
-      const duplicateKey = `${reaction.userId || 'unknown'}-${reaction.reaction}`;
-      const lastSeenAt = recentReactionRef.current.get(duplicateKey) || 0;
 
       if (seenReactionsRef.current.has(key)) return acc;
-      if (lastSeenAt > 0 && Math.abs(createdAt - lastSeenAt) < DUPLICATE_WINDOW_MS) return acc;
 
       seenReactionsRef.current.add(key);
-      recentReactionRef.current.set(duplicateKey, createdAt);
 
       acc.push({
         id: key,

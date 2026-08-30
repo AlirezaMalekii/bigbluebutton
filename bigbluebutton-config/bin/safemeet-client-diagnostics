@@ -7,14 +7,13 @@ NGINX_ENABLED=/etc/bigbluebutton/nginx/safemeet-client-diagnostics.nginx
 SERVICE=safemeet-diagnostics-collector.service
 COLLECTOR=/usr/lib/bigbluebutton/safemeet-diagnostics-collector.py
 
-restart_html5() {
-  mapfile -t services < <(
-    systemctl list-units --type=service --state=running --no-legend \
-      'bbb-html5-frontend@*.service' 'bbb-html5-backend@*.service' \
-      | awk '{print $1}'
-  )
-  if ((${#services[@]} > 0)); then
-    systemctl restart "${services[@]}"
+reload_client_settings() {
+  # BBB 3 loads settings.yml plus /etc/bigbluebutton/bbb-html5.yml once, from
+  # akka-bbb-apps Boot. There are no Meteor bbb-html5 frontend/backend units in
+  # this packaging layout, so restarting those patterns leaves new meetings on
+  # the stale configuration even though `status` reports the file as enabled.
+  if systemctl is-active --quiet bbb-apps-akka.service; then
+    systemctl restart bbb-apps-akka.service
   fi
 }
 
@@ -30,7 +29,7 @@ enable_diagnostics() {
   systemctl enable --now "$SERVICE"
   nginx -t
   systemctl reload nginx
-  restart_html5
+  reload_client_settings
   echo "SafeMeet client diagnostics enabled. New meetings will send local diagnostics."
 }
 
@@ -41,7 +40,7 @@ disable_diagnostics() {
   nginx -t
   systemctl reload nginx
   systemctl disable --now "$SERVICE" >/dev/null 2>&1 || true
-  restart_html5
+  reload_client_settings
   echo "SafeMeet client diagnostics disabled. Existing log retention is unchanged."
 }
 

@@ -17,7 +17,6 @@ import Styled from './stage-reaction-overlay-styles';
 
 const MAX_VISIBLE_REACTIONS = 10;
 const REACTION_TTL_MS = 7600;
-const DUPLICATE_WINDOW_MS = 3000;
 /**
  * Above chat panel content; below ActionsBar (20) and BBBMenu (~999).
  */
@@ -40,7 +39,6 @@ const StageReactionOverlay = ({ reactions }) => {
   const [floatingReactions, setFloatingReactions] = useState([]);
   const [chatBounds, setChatBounds] = useState(null);
   const seenReactionsRef = useRef(new Set());
-  const recentReactionRef = useRef(new Map());
   const expireTimersRef = useRef(new Map());
   const reactionsRef = useRef(reactions);
   reactionsRef.current = reactions;
@@ -163,12 +161,18 @@ const StageReactionOverlay = ({ reactions }) => {
     expireTimersRef.current.clear();
   };
 
+  const expireReaction = (id) => {
+    const timer = expireTimersRef.current.get(id);
+    if (timer) clearTimeout(timer);
+    expireTimersRef.current.delete(id);
+    setFloatingReactions((current) => current.filter((reaction) => reaction.id !== id));
+  };
+
   const scheduleExpire = (id) => {
     if (expireTimersRef.current.has(id)) return;
 
     const timer = setTimeout(() => {
-      setFloatingReactions((current) => current.filter((reaction) => reaction.id !== id));
-      expireTimersRef.current.delete(id);
+      expireReaction(id);
     }, REACTION_TTL_MS);
 
     expireTimersRef.current.set(id, timer);
@@ -191,21 +195,11 @@ const StageReactionOverlay = ({ reactions }) => {
     if (reactionsToShow.length === 0) return;
 
     const nextReactions = reactionsToShow.reduce((acc, reaction) => {
-      const createdAt = reaction.creationDate.getTime();
       const key = getReactionKey(reaction);
-      const duplicateKey = `${reaction.userId || 'unknown'}-${reaction.reaction}`;
-      const lastSeenAt = recentReactionRef.current.get(duplicateKey);
 
       if (seenReactionsRef.current.has(key)) return acc;
-      if (
-        lastSeenAt != null
-        && Math.abs(createdAt - lastSeenAt) < DUPLICATE_WINDOW_MS
-      ) {
-        return acc;
-      }
 
       seenReactionsRef.current.add(key);
-      recentReactionRef.current.set(duplicateKey, createdAt);
 
       const lane = 18 + Math.random() * 64;
       const drift = Math.round((Math.random() * 40) - 20);
@@ -253,6 +247,8 @@ const StageReactionOverlay = ({ reactions }) => {
           $duration={reaction.duration}
           $delay={reaction.delay}
           $travel={travel}
+          data-test="stageReactionBubble"
+          onAnimationEnd={() => expireReaction(reaction.id)}
         >
           <Styled.BubbleCard>
             <Styled.Emoji aria-hidden="true">{reaction.emoji}</Styled.Emoji>

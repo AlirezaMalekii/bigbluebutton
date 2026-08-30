@@ -80,9 +80,6 @@ const ReactionsButton = (props) => {
   const handleReactionSelect = (reaction) => {
     if (pendingRef.current) return;
 
-    // Same emoji already active — server skips; avoid a second floating bubble.
-    if (reaction !== 'none' && reaction === currentUserReaction) return;
-
     // Clearing status should not consume the send budget.
     if (reaction !== 'none' && !isModerator) {
       const rate = checkReactionRateLimit();

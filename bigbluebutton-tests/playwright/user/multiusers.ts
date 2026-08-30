@@ -575,14 +575,37 @@ export class MultiUsers {
     }
 
     await this.modPage.waitForSelector(e.whiteboard);
+    await this.modPage.page.locator('html').evaluate((element) => {
+      element.setAttribute('data-skyroom-performance-tier', 'low');
+    });
     await this.modPage.waitAndClick(e.reactionsButton);
     await this.modPage.waitAndClick(smilingEmojiReaction);
     const emojiRainLocator = this.modPage.page.locator(e.emojiRain);
+    const stageBubble = this.modPage.page.locator(e.stageReactionBubble).last();
     await expect(emojiRainLocator, 'should display the emoji rain element when enabled').toHaveCount(5, {
       timeout: ELEMENT_WAIT_TIME,
     });
+    await expect(stageBubble, 'should display a floating reaction bubble').toBeVisible({
+      timeout: ELEMENT_WAIT_TIME,
+    });
+    await expect
+      .poll(() => stageBubble.evaluate((element) => getComputedStyle(element).animationName), {
+        message: 'should preserve the lightweight reaction motion in low-power mode',
+      })
+      .not.toBe('none');
+    const initialBubbleTop = await stageBubble.evaluate((element) => element.getBoundingClientRect().top);
+    await this.modPage.page.waitForTimeout(500);
+    const movedBubbleTop = await stageBubble.evaluate((element) => element.getBoundingClientRect().top);
+    expect(movedBubbleTop, 'should move the reaction bubble upward').toBeLessThan(initialBubbleTop);
     await this.modPage.page.waitForTimeout(1000);
     await expect(emojiRainLocator, 'should stop displaying the emoji rain element after a second').toHaveCount(0, {
+      timeout: ELEMENT_WAIT_TIME,
+    });
+
+    // Repeating the currently active emoji is a new reaction event.
+    await this.modPage.waitAndClick(e.reactionsButton);
+    await this.modPage.waitAndClick(smilingEmojiReaction);
+    await expect(emojiRainLocator, 'should display the same reaction again').toHaveCount(5, {
       timeout: ELEMENT_WAIT_TIME,
     });
   }
