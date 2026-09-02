@@ -10,8 +10,8 @@ import { defineMessages, useIntl } from 'react-intl';
 import useChat from '/imports/ui/core/hooks/useChat';
 import useIntersectionObserver from '/imports/ui/hooks/useIntersectionObserver';
 import { ChatEvents } from '/imports/ui/core/enums/chat';
-import { layoutSelect } from '/imports/ui/components/layout/context';
-import { Layout } from '/imports/ui/components/layout/layoutTypes';
+import { layoutSelect, layoutSelectOutput } from '/imports/ui/components/layout/context';
+import { Layout, Output } from '/imports/ui/components/layout/layoutTypes';
 import { Message } from '/imports/ui/Types/message';
 import ChatListPage from './page/component';
 import LAST_SEEN_MUTATION from './queries';
@@ -194,6 +194,7 @@ const ChatMessageList: React.FC<ChatListProps> = ({
   isRTL,
 }) => {
   const intl = useIntl();
+  const chatPanelVisible = layoutSelectOutput((i: Output) => i.sidebarContent.display);
   // I used a ref here because I don't want to re-render the component when the last sender changes
   const lastSenderPerPage = React.useRef<Map<number, string>>(new Map());
   const endSentinelRef = React.useRef<HTMLDivElement | null>(null);
@@ -328,6 +329,7 @@ const ChatMessageList: React.FC<ChatListProps> = ({
 
   useEffect(() => {
     const lastSeenTime = new Date(lastMessageCreatedAt).getTime();
+    if (!chatPanelVisible) return;
     if (!Number.isFinite(lastSeenTime) || lastMessageCreatedAt === '') return;
 
     setMessageAsSeenMutation({
@@ -362,7 +364,7 @@ const ChatMessageList: React.FC<ChatListProps> = ({
         },
       }, `Setting chat last seen failed: ${e?.message}`);
     });
-  }, [lastMessageCreatedAt, chatId, setMessageAsSeenMutation]);
+  }, [lastMessageCreatedAt, chatId, setMessageAsSeenMutation, chatPanelVisible]);
 
   useEffect(() => {
     const pendingLastSeenAt = pendingLastSeenAtByChat[chatId];
@@ -393,6 +395,7 @@ const ChatMessageList: React.FC<ChatListProps> = ({
   }, []);
 
   const markMessageAsSeen = useCallback((message: Message) => {
+    if (!chatPanelVisible) return;
     if (new Date(message.createdAt).getTime() > new Date((lastMessageCreatedAt || 0)).getTime()) {
       dispatchLastSeen();
       const lastSeenQueueValue = lastSeenQueue();
@@ -404,7 +407,7 @@ const ChatMessageList: React.FC<ChatListProps> = ({
         lastSeenQueue(lastSeenQueueValue);
       }
     }
-  }, [lastMessageCreatedAt, chatId]);
+  }, [lastMessageCreatedAt, chatId, chatPanelVisible]);
 
   const setScrollToTailEventHandler = () => {
     toggleFollowingTail(isEndSentinelVisible);

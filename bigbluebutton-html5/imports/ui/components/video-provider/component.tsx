@@ -35,6 +35,8 @@ import {
   getSkyroomPerformanceTier,
   SKYROOM_PERFORMANCE_TIER_EVENT,
 } from '/imports/ui/components/skyroom-layout/performance-profile';
+import { selectHardBudgetedRemoteIds } from '/imports/ui/components/video-provider/mobile-webcam-viewport-utils';
+import { isSkyroomMobileWebcamDockHidden } from '/imports/ui/components/skyroom-layout/mobile-webcam-visibility';
 
 const SKYROOM_MOBILE_VIEWPORT_SETTLE_MS = 120;
 
@@ -206,6 +208,8 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
   private viewportCandidateStreams: Set<string>;
 
+  private viewportCandidateAreas: Map<string, number>;
+
   private viewportRetainedStreams: Set<string>;
 
   private hasViewportVisibilitySnapshot: boolean;
@@ -243,6 +247,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     this.localStreamsPendingWsRestore = new Map();
     this.visibleVideoStreams = new Set();
     this.viewportCandidateStreams = new Set();
+    this.viewportCandidateAreas = new Map();
     this.viewportRetainedStreams = new Set();
     this.hasViewportVisibilitySnapshot = false;
     this.viewportReleaseTimeout = null;
@@ -614,15 +619,31 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       : Math.max(0, Number(releaseDelay) || 0));
   }
 
-  handleVideoVisibilityChange(changes: { stream: string; visible: boolean }[]) {
+  handleVideoVisibilityChange(changes: { area?: number; stream: string; visible: boolean }[]) {
+    const { webcamsVisible } = this.props;
     const firstSnapshot = !this.hasViewportVisibilitySnapshot;
     this.hasViewportVisibilitySnapshot = true;
 
-    changes.forEach(({ stream, visible }) => {
+    // Hidden webcam tab: keep the last decoder set. CSS already hides the dock.
+    // Applying all-false here tore remotes down on tab switch, froze low-end
+    // Android, and left the chat panel stuck on ChatLoading. Check the
+    // synchronous active-box flag too — IntersectionObserver can fire before
+    // the React `webcamsVisible` prop catches up.
+    if (!webcamsVisible || isSkyroomMobileWebcamDockHidden()) {
+      if (this.mobileViewportApplyTimeout) {
+        clearTimeout(this.mobileViewportApplyTimeout);
+        this.mobileViewportApplyTimeout = null;
+      }
+      return;
+    }
+
+    changes.forEach(({ area, stream, visible }) => {
       if (visible) {
         this.viewportCandidateStreams.add(stream);
+        this.viewportCandidateAreas.set(stream, Math.max(0, Number(area) || 1));
       } else {
         this.viewportCandidateStreams.delete(stream);
+        this.viewportCandidateAreas.delete(stream);
       }
     });
 
@@ -645,39 +666,29 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     const hasHardDecoderBudget = Number.isFinite(activeVideoLimit);
 
     if (hasHardDecoderBudget) {
-      const { streams, focusedId } = this.props;
-      const localCount = streams.filter((item) => (
-        item.type !== VIDEO_TYPES.GRID
-        && item.type !== VIDEO_TYPES.AUDIO_ONLY
-        && VideoService.isLocalStream(item.stream)
-      )).length;
-      const remoteBudget = Math.max(0, activeVideoLimit - localCount);
-      const mobile = isSkyroomMobileViewport();
-      const candidates = streams.filter((item) => (
-        item.type !== VIDEO_TYPES.GRID
-        && item.type !== VIDEO_TYPES.AUDIO_ONLY
-        && !VideoService.isLocalStream(item.stream)
-        && (
-          this.viewportCandidateStreams.has(item.stream)
-          || (!mobile && (
-            item.stream === focusedId
-            || item.user?.pinned
-            || item.floor
-            || item.user?.presenter
+      const { streams, focusedId, webcamsVisible } = this.props;
+      if (!webcamsVisible && this.visibleVideoStreams.size > 0) {
+        this.viewportRetainedStreams = new Set(this.visibleVideoStreams);
+        return;
+      }
+      nextVisible = selectHardBudgetedRemoteIds({
+        candidateAreas: this.viewportCandidateAreas,
+        isMobile: isSkyroomMobileViewport(),
+        limit: activeVideoLimit,
+        streams: streams
+          .filter((item) => (
+            item.type !== VIDEO_TYPES.GRID
+            && item.type !== VIDEO_TYPES.AUDIO_ONLY
           ))
-        )
-      ));
-      const ranked = candidates.slice().sort((left, right) => {
-        const score = (item) => {
-          const visibleScore = this.viewportCandidateStreams.has(item.stream) ? 100 : 0;
-          if (item.stream === focusedId) return visibleScore + 40;
-          if (item.user?.pinned) return visibleScore + 30;
-          if (item.floor || item.user?.presenter) return visibleScore + 20;
-          return visibleScore + 1;
-        };
-        return score(right) - score(left);
+          .map((item) => ({
+            focused: item.stream === focusedId,
+            floor: Boolean(item.floor),
+            local: VideoService.isLocalStream(item.stream),
+            pinned: Boolean(item.user?.pinned),
+            presenter: Boolean(item.user?.presenter),
+            stream: item.stream,
+          })),
       });
-      nextVisible = new Set(ranked.slice(0, remoteBudget).map((item) => item.stream));
       // Hard-budget clients use a settled switch rather than retained overlap,
       // so scroll/tier transitions cannot temporarily exceed the decoder cap.
       this.viewportRetainedStreams = new Set(nextVisible);
@@ -717,7 +728,8 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
     const { socketOpen } = this.state;
     const { streams } = this.props;
-    if (reconcileMedia && (firstSnapshot || becameVisible) && this.mounted && socketOpen) {
+    const visibleSetChanged = becameVisible || becameHidden;
+    if (reconcileMedia && (firstSnapshot || visibleSetChanged) && this.mounted && socketOpen) {
       this.updateStreams(streams);
     }
     if (becameHidden && !hasHardDecoderBudget) this.scheduleViewportRelease();

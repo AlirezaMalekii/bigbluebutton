@@ -269,7 +269,20 @@ export const openSkyroomMobileBox = (layoutContextDispatch, box) => {
 
   if (box !== 'users') closeSkyroomUsers(layoutContextDispatch);
   // chat, breakout, and waiting-users share the content sidebar.
-  if (!isSkyroomContentSidebarBox(box)) closeSkyroomChat(layoutContextDispatch);
+  if (!isSkyroomContentSidebarBox(box)) {
+    // Phone: hide chat without tearing the GraphQL tree down. Full close
+    // unmounted ChatContainer; on some low-end phones the patched message
+    // subscription never resumed and the tab sat on ChatLoading forever.
+    // isOpen=false keeps navbar/tab state correct; panel + idChatOpen stay so
+    // ChatContainer remains mounted. Visibility is gated by mobileActiveBox.
+    const keepChatMountedOnMobile = isSkyroomMobileViewport()
+      && (box === 'webcams' || box === 'users' || box === 'notes' || box == null);
+    if (keepChatMountedOnMobile) {
+      layoutContextDispatch({ type: ACTIONS.SET_SIDEBAR_CONTENT_IS_OPEN, value: false });
+    } else {
+      closeSkyroomChat(layoutContextDispatch);
+    }
+  }
   if (box !== 'notes') closeSkyroomNotes();
 
   if (box === 'users') openSkyroomUserList(layoutContextDispatch);

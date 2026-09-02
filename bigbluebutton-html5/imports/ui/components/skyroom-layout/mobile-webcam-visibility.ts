@@ -9,7 +9,11 @@ import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
 } from './panel-toggles';
-import { resolveSkyroomMobileBox, subscribeSkyroomMobileBottom } from './mobile-bottom-state';
+import {
+  getSkyroomMobileActiveBox,
+  resolveSkyroomMobileBox,
+  subscribeSkyroomMobileBottom,
+} from './mobile-bottom-state';
 import { getSkyroomNotesOpen, subscribeSkyroomNotesOpen } from './notes-panel-state';
 import { isPrivilegedStream } from './camera-placement';
 
@@ -78,6 +82,23 @@ export const computeSkyroomMobileWebcamsVisible = ({
   }
 
   return false;
+};
+
+/**
+ * True while another mobile bottom box owns the screen and the camera dock is
+ * being hidden. IntersectionObserver can fire an all-false burst in that window
+ * before the React `webcamsVisible` prop updates — applying it tore remotes
+ * down and froze chat loading on some phones.
+ */
+export const isSkyroomMobileWebcamDockHidden = (): boolean => {
+  if (!isSkyroomMobileViewport() || !isSkyroomColumnLayout()) return false;
+  const box = getSkyroomMobileActiveBox();
+  if (box === undefined || box === 'webcams') return false;
+  if (typeof document === 'undefined') return true;
+  const layoutEl = document.getElementById('layout');
+  // Top-zone cameras stay live under chat/users when nothing is on stage.
+  if (layoutEl?.hasAttribute('data-skyroom-mobile-top-webcams')) return false;
+  return true;
 };
 
 export const limitSkyroomMobileStageRemoteWebcams = (

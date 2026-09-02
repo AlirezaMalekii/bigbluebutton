@@ -12,7 +12,10 @@
     "lint:fix": "eslint . --fix",
     "lint:file": "eslint",
     "tscheck:staged": "tsc --noEmit --incremental",
-    "test:safemeet-whiteboard-queue": "node imports/ui/components/whiteboard/annotation-sender.test.mjs"
+    "test:safemeet-whiteboard-queue": "node imports/ui/components/whiteboard/annotation-sender.test.mjs",
+    "test:safemeet-whiteboard-permissions": "node imports/ui/components/whiteboard/shape-permissions.test.mjs",
+    "test:safemeet-reaction-events": "node imports/ui/components/emoji-rain/reaction-event-buffer.test.mjs",
+    "test:safemeet-webcam-viewport": "node imports/ui/components/video-provider/mobile-webcam-viewport-utils.test.mjs"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

@@ -13,6 +13,10 @@ import {
   resolveChatColumnDomBounds,
 } from './resolve-chat-column-bounds';
 import { layoutSelectOutput } from '../layout/context';
+import {
+  getReactionEventKey,
+  replaceActiveReactionsByUser,
+} from './reaction-event-buffer';
 import Styled from './stage-reaction-overlay-styles';
 
 const MAX_VISIBLE_REACTIONS = 10;
@@ -28,12 +32,6 @@ const buildFixedStyle = (bounds) => ({
   width: `${bounds.width}px`,
   height: `${bounds.height}px`,
 });
-
-const getReactionKey = (reaction) => {
-  const createdAt = reaction.creationDate?.getTime?.() || 0;
-  return reaction.eventId
-    || `${reaction.userId || 'unknown'}-${reaction.reaction}-${createdAt}`;
-};
 
 const StageReactionOverlay = ({ reactions }) => {
   const [floatingReactions, setFloatingReactions] = useState([]);
@@ -152,7 +150,7 @@ const StageReactionOverlay = ({ reactions }) => {
   const boundsVisible = hasUsableChatBounds(chatBounds);
 
   const reactionSignature = useMemo(
-    () => reactions.map(getReactionKey).join('|'),
+    () => reactions.map(getReactionEventKey).join('|'),
     [reactions],
   );
 
@@ -195,7 +193,7 @@ const StageReactionOverlay = ({ reactions }) => {
     if (reactionsToShow.length === 0) return;
 
     const nextReactions = reactionsToShow.reduce((acc, reaction) => {
-      const key = getReactionKey(reaction);
+      const key = getReactionEventKey(reaction);
 
       if (seenReactionsRef.current.has(key)) return acc;
 
@@ -208,6 +206,7 @@ const StageReactionOverlay = ({ reactions }) => {
       acc.push({
         id: key,
         emoji: reaction.reaction,
+        userId: reaction.userId,
         userName: reaction.userName,
         left: lane,
         drift,
@@ -220,10 +219,11 @@ const StageReactionOverlay = ({ reactions }) => {
 
     if (nextReactions.length === 0) return;
 
-    setFloatingReactions((current) => [
-      ...current,
-      ...nextReactions,
-    ].slice(-MAX_VISIBLE_REACTIONS));
+    setFloatingReactions((current) => replaceActiveReactionsByUser(
+      current,
+      nextReactions,
+      MAX_VISIBLE_REACTIONS,
+    ));
 
     nextReactions.forEach(({ id }) => scheduleExpire(id));
   }, [animations, boundsVisible, reactionSignature]);

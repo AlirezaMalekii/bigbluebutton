@@ -8,6 +8,12 @@ import {
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import useDeduplicatedSubscription from '../../core/hooks/useDeduplicatedSubscription';
 
+import {
+  isSkyroomColumnLayout,
+  isSkyroomMobileViewport,
+} from '/imports/ui/components/skyroom-layout/panel-toggles';
+import { PANELS } from '../layout/enums';
+
 const SidebarContentContainer = (props) => {
   const { isSharedNotesPinned } = props;
   const sidebarContentInput = layoutSelectInput((i) => i.sidebarContent);
@@ -27,19 +33,37 @@ const SidebarContentContainer = (props) => {
   const presentationPage = presentationPageData?.pres_page_curr[0] || {};
 
   const currentSlideId = presentationPage?.pageId;
+  const keepChatMountedOnMobile = isSkyroomColumnLayout()
+    && isSkyroomMobileViewport()
+    && sidebarContentPanel === PANELS.CHAT;
 
-  if (sidebarContentOutput.display === false) return null;
+  if (sidebarContentOutput.display === false && !keepChatMountedOnMobile) return null;
+
+  const hiddenOnMobile = sidebarContentOutput.display === false && keepChatMountedOnMobile;
 
   return (
-    <SidebarContent
-      {...sidebarContentOutput}
-      contextDispatch={layoutContextDispatch}
-      sidebarContentPanel={sidebarContentPanel}
-      amIPresenter={amIPresenter}
-      amIModerator={amIModerator}
-      currentSlideId={currentSlideId}
-      isSharedNotesPinned={isSharedNotesPinned}
-    />
+    <div
+      hidden={hiddenOnMobile}
+      aria-hidden={hiddenOnMobile}
+      style={hiddenOnMobile ? {
+        height: 0,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+        position: 'absolute',
+        visibility: 'hidden',
+        width: 0,
+      } : undefined}
+    >
+      <SidebarContent
+        {...sidebarContentOutput}
+        contextDispatch={layoutContextDispatch}
+        sidebarContentPanel={sidebarContentPanel}
+        amIPresenter={amIPresenter}
+        amIModerator={amIModerator}
+        currentSlideId={currentSlideId}
+        isSharedNotesPinned={isSharedNotesPinned}
+      />
+    </div>
   );
 };
 

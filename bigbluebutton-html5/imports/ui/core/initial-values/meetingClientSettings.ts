@@ -1139,7 +1139,7 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
       enabled: true,
       mode: 'auto',
       mobileDecoderBudget: 4,
-      desktopLowPowerDecoderBudget: 6,
+      desktopLowPowerDecoderBudget: 9,
       lowPowerHardwareConcurrency: 4,
       lowPowerDeviceMemoryGb: 4,
       longTaskThresholdMs: 200,

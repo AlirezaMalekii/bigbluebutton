@@ -18,7 +18,7 @@ const DEFAULT_SETTINGS = {
   enabled: true,
   mode: 'auto',
   mobileDecoderBudget: 4,
-  desktopLowPowerDecoderBudget: 6,
+  desktopLowPowerDecoderBudget: 9,
   lowPowerHardwareConcurrency: 4,
   lowPowerDeviceMemoryGb: 4,
   longTaskThresholdMs: 200,
@@ -122,7 +122,7 @@ export const getSkyroomActiveVideoLimit = () => {
   const tier = document.documentElement.getAttribute(PERFORMANCE_TIER_ATTRIBUTE)
     || detectSkyroomPerformanceTier();
   if (tier === 'low') {
-    return normalizeBudget(settings.desktopLowPowerDecoderBudget, 6);
+    return normalizeBudget(settings.desktopLowPowerDecoderBudget, 9);
   }
   return Number.POSITIVE_INFINITY;
 };

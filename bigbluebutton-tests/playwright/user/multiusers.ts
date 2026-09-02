@@ -111,6 +111,35 @@ export class MultiUsers {
     await this.userPage.hasElement(e.userListItem, 'should display the user list item for the attendee');
     const isPresenter = await checkIsPresenter(this.userPage);
     await expect(isPresenter, 'should the attendee be presenter').toBeTruthy();
+
+    // A newly promoted presenter must be able to erase a shape created locally.
+    await this.userPage.waitAndClick(e.wbShapesButton);
+    await this.userPage.waitAndClick(e.wbLineShape);
+    const whiteboard = this.userPage.page.locator(e.whiteboard);
+    const bounds = await whiteboard.boundingBox();
+    if (!bounds) throw new Error('presenter whiteboard boundingBox is null');
+    const start = {
+      x: bounds.x + bounds.width * 0.3,
+      y: bounds.y + bounds.height * 0.3,
+    };
+    const end = {
+      x: bounds.x + bounds.width * 0.7,
+      y: bounds.y + bounds.height * 0.7,
+    };
+    await this.userPage.page.mouse.move(start.x, start.y);
+    await this.userPage.page.mouse.down();
+    await this.userPage.page.mouse.move(end.x, end.y, { steps: 25 });
+    await this.userPage.page.mouse.up();
+    await this.userPage.hasElement(e.wbDrawnLine, 'presenter should create a line');
+    await this.modPage.hasElement(e.wbDrawnLine, 'moderator should receive the presenter line');
+
+    await this.userPage.waitAndClick(e.wbEraser);
+    await this.userPage.page.mouse.move(start.x, start.y);
+    await this.userPage.page.mouse.down();
+    await this.userPage.page.mouse.move(end.x, end.y, { steps: 25 });
+    await this.userPage.page.mouse.up();
+    await this.userPage.wasRemoved(e.wbDrawnLine, 'presenter should erase their own line');
+    await this.modPage.wasRemoved(e.wbDrawnLine, 'moderator should receive the erased presenter line');
   }
 
   async takePresenter() {
@@ -605,9 +634,23 @@ export class MultiUsers {
     // Repeating the currently active emoji is a new reaction event.
     await this.modPage.waitAndClick(e.reactionsButton);
     await this.modPage.waitAndClick(smilingEmojiReaction);
+    await expect(
+      this.modPage.page.locator(e.stageReactionBubble),
+      'should replace the previous bubble when the same user reacts again',
+    ).toHaveCount(1, { timeout: ELEMENT_WAIT_TIME });
     await expect(emojiRainLocator, 'should display the same reaction again').toHaveCount(5, {
       timeout: ELEMENT_WAIT_TIME,
     });
+
+    // A different reaction from the same user also replaces the active bubble.
+    await this.modPage.page.waitForTimeout(500);
+    await this.modPage.waitAndClick(e.reactionsButton);
+    await this.modPage.waitAndClick(`${e.singleReactionButton}:nth-child(5)`);
+    const activeBubbles = this.modPage.page.locator(e.stageReactionBubble);
+    await expect(activeBubbles, 'should keep one active bubble per reacting user').toHaveCount(1, {
+      timeout: ELEMENT_WAIT_TIME,
+    });
+    await expect(activeBubbles).toContainText('👍');
   }
 
   async clearAllStatusIcon() {

@@ -1,9 +1,10 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { CircularProgress } from '@mui/material';
 import SkyroomSpinner from '/imports/ui/components/skyroom-layout/loading/SkyroomSpinner';
 import {
   isSkyroomTheme,
   isSkyroomColumnLayout,
+  getPublicChatId,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import ChatHeader from './chat-header/component';
 import { layoutSelect, layoutSelectInput } from '../../layout/context';
@@ -128,6 +129,17 @@ const ChatContainer: React.FC = () => {
   }));
 
   const isLocked = currentUser?.locked || currentUser?.userLockSettings?.disablePublicChat;
+
+  useEffect(() => {
+    if (sidebarContent.sidebarContentPanel !== PANELS.CHAT) return;
+    if (idChatOpen || isLocked) return;
+    const publicChatId = getPublicChatId();
+    if (!publicChatId) return;
+    layoutContextDispatch({
+      type: ACTIONS.SET_ID_CHAT_OPEN,
+      value: publicChatId,
+    });
+  }, [idChatOpen, isLocked, sidebarContent.sidebarContentPanel, layoutContextDispatch]);
 
   if (pendingChat && chats) {
     const chat = chats.find((c) => {

@@ -9,6 +9,7 @@ import {
   normalizeReactionStream,
   reactionStreamVar,
 } from './reaction-stream';
+import { keepLatestReactionPerUser } from './reaction-event-buffer';
 import useDeduplicatedSubscription from '../../core/hooks/useDeduplicatedSubscription';
 
 const DUPLICATE_WINDOW_MS = 3000;
@@ -81,7 +82,9 @@ const mergeStreamAndFallback = (streamReactions, fallbackReactions) => {
     pushFallback(reaction);
   });
 
-  return merged;
+  // Streaming payloads may contain the recent history again. Emit at most the
+  // newest event for each user so a new click cannot replay older bubbles.
+  return keepLatestReactionPerUser(merged);
 };
 
 const EmojiRainContainer = () => {

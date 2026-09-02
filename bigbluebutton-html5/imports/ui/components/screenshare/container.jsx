@@ -201,6 +201,13 @@ const ScreenshareContainer = (props) => {
         value: true,
       });
       Session.setItem('presentationLastState', true);
+      // Unmount props can still say the meeting is broadcasting, so the class
+      // component skips pile cleanup. Clear the local screenshare flag here
+      // from live state so the presenter stage is not left as a black card.
+      layoutContextDispatch({
+        type: ACTIONS.SET_HAS_SCREEN_SHARE,
+        value: false,
+      });
 
       if (isPresenter) {
         restorePresentationMediaExternalVideo(

@@ -3573,6 +3573,7 @@
     pointer-events: auto !important;
     overflow: hidden !important;
     border-radius: 14px !important;
+    touch-action: pan-y !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"][data-skyroom-mobile-top-webcams="true"]:not([data-skyroom-mobile-bottom-webcams="true"]) .react-draggable:has(#cameraDock) {
@@ -3589,9 +3590,20 @@
     margin: 0 !important;
     overflow: hidden !important;
     border-radius: 14px !important;
+    touch-action: pan-y !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .react-draggable:has(#cameraDock) > div,
+  /* Resizable wrapper fills the zone; #cameraDock is the only scrollport. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .react-draggable:has(#cameraDock) > div {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .react-draggable:has(#cameraDock) #cameraDock {
     width: 100% !important;
     height: 100% !important;
@@ -3605,9 +3617,9 @@
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="webcamContainer"] {
     padding: 0 !important;
     width: 100% !important;
-    height: 100% !important;
-    max-height: 100% !important;
-    min-height: 0 !important;
+    height: max-content !important;
+    max-height: none !important;
+    min-height: 100% !important;
     overflow: visible !important;
   }
 
@@ -3686,8 +3698,10 @@
     visibility: hidden !important;
   }
 
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock .video-provider_canvas,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [class*="VideoCanvas"] {
     position: relative !important;
+    inset: auto !important;
     min-height: 0 !important;
     height: max-content !important;
     max-height: none !important;
@@ -3696,6 +3710,7 @@
     left: auto !important;
     right: auto !important;
     bottom: auto !important;
+    flex: 0 0 auto !important;
     align-items: stretch !important;
     align-content: start !important;
     justify-content: stretch !important;
@@ -3708,7 +3723,8 @@
        max-content sizing + height:100% tiles was collapsing the grid into the
        dock and hiding cams below the fold with no scroll. */
     max-height: none !important;
-    align-self: stretch !important;
+    flex-shrink: 0 !important;
+    align-self: flex-start !important;
     align-content: start !important;
     justify-content: stretch !important;
     justify-items: stretch !important;
@@ -3740,6 +3756,8 @@
     overflow-y: hidden !important;
   }
 
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:only-child) .video-provider_canvas,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:first-child:nth-last-child(2)) .video-provider_canvas,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:only-child) [class*="VideoCanvas"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:first-child:nth-last-child(2)) [class*="VideoCanvas"] {
     height: 100% !important;

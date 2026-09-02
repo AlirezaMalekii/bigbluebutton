@@ -56,6 +56,10 @@ import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import {
+  canDeleteWhiteboardShape,
+  stampLocalShapeOwnership,
+} from './shape-permissions';
 
 const USER_CAMERA_INTERACTION_MS = (
   window.meetingClientSettings?.public?.presentation?.panZoomInterval || 200
@@ -461,6 +465,7 @@ const Whiteboard = React.memo((props) => {
   const bgSelectedRef = React.useRef(false);
   const lastVisibilityStateRef = React.useRef('');
   const mountedTimeoutIdRef = useRef(null);
+  const cameraFitPollCancelRef = useRef(null);
   const presentationIdRef = React.useRef(presentationId);
   const hasZoomSyncedRef = useRef(false);
   const lastForcedViewRef = useRef(null);
@@ -487,12 +492,15 @@ const Whiteboard = React.memo((props) => {
           readonlyOk: false,
           icon: 'tool-delete-selected-items',
           onSelect() {
-            editor.deleteShapes(editor.getSelectedShapes().map((shape) => {
-              if (currentUser?.presenter || (shape?.meta?.createdBy === currentUser?.userId)) {
-                return shape.id;
-              }
-              return '';
-            })?.filter((s) => s?.length > 0));
+            editor.deleteShapes(editor.getSelectedShapes()
+              .filter((shape) => !isBackgroundShape(shape) && canDeleteWhiteboardShape({
+                shape,
+                source: 'user',
+                userId: currentUser?.userId,
+                isPresenter,
+                isModerator,
+              }))
+              .map((shape) => shape.id));
           },
         },
       };
@@ -565,7 +573,7 @@ const Whiteboard = React.memo((props) => {
       };
       return acc;
     }, {}),
-  }), [intl, currentUser?.presenter, currentUser?.userId, isModerator, viewerCanPan]);
+  }), [intl, currentUser?.userId, isModerator, isPresenter, viewerCanPan]);
 
   const presenterChanged = usePrevious(isPresenter) !== isPresenter;
   const prevCurPageId = usePrevious(curPageId);
@@ -1531,9 +1539,22 @@ const Whiteboard = React.memo((props) => {
             isMountedRef.current = true;
           });
         });
+      } else {
+        // Slide/area size was not ready (common after screenshare → new file).
+        // Still become "mounted" so ResizeObserver can fit the camera later.
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            isMountedRef.current = true;
+          });
+        });
       }
     } catch (error) {
       logger.error({ logCode: 'AdjustCameraOnMount' }, `Failed to store viewbox: ${error}`);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          isMountedRef.current = true;
+        });
+      });
       throw error;
     }
   };
@@ -1543,21 +1564,64 @@ const Whiteboard = React.memo((props) => {
     options = {},
     frameIdRef = null,
   ) => {
-    if (options?.maxTries === 0) return;
-    const frameId = requestAnimationFrame(() => {
+    const maxTries = Number.isFinite(options.maxTries) ? options.maxTries : 32;
+    const stabilityFrames = Number.isFinite(options.stabilityFrames)
+      ? options.stabilityFrames
+      : 2;
+    if (maxTries === 0) return () => {};
+
+    let tries = 0;
+    let stableCount = 0;
+    let lastWidth = -1;
+    let lastHeight = -1;
+    let cancelled = false;
+    let frameId = null;
+
+    const tick = () => {
+      if (cancelled) return;
       const container = document.querySelector('[data-test="presentationContainer"]');
       const innerWrapper = document.getElementById('presentationInnerWrapper');
-      onReady({
+      const innerWrapperWidth = innerWrapper?.offsetWidth || 0;
+      const innerWrapperHeight = innerWrapper?.offsetHeight || 0;
+      const snapshot = {
         containerWidth: container?.offsetWidth || 0,
         containerHeight: container?.offsetHeight || 0,
-        innerWrapperWidth: innerWrapper?.offsetWidth || 0,
-        innerWrapperHeight: innerWrapper?.offsetHeight || 0,
-      });
-    });
+        innerWrapperWidth,
+        innerWrapperHeight,
+      };
+
+      tries += 1;
+      const hasSize = innerWrapperWidth > 1 && innerWrapperHeight > 1;
+      if (hasSize && innerWrapperWidth === lastWidth && innerWrapperHeight === lastHeight) {
+        stableCount += 1;
+      } else {
+        stableCount = hasSize ? 1 : 0;
+        lastWidth = innerWrapperWidth;
+        lastHeight = innerWrapperHeight;
+      }
+
+      if ((hasSize && stableCount >= stabilityFrames) || tries >= maxTries) {
+        onReady(snapshot);
+        return;
+      }
+
+      frameId = requestAnimationFrame(tick);
+      if (frameIdRef) {
+        const targetRef = frameIdRef;
+        targetRef.current = frameId;
+      }
+    };
+
+    frameId = requestAnimationFrame(tick);
     if (frameIdRef) {
       const targetRef = frameIdRef;
       targetRef.current = frameId;
     }
+
+    return () => {
+      cancelled = true;
+      if (frameId !== null) cancelAnimationFrame(frameId);
+    };
   };
 
   const handleTldrawMount = (editor) => {
@@ -1654,13 +1718,28 @@ const Whiteboard = React.memo((props) => {
       editor.setStyleForNextShapes(DefaultSizeStyle, initialSizeStyle);
     }
 
+    const disposeBeforeCreateHandler = editor.sideEffects.registerBeforeCreateHandler('shape', (shape, source) => {
+      if (source !== 'user' || isBackgroundShape(shape)) return shape;
+      return stampLocalShapeOwnership(
+        shape,
+        currentUserRef.current?.userId,
+        presentationIdRef.current,
+      );
+    });
+    if (typeof disposeBeforeCreateHandler === 'function') {
+      storeListenerDisposersRef.current.push(disposeBeforeCreateHandler);
+    }
+
     const disposeBeforeDeleteHandler = editor.sideEffects.registerBeforeDeleteHandler('shape', (shape, source) => {
       // Presentation slide image must never be deleted (select+move/undo used to wipe it).
       if (isBackgroundShape(shape)) return false;
-      const { presenter, isModerator: userIsModerator, userId } = currentUserRef.current;
-      const isOwn = userId && shape.meta?.createdBy === userId;
-      const hasPermission = isOwn || presenter || userIsModerator;
-      return source === 'user' ? hasPermission : true;
+      return canDeleteWhiteboardShape({
+        shape,
+        source,
+        userId: currentUserRef.current?.userId,
+        isPresenter: isPresenterRef.current,
+        isModerator: isModeratorRef.current,
+      });
     });
     if (typeof disposeBeforeDeleteHandler === 'function') {
       storeListenerDisposersRef.current.push(disposeBeforeDeleteHandler);
@@ -2212,8 +2291,14 @@ const Whiteboard = React.memo((props) => {
       }
     }
 
-    pollInnerWrapperDimensionsUntilStable(() => {
+    if (typeof cameraFitPollCancelRef.current === 'function') {
+      cameraFitPollCancelRef.current();
+    }
+    cameraFitPollCancelRef.current = pollInnerWrapperDimensionsUntilStable(() => {
       adjustCameraOnMount(!isPresenterRef.current);
+    }, {
+      maxTries: 48,
+      stabilityFrames: 2,
     });
 
     // New cursor hint shape: circle scaled by pointerDiameter, centered at (0,0)
@@ -2508,8 +2593,9 @@ const Whiteboard = React.memo((props) => {
     initialViewBoxWidthRef.current = null;
     initialViewBoxHeightRef.current = null;
 
+    let cancelPoll = () => {};
     const frameId = requestAnimationFrame(() => {
-      pollInnerWrapperDimensionsUntilStable(() => {
+      cancelPoll = pollInnerWrapperDimensionsUntilStable(() => {
         if (isPresenterRef.current) {
           try {
             adjustCameraOnMount(false);
@@ -2522,9 +2608,12 @@ const Whiteboard = React.memo((props) => {
       }, {
         maxTries: 80,
         stabilityFrames: 16,
-      });
+      }) || (() => {});
     });
-    return () => cancelAnimationFrame(frameId);
+    return () => {
+      cancelAnimationFrame(frameId);
+      cancelPoll();
+    };
   }, [
     currentPresentationPage?.svgUrl,
     currentPresentationPage?.scaledWidth,
@@ -2912,6 +3001,10 @@ const Whiteboard = React.memo((props) => {
       localStorage.removeItem('initialViewBoxHeight');
       localStorage.removeItem('pageZoomMap');
       localStorage.removeItem('pageActualZoomRatioMap');
+      if (typeof cameraFitPollCancelRef.current === 'function') {
+        cameraFitPollCancelRef.current();
+        cameraFitPollCancelRef.current = null;
+      }
       if (mountedTimeoutIdRef.current) {
         clearTimeout(mountedTimeoutIdRef.current);
       }

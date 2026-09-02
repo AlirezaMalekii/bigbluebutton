@@ -32,6 +32,14 @@ import {
   liveKitRoom,
 } from '/imports/ui/services/livekit';
 import useMeetingSettings from '/imports/ui/core/local-states/useMeetingSettings';
+import {
+  getSkyroomActiveVideoLimit,
+} from '/imports/ui/components/skyroom-layout/performance-profile';
+import { isSkyroomMobileViewport } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import { isSkyroomMobileWebcamDockHidden } from '/imports/ui/components/skyroom-layout/mobile-webcam-visibility';
+import { selectHardBudgetedRemoteIds } from '/imports/ui/components/video-provider/mobile-webcam-viewport-utils';
+
+const SKYROOM_MOBILE_VIEWPORT_SETTLE_MS = 120;
 
 const intlClientErrors = defineMessages({
   permissionError: {
@@ -135,6 +143,15 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
   // This is a hacky way to break circular deps between some effects and callbacks - prlanzarin
   const streamsRef = useRef(streams);
   streamsRef.current = streams;
+  const focusedIdRef = useRef(focusedId);
+  focusedIdRef.current = focusedId;
+  const viewportCandidateAreasRef = useRef(new Map<string, number>());
+  const visibleRemoteStreamsRef = useRef(new Set<string>());
+  const hasViewportSnapshotRef = useRef(false);
+  const webcamsVisibleRef = useRef(webcamsVisible);
+  webcamsVisibleRef.current = webcamsVisible;
+  const viewportApplyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const updateStreamsRef = useRef<(streamsList: VideoItem[], shouldDebounce?: boolean) => void>(() => {});
 
   const withSelectiveSubscription = meetingSettings.public.media?.livekit?.selectiveSubscription?.enabled ?? true;
 
@@ -439,6 +456,16 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
       && streamsRef.current.some(
         (item) => item.type === VIDEO_TYPES.STREAM && item.stream === trackName,
       )) {
+      const activeVideoLimit = getSkyroomActiveVideoLimit();
+      if (
+        Number.isFinite(activeVideoLimit)
+        && (
+          !hasViewportSnapshotRef.current
+          || !visibleRemoteStreamsRef.current.has(trackName)
+        )
+      ) {
+        return;
+      }
       subscribeToRemotePub(trackName);
     }
   }, []);
@@ -500,6 +527,10 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
       liveKitRoom.off(RoomEvent.TrackUnpublished, handleTrackUnpublished);
       liveKitRoom.off(RoomEvent.TrackSubscribed, handleTrackSubscribed);
       liveKitRoom.off(RoomEvent.TrackUnsubscribed, handleTrackUnsubscribed);
+      if (viewportApplyTimeoutRef.current) {
+        clearTimeout(viewportApplyTimeoutRef.current);
+        viewportApplyTimeoutRef.current = null;
+      }
 
       VideoService.updatePeerDictionaryReference({});
       exitVideo();
@@ -540,6 +571,51 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
   );
 
   const updateStreams = useCallback((streamsList: VideoItem[], shouldDebounce = false) => {
+    const activeVideoLimit = getSkyroomActiveVideoLimit();
+    let streamsForMedia = streamsList;
+    if (Number.isFinite(activeVideoLimit)) {
+      if (!webcamsVisibleRef.current && visibleRemoteStreamsRef.current.size > 0) {
+        streamsForMedia = streamsList.filter((item) => (
+          item.type === VIDEO_TYPES.GRID
+          || item.type === VIDEO_TYPES.AUDIO_ONLY
+          || VideoService.isLocalStream(item.stream)
+          || visibleRemoteStreamsRef.current.has(item.stream)
+        ));
+      } else if (!hasViewportSnapshotRef.current) {
+        streamsForMedia = streamsList.filter((item) => (
+          item.type === VIDEO_TYPES.GRID
+          || item.type === VIDEO_TYPES.AUDIO_ONLY
+          || VideoService.isLocalStream(item.stream)
+        ));
+      } else {
+        const nextVisible = selectHardBudgetedRemoteIds({
+          candidateAreas: viewportCandidateAreasRef.current,
+          isMobile: isSkyroomMobileViewport(),
+          limit: activeVideoLimit,
+          streams: streamsList
+            .filter((item) => (
+              item.type !== VIDEO_TYPES.GRID
+              && item.type !== VIDEO_TYPES.AUDIO_ONLY
+            ))
+            .map((item) => ({
+              focused: item.stream === focusedIdRef.current,
+              floor: Boolean(item.floor),
+              local: VideoService.isLocalStream(item.stream),
+              pinned: Boolean(item.user?.pinned),
+              presenter: Boolean(item.user?.presenter),
+              stream: item.stream,
+            })),
+        });
+        visibleRemoteStreamsRef.current = nextVisible;
+        streamsForMedia = streamsList.filter((item) => (
+          item.type === VIDEO_TYPES.GRID
+          || item.type === VIDEO_TYPES.AUDIO_ONLY
+          || VideoService.isLocalStream(item.stream)
+          || nextVisible.has(item.stream)
+        ));
+      }
+    }
+
     const connectedStreamIds = [
       ...Object.keys(bridgeRefs.current.localTracks),
       ...Object.keys(bridgeRefs.current.remoteTracks),
@@ -547,7 +623,7 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
     const [
       streamsToConnect,
       streamsToDisconnect,
-    ] = VideoService.getStreamsToConnectAndDisconnect(streamsList, connectedStreamIds);
+    ] = VideoService.getStreamsToConnectAndDisconnect(streamsForMedia, connectedStreamIds);
 
     if (shouldDebounce) {
       debouncedConnectStreams(streamsToConnect);
@@ -557,6 +633,34 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
 
     destroyStreams(streamsToDisconnect);
   }, [connectStreams, debouncedConnectStreams]);
+  updateStreamsRef.current = updateStreams;
+
+  const handleVideoVisibilityChange = useCallback((
+    changes: { area?: number; stream: string; visible: boolean }[],
+  ) => {
+    hasViewportSnapshotRef.current = true;
+    if (!webcamsVisibleRef.current || isSkyroomMobileWebcamDockHidden()) {
+      if (viewportApplyTimeoutRef.current) {
+        clearTimeout(viewportApplyTimeoutRef.current);
+        viewportApplyTimeoutRef.current = null;
+      }
+      return;
+    }
+    changes.forEach(({ area, stream, visible }) => {
+      if (visible) {
+        viewportCandidateAreasRef.current.set(stream, Math.max(0, Number(area) || 1));
+      } else {
+        viewportCandidateAreasRef.current.delete(stream);
+      }
+    });
+    if (viewportApplyTimeoutRef.current) clearTimeout(viewportApplyTimeoutRef.current);
+    viewportApplyTimeoutRef.current = setTimeout(() => {
+      viewportApplyTimeoutRef.current = null;
+      if (!Number.isFinite(getSkyroomActiveVideoLimit())) return;
+      if (!webcamsVisibleRef.current) return;
+      updateStreamsRef.current(streamsRef.current);
+    }, SKYROOM_MOBILE_VIEWPORT_SETTLE_MS);
+  }, []);
 
   const replaceVideoTracks = (streamId: string, mediaStream: MediaStream) => {
     const track = bridgeRefs.current.localTracks[streamId];
@@ -698,6 +802,7 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
       onVideoItemMount={createVideoTag}
       onVideoItemUnmount={destroyVideoTag}
       onVideoPlaybackStateChange={handleVideoPlaybackStateChange}
+      onVideoVisibilityChange={handleVideoVisibilityChange}
       onVirtualBgDrop={startVirtualBackgroundByDrop}
       overflowCount={overflowCount}
       webcamsVisible={webcamsVisible}

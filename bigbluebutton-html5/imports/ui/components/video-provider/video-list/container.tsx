@@ -35,7 +35,11 @@ interface VideoListContainerProps {
   onVideoItemMount: (stream: string, video: HTMLVideoElement) => void;
   onVideoItemUnmount: (stream: string, video: HTMLVideoElement) => void;
   onVideoPlaybackStateChange: (stream: string, state: VideoPlaybackState) => void;
-  onVideoVisibilityChange?: (changes: { stream: string; visible: boolean }[]) => void;
+  onVideoVisibilityChange?: (changes: {
+    area?: number;
+    stream: string;
+    visible: boolean;
+  }[]) => void;
   onVirtualBgDrop: (stream: string, type: string, name: string, data: string) => Promise<unknown>;
 }
 

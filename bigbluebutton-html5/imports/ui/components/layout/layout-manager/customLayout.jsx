@@ -1324,8 +1324,11 @@ const CustomLayout = (props) => {
       value: dropZoneAreas,
     });
 
+    // Meeting GraphQL is the source of truth. The local layout flag can lag
+    // after stop-share (unmount cleanup is skipped while last props still say
+    // broadcasting), which hid the restored file behind a black stage.
     const hidePresentationForScreenshare = skyroomColumnActive
-      && hasActiveScreenShare;
+      && Boolean(meetingData?.hasScreenshare);
 
     layoutContextDispatch({
       type: ACTIONS.SET_PRESENTATION_OUTPUT,

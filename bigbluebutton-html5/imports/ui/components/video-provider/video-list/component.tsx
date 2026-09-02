@@ -17,6 +17,10 @@ import { VideoItem } from '/imports/ui/components/video-provider/types';
 import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
 import { VideoPlaybackState } from '/imports/ui/components/video-provider/video-playback-utils';
 import { computeMobileScrollableWebcamGrid } from '/imports/ui/components/video-provider/mobile-webcam-grid-utils';
+import {
+  isTileVisibleInClip,
+  WEBCAM_VIEWPORT_CLIP_SELECTOR,
+} from '/imports/ui/components/video-provider/mobile-webcam-viewport-utils';
 import { UserCameraHelperAreas } from '../../plugins-engine/extensible-areas/components/user-camera-helper/types';
 import {
   getSkyroomWebcamLayout,
@@ -51,6 +55,7 @@ import {
   isSkyroomMobileViewport,
   isSkyroomTheme,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import { isSkyroomMobileWebcamDockHidden } from '/imports/ui/components/skyroom-layout/mobile-webcam-visibility';
 
 const intlMessages = defineMessages({
   autoplayBlockedDesc: {
@@ -107,8 +112,17 @@ const ASPECT_RATIO = 4 / 3;
 // const ACTION_NAME_BACKGROUND = 'blurBackground';
 
 const getSkyroomViewportLayoutKey = () => {
+  const layoutEl = typeof document !== 'undefined' ? document.getElementById('layout') : null;
+  const mobileKey = layoutEl
+    ? [
+      layoutEl.getAttribute('data-skyroom-mobile-bottom-webcams') ? 'b' : '',
+      layoutEl.getAttribute('data-skyroom-mobile-top-webcams') ? 't' : '',
+      layoutEl.getAttribute('data-skyroom-mobile-zone-fs') || '',
+      layoutEl.getAttribute('data-skyroom-mobile-webcam-scroll') ? 's' : '',
+    ].join('')
+    : '';
   const layout = getSkyroomWebcamLayout();
-  if (!layout) return 'none';
+  if (!layout) return mobileKey || 'none';
 
   const boundsKey = (bounds: {
     top?: number;
@@ -123,6 +137,7 @@ const getSkyroomViewportLayoutKey = () => {
   );
 
   return [
+    mobileKey,
     layout.stageMediaOpen ? 1 : 0,
     layout.centerDropEnabled ? 1 : 0,
     layout.sidebarStackVisible === false ? 0 : 1,
@@ -151,7 +166,11 @@ interface VideoListProps {
   onVideoItemMount: (stream: string, video: HTMLVideoElement) => void;
   onVideoItemUnmount: (stream: string, video: HTMLVideoElement) => void;
   onVideoPlaybackStateChange: (stream: string, state: VideoPlaybackState) => void;
-  onVideoVisibilityChange?: (changes: { stream: string; visible: boolean }[]) => void;
+  onVideoVisibilityChange?: (changes: {
+    area?: number;
+    stream: string;
+    visible: boolean;
+  }[]) => void;
   onVirtualBgDrop: (stream: string, type: string, name: string, data: string) => Promise<unknown>;
 }
 
@@ -208,13 +227,19 @@ class VideoList extends Component<VideoListProps, VideoListState> {
 
   private visibleViewportTargets: Set<Element>;
 
+  private viewportTargetAreas: Map<Element, number>;
+
   private reportedStreamVisibility: Map<string, boolean>;
+
+  private reportedStreamAreas: Map<string, number>;
 
   private pendingViewportStreams: Set<string>;
 
   private viewportReportFrame: number | null;
 
   private viewportSyncFrame: number | null;
+
+  private viewportScrollRoots: Set<Element>;
 
   private skyroomViewportLayoutKey: string;
 
@@ -267,10 +292,13 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     this.viewportTargetObservers = new Map();
     this.viewportTargets = new Map();
     this.visibleViewportTargets = new Set();
+    this.viewportTargetAreas = new Map();
     this.reportedStreamVisibility = new Map();
+    this.reportedStreamAreas = new Map();
     this.pendingViewportStreams = new Set();
     this.viewportReportFrame = null;
     this.viewportSyncFrame = null;
+    this.viewportScrollRoots = new Set();
     this.skyroomViewportLayoutKey = getSkyroomViewportLayoutKey();
     this.unsubscribeSkyroomZones = null;
     this.failedMediaElements = [];
@@ -285,6 +313,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     this.handleViewportIntersections = this.handleViewportIntersections.bind(this);
     this.syncViewportTargets = this.syncViewportTargets.bind(this);
     this.scheduleViewportTargetSync = this.scheduleViewportTargetSync.bind(this);
+    this.handleViewportScroll = this.handleViewportScroll.bind(this);
     this.handlePageLifecycleChange = this.handlePageLifecycleChange.bind(this);
     this.autoplayWasHandled = false;
   }
@@ -360,6 +389,9 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     }
 
     if (layoutType !== prevLayoutType
+      || focusedId !== prevFocusedId
+      || cameraDockWidth !== prevCameraDockWidth
+      || cameraDockHeight !== prevCameraDockHeight
       || streamLayoutChanged
       || overflowCount !== prevOverflowCount
       || skyroomZoneRevision !== prevState.skyroomZoneRevision
@@ -382,8 +414,14 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     this.viewportTargetObservers.clear();
     this.viewportTargets.clear();
     this.visibleViewportTargets.clear();
+    this.viewportTargetAreas.clear();
     this.reportedStreamVisibility.clear();
+    this.reportedStreamAreas.clear();
     this.pendingViewportStreams.clear();
+    this.viewportScrollRoots.forEach((root) => {
+      root.removeEventListener('scroll', this.handleViewportScroll);
+    });
+    this.viewportScrollRoots.clear();
     if (this.viewportReportFrame !== null) cancelAnimationFrame(this.viewportReportFrame);
     this.viewportReportFrame = null;
     if (this.viewportSyncFrame !== null) cancelAnimationFrame(this.viewportSyncFrame);
@@ -406,13 +444,38 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     this.scheduleViewportTargetSync();
   }
 
+  handleViewportScroll() {
+    this.scheduleViewportTargetSync();
+  }
+
+  static getViewportClipRoot(target: Element) {
+    return target.closest(WEBCAM_VIEWPORT_CLIP_SELECTOR);
+  }
+
   static getViewportObserverRoot(target: Element) {
-    return target.closest([
-      '#skyroom-stage-webcam-dock',
-      '#skyroom-sidebar-webcam-dock',
-      '#skyroom-center-webcam-dock',
-      '#cameraDock',
-    ].join(', '));
+    // A transformed ancestor (react-draggable translate3d) makes IntersectionObserver
+    // miss scroll updates on WebKit when the root is the dock itself. Clip in JS
+    // against the dock rect and observe the viewport instead.
+    if (isSkyroomMobileViewport()) return null;
+    return VideoList.getViewportClipRoot(target);
+  }
+
+  syncViewportScrollRoots() {
+    const nextRoots = new Set<Element>();
+    this.viewportTargets.forEach((_, target) => {
+      const root = VideoList.getViewportClipRoot(target);
+      if (root) nextRoots.add(root);
+    });
+
+    this.viewportScrollRoots.forEach((root) => {
+      if (nextRoots.has(root)) return;
+      root.removeEventListener('scroll', this.handleViewportScroll);
+    });
+    nextRoots.forEach((root) => {
+      if (this.viewportScrollRoots.has(root)) return;
+      root.addEventListener('scroll', this.handleViewportScroll, { passive: true });
+    });
+    this.viewportScrollRoots = nextRoots;
   }
 
   getViewportObserver(root: Element | null) {
@@ -426,64 +489,76 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     const observer = new IntersectionObserver(this.handleViewportIntersections, {
       root,
       rootMargin: `${safeOverscan}px`,
-      threshold: 0.01,
+      threshold: [0, 0.01, 0.15, 0.5, 1],
     });
     this.viewportObservers.set(root, observer);
     return observer;
   }
 
-  isViewportTargetVisible(target: Element) {
+  evaluateViewportTarget(target: Element) {
     const { webcamsVisible } = this.props;
-    if (!webcamsVisible) return false;
+    if (!webcamsVisible) {
+      this.viewportTargetAreas.set(target, 0);
+      return false;
+    }
 
     const element = target as HTMLElement;
     const styles = window.getComputedStyle(element);
     if (element.offsetParent === null
       || styles.visibility === 'hidden'
-      || styles.display === 'none') return false;
+      || styles.display === 'none') {
+      this.viewportTargetAreas.set(target, 0);
+      return false;
+    }
 
     const {
       overscanPixels = 24,
     } = window.meetingClientSettings.public.kurento.viewportSubscription || {};
     const overscan = Math.max(0, Number(overscanPixels) || 0);
     const targetRect = element.getBoundingClientRect();
-    const root = VideoList.getViewportObserverRoot(target);
+    const root = VideoList.getViewportClipRoot(target);
     const rootRect = root?.getBoundingClientRect() || {
-      top: 0,
-      right: window.innerWidth,
       bottom: window.innerHeight,
+      height: window.innerHeight,
       left: 0,
+      right: window.innerWidth,
+      top: 0,
+      width: window.innerWidth,
     };
-
-    return targetRect.width > 0
-      && targetRect.height > 0
-      && targetRect.bottom >= rootRect.top - overscan
-      && targetRect.top <= rootRect.bottom + overscan
-      && targetRect.right >= rootRect.left - overscan
-      && targetRect.left <= rootRect.right + overscan;
+    const { area, visible } = isTileVisibleInClip(targetRect, rootRect, overscan);
+    this.viewportTargetAreas.set(target, visible ? area : 0);
+    return visible;
   }
 
   reportViewportVisibility(streams: Set<string>) {
     const { onVideoVisibilityChange } = this.props;
-    const changes: { stream: string; visible: boolean }[] = [];
+    const changes: { area?: number; stream: string; visible: boolean }[] = [];
     const streamsWithTargets = new Set<string>();
-    const visibleStreams = new Set<string>();
+    const visibleStreams = new Map<string, number>();
 
     this.viewportTargets.forEach((stream, target) => {
       streamsWithTargets.add(stream);
-      if (this.visibleViewportTargets.has(target)) visibleStreams.add(stream);
+      if (!this.visibleViewportTargets.has(target)) return;
+      const area = this.viewportTargetAreas.get(target) ?? 1;
+      visibleStreams.set(stream, Math.max(visibleStreams.get(stream) ?? 0, area));
     });
 
     streams.forEach((stream) => {
       const hasTarget = streamsWithTargets.has(stream);
+      const area = hasTarget ? (visibleStreams.get(stream) ?? 0) : 0;
       const visible = hasTarget && visibleStreams.has(stream);
-      if (this.reportedStreamVisibility.get(stream) === visible) return;
+      if (
+        this.reportedStreamVisibility.get(stream) === visible
+        && this.reportedStreamAreas.get(stream) === area
+      ) return;
       if (hasTarget) {
         this.reportedStreamVisibility.set(stream, visible);
+        this.reportedStreamAreas.set(stream, area);
       } else {
         this.reportedStreamVisibility.delete(stream);
+        this.reportedStreamAreas.delete(stream);
       }
-      changes.push({ stream, visible });
+      changes.push({ area, stream, visible });
     });
 
     if (changes.length > 0) onVideoVisibilityChange?.(changes);
@@ -503,16 +578,14 @@ class VideoList extends Component<VideoListProps, VideoListState> {
 
   handleViewportIntersections(entries: IntersectionObserverEntry[]) {
     if (document.visibilityState === 'hidden') return;
+    if (isSkyroomMobileWebcamDockHidden()) return;
     const affectedStreams = new Set<string>();
 
     entries.forEach((entry) => {
       const stream = this.viewportTargets.get(entry.target);
       if (!stream) return;
 
-      const visible = entry.isIntersecting
-        && entry.intersectionRatio > 0
-        && this.isViewportTargetVisible(entry.target);
-
+      const visible = this.evaluateViewportTarget(entry.target);
       if (visible) {
         this.visibleViewportTargets.add(entry.target);
       } else {
@@ -547,27 +620,38 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       VideoList.setViewportTargetPlayback(target, false);
       this.viewportTargets.delete(target);
       this.visibleViewportTargets.delete(target);
+      this.viewportTargetAreas.delete(target);
       removedStreams.add(stream);
     });
 
     if (typeof IntersectionObserver !== 'function') {
-      const fallbackChanges: { stream: string; visible: boolean }[] = [];
+      const fallbackChanges: { area?: number; stream: string; visible: boolean }[] = [];
       const currentStreams = new Set<string>();
       nextTargets.forEach((target) => {
         const stream = target.getAttribute('data-skyroom-viewport-stream');
         if (stream) currentStreams.add(stream);
-        const visible = Boolean(stream) && this.isViewportTargetVisible(target);
+        const visible = Boolean(stream) && this.evaluateViewportTarget(target);
+        const area = this.viewportTargetAreas.get(target) ?? 0;
         VideoList.setViewportTargetPlayback(target, visible);
-        if (!stream || this.reportedStreamVisibility.get(stream) === visible) return;
+        if (
+          !stream
+          || (
+            this.reportedStreamVisibility.get(stream) === visible
+            && this.reportedStreamAreas.get(stream) === area
+          )
+        ) return;
         this.reportedStreamVisibility.set(stream, visible);
-        fallbackChanges.push({ stream, visible });
+        this.reportedStreamAreas.set(stream, area);
+        fallbackChanges.push({ area, stream, visible });
       });
       this.reportedStreamVisibility.forEach((visible, stream) => {
         if (!visible || currentStreams.has(stream)) return;
         this.reportedStreamVisibility.set(stream, false);
-        fallbackChanges.push({ stream, visible: false });
+        this.reportedStreamAreas.set(stream, 0);
+        fallbackChanges.push({ area: 0, stream, visible: false });
       });
       if (fallbackChanges.length > 0) onVideoVisibilityChange(fallbackChanges);
+      this.syncViewportScrollRoots();
       return;
     }
 
@@ -604,7 +688,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     nextTargets.forEach((target) => {
       const stream = this.viewportTargets.get(target);
       if (!stream) return;
-      if (this.isViewportTargetVisible(target)) {
+      if (this.evaluateViewportTarget(target)) {
         this.visibleViewportTargets.add(target);
         VideoList.setViewportTargetPlayback(target, true);
       } else {
@@ -614,6 +698,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       layoutAffectedStreams.add(stream);
     });
 
+    this.syncViewportScrollRoots();
     this.queueViewportVisibilityReport(layoutAffectedStreams);
   }
 
@@ -693,6 +778,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       window.requestAnimationFrame(() => {
         this.ticking = false;
         this.setOptimalGrid();
+        this.scheduleViewportTargetSync();
       });
     }
     this.ticking = true;
@@ -862,19 +948,32 @@ class VideoList extends Component<VideoListProps, VideoListState> {
 
     const gridGutter = parseInt(window.getComputedStyle(this.grid)
       .getPropertyValue('grid-row-gap'), 10);
+    const measuredDock = (
+      this.canvas.closest('#cameraDock')
+      || this.grid.closest('#cameraDock')
+      || document.getElementById('cameraDock')
+    ) as HTMLElement | null;
+    const measuredWidth = measuredDock?.clientWidth ?? 0;
+    const measuredHeight = measuredDock?.clientHeight ?? 0;
+    const mobileDock = isSkyroomColumnLayout() && isSkyroomMobileViewport();
+    const dockWidth = mobileDock && measuredWidth > 0
+      ? measuredWidth
+      : cameraDock?.width;
+    const dockHeight = mobileDock && measuredHeight > 0
+      ? measuredHeight
+      : cameraDock?.height;
     let optimalGrid: VideoListState['optimalGrid'] | null = VideoList.computeOptimalGrid(
       visibleStreams,
-      cameraDock?.width,
-      cameraDock?.height,
+      dockWidth,
+      dockHeight,
       gridGutter,
       focusedId,
     );
 
     if (
-      isSkyroomColumnLayout()
-      && isSkyroomMobileViewport()
-      && cameraDock?.width > 0
-      && cameraDock?.height > 0
+      mobileDock
+      && dockWidth > 0
+      && dockHeight > 0
       && visibleStreams.length > 0
     ) {
       const gutter = Number.isFinite(gridGutter) ? gridGutter : 0;
@@ -885,9 +984,9 @@ class VideoList extends Component<VideoListProps, VideoListState> {
         optimalGrid = {
           columns: 1,
           rows: 1,
-          width: cameraDock.width,
-          height: cameraDock.height,
-          filledArea: cameraDock.width * cameraDock.height,
+          width: dockWidth,
+          height: dockHeight,
+          filledArea: dockWidth * dockHeight,
         };
       } else if (count === 2) {
         // Two cams: side-by-side, each column fills the full dock height.
@@ -895,14 +994,14 @@ class VideoList extends Component<VideoListProps, VideoListState> {
         const chrome = 4; // list padding 2px × 2
         const cellWidth = Math.max(
           1,
-          Math.floor((cameraDock.width - chrome - gutter) / 2),
+          Math.floor((dockWidth - chrome - gutter) / 2),
         );
-        const cellHeight = Math.max(1, cameraDock.height - chrome);
+        const cellHeight = Math.max(1, dockHeight - chrome);
         optimalGrid = {
           columns: 2,
           rows: 1,
-          width: cameraDock.width,
-          height: cameraDock.height,
+          width: dockWidth,
+          height: dockHeight,
           cellWidth,
           cellHeight,
           filledArea: cellWidth * cellHeight * 2,
@@ -915,16 +1014,16 @@ class VideoList extends Component<VideoListProps, VideoListState> {
         const chrome = 4; // list padding 2px × 2
         const cellWidth = Math.max(
           1,
-          Math.floor((cameraDock.width - chrome - gutter) / mobileColumns),
+          Math.floor((dockWidth - chrome - gutter) / mobileColumns),
         );
         const cellHeight = Math.max(
           1,
-          Math.floor((cameraDock.height - chrome - gutter) / 2),
+          Math.floor((dockHeight - chrome - gutter) / 2),
         );
         optimalGrid = {
           columns: mobileColumns,
           rows,
-          width: cameraDock.width,
+          width: dockWidth,
           height: (cellHeight * rows) + ((rows - 1) * gutter),
           cellWidth,
           cellHeight,
@@ -1311,6 +1410,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
         <Styled.VideoCanvas
           $position={position}
           data-skyroom-webcam-load={webcamLoad}
+          className="video-provider_canvas"
           ref={(ref) => {
             this.canvas = ref;
           }}
@@ -1371,8 +1471,18 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     ).length;
     // Prefer explicit cellHeight from mobile setOptimalGrid; fall back so a stale
     // grid without cell metrics still scrolls instead of fitting everything in-dock.
-    const dockH = Math.max(1, cameraDock?.height || 0);
-    const dockW = Math.max(1, cameraDock?.width || 0);
+    const measuredDock = (
+      this.canvas?.closest('#cameraDock')
+      || (typeof document !== 'undefined' ? document.getElementById('cameraDock') : null)
+    ) as HTMLElement | null;
+    const dockH = Math.max(
+      1,
+      (fillMobileDock ? measuredDock?.clientHeight : 0) || cameraDock?.height || 0,
+    );
+    const dockW = Math.max(
+      1,
+      (fillMobileDock ? measuredDock?.clientWidth : 0) || cameraDock?.width || 0,
+    );
     const mobileColumns = 2;
     const mobileRows = Math.max(1, Math.ceil(visibleCount / mobileColumns));
     const mobileChrome = 4;
@@ -1418,6 +1528,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     return (
       <Styled.VideoCanvas
         $position={position}
+        className="video-provider_canvas"
         ref={(ref) => {
           this.canvas = ref;
         }}

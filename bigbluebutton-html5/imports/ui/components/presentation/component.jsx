@@ -1040,39 +1040,41 @@ class Presentation extends PureComponent {
                   {slideContent}
                 </Styled.VisuallyHidden>
                 <LocatedErrorBoundary Fallback={FallbackView} logMetadata={APP_CRASH_METADATA}>
-                  <WhiteboardContainer
-                    whiteboardId={currentSlide?.id}
-                    slidePosition={slidePosition}
-                    getSvgRef={this.getSvgRef}
-                    tldrawAPI={tldrawAPI}
-                    setTldrawAPI={this.setTldrawAPI}
-                    curPageId={currentSlide?.num.toString() || '0'}
-                    svgUri={currentSlide?.svgUri}
-                    intl={intl}
-                    presentationWidth={wbPresentationWidth}
-                    presentationHeight={wbPresentationHeight}
-                    presentationAreaHeight={wbPresentationAreaHeight}
-                    presentationAreaWidth={wbPresentationAreaWidth}
-                    isPanning={isPanning}
-                    zoomChanger={this.zoomChanger}
-                    fitToWidth={fitToWidth}
-                    zoomValue={zoom}
-                    setTldrawIsMounting={this.setTldrawIsMounting}
-                    setIsToolbarVisible={this.setIsToolbarVisible}
-                    isFullscreen={isFullscreen}
-                    fullscreenAction={ACTIONS.SET_FULLSCREEN_ELEMENT}
-                    fullscreenElementId={fullscreenElementId}
-                    layoutContextDispatch={layoutContextDispatch}
-                    fullscreenRef={this.refPresentationContainer}
-                    presentationId={currentPresentationId}
-                    darkTheme={darkTheme}
-                    isToolbarVisible={isToolbarVisible}
-                    isViewersAnnotationsLocked={isViewersAnnotationsLocked}
-                    annotationStreamData={annotationStreamData}
-                    initialPageAnnotations={initialPageAnnotations}
-                    refetchInitialPageAnnotations={refetchInitialPageAnnotations}
-                    restoreOnUpdate={restoreOnUpdate}
-                  />
+                  {stageReady && currentSlide && (
+                    <WhiteboardContainer
+                      whiteboardId={currentSlide?.id}
+                      slidePosition={slidePosition}
+                      getSvgRef={this.getSvgRef}
+                      tldrawAPI={tldrawAPI}
+                      setTldrawAPI={this.setTldrawAPI}
+                      curPageId={currentSlide?.num.toString() || '0'}
+                      svgUri={currentSlide?.svgUri}
+                      intl={intl}
+                      presentationWidth={wbPresentationWidth}
+                      presentationHeight={wbPresentationHeight}
+                      presentationAreaHeight={wbPresentationAreaHeight}
+                      presentationAreaWidth={wbPresentationAreaWidth}
+                      isPanning={isPanning}
+                      zoomChanger={this.zoomChanger}
+                      fitToWidth={fitToWidth}
+                      zoomValue={zoom}
+                      setTldrawIsMounting={this.setTldrawIsMounting}
+                      setIsToolbarVisible={this.setIsToolbarVisible}
+                      isFullscreen={isFullscreen}
+                      fullscreenAction={ACTIONS.SET_FULLSCREEN_ELEMENT}
+                      fullscreenElementId={fullscreenElementId}
+                      layoutContextDispatch={layoutContextDispatch}
+                      fullscreenRef={this.refPresentationContainer}
+                      presentationId={currentPresentationId}
+                      darkTheme={darkTheme}
+                      isToolbarVisible={isToolbarVisible}
+                      isViewersAnnotationsLocked={isViewersAnnotationsLocked}
+                      annotationStreamData={annotationStreamData}
+                      initialPageAnnotations={initialPageAnnotations}
+                      refetchInitialPageAnnotations={refetchInitialPageAnnotations}
+                      restoreOnUpdate={restoreOnUpdate}
+                    />
+                  )}
                 </LocatedErrorBoundary>
               </div>
               {!tldrawIsMounting && stageReady && (

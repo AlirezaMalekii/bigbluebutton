@@ -6,6 +6,10 @@ import {
   isFreshReaction,
   reactionStreamVar,
 } from '/imports/ui/components/emoji-rain/reaction-stream';
+import {
+  getReactionEventKey,
+  replaceActiveReactionsByUser,
+} from '/imports/ui/components/emoji-rain/reaction-event-buffer';
 import { overlayVisibilityVar } from './service';
 import {
   OverlayReactionBubble,
@@ -21,23 +25,13 @@ const REACTION_TTL_MS = 6800;
 interface FloatingReaction {
   id: string;
   emoji: string;
+  userId?: string;
   userName: string;
   left: number;
   drift: number;
   duration: number;
   delay: number;
 }
-
-const getReactionKey = (reaction: {
-  eventId?: string;
-  userId?: string;
-  reaction: string;
-  creationDate: Date;
-}) => {
-  const createdAt = reaction.creationDate?.getTime?.() || 0;
-  return reaction.eventId
-    || `${reaction.userId || 'unknown'}-${reaction.reaction}-${createdAt}`;
-};
 
 const ScreenShareChatReactionOverlay: React.FC = () => {
   const reactions = useReactiveVar(reactionStreamVar);
@@ -51,7 +45,7 @@ const ScreenShareChatReactionOverlay: React.FC = () => {
   const overlayVisible = visibility !== 'hidden';
 
   const reactionSignature = useMemo(
-    () => reactions.map(getReactionKey).join('|'),
+    () => reactions.map(getReactionEventKey).join('|'),
     [reactions],
   );
 
@@ -97,7 +91,7 @@ const ScreenShareChatReactionOverlay: React.FC = () => {
     if (reactionsToShow.length === 0) return;
 
     const nextReactions = reactionsToShow.reduce<FloatingReaction[]>((acc, reaction) => {
-      const key = getReactionKey(reaction);
+      const key = getReactionEventKey(reaction);
 
       if (seenReactionsRef.current.has(key)) return acc;
 
@@ -106,6 +100,7 @@ const ScreenShareChatReactionOverlay: React.FC = () => {
       acc.push({
         id: key,
         emoji: reaction.reaction,
+        userId: reaction.userId,
         userName: reaction.userName,
         left: 14 + Math.random() * 72,
         drift: Math.round((Math.random() * 44) - 22),
@@ -118,10 +113,11 @@ const ScreenShareChatReactionOverlay: React.FC = () => {
 
     if (nextReactions.length === 0) return;
 
-    setFloatingReactions((current) => [
-      ...current,
-      ...nextReactions,
-    ].slice(-MAX_VISIBLE_REACTIONS));
+    setFloatingReactions((current) => replaceActiveReactionsByUser(
+      current,
+      nextReactions,
+      MAX_VISIBLE_REACTIONS,
+    ));
 
     nextReactions.forEach(({ id }) => scheduleExpire(id));
   }, [overlayVisible, reactionSignature]);
