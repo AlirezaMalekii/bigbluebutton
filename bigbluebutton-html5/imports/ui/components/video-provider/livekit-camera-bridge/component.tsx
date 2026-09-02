@@ -23,7 +23,7 @@ import VideoListContainer from '/imports/ui/components/video-provider/video-list
 import logger from '/imports/startup/client/logger';
 import { notifyStreamStateChange } from '/imports/ui/services/bbb-webrtc-sfu/stream-state-service';
 import BBBVideoStream from '/imports/ui/services/webrtc-base/bbb-video-stream';
-import { VideoItem } from '/imports/ui/components/video-provider/types';
+import { VideoItem, Stream } from '/imports/ui/components/video-provider/types';
 import { Output } from '/imports/ui/components/layout/layoutTypes';
 import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
 import { VideoPlaybackState } from '/imports/ui/components/video-provider/video-playback-utils';
@@ -593,10 +593,7 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
           isMobile: isSkyroomMobileViewport(),
           limit: activeVideoLimit,
           streams: streamsList
-            .filter((item) => (
-              item.type !== VIDEO_TYPES.GRID
-              && item.type !== VIDEO_TYPES.AUDIO_ONLY
-            ))
+            .filter((item): item is Stream => item.type === VIDEO_TYPES.STREAM)
             .map((item) => ({
               focused: item.stream === focusedIdRef.current,
               floor: Boolean(item.floor),

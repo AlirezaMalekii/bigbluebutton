@@ -99,6 +99,7 @@ const SkyroomMeetingDetailsModal: React.FC<SkyroomMeetingDetailsModalProps> = ({
             </p>
             <div
               className="skyroom-meeting-details-description-body"
+              // eslint-disable-next-line react/no-danger
               dangerouslySetInnerHTML={{ __html: descriptionHtml }}
             />
           </div>
