@@ -36,7 +36,7 @@ public:
     copyright: ''
     # SafeMeet product version (canonical: repo-root SAFEMEET_VERSION).
     # Auto-bumped on each push to safemeet; milestones via scripts/safemeet-bump-version.sh --set X.Y
-    html5ClientBuild: 0.8.25
+    html5ClientBuild: 0.8.26
     helpLink: ''
     delayForUnmountOfSharedNote: 120000
     bbbTabletApp:
