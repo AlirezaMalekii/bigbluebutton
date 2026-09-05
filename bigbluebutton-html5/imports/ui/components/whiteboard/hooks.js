@@ -286,14 +286,50 @@ const useMouseEvents = ({
     }
   };
 
+  const applyPresenterPinchZoom = throttle({ interval: 175 }, (event) => {
+    if (!isPresenterRef.current || !tlEditorRef.current || !currentPresentationPage) return;
+    if (event.touches.length !== 2) return;
+
+    const [t1, t2] = event.touches;
+    const currentDistance = getDistanceBetweenTouches(t1, t2);
+    const MAX_ZOOM_FACTOR = 4;
+    const MIN_ZOOM_FACTOR = isInfiniteWhiteboard ? 0.25 : 1;
+    const ZOOM_STEP = 0.1;
+
+    const { x: cx, y: cy, z: cz } = tlEditorRef.current.getCamera();
+    let currentZoomLevel = cz / initialZoomRef.current;
+
+    if (currentDistance > initialPinchDistanceRef.current) {
+      currentZoomLevel = Math.min(currentZoomLevel + ZOOM_STEP, MAX_ZOOM_FACTOR);
+    } else {
+      currentZoomLevel = Math.max(currentZoomLevel - ZOOM_STEP, MIN_ZOOM_FACTOR);
+    }
+
+    const zoomPercentage = currentZoomLevel * 100;
+    zoomChanger(zoomPercentage);
+
+    const newCameraZoomFactor = currentZoomLevel * initialZoomRef.current;
+    const centerX = (t1.clientX + t2.clientX) / 2;
+    const centerY = (t1.clientY + t2.clientY) / 2;
+    const rect = whiteboardRef.current?.getBoundingClientRect();
+    const canvasCenterX = (centerX - (rect?.left || 0)) / cz + cx;
+    const canvasCenterY = (centerY - (rect?.top || 0)) / cz + cy;
+
+    tlEditorRef.current.setCamera({
+      x: cx + (canvasCenterX - cx) * (cz / newCameraZoomFactor - 1),
+      y: cy + (canvasCenterY - cy) * (cz / newCameraZoomFactor - 1),
+      z: newCameraZoomFactor,
+    }, { duration: 175 });
+
+    initialPinchDistanceRef.current = currentDistance;
+  });
+
   const handleTouchStart = (event) => {
     if (isWhiteboardChromeTarget(event.target)) return;
 
     if (event.touches.length === 2) {
-      if (!isPresenterRef.current) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
+      // Do not preventDefault: a non-passive listener on the stage delays pen ink.
+      event.stopPropagation();
       fingerCountRef.current = 2;
       isPinchingRef.current = false;
       const [t1, t2] = event.touches;
@@ -305,59 +341,20 @@ const useMouseEvents = ({
     }
   };
 
-  const handleTouchMove = throttle({ interval: 175 }, (event) => {
+  const handleTouchMove = (event) => {
+    // One finger / stylus must reach tldraw on the same frame. Never throttle
+    // or preventDefault this path — that is what made strokes lag and drift.
+    if (event.touches.length !== 2) return;
     if (isWhiteboardChromeTarget(event.target)) return;
 
-    if (fingerCountRef.current === 2 && event.touches.length === 2) {
-      const [t1, t2] = event.touches;
-      const currentDistance = getDistanceBetweenTouches(t1, t2);
-      const distanceDiff = Math.abs(currentDistance - initialPinchDistanceRef.current);
-      if (distanceDiff > PINCH_THRESHOLD) {
-        isPinchingRef.current = true;
-
-        // Pinch-to-zoom for presenters
-        if (isPresenterRef.current && tlEditorRef.current && currentPresentationPage) {
-          const MAX_ZOOM_FACTOR = 4;
-          const MIN_ZOOM_FACTOR = isInfiniteWhiteboard ? 0.25 : 1;
-          const ZOOM_STEP = 0.1;
-
-          const { x: cx, y: cy, z: cz } = tlEditorRef.current.getCamera();
-          let currentZoomLevel = cz / initialZoomRef.current;
-
-          // Zoom in if fingers moving apart, zoom out if moving together
-          if (currentDistance > initialPinchDistanceRef.current) {
-            currentZoomLevel = Math.min(currentZoomLevel + ZOOM_STEP, MAX_ZOOM_FACTOR);
-          } else {
-            currentZoomLevel = Math.max(currentZoomLevel - ZOOM_STEP, MIN_ZOOM_FACTOR);
-          }
-
-          const zoomPercentage = currentZoomLevel * 100;
-          zoomChanger(zoomPercentage);
-
-          const newCameraZoomFactor = currentZoomLevel * initialZoomRef.current;
-
-          // Calculate center point between the two touches
-          const centerX = (t1.clientX + t2.clientX) / 2;
-          const centerY = (t1.clientY + t2.clientY) / 2;
-
-          const rect = whiteboardRef.current?.getBoundingClientRect();
-          const canvasCenterX = (centerX - (rect?.left || 0)) / cz + cx;
-          const canvasCenterY = (centerY - (rect?.top || 0)) / cz + cy;
-
-          const nextCamera = {
-            x: cx + (canvasCenterX - cx) * (cz / newCameraZoomFactor - 1),
-            y: cy + (canvasCenterY - cy) * (cz / newCameraZoomFactor - 1),
-            z: newCameraZoomFactor,
-          };
-
-          tlEditorRef.current.setCamera(nextCamera, { duration: 175 });
-
-          // Update initial distance for continuous pinch
-          initialPinchDistanceRef.current = currentDistance;
-        }
-      }
+    event.stopPropagation();
+    const [t1, t2] = event.touches;
+    const currentDistance = getDistanceBetweenTouches(t1, t2);
+    if (Math.abs(currentDistance - initialPinchDistanceRef.current) > PINCH_THRESHOLD) {
+      isPinchingRef.current = true;
+      applyPresenterPinchZoom(event);
     }
-  });
+  };
 
   const handleTouchEnd = (event) => {
     if (isWhiteboardChromeTarget(event.target)) return;
@@ -408,9 +405,9 @@ const useMouseEvents = ({
       presentationWrapper.addEventListener('mouseleave', handleMouseLeave);
       presentationWrapper.addEventListener('wheel', handleMouseWheel, { passive: false, capture: true });
       presentationWrapper.addEventListener('pointerdown', handlePointerDown, { capture: true });
-      presentationWrapper.addEventListener('touchstart', handleTouchStart, { passive: false, capture: true });
-      presentationWrapper.addEventListener('touchend', handleTouchEnd, { passive: false, capture: true });
-      presentationWrapper.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
+      presentationWrapper.addEventListener('touchstart', handleTouchStart, { capture: true, passive: true });
+      presentationWrapper.addEventListener('touchend', handleTouchEnd, { capture: true, passive: true });
+      presentationWrapper.addEventListener('touchmove', handleTouchMove, { capture: true, passive: true });
     }
 
     return () => {

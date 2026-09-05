@@ -1218,9 +1218,14 @@
     overflow: visible !important;
   }
 
+  /*
+   * Pen/stylus ink must not wait for the browser to classify a pinch/pan.
+   * Presenter pinch-zoom is handled in JS (two-finger only). Zoom buttons
+   * remain on the presentation toolbar.
+   */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tl-canvas {
     overflow: hidden !important;
-    touch-action: pinch-zoom pan-x pan-y !important;
+    touch-action: none !important;
   }
 
   /*
