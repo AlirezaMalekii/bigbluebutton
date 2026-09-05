@@ -439,6 +439,15 @@ body.lang-fa #whiteboard-element .tl-text-measure {
   pointer-events: auto;
 }
 
+/* Phone presenter: keep the control on the stage box, below undo/redo chips. */
+#layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-presentation-fullscreen-btn {
+  top: auto !important;
+  bottom: calc(var(--skyroom-presentation-toolbar-h, 32px) + 8px) !important;
+  left: 8px !important;
+  right: auto !important;
+  z-index: 1003 !important;
+}
+
 .skyroom-presentation-fullscreen-btn button,
 .skyroom-presentation-fullscreen-btn [class*="FullscreenButton"] {
   display: inline-flex !important;

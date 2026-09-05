@@ -30,6 +30,7 @@ import {
 import { SKYROOM_MOBILE_ZONE_FS_EVENT } from '/imports/ui/components/skyroom-layout/mobile-zone-fullscreen-state';
 import {
   isPresentationFullscreenActive,
+  isSkyroomMobilePresentation,
   togglePresentationFullscreen,
 } from './presentation-fullscreen';
 
@@ -81,7 +82,7 @@ const getToolbarHeight = () => {
 
 // Match --skyroom-presentation-toolbar-h so camera fit never boots with height=0
 // (that over-zooms, then the shorter canvas looks top-biased).
-const SKYROOM_MOBILE_PRESENTATION_TOOLBAR_H = 22;
+const SKYROOM_MOBILE_PRESENTATION_TOOLBAR_H = 32;
 const SKYROOM_DESKTOP_PRESENTATION_TOOLBAR_H = 36;
 const FULL_SLIDE_VIEWBOX_EPSILON = 0.5;
 
@@ -768,10 +769,14 @@ class Presentation extends PureComponent {
     const allowFullscreen = window.meetingClientSettings?.public?.app?.allowFullscreen;
     const isIphone = !!(navigator.userAgent.match(/iPhone/i));
 
-    if (!allowFullscreen || isIphone) return null;
-    // Presenters use the top-right whiteboard dock; the top-left overlay
-    // overlaps undo/redo and duplicates the dock fullscreen control.
-    if (userIsPresenter) return null;
+    if (!allowFullscreen) return null;
+    const mobileSkyroom = isSkyroomMobilePresentation();
+    // Browser Fullscreen API is unreliable on iPhone; Skyroom phone uses
+    // layout-only fullscreen instead of hiding the control entirely.
+    if (isIphone && !mobileSkyroom) return null;
+    // Desktop presenters already have the whiteboard dock control. Phone
+    // presenters previously had neither that dock nor the overlay button.
+    if (userIsPresenter && !mobileSkyroom) return null;
 
     const presentationIsFullscreen = isPresentationFullscreenActive({
       fullscreenContext,

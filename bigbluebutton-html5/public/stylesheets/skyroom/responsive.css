@@ -18,7 +18,7 @@
 
 @media (max-width: 599.98px) {
   /* Hide mis-positioned desktop geometry until the mobile split engine tags #layout. */
-  html[data-skyroom="true"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]) {
+  html[data-skyroom="true"] #layout[data-skyroom-column="true"]:not([data-skyroom-mobile="true"]):not([data-skyroom-screen-share="true"]) {
     visibility: hidden !important;
     pointer-events: none !important;
   }
@@ -745,7 +745,7 @@
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] {
-    --skyroom-presentation-toolbar-h: 22px;
+    --skyroom-presentation-toolbar-h: 32px;
     --skyroom-wb-toolbar-gap: 2px;
   }
 
@@ -790,15 +790,16 @@
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [class*="PresentationToolbarWrapper"] {
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important;
+    flex-wrap: wrap !important;
     justify-content: center !important;
     align-items: center !important;
     direction: inherit !important;
     grid-template-columns: none !important;
     gap: 4px !important;
-    min-height: var(--skyroom-presentation-toolbar-h, 22px) !important;
-    height: var(--skyroom-presentation-toolbar-h, 22px) !important;
-    max-height: var(--skyroom-presentation-toolbar-h, 22px) !important;
+    row-gap: 2px !important;
+    min-height: var(--skyroom-presentation-toolbar-h, 32px) !important;
+    height: auto !important;
+    max-height: none !important;
     padding-block: 0 !important;
     padding-inline: max(8px, env(safe-area-inset-left, 0px) + 4px)
       max(8px, env(safe-area-inset-right, 0px) + 4px) !important;
@@ -884,13 +885,30 @@
     z-index: 3 !important;
   }
 
-  /* Compact zoom − / % select / reset / + on phone slide-nav. */
+  /* Compact zoom − / % select / reset / + on phone slide-nav. Keep a 28px
+     touch target so pinch-alternative buttons are not clipped or untappable. */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="zoomOutBtn"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="zoomInBtn"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="resetZoomButton"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="zoomSelect"] {
     margin: 0 !important;
     flex-shrink: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="zoomOutBtn"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="zoomInBtn"] {
+    min-width: 28px !important;
+    min-height: 28px !important;
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="zoomOutBtn"] > span:first-child,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="zoomInBtn"] > span:first-child {
+    min-width: 22px !important;
+    min-height: 22px !important;
+    width: 22px !important;
+    height: 22px !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #presentationToolbarWrapper [data-test="zoomSelect"],
@@ -1141,9 +1159,9 @@
     max-width: 100% !important;
     margin-inline: 0 !important;
     overflow: visible !important;
-    height: var(--skyroom-presentation-toolbar-h, 22px) !important;
-    min-height: var(--skyroom-presentation-toolbar-h, 22px) !important;
-    max-height: var(--skyroom-presentation-toolbar-h, 22px) !important;
+    height: auto !important;
+    min-height: var(--skyroom-presentation-toolbar-h, 32px) !important;
+    max-height: none !important;
   }
 
   #layout[data-skyroom-column="true"] #presentationToolbarWrapper [class*="PresentationSlideControls"],
@@ -1202,6 +1220,7 @@
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #whiteboard-element .tl-canvas {
     overflow: hidden !important;
+    touch-action: pinch-zoom pan-x pan-y !important;
   }
 
   /*
@@ -3702,6 +3721,10 @@
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [class*="VideoCanvas"] {
     position: relative !important;
     inset: auto !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
     min-height: 0 !important;
     height: max-content !important;
     max-height: none !important;
@@ -3769,6 +3792,21 @@
     margin: 0 !important;
     align-self: stretch !important;
     width: 100% !important;
+  }
+
+  /* 3+: do not stretch the list back to the dock height — that collapses
+     extra rows and makes overflow-y:auto a no-op. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-skyroom-mobile-webcam-grid="scroll"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-skyroom-mobile-webcam-grid="scroll"]) [class*="VideoCanvas"] > div {
+    align-self: flex-start !important;
+    flex: 0 0 auto !important;
+    max-height: none !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-skyroom-mobile-webcam-grid="scroll"] [data-test="webcamVideoItem"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-skyroom-mobile-webcam-grid="scroll"] [class*="VideoListItem"] {
+    max-height: none !important;
+    height: 100% !important;
   }
 
   /* Default (3+): stretch into fixed grid-row tracks from JS. Avoid height:100% —

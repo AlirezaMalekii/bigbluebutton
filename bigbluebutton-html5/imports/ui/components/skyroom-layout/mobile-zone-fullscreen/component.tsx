@@ -4,7 +4,6 @@ import React, {
 import { createPortal } from 'react-dom';
 import { defineMessages, useIntl } from 'react-intl';
 import Icon from '/imports/ui/components/common/icon/component';
-import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import { layoutDispatch } from '/imports/ui/components/layout/context';
 import {
   isSkyroomColumnLayout,
@@ -67,11 +66,6 @@ const SkyroomMobileZoneFullscreenButtons: React.FC = () => {
   const [activeBox, setActiveBox] = useState(getSkyroomMobileActiveBox);
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
   const expanded = getSkyroomMobileZoneFullscreen();
-
-  const { data: currentUser } = useCurrentUser((u) => ({
-    presenter: u.presenter,
-  }));
-  const isPresenter = Boolean(currentUser?.presenter);
 
   useEffect(() => subscribeSkyroomMobileZoneFullscreen(force), []);
   useEffect(() => subscribeSkyroomMobileBottom(() => {
@@ -202,7 +196,7 @@ const SkyroomMobileZoneFullscreenButtons: React.FC = () => {
     </div>
   );
 
-  const showTopForUser = showTopBtn && !isPresenter && expanded !== 'bottom';
+  const showTopForUser = showTopBtn && expanded !== 'bottom';
   const bottomInHeader = Boolean(headerSlot);
   const showBottomForUser = showBottomBtn && expanded !== 'top';
   const showTopMinimize = hasCloseableBox || expanded === 'top';

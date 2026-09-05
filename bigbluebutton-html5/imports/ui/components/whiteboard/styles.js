@@ -191,7 +191,6 @@ const TldrawV2GlobalStyle = createGlobalStyle`
       border-radius: ${isSkyroomMobile ? '10px' : '14px'} !important;
       background: rgba(12, 20, 34, 0.92) !important;
       border: 1px solid rgba(20, 169, 158, 0.22) !important;
-      backdrop-filter: blur(12px) !important;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
       ${isSkyroomMobile ? 'overflow: visible !important; height: auto !important;' : ''}
     }

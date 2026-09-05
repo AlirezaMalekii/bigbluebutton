@@ -74,8 +74,6 @@
   background: rgba(12, 20, 34, 0.92) !important;
   border: 1px solid rgba(20, 169, 158, 0.2) !important;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.32) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 #layout[data-skyroom-column="true"] #ActionsBar [class*="MuteWarning"] > span {
@@ -655,8 +653,6 @@
 #layout[data-skyroom-column="true"] [class*="PresentationToolbarWrapper"] {
   background: rgba(8, 14, 26, 0.90) !important;
   border-top: 1px solid rgba(20, 169, 158, 0.20) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.22) !important;
 }
 

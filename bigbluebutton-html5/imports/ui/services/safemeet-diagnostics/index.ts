@@ -81,6 +81,8 @@ class SafeMeetDiagnostics {
 
   private expectedHeartbeat = 0;
 
+  private lastLongTaskRecordMs = 0;
+
   private context: DiagnosticData = {};
 
   private readonly handleError = (event: Event) => {
@@ -120,6 +122,14 @@ class SafeMeetDiagnostics {
 
   private readonly handleVisibility = () => {
     this.record('page_visibility_changed', { state: document.visibilityState });
+    if (document.visibilityState === 'hidden') {
+      this.pauseTimers();
+      this.stopLongTaskObserver();
+      this.flush(true);
+      return;
+    }
+    this.startLongTaskObserver();
+    this.resumeTimers();
   };
 
   private readonly handlePageHide = () => {
@@ -155,27 +165,49 @@ class SafeMeetDiagnostics {
     document.addEventListener('visibilitychange', this.handleVisibility);
     window.addEventListener('pagehide', this.handlePageHide);
 
-    if ('PerformanceObserver' in window) {
-      try {
-        this.longTaskObserver = new PerformanceObserver((list) => {
-          list.getEntries().forEach((entry) => {
-            if (entry.duration >= this.config.longTaskThresholdMs) {
-              this.record('main_thread_long_task', {
-                durationMs: Math.round(entry.duration),
-                startTimeMs: Math.round(entry.startTime),
-              });
-            }
-          });
-        });
-        this.longTaskObserver.observe({ entryTypes: ['longtask'] });
-      } catch {
-        this.longTaskObserver = null;
-      }
-    }
+    this.startLongTaskObserver();
+    this.startTimers();
+  }
 
+  private startLongTaskObserver() {
+    if (this.longTaskObserver || !('PerformanceObserver' in window)) return;
+    try {
+      this.longTaskObserver = new PerformanceObserver((list) => {
+        if (document.visibilityState === 'hidden') return;
+        let longest = 0;
+        let startTimeMs = 0;
+        list.getEntries().forEach((entry) => {
+          if (entry.duration >= this.config.longTaskThresholdMs && entry.duration > longest) {
+            longest = entry.duration;
+            startTimeMs = entry.startTime;
+          }
+        });
+        const now = performance.now();
+        if (longest > 0 && now - this.lastLongTaskRecordMs >= 1000) {
+          this.lastLongTaskRecordMs = now;
+          this.record('main_thread_long_task', {
+            durationMs: Math.round(longest),
+            startTimeMs: Math.round(startTimeMs),
+          });
+        }
+      });
+      this.longTaskObserver.observe({ entryTypes: ['longtask'] });
+    } catch {
+      this.longTaskObserver = null;
+    }
+  }
+
+  private stopLongTaskObserver() {
+    this.longTaskObserver?.disconnect();
+    this.longTaskObserver = null;
+  }
+
+  private startTimers() {
+    if (this.stallTimer !== null || this.sampleTimer !== null) return;
     const heartbeatInterval = 1000;
     this.expectedHeartbeat = Date.now() + heartbeatInterval;
     this.stallTimer = window.setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
       const now = Date.now();
       const drift = now - this.expectedHeartbeat;
       this.expectedHeartbeat = now + heartbeatInterval;
@@ -186,9 +218,22 @@ class SafeMeetDiagnostics {
     }, heartbeatInterval);
 
     this.sampleTimer = window.setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
       this.record('runtime_sample', SafeMeetDiagnostics.getRuntimeSnapshot());
       this.flush();
     }, this.config.sampleIntervalMs);
+  }
+
+  private pauseTimers() {
+    if (this.stallTimer !== null) window.clearInterval(this.stallTimer);
+    if (this.sampleTimer !== null) window.clearInterval(this.sampleTimer);
+    this.stallTimer = null;
+    this.sampleTimer = null;
+  }
+
+  private resumeTimers() {
+    if (!this.started) return;
+    this.startTimers();
   }
 
   stop() {
@@ -200,12 +245,8 @@ class SafeMeetDiagnostics {
     window.removeEventListener('unhandledrejection', this.handleUnhandledRejection);
     document.removeEventListener('visibilitychange', this.handleVisibility);
     window.removeEventListener('pagehide', this.handlePageHide);
-    if (this.stallTimer !== null) window.clearInterval(this.stallTimer);
-    if (this.sampleTimer !== null) window.clearInterval(this.sampleTimer);
-    this.stallTimer = null;
-    this.sampleTimer = null;
-    this.longTaskObserver?.disconnect();
-    this.longTaskObserver = null;
+    this.pauseTimers();
+    this.stopLongTaskObserver();
   }
 
   record(logCode: string, data: Record<string, unknown> = {}) {

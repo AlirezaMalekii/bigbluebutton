@@ -13,6 +13,7 @@ let persistentLongTasks = false;
 let longTaskObserver: PerformanceObserver | null = null;
 let phoneMediaQuery: MediaQueryList | null = null;
 let mediaQueryListener: (() => void) | null = null;
+let visibilityListener: (() => void) | null = null;
 
 const DEFAULT_SETTINGS = {
   enabled: true,
@@ -70,16 +71,23 @@ const applyTier = () => {
   }
 };
 
+const stopLongTaskObserver = () => {
+  longTaskObserver?.disconnect();
+  longTaskObserver = null;
+};
+
 const startLongTaskObserver = () => {
   const settings = getSettings();
   if (
-    settings.mode !== 'auto'
+    longTaskObserver
+    || settings.mode !== 'auto'
     || typeof PerformanceObserver !== 'function'
     || !PerformanceObserver.supportedEntryTypes?.includes('longtask')
   ) return;
 
   const longTaskTimes: number[] = [];
   longTaskObserver = new PerformanceObserver((list) => {
+    if (document.visibilityState === 'hidden') return;
     const now = performance.now();
     list.getEntries().forEach((entry) => {
       if (entry.duration >= settings.longTaskThresholdMs) longTaskTimes.push(now);
@@ -93,11 +101,21 @@ const startLongTaskObserver = () => {
   longTaskObserver.observe({ entryTypes: ['longtask'] });
 };
 
+const handleVisibility = () => {
+  if (document.visibilityState === 'hidden') {
+    stopLongTaskObserver();
+    return;
+  }
+  startLongTaskObserver();
+};
+
 export const startSkyroomPerformanceProfile = () => {
   applyTier();
   phoneMediaQuery = window.matchMedia('(max-width: 599px)');
   mediaQueryListener = () => applyTier();
   phoneMediaQuery.addEventListener?.('change', mediaQueryListener);
+  visibilityListener = handleVisibility;
+  document.addEventListener('visibilitychange', visibilityListener);
   startLongTaskObserver();
 };
 
@@ -105,10 +123,13 @@ export const stopSkyroomPerformanceProfile = () => {
   if (phoneMediaQuery && mediaQueryListener) {
     phoneMediaQuery.removeEventListener?.('change', mediaQueryListener);
   }
-  longTaskObserver?.disconnect();
-  longTaskObserver = null;
+  if (visibilityListener) {
+    document.removeEventListener('visibilitychange', visibilityListener);
+  }
+  stopLongTaskObserver();
   phoneMediaQuery = null;
   mediaQueryListener = null;
+  visibilityListener = null;
   persistentLongTasks = false;
   currentTier = 'standard';
   document.documentElement.removeAttribute(PERFORMANCE_TIER_ATTRIBUTE);

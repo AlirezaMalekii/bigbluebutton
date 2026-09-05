@@ -36,6 +36,7 @@ import {
 import { subscribeSkyroomMobileBottom } from '/imports/ui/components/skyroom-layout/mobile-bottom-state';
 import {
   isSkyroomColumnLayout,
+  isSkyroomMobileViewport,
   syncSkyroomMobileWebcamDockVisibility,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import { getSkyroomStreamPrivilegeKey } from '/imports/ui/components/skyroom-layout/camera-placement';
@@ -942,7 +943,7 @@ const CustomLayout = (props) => {
           layoutEl.style.removeProperty('--skyroom-mobile-status-rail-top');
           layoutEl.style.removeProperty('--skyroom-mobile-status-rail-offset');
         }
-      } else {
+      } else if (!isSkyroomMobileViewport()) {
         layoutEl?.removeAttribute('data-skyroom-mobile');
         layoutEl?.removeAttribute('data-skyroom-mobile-has-top');
         layoutEl?.removeAttribute('data-skyroom-mobile-has-bottom');

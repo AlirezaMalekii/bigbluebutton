@@ -777,11 +777,15 @@ const Whiteboard = React.memo((props) => {
       updateShapes(
         changedShapesById, tlEditorRef, presentationIdRef, pageChanged, assets, bgShape,
       );
-      recordSafeMeetDiagnostic('whiteboard_remote_shapes_applied', {
-        shapeCount: Object.keys(changedShapesById).length,
-        totalShapeCount: Object.keys(nextShapesById).length,
-        durationMs: Math.round(performance.now() - startedAt),
-      });
+      const shapeCount = Object.keys(changedShapesById).length;
+      const durationMs = Math.round(performance.now() - startedAt);
+      if (shapeCount > 0 || durationMs >= 8) {
+        recordSafeMeetDiagnostic('whiteboard_remote_shapes_applied', {
+          shapeCount,
+          totalShapeCount: Object.keys(nextShapesById).length,
+          durationMs,
+        });
+      }
     });
     return () => cancelAnimationFrame(frameId);
   }, [shapes]);

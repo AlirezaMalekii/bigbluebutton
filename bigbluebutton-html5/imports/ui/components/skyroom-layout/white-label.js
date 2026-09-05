@@ -108,9 +108,35 @@ export const applySkyroomWhiteLabelSettings = (settings) => {
 };
 
 let domObserver = null;
+let pendingScrubNodes = [];
+let scrubFrame = 0;
+
+const MAYBE_UPSTREAM_BRAND = /big|بیگ|bbb/i;
+const SKIP_HOT_TAGS = new Set(['VIDEO', 'CANVAS', 'SVG', 'PATH', 'IMG', 'SOURCE', 'TRACK']);
+const SKIP_HOT_SELECTOR = [
+  '#whiteboard-element',
+  '#whiteboard-container',
+  '.tl-container',
+  '.tl-canvas',
+  '[data-test="webcamVideoItem"]',
+  '#cameraDock',
+  '#skyroom-stage-webcam-dock',
+  '#skyroom-sidebar-webcam-dock',
+  '#skyroom-center-webcam-dock',
+  'video',
+  'canvas',
+  'svg',
+].join(',');
+
+const isHotMediaNode = (node) => {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) return false;
+  if (SKIP_HOT_TAGS.has(node.tagName)) return true;
+  return typeof node.closest === 'function' && node.closest(SKIP_HOT_SELECTOR);
+};
 
 const scrubTextNode = (node) => {
   const original = node.textContent;
+  if (!original || !MAYBE_UPSTREAM_BRAND.test(original)) return;
   const next = scrubString(original);
   if (next !== original) {
     // eslint-disable-next-line no-param-reassign
@@ -119,8 +145,14 @@ const scrubTextNode = (node) => {
 };
 
 const scrubElementTree = (root) => {
-  if (!root) return;
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  if (!root || isHotMediaNode(root)) return;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode: (node) => {
+      const parent = node.parentElement;
+      if (parent && isHotMediaNode(parent)) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
   let node = walker.nextNode();
   while (node) {
     scrubTextNode(node);
@@ -128,8 +160,33 @@ const scrubElementTree = (root) => {
   }
 };
 
+const flushPendingScrubs = () => {
+  scrubFrame = 0;
+  const nodes = pendingScrubNodes;
+  pendingScrubNodes = [];
+  nodes.forEach((node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const parent = node.parentElement;
+      if (parent && isHotMediaNode(parent)) return;
+      scrubTextNode(node);
+      return;
+    }
+    if (node.nodeType === Node.ELEMENT_NODE && document.contains(node)) {
+      scrubElementTree(node);
+    }
+  });
+};
+
+const queueScrubNode = (node) => {
+  pendingScrubNodes.push(node);
+  if (scrubFrame) return;
+  scrubFrame = window.requestAnimationFrame(flushPendingScrubs);
+};
+
 /**
  * Catches late-rendered strings (toasts, plugins, server-driven labels).
+ * Do not watch tldraw/webcam trees or characterData — those mutate every frame
+ * and were a major meeting-page CPU cost.
  */
 export const startSkyroomWhiteLabelDomWatch = () => {
   if (domObserver || typeof document === 'undefined') return;
@@ -143,9 +200,13 @@ export const startSkyroomWhiteLabelDomWatch = () => {
     mutations.forEach((mutation) => {
       mutation.addedNodes.forEach((node) => {
         if (node.nodeType === Node.TEXT_NODE) {
-          scrubTextNode(node);
-        } else if (node.nodeType === Node.ELEMENT_NODE) {
-          scrubElementTree(node);
+          const parent = node.parentElement;
+          if (parent && isHotMediaNode(parent)) return;
+          queueScrubNode(node);
+          return;
+        }
+        if (node.nodeType === Node.ELEMENT_NODE && !isHotMediaNode(node)) {
+          queueScrubNode(node);
         }
       });
     });
@@ -154,7 +215,6 @@ export const startSkyroomWhiteLabelDomWatch = () => {
   domObserver.observe(root, {
     childList: true,
     subtree: true,
-    characterData: true,
   });
 };
 
@@ -163,4 +223,9 @@ export const stopSkyroomWhiteLabelDomWatch = () => {
     domObserver.disconnect();
     domObserver = null;
   }
+  if (scrubFrame) {
+    window.cancelAnimationFrame(scrubFrame);
+    scrubFrame = 0;
+  }
+  pendingScrubNodes = [];
 };

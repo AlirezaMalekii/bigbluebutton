@@ -222,6 +222,8 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
   private diagnosticsStatsInFlight: boolean;
 
+  private lastViewportDiagKey: string;
+
   private requestedCameraProfiles: WeakMap<WebRtcPeer, string>;
 
   constructor(props: VideoProviderProps) {
@@ -254,6 +256,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     this.mobileViewportApplyTimeout = null;
     this.diagnosticsStatsTimer = null;
     this.diagnosticsStatsInFlight = false;
+    this.lastViewportDiagKey = '';
     this.requestedCameraProfiles = new WeakMap();
 
     this.createVideoTag = this.createVideoTag.bind(this);
@@ -710,14 +713,23 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       this.playbackSoftRecoveryAttempted.delete(stream);
     });
 
-    recordSafeMeetDiagnostic('webcam_viewport_selection', {
-      candidates: this.viewportCandidateStreams.size,
-      activeRemote: nextVisible.size,
-      peerCount: Object.keys(this.webRtcPeers).length,
-      mobile: isSkyroomMobileViewport(),
-      performanceTier: getSkyroomPerformanceTier(),
-      activeVideoLimit: hasHardDecoderBudget ? activeVideoLimit : 0,
-    });
+    const viewportDiagKey = [
+      this.viewportCandidateStreams.size,
+      nextVisible.size,
+      Object.keys(this.webRtcPeers).length,
+      hasHardDecoderBudget ? activeVideoLimit : 0,
+    ].join(':');
+    if (this.lastViewportDiagKey !== viewportDiagKey) {
+      this.lastViewportDiagKey = viewportDiagKey;
+      recordSafeMeetDiagnostic('webcam_viewport_selection', {
+        candidates: this.viewportCandidateStreams.size,
+        activeRemote: nextVisible.size,
+        peerCount: Object.keys(this.webRtcPeers).length,
+        mobile: isSkyroomMobileViewport(),
+        performanceTier: getSkyroomPerformanceTier(),
+        activeVideoLimit: hasHardDecoderBudget ? activeVideoLimit : 0,
+      });
+    }
 
     if (!this.isViewportSubscriptionEnabled()) {
       if (this.viewportReleaseTimeout) clearTimeout(this.viewportReleaseTimeout);
@@ -744,16 +756,21 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
   }
 
   async collectDiagnosticsStats() {
-    if (this.diagnosticsStatsInFlight) return;
+    if (this.diagnosticsStatsInFlight || document.visibilityState === 'hidden') return;
+    const remotePeers = Object.values(this.webRtcPeers).filter((peer) => (
+      Boolean(peer?.peerConnection) && !peer.isPublisher
+    ));
+    if (remotePeers.length === 0) return;
     this.diagnosticsStatsInFlight = true;
     let inboundVideoReports = 0;
     let framesDecoded = 0;
     let framesDropped = 0;
     let bytesReceived = 0;
     try {
-      await Promise.all(Object.values(this.webRtcPeers).map(async (peer) => {
-        if (!peer?.peerConnection || peer.isPublisher) return;
-        const reports = await peer.peerConnection.getStats();
+      await Promise.all(remotePeers.map(async (peer) => {
+        const { peerConnection } = peer;
+        if (!peerConnection) return;
+        const reports = await peerConnection.getStats();
         reports.forEach((report) => {
           if (report.type !== 'inbound-rtp' || report.kind !== 'video') return;
           inboundVideoReports += 1;

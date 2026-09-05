@@ -16,7 +16,10 @@ import { Output } from '/imports/ui/components/layout/layoutTypes';
 import { VideoItem } from '/imports/ui/components/video-provider/types';
 import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
 import { VideoPlaybackState } from '/imports/ui/components/video-provider/video-playback-utils';
-import { computeMobileScrollableWebcamGrid } from '/imports/ui/components/video-provider/mobile-webcam-grid-utils';
+import {
+  computeMobileScrollableWebcamGrid,
+  resolveMobileWebcamDockSize,
+} from '/imports/ui/components/video-provider/mobile-webcam-grid-utils';
 import {
   isTileVisibleInClip,
   WEBCAM_VIEWPORT_CLIP_SELECTOR,
@@ -489,7 +492,9 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     const observer = new IntersectionObserver(this.handleViewportIntersections, {
       root,
       rootMargin: `${safeOverscan}px`,
-      threshold: [0, 0.01, 0.15, 0.5, 1],
+      // Area comes from getBoundingClientRect in evaluateViewportTarget.
+      // Extra IO thresholds only forced style/layout work on every tile.
+      threshold: [0, 1],
     });
     this.viewportObservers.set(root, observer);
     return observer;
@@ -497,16 +502,24 @@ class VideoList extends Component<VideoListProps, VideoListState> {
 
   evaluateViewportTarget(target: Element) {
     const { webcamsVisible } = this.props;
-    if (!webcamsVisible) {
+    if (!webcamsVisible || isSkyroomMobileWebcamDockHidden()) {
       this.viewportTargetAreas.set(target, 0);
       return false;
     }
 
     const element = target as HTMLElement;
-    const styles = window.getComputedStyle(element);
-    if (element.offsetParent === null
-      || styles.visibility === 'hidden'
-      || styles.display === 'none') {
+    if (element.hidden) {
+      this.viewportTargetAreas.set(target, 0);
+      return false;
+    }
+    // Avoid getComputedStyle / offsetParent here: both force layout, and
+    // offsetParent is null for descendants of position:fixed Skyroom docks.
+    if (typeof element.checkVisibility === 'function') {
+      if (!element.checkVisibility({ checkOpacity: false })) {
+        this.viewportTargetAreas.set(target, 0);
+        return false;
+      }
+    } else if (element.getClientRects().length === 0) {
       this.viewportTargetAreas.set(target, 0);
       return false;
     }
@@ -956,12 +969,16 @@ class VideoList extends Component<VideoListProps, VideoListState> {
     const measuredWidth = measuredDock?.clientWidth ?? 0;
     const measuredHeight = measuredDock?.clientHeight ?? 0;
     const mobileDock = isSkyroomColumnLayout() && isSkyroomMobileViewport();
-    const dockWidth = mobileDock && measuredWidth > 0
-      ? measuredWidth
-      : cameraDock?.width;
-    const dockHeight = mobileDock && measuredHeight > 0
-      ? measuredHeight
-      : cameraDock?.height;
+    const resolvedDock = mobileDock
+      ? resolveMobileWebcamDockSize(
+        measuredWidth,
+        measuredHeight,
+        cameraDock?.width || 0,
+        cameraDock?.height || 0,
+      )
+      : { width: cameraDock?.width || 0, height: cameraDock?.height || 0 };
+    const dockWidth = resolvedDock.width;
+    const dockHeight = resolvedDock.height;
     let optimalGrid: VideoListState['optimalGrid'] | null = VideoList.computeOptimalGrid(
       visibleStreams,
       dockWidth,
@@ -1034,13 +1051,17 @@ class VideoList extends Component<VideoListProps, VideoListState> {
 
     if (!optimalGrid) return;
 
-    layoutContextDispatch({
-      type: ACTIONS.SET_CAMERA_DOCK_OPTIMAL_GRID_SIZE,
-      value: {
-        width: optimalGrid.width,
-        height: optimalGrid.height,
-      },
-    });
+    // Phone dock size is owned by the Skyroom zone rect. Publishing the tall
+    // 3+ content height here made the layout engine fight CSS overflow.
+    if (!mobileDock) {
+      layoutContextDispatch({
+        type: ACTIONS.SET_CAMERA_DOCK_OPTIMAL_GRID_SIZE,
+        value: {
+          width: optimalGrid.width,
+          height: optimalGrid.height,
+        },
+      });
+    }
     this.setState({
       optimalGrid,
     });
@@ -1475,14 +1496,15 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       this.canvas?.closest('#cameraDock')
       || (typeof document !== 'undefined' ? document.getElementById('cameraDock') : null)
     ) as HTMLElement | null;
-    const dockH = Math.max(
-      1,
-      (fillMobileDock ? measuredDock?.clientHeight : 0) || cameraDock?.height || 0,
-    );
-    const dockW = Math.max(
-      1,
-      (fillMobileDock ? measuredDock?.clientWidth : 0) || cameraDock?.width || 0,
-    );
+    const resolvedDock = fillMobileDock
+      ? resolveMobileWebcamDockSize(
+        measuredDock?.clientWidth ?? 0,
+        measuredDock?.clientHeight ?? 0,
+        cameraDock?.width || 0,
+        cameraDock?.height || 0,
+      )
+      : { width: cameraDock?.width || 0, height: cameraDock?.height || 0 };
+    const dockH = Math.max(1, resolvedDock.height);
     const mobileColumns = 2;
     const mobileRows = Math.max(1, Math.ceil(visibleCount / mobileColumns));
     const mobileChrome = 4;
@@ -1496,7 +1518,7 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       + ((mobileRows - 1) * mobileGutter);
     // 2 cams fill the dock; 3+ use fixed row tracks so extra rows scroll inside the dock.
     const mobilePairFill = fillMobileDock && visibleCount === 2;
-    const mobileScrollGrid = fillMobileDock && visibleCount > 2 && dockH > 0 && dockW > 0;
+    const mobileScrollGrid = fillMobileDock && visibleCount > 2;
 
     let listWidth = `${optimalGrid.width}px`;
     let listHeight = `${optimalGrid.height}px`;

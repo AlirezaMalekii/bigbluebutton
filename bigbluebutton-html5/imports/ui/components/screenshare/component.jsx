@@ -86,6 +86,9 @@ class ScreenshareComponent extends React.Component {
       videoTagRef: null,
     };
 
+    this.lastMediaWidth = 0;
+    this.lastMediaHeight = 0;
+
     this.onLoadedData = this.onLoadedData.bind(this);
     this.onLoadedMetadata = this.onLoadedMetadata.bind(this);
     this.onVideoResize = this.onVideoResize.bind(this);
@@ -618,7 +621,19 @@ class ScreenshareComponent extends React.Component {
     const shouldRenderConnectingState = !loaded
       || (isPresenter && !isGloballyBroadcasting);
 
-    const display = (width > 0 && height > 0) && shouldShowScreenshare ? 'inherit' : 'none';
+    if (width > 0) this.lastMediaWidth = width;
+    if (height > 0) this.lastMediaHeight = height;
+    const mediaWidth = width > 0 ? width : this.lastMediaWidth;
+    const mediaHeight = height > 0 ? height : this.lastMediaHeight;
+    const hideVisually = !shouldShowScreenshare || width <= 0 || height <= 0;
+    // display:none on a live WebRTC <video> tears the Android compositor down
+    // during tab/layout churn and leaves the meeting frozen.
+    const keepComposed = hideVisually
+      && (isGloballyBroadcasting || loaded)
+      && (deviceInfo.isMobile || isSkyroomTheme());
+    const display = (!hideVisually || keepComposed) && mediaWidth > 0 && mediaHeight > 0
+      ? 'inherit'
+      : 'none';
     const Settings = getSettingsSingletonInstance();
     const { animations } = Settings.application;
 
@@ -635,11 +650,13 @@ class ScreenshareComponent extends React.Component {
           {
             position: 'absolute',
             display,
+            visibility: keepComposed ? 'hidden' : 'visible',
+            pointerEvents: keepComposed ? 'none' : 'auto',
             top,
             left,
             right,
-            height,
-            width,
+            height: keepComposed ? mediaHeight : height,
+            width: keepComposed ? mediaWidth : width,
             zIndex: fullscreenContext ? (stageZIndex || zIndex) : stageZIndex,
             backgroundColor: '#06172A',
             boxSizing: 'border-box',

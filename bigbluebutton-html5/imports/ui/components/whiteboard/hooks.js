@@ -410,7 +410,7 @@ const useMouseEvents = ({
       presentationWrapper.addEventListener('pointerdown', handlePointerDown, { capture: true });
       presentationWrapper.addEventListener('touchstart', handleTouchStart, { passive: false, capture: true });
       presentationWrapper.addEventListener('touchend', handleTouchEnd, { passive: false, capture: true });
-      presentationWrapper.addEventListener('touchmove', handleTouchMove, { passive: false });
+      presentationWrapper.addEventListener('touchmove', handleTouchMove, { passive: false, capture: true });
     }
 
     return () => {
@@ -423,7 +423,7 @@ const useMouseEvents = ({
         presentationWrapper.removeEventListener('pointerdown', handlePointerDown, { capture: true });
         presentationWrapper.removeEventListener('touchstart', handleTouchStart, { capture: true });
         presentationWrapper.removeEventListener('touchend', handleTouchEnd, { capture: true });
-        presentationWrapper.removeEventListener('touchmove', handleTouchMove);
+        presentationWrapper.removeEventListener('touchmove', handleTouchMove, { capture: true });
       }
       window.removeEventListener('mousedown', handleMouseDownWindow);
     };
