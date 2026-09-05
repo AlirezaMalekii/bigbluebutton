@@ -330,12 +330,12 @@ export const meetingClientSettingsInitialValues: MeetingClientSettings = {
         {
           id: 'low-u8',
           name: 'low-u8',
-          bitrate: 100,
+          bitrate: 90,
           hidden: true,
           constraints: {
-            width: 640,
-            height: 360,
-            frameRate: 12,
+            width: 480,
+            height: 270,
+            frameRate: 15,
           },
         },
         {

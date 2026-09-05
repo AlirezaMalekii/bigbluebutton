@@ -1,5 +1,6 @@
 import React, { useCallback, useRef } from 'react';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
+import { isSkyroomMobileViewport } from '../panel-toggles';
 import {
   clearSkyroomWebcamDragPreview,
   setSkyroomWebcamDragPreview,
@@ -46,8 +47,8 @@ const SkyroomWebcamZoneDrag: React.FC<SkyroomWebcamZoneDragProps> = ({
     isModerator: user.isModerator,
   }));
   const isModerator = Boolean(currentUser?.isModerator);
-  // Moderators broadcast layout; viewers rearrange any webcam locally on their screen.
-  const canDrag = enabled;
+  // Phone tiles must keep native vertical scroll. Desktop zone drag is unchanged.
+  const canDrag = enabled && !isSkyroomMobileViewport();
   const dragStateRef = useRef({
     startX: 0,
     startY: 0,

@@ -718,13 +718,9 @@ class VideoList extends Component<VideoListProps, VideoListState> {
   static setViewportTargetPlayback(target: Element, shouldPlay: boolean) {
     const videoElement = target.querySelector('video');
     if (!(videoElement instanceof HTMLVideoElement)) return;
-
-    if (!shouldPlay) {
-      if (!videoElement.paused) videoElement.pause();
-      return;
-    }
-
-    if (!videoElement.srcObject || !videoElement.paused) return;
+    // Visibility only reports subscription intent. Pausing here painted black
+    // tiles on iOS/Android when IO flickered or the webcam tab hid.
+    if (!shouldPlay || !videoElement.srcObject || !videoElement.paused) return;
     videoElement.play().catch((error) => {
       if (error.name === 'NotAllowedError') {
         const tagFailedEvent = new CustomEvent('videoPlayFailed', {
@@ -993,59 +989,15 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       && dockHeight > 0
       && visibleStreams.length > 0
     ) {
-      const gutter = Number.isFinite(gridGutter) ? gridGutter : 0;
-      const count = visibleStreams.length;
-
-      if (count === 1) {
-        // One cam: fill the entire webcam box.
-        optimalGrid = {
-          columns: 1,
-          rows: 1,
-          width: dockWidth,
-          height: dockHeight,
-          filledArea: dockWidth * dockHeight,
-        };
-      } else if (count === 2) {
-        // Two cams: side-by-side, each column fills the full dock height.
-        // Match responsive.css gap/padding so tiles stay inside the box.
-        const chrome = 4; // list padding 2px × 2
-        const cellWidth = Math.max(
-          1,
-          Math.floor((dockWidth - chrome - gutter) / 2),
-        );
-        const cellHeight = Math.max(1, dockHeight - chrome);
-        optimalGrid = {
-          columns: 2,
-          rows: 1,
-          width: dockWidth,
-          height: dockHeight,
-          cellWidth,
-          cellHeight,
-          filledArea: cellWidth * cellHeight * 2,
-        };
-      } else {
-        // 3+: 2-column grid sized so two rows fill the dock (2×2 viewport);
-        // further rows overflow and the dock scrolls.
-        const mobileColumns = 2;
-        const rows = Math.ceil(count / mobileColumns);
-        const chrome = 4; // list padding 2px × 2
-        const cellWidth = Math.max(
-          1,
-          Math.floor((dockWidth - chrome - gutter) / mobileColumns),
-        );
-        const cellHeight = Math.max(
-          1,
-          Math.floor((dockHeight - chrome - gutter) / 2),
-        );
-        optimalGrid = {
-          columns: mobileColumns,
-          rows,
-          width: dockWidth,
-          height: (cellHeight * rows) + ((rows - 1) * gutter),
-          cellWidth,
-          cellHeight,
-          filledArea: cellWidth * cellHeight * count,
-        };
+      const gutter = Number.isFinite(gridGutter) ? gridGutter : 4;
+      const mobileGrid = computeMobileScrollableWebcamGrid(
+        visibleStreams.length,
+        dockWidth,
+        dockHeight,
+        gutter,
+      );
+      if (mobileGrid) {
+        optimalGrid = mobileGrid;
       }
     }
 
@@ -1505,32 +1457,30 @@ class VideoList extends Component<VideoListProps, VideoListState> {
       )
       : { width: cameraDock?.width || 0, height: cameraDock?.height || 0 };
     const dockH = Math.max(1, resolvedDock.height);
-    const mobileColumns = 2;
-    const mobileRows = Math.max(1, Math.ceil(visibleCount / mobileColumns));
-    const mobileChrome = 4;
-    const mobileGutter = 4;
-    const fallbackCellHeight = Math.max(
-      1,
-      Math.floor((dockH - mobileChrome - mobileGutter) / 2),
-    );
-    const scrollCellHeight = optimalGrid.cellHeight || fallbackCellHeight;
-    const scrollListHeight = (scrollCellHeight * mobileRows)
-      + ((mobileRows - 1) * mobileGutter);
-    // 2 cams fill the dock; 3+ use fixed row tracks so extra rows scroll inside the dock.
+    const mobileGrid = fillMobileDock && visibleCount > 0
+      ? computeMobileScrollableWebcamGrid(
+        visibleCount,
+        Math.max(1, resolvedDock.width),
+        dockH,
+        4,
+      )
+      : null;
     const mobilePairFill = fillMobileDock && visibleCount === 2;
     const mobileScrollGrid = fillMobileDock && visibleCount > 2;
+    const scrollCellHeight = mobileGrid?.cellHeight || optimalGrid.cellHeight || 1;
+    const scrollListHeight = mobileGrid?.height || optimalGrid.height;
 
     let listWidth = `${optimalGrid.width}px`;
     let listHeight = `${optimalGrid.height}px`;
     let listGridRows = `repeat(${optimalGrid.rows}, 1fr)`;
-    if (mobileScrollGrid) {
+    if (mobileScrollGrid && mobileGrid) {
       listWidth = '100%';
       listHeight = `${scrollListHeight}px`;
-      listGridRows = `repeat(${mobileRows}, ${scrollCellHeight}px)`;
-    } else if (mobilePairFill) {
+      listGridRows = `repeat(${mobileGrid.rows}, ${scrollCellHeight}px)`;
+    } else if (mobilePairFill && mobileGrid) {
       listWidth = '100%';
       listHeight = '100%';
-      listGridRows = `${optimalGrid.cellHeight || (dockH - mobileChrome)}px`;
+      listGridRows = `${mobileGrid.cellHeight}px`;
     } else if (fillMobileDock) {
       listWidth = '100%';
       listHeight = '100%';
@@ -1572,8 +1522,8 @@ class VideoList extends Component<VideoListProps, VideoListState> {
             style={{
               width: listWidth,
               height: listHeight,
-              gridTemplateColumns: mobileScrollGrid
-                ? `repeat(${mobileColumns}, 1fr)`
+              gridTemplateColumns: mobileScrollGrid && mobileGrid
+                ? `repeat(${mobileGrid.columns}, 1fr)`
                 : `repeat(${optimalGrid.columns}, 1fr)`,
               gridTemplateRows: listGridRows,
             }}

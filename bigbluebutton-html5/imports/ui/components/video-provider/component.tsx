@@ -35,7 +35,7 @@ import {
   getSkyroomPerformanceTier,
   SKYROOM_PERFORMANCE_TIER_EVENT,
 } from '/imports/ui/components/skyroom-layout/performance-profile';
-import { selectHardBudgetedRemoteIds } from '/imports/ui/components/video-provider/mobile-webcam-viewport-utils';
+import { resolveStableViewportSelection } from '/imports/ui/components/video-provider/mobile-webcam-viewport-utils';
 import { isSkyroomMobileWebcamDockHidden } from '/imports/ui/components/skyroom-layout/mobile-webcam-visibility';
 
 const SKYROOM_MOBILE_VIEWPORT_SETTLE_MS = 120;
@@ -224,6 +224,8 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
   private lastViewportDiagKey: string;
 
+  private lastViewportSelectionReason: string;
+
   private requestedCameraProfiles: WeakMap<WebRtcPeer, string>;
 
   constructor(props: VideoProviderProps) {
@@ -257,6 +259,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     this.diagnosticsStatsTimer = null;
     this.diagnosticsStatsInFlight = false;
     this.lastViewportDiagKey = '';
+    this.lastViewportSelectionReason = '';
     this.requestedCameraProfiles = new WeakMap();
 
     this.createVideoTag = this.createVideoTag.bind(this);
@@ -582,11 +585,51 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     return this.visibleVideoStreams.has(stream) || focusedId === stream;
   }
 
+  mapViewportBudgetStreams(streams?: VideoItem[]) {
+    const { focusedId, streams: propStreams } = this.props;
+    const items = streams ?? propStreams;
+    return items
+      .filter((item) => (
+        item.type !== VIDEO_TYPES.GRID
+        && item.type !== VIDEO_TYPES.AUDIO_ONLY
+      ))
+      .map((item) => ({
+        focused: item.stream === focusedId,
+        floor: Boolean(item.floor),
+        local: VideoService.isLocalStream(item.stream),
+        pinned: Boolean(item.user?.pinned),
+        presenter: Boolean(item.user?.presenter),
+        stream: item.stream,
+      }));
+  }
+
+  applyStableViewportSelection({ hidden = false } = {}) {
+    const activeVideoLimit = getSkyroomActiveVideoLimit();
+    const selection = resolveStableViewportSelection({
+      candidateAreas: this.viewportCandidateAreas,
+      hasSnapshot: this.hasViewportVisibilitySnapshot,
+      isHidden: hidden,
+      isMobile: isSkyroomMobileViewport(),
+      limit: Number.isFinite(activeVideoLimit) ? activeVideoLimit : Number.POSITIVE_INFINITY,
+      previousRetained: this.viewportRetainedStreams,
+      previousVisible: this.visibleVideoStreams,
+      streams: this.mapViewportBudgetStreams(),
+    });
+    this.visibleVideoStreams = selection.nextVisible;
+    this.viewportRetainedStreams = selection.retained;
+    this.lastViewportSelectionReason = selection.reason;
+    return selection;
+  }
+
   getStreamsForMediaSubscription(streams: VideoItem[]) {
     if (!this.isViewportSubscriptionEnabled()) return streams;
-    // Do not create a full-meeting burst while IntersectionObserver is taking
-    // its first snapshot. Local/focused/presenter streams remain protected by
-    // shouldKeepRemoteStream and visible subscribers follow on the next frame.
+    if (
+      Number.isFinite(getSkyroomActiveVideoLimit())
+      && !this.hasViewportVisibilitySnapshot
+      && this.visibleVideoStreams.size === 0
+    ) {
+      this.applyStableViewportSelection();
+    }
     return streams.filter((stream) => this.shouldKeepRemoteStream(stream));
   }
 
@@ -624,8 +667,6 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
   handleVideoVisibilityChange(changes: { area?: number; stream: string; visible: boolean }[]) {
     const { webcamsVisible } = this.props;
-    const firstSnapshot = !this.hasViewportVisibilitySnapshot;
-    this.hasViewportVisibilitySnapshot = true;
 
     // Hidden webcam tab: keep the last decoder set. CSS already hides the dock.
     // Applying all-false here tore remotes down on tab switch, froze low-end
@@ -639,6 +680,9 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       }
       return;
     }
+
+    const firstSnapshot = !this.hasViewportVisibilitySnapshot;
+    this.hasViewportVisibilitySnapshot = true;
 
     changes.forEach(({ area, stream, visible }) => {
       if (visible) {
@@ -663,52 +707,35 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
   }
 
   applyViewportCandidates(firstSnapshot = false, reconcileMedia = true) {
-    const previousVisible = this.visibleVideoStreams;
-    let nextVisible = new Set(this.viewportCandidateStreams);
+    const previousVisible = new Set(this.visibleVideoStreams);
     const activeVideoLimit = getSkyroomActiveVideoLimit();
     const hasHardDecoderBudget = Number.isFinite(activeVideoLimit);
+    const { webcamsVisible } = this.props;
+    const hidden = !webcamsVisible || isSkyroomMobileWebcamDockHidden();
 
+    let nextVisible = new Set(this.viewportCandidateStreams);
     if (hasHardDecoderBudget) {
-      const { streams, focusedId, webcamsVisible } = this.props;
-      if (!webcamsVisible && this.visibleVideoStreams.size > 0) {
+      if (hidden && this.visibleVideoStreams.size > 0) {
         this.viewportRetainedStreams = new Set(this.visibleVideoStreams);
         return;
       }
-      nextVisible = selectHardBudgetedRemoteIds({
-        candidateAreas: this.viewportCandidateAreas,
-        isMobile: isSkyroomMobileViewport(),
-        limit: activeVideoLimit,
-        streams: streams
-          .filter((item) => (
-            item.type !== VIDEO_TYPES.GRID
-            && item.type !== VIDEO_TYPES.AUDIO_ONLY
-          ))
-          .map((item) => ({
-            focused: item.stream === focusedId,
-            floor: Boolean(item.floor),
-            local: VideoService.isLocalStream(item.stream),
-            pinned: Boolean(item.user?.pinned),
-            presenter: Boolean(item.user?.presenter),
-            stream: item.stream,
-          })),
-      });
-      // Hard-budget clients use a settled switch rather than retained overlap,
-      // so scroll/tier transitions cannot temporarily exceed the decoder cap.
-      this.viewportRetainedStreams = new Set(nextVisible);
+      const selection = this.applyStableViewportSelection({ hidden });
+      nextVisible = selection.nextVisible;
+    } else {
+      this.visibleVideoStreams = nextVisible;
+      nextVisible.forEach((stream) => this.viewportRetainedStreams.add(stream));
     }
 
     const becameVisible = Array.from(nextVisible).some((stream) => !previousVisible.has(stream));
     const becameHidden = Array.from(previousVisible).some((stream) => !nextVisible.has(stream));
-    this.visibleVideoStreams = nextVisible;
 
     nextVisible.forEach((stream) => {
-      this.viewportRetainedStreams.add(stream);
       if (this.playbackState[stream] && this.playbackState[stream] !== 'playing') {
         this.setPlaybackRecoveryTimeout(stream, this.playbackState[stream]);
       }
     });
     previousVisible.forEach((stream) => {
-      if (nextVisible.has(stream)) return;
+      if (nextVisible.has(stream) || this.viewportRetainedStreams.has(stream)) return;
       this.clearPlaybackTimeout(stream);
       this.playbackSoftRecoveryAttempted.delete(stream);
     });
@@ -716,6 +743,8 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     const viewportDiagKey = [
       this.viewportCandidateStreams.size,
       nextVisible.size,
+      this.viewportRetainedStreams.size,
+      this.lastViewportSelectionReason,
       Object.keys(this.webRtcPeers).length,
       hasHardDecoderBudget ? activeVideoLimit : 0,
     ].join(':');
@@ -724,6 +753,8 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       recordSafeMeetDiagnostic('webcam_viewport_selection', {
         candidates: this.viewportCandidateStreams.size,
         activeRemote: nextVisible.size,
+        retainedRemote: this.viewportRetainedStreams.size,
+        reason: this.lastViewportSelectionReason || (firstSnapshot ? 'first_snapshot' : 'updated'),
         peerCount: Object.keys(this.webRtcPeers).length,
         mobile: isSkyroomMobileViewport(),
         performanceTier: getSkyroomPerformanceTier(),
@@ -744,7 +775,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     if (reconcileMedia && (firstSnapshot || visibleSetChanged) && this.mounted && socketOpen) {
       this.updateStreams(streams);
     }
-    if (becameHidden && !hasHardDecoderBudget) this.scheduleViewportRelease();
+    if (becameHidden) this.scheduleViewportRelease();
   }
 
   handlePerformanceTierChange() {
@@ -766,6 +797,11 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     let framesDecoded = 0;
     let framesDropped = 0;
     let bytesReceived = 0;
+    let framesPerSecond = 0;
+    let jitterBufferMs = 0;
+    let jitterBufferSamples = 0;
+    let freezeCount = 0;
+    let freezeDuration = 0;
     try {
       await Promise.all(remotePeers.map(async (peer) => {
         const { peerConnection } = peer;
@@ -777,6 +813,15 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
           framesDecoded += Number(report.framesDecoded) || 0;
           framesDropped += Number(report.framesDropped) || 0;
           bytesReceived += Number(report.bytesReceived) || 0;
+          framesPerSecond += Number(report.framesPerSecond) || 0;
+          freezeCount += Number(report.freezeCount) || 0;
+          freezeDuration += Number(report.totalFreezesDuration) || 0;
+          const emitted = Number(report.jitterBufferEmittedCount) || 0;
+          const delay = Number(report.jitterBufferDelay) || 0;
+          if (emitted > 0) {
+            jitterBufferMs += (delay / emitted) * 1000;
+            jitterBufferSamples += 1;
+          }
         });
       }));
       recordSafeMeetDiagnostic('webcam_webrtc_sample', {
@@ -786,6 +831,13 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
         framesDecoded,
         framesDropped,
         bytesReceived,
+        framesPerSecond,
+        jitterBufferMs: jitterBufferSamples > 0
+          ? Math.round(jitterBufferMs / jitterBufferSamples)
+          : 0,
+        freezeCount,
+        freezeDuration,
+        reason: this.lastViewportSelectionReason,
       });
     } catch (error) {
       recordSafeMeetDiagnostic('webcam_webrtc_sample_failed', {

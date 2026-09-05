@@ -3810,8 +3810,9 @@
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-skyroom-mobile-webcam-grid="scroll"] [data-test="webcamVideoItem"],
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-skyroom-mobile-webcam-grid="scroll"] [class*="VideoListItem"] {
+    height: auto !important;
     max-height: none !important;
-    height: 100% !important;
+    min-height: 0 !important;
   }
 
   /* Default (3+): stretch into fixed grid-row tracks from JS. Avoid height:100% —

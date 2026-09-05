@@ -107,6 +107,16 @@ const CustomLayout = (props) => {
   const [skyroomNotesOpen, setSkyroomNotesOpen] = useState(getSkyroomNotesOpen);
   const calculatesLayoutRef = useRef(() => {});
   const calculatesLayoutPendingRef = useRef(false);
+  const lastLayoutOutputRef = useRef({});
+  const lastMobileCameraDockRef = useRef(null);
+
+  const dispatchOutput = (type, value) => {
+    const prev = lastLayoutOutputRef.current[type];
+    const next = JSON.stringify(value);
+    if (prev === next) return;
+    lastLayoutOutputRef.current[type] = next;
+    layoutContextDispatch({ type, value });
+  };
 
   useEffect(() => subscribeSkyroomNotesOpen(setSkyroomNotesOpen), []);
 
@@ -114,7 +124,6 @@ const CustomLayout = (props) => {
     const refreshSkyroomLayout = () => {
       if (!document.getElementById('layout')?.hasAttribute('data-skyroom-column')) return;
       calculatesLayoutRef.current();
-      window.requestAnimationFrame(() => calculatesLayoutRef.current());
     };
 
     // Mobile bottom box (webcams/chat/…) lives outside layout context. After an
@@ -202,8 +211,7 @@ const CustomLayout = (props) => {
     if (!hasActiveScreenShare && cameraDockInput.numCameras === 0) return undefined;
 
     calculatesLayout();
-    const raf = window.requestAnimationFrame(() => calculatesLayout());
-    return () => window.cancelAnimationFrame(raf);
+    return undefined;
   }, [
     hasActiveScreenShare,
     layoutVideoStreams.length,
@@ -787,10 +795,7 @@ const CustomLayout = (props) => {
       };
       layoutMediaAreaBounds = skyroomLayout.mediaAreaBounds;
       if (skyroomLayout.cameraDockPosition) {
-        layoutContextDispatch({
-          type: ACTIONS.SET_CAMERA_DOCK_POSITION,
-          value: skyroomLayout.cameraDockPosition,
-        });
+        dispatchOutput(ACTIONS.SET_CAMERA_DOCK_POSITION, skyroomLayout.cameraDockPosition);
       }
       if (skyroomLayout.cameraDockBounds) {
         layoutCameraDockBounds = skyroomLayout.cameraDockBounds;
@@ -1139,41 +1144,32 @@ const CustomLayout = (props) => {
       clearSkyroomWebcamLayout();
     }
 
-    layoutContextDispatch({
-      type: ACTIONS.SET_NAVBAR_OUTPUT,
-      value: {
-        display: navbarInput.hasNavBar,
-        width: layoutNavbarBounds.width,
-        height: layoutNavbarBounds.height,
-        top: layoutNavbarBounds.top,
-        left: layoutNavbarBounds.left,
-        tabOrder: DEFAULT_VALUES.navBarTabOrder,
-        zIndex: layoutNavbarBounds.zIndex,
-      },
+    dispatchOutput(ACTIONS.SET_NAVBAR_OUTPUT, {
+      display: navbarInput.hasNavBar,
+      width: layoutNavbarBounds.width,
+      height: layoutNavbarBounds.height,
+      top: layoutNavbarBounds.top,
+      left: layoutNavbarBounds.left,
+      tabOrder: DEFAULT_VALUES.navBarTabOrder,
+      zIndex: layoutNavbarBounds.zIndex,
     });
 
-    layoutContextDispatch({
-      type: ACTIONS.SET_ACTIONBAR_OUTPUT,
-      value: {
-        display: actionbarInput.hasActionBar,
-        width: layoutActionbarBounds.width,
-        height: layoutActionbarBounds.height,
-        innerHeight: layoutActionbarBounds.innerHeight,
-        top: layoutActionbarBounds.top,
-        left: layoutActionbarBounds.left,
-        padding: layoutActionbarBounds.padding,
-        tabOrder: DEFAULT_VALUES.actionBarTabOrder,
-        zIndex: layoutActionbarBounds.zIndex,
-      },
+    dispatchOutput(ACTIONS.SET_ACTIONBAR_OUTPUT, {
+      display: actionbarInput.hasActionBar,
+      width: layoutActionbarBounds.width,
+      height: layoutActionbarBounds.height,
+      innerHeight: layoutActionbarBounds.innerHeight,
+      top: layoutActionbarBounds.top,
+      left: layoutActionbarBounds.left,
+      padding: layoutActionbarBounds.padding,
+      tabOrder: DEFAULT_VALUES.actionBarTabOrder,
+      zIndex: layoutActionbarBounds.zIndex,
     });
 
-    layoutContextDispatch({
-      type: ACTIONS.SET_CAPTIONS_OUTPUT,
-      value: {
-        left: !isRTL ? layoutSidebarSize + captionsMargin : null,
-        right: isRTL ? layoutSidebarSize + captionsMargin : null,
-        maxWidth: layoutMediaAreaBounds.width - captionsMargin * 2,
-      },
+    dispatchOutput(ACTIONS.SET_CAPTIONS_OUTPUT, {
+      left: !isRTL ? layoutSidebarSize + captionsMargin : null,
+      right: isRTL ? layoutSidebarSize + captionsMargin : null,
+      maxWidth: layoutMediaAreaBounds.width - captionsMargin * 2,
     });
 
     const sidebarNavigationDisplay = skyroomLayout?.isMobileSplit
@@ -1185,71 +1181,56 @@ const CustomLayout = (props) => {
         || skyroomLayout.mobileActiveBox === 'waiting')
       : sidebarContentInput.isOpen;
 
-    layoutContextDispatch({
-      type: ACTIONS.SET_SIDEBAR_NAVIGATION_OUTPUT,
-      value: {
-        display: sidebarNavigationDisplay,
-        minWidth: sidebarNavWidth.minWidth,
-        width: sidebarNavWidth.width,
-        maxWidth: sidebarNavWidth.maxWidth,
-        height: layoutSidebarNavHeight,
-        top: sidebarNavBounds.top,
-        left: sidebarNavBounds.left,
-        right: sidebarNavBounds.right,
-        tabOrder: DEFAULT_VALUES.sidebarNavTabOrder,
-        isResizable: !skyroomColumnActive && !isMobile && !isTablet,
-        zIndex: sidebarNavBounds.zIndex,
-      },
+    dispatchOutput(ACTIONS.SET_SIDEBAR_NAVIGATION_OUTPUT, {
+      display: sidebarNavigationDisplay,
+      minWidth: sidebarNavWidth.minWidth,
+      width: sidebarNavWidth.width,
+      maxWidth: sidebarNavWidth.maxWidth,
+      height: layoutSidebarNavHeight,
+      top: sidebarNavBounds.top,
+      left: sidebarNavBounds.left,
+      right: sidebarNavBounds.right,
+      tabOrder: DEFAULT_VALUES.sidebarNavTabOrder,
+      isResizable: !skyroomColumnActive && !isMobile && !isTablet,
+      zIndex: sidebarNavBounds.zIndex,
     });
 
-    layoutContextDispatch({
-      type: ACTIONS.SET_SIDEBAR_NAVIGATION_RESIZABLE_EDGE,
-      value: {
-        top: false,
-        right: !skyroomColumnActive && !isRTL,
-        bottom: false,
-        left: skyroomColumnActive ? false : isRTL,
-      },
+    dispatchOutput(ACTIONS.SET_SIDEBAR_NAVIGATION_RESIZABLE_EDGE, {
+      top: false,
+      right: !skyroomColumnActive && !isRTL,
+      bottom: false,
+      left: skyroomColumnActive ? false : isRTL,
     });
 
-    layoutContextDispatch({
-      type: ACTIONS.SET_SIDEBAR_CONTENT_OUTPUT,
-      value: {
-        display: sidebarContentDisplay,
-        minWidth: sidebarContentWidth.minWidth,
-        width: sidebarContentWidth.width,
-        maxWidth: sidebarContentWidth.maxWidth,
-        height: layoutSidebarContentHeight,
-        top: sidebarContentBounds.top,
-        left: sidebarContentBounds.left,
-        right: sidebarContentBounds.right,
-        currentPanelType,
-        tabOrder: DEFAULT_VALUES.sidebarContentTabOrder,
-        isResizable: !skyroomColumnActive && !isMobile && !isTablet,
-        zIndex: sidebarContentBounds.zIndex,
-      },
+    dispatchOutput(ACTIONS.SET_SIDEBAR_CONTENT_OUTPUT, {
+      display: sidebarContentDisplay,
+      minWidth: sidebarContentWidth.minWidth,
+      width: sidebarContentWidth.width,
+      maxWidth: sidebarContentWidth.maxWidth,
+      height: layoutSidebarContentHeight,
+      top: sidebarContentBounds.top,
+      left: sidebarContentBounds.left,
+      right: sidebarContentBounds.right,
+      currentPanelType,
+      tabOrder: DEFAULT_VALUES.sidebarContentTabOrder,
+      isResizable: !skyroomColumnActive && !isMobile && !isTablet,
+      zIndex: sidebarContentBounds.zIndex,
     });
 
-    layoutContextDispatch({
-      type: ACTIONS.SET_SIDEBAR_CONTENT_RESIZABLE_EDGE,
-      value: {
-        top: false,
-        right: !skyroomColumnActive && !isRTL,
-        bottom: false,
-        left: skyroomColumnActive ? false : isRTL,
-      },
+    dispatchOutput(ACTIONS.SET_SIDEBAR_CONTENT_RESIZABLE_EDGE, {
+      top: false,
+      right: !skyroomColumnActive && !isRTL,
+      bottom: false,
+      left: skyroomColumnActive ? false : isRTL,
     });
 
-    layoutContextDispatch({
-      type: ACTIONS.SET_MEDIA_AREA_SIZE,
-      value: {
-        width: skyroomColumnActive
-          ? windowWidth() - layoutSidebarSize
-          : windowWidth() - sidebarNavWidth.width - sidebarContentWidth.width,
-        height: windowHeight() - (skyroomColumnActive
-          ? SKYROOM_NAVBAR_H + SKYROOM_FOOTER_H
-          : DEFAULT_VALUES.navBarHeight + actionBarHeight),
-      },
+    dispatchOutput(ACTIONS.SET_MEDIA_AREA_SIZE, {
+      width: skyroomColumnActive
+        ? windowWidth() - layoutSidebarSize
+        : windowWidth() - sidebarNavWidth.width - sidebarContentWidth.width,
+      height: windowHeight() - (skyroomColumnActive
+        ? SKYROOM_NAVBAR_H + SKYROOM_FOOTER_H
+        : DEFAULT_VALUES.navBarHeight + actionBarHeight),
     });
 
     const isMediaOpen = layoutMediaBounds?.width > 0 && layoutMediaBounds?.height > 0;
@@ -1257,9 +1238,20 @@ const CustomLayout = (props) => {
       ? skyroomLayout?.cameraDockPosition
       : null;
     const effectiveCameraPosition = skyroomCameraPosition || cameraDockInput.position;
-    const dockBoundsSource = (skyroomColumnActive && skyroomLayout?.cameraDockBounds)
+    let dockBoundsSource = (skyroomColumnActive && skyroomLayout?.cameraDockBounds)
       ? skyroomLayout.cameraDockBounds
       : layoutCameraDockBounds;
+    if (
+      skyroomLayout?.isMobileSplit
+      && (layoutWebcamCount > 0 || isLocalWebcamConnecting)
+      && !skyroomLayout.mobileCamerasInBottom
+      && !skyroomLayout.mobileCamerasInTop
+      && lastMobileCameraDockRef.current
+    ) {
+      dockBoundsSource = lastMobileCameraDockRef.current;
+    } else if (dockBoundsSource?.width > 0 && dockBoundsSource?.height > 0) {
+      lastMobileCameraDockRef.current = dockBoundsSource;
+    }
     const safeCameraDockBounds = {
       minWidth: 0,
       width: 0,
@@ -1276,54 +1268,48 @@ const CustomLayout = (props) => {
       ...dockBoundsSource,
     };
 
-    layoutContextDispatch({
-      type: ACTIONS.SET_CAMERA_DOCK_OUTPUT,
-      value: {
-        display: layoutWebcamCount > 0 || isLocalWebcamConnecting,
-        position: effectiveCameraPosition,
-        minWidth: safeCameraDockBounds.minWidth,
-        width: safeCameraDockBounds.width,
-        maxWidth: safeCameraDockBounds.maxWidth,
-        presenterMaxWidth: safeCameraDockBounds.presenterMaxWidth,
-        minHeight: safeCameraDockBounds.minHeight,
-        height: safeCameraDockBounds.height,
-        maxHeight: safeCameraDockBounds.maxHeight,
-        top: safeCameraDockBounds.top,
-        left: safeCameraDockBounds.left,
-        right: safeCameraDockBounds.right,
-        tabOrder: 4,
-        isDraggable: skyroomColumnActive
-          ? false
-          : (!isMobile && !isTablet && isMediaOpen),
-        resizableEdge: skyroomColumnActive
-          ? {
-            top: false, right: false, bottom: false, left: false,
-          }
-          : {
-            top:
+    dispatchOutput(ACTIONS.SET_CAMERA_DOCK_OUTPUT, {
+      display: layoutWebcamCount > 0 || isLocalWebcamConnecting,
+      position: effectiveCameraPosition,
+      minWidth: safeCameraDockBounds.minWidth,
+      width: safeCameraDockBounds.width,
+      maxWidth: safeCameraDockBounds.maxWidth,
+      presenterMaxWidth: safeCameraDockBounds.presenterMaxWidth,
+      minHeight: safeCameraDockBounds.minHeight,
+      height: safeCameraDockBounds.height,
+      maxHeight: safeCameraDockBounds.maxHeight,
+      top: safeCameraDockBounds.top,
+      left: safeCameraDockBounds.left,
+      right: safeCameraDockBounds.right,
+      tabOrder: 4,
+      isDraggable: skyroomColumnActive
+        ? false
+        : (!isMobile && !isTablet && isMediaOpen),
+      resizableEdge: skyroomColumnActive
+        ? {
+          top: false, right: false, bottom: false, left: false,
+        }
+        : {
+          top:
+          isMediaOpen
+            && (effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_BOTTOM
+            || (effectiveCameraPosition === CAMERADOCK_POSITION.SIDEBAR_CONTENT_BOTTOM
+            && input.sidebarContent.isOpen)),
+          right:
             isMediaOpen
-              && (effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_BOTTOM
-              || (effectiveCameraPosition === CAMERADOCK_POSITION.SIDEBAR_CONTENT_BOTTOM
-              && input.sidebarContent.isOpen)),
-            right:
-              isMediaOpen
-              && ((!isRTL && effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_LEFT)
-              || (isRTL && effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_RIGHT)),
-            bottom: isMediaOpen && effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_TOP,
-            left:
-              isMediaOpen
-              && ((!isRTL && effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_RIGHT)
-              || (isRTL && effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_LEFT)),
-          },
-        zIndex: safeCameraDockBounds.zIndex,
-        focusedId: input.cameraDock.focusedId,
-      },
+            && ((!isRTL && effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_LEFT)
+            || (isRTL && effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_RIGHT)),
+          bottom: isMediaOpen && effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_TOP,
+          left:
+            isMediaOpen
+            && ((!isRTL && effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_RIGHT)
+            || (isRTL && effectiveCameraPosition === CAMERADOCK_POSITION.CONTENT_LEFT)),
+        },
+      zIndex: safeCameraDockBounds.zIndex,
+      focusedId: input.cameraDock.focusedId,
     });
 
-    layoutContextDispatch({
-      type: ACTIONS.SET_DROP_AREAS,
-      value: dropZoneAreas,
-    });
+    dispatchOutput(ACTIONS.SET_DROP_AREAS, dropZoneAreas);
 
     // Meeting GraphQL is the source of truth. The local layout flag can lag
     // after stop-share (unmount cleanup is skipped while last props still say
@@ -1331,70 +1317,53 @@ const CustomLayout = (props) => {
     const hidePresentationForScreenshare = skyroomColumnActive
       && Boolean(meetingData?.hasScreenshare);
 
-    layoutContextDispatch({
-      type: ACTIONS.SET_PRESENTATION_OUTPUT,
-      value: {
-        display: hidePresentationForScreenshare ? false : presentationInput.isOpen,
-        width: layoutMediaBounds.width,
-        height: layoutMediaBounds.height,
-        top: layoutMediaBounds.top,
-        left: layoutMediaBounds.left,
-        right: isRTL ? layoutMediaBounds.right + horizontalCameraDiff : null,
-        tabOrder: DEFAULT_VALUES.presentationTabOrder,
-        isResizable: false,
-        zIndex: layoutMediaBounds.zIndex,
-      },
+    dispatchOutput(ACTIONS.SET_PRESENTATION_OUTPUT, {
+      display: hidePresentationForScreenshare ? false : presentationInput.isOpen,
+      width: layoutMediaBounds.width,
+      height: layoutMediaBounds.height,
+      top: layoutMediaBounds.top,
+      left: layoutMediaBounds.left,
+      right: isRTL ? layoutMediaBounds.right + horizontalCameraDiff : null,
+      tabOrder: DEFAULT_VALUES.presentationTabOrder,
+      isResizable: false,
+      zIndex: layoutMediaBounds.zIndex,
     });
 
-    layoutContextDispatch({
-      type: ACTIONS.SET_SCREEN_SHARE_OUTPUT,
-      value: {
-        // Required so stage overlays (reactions) can detect active screenshare.
-        // Previously display was never set and stayed false from initState.
-        display: Boolean(hasActiveScreenShare),
-        width: layoutMediaBounds.width,
-        height: layoutMediaBounds.height,
-        top: layoutMediaBounds.top,
-        left: layoutMediaBounds.left,
-        right: isRTL ? layoutMediaBounds.right + horizontalCameraDiff : null,
-        zIndex: layoutMediaBounds.zIndex,
-      },
+    dispatchOutput(ACTIONS.SET_SCREEN_SHARE_OUTPUT, {
+      display: Boolean(hasActiveScreenShare),
+      width: layoutMediaBounds.width,
+      height: layoutMediaBounds.height,
+      top: layoutMediaBounds.top,
+      left: layoutMediaBounds.left,
+      right: isRTL ? layoutMediaBounds.right + horizontalCameraDiff : null,
+      zIndex: layoutMediaBounds.zIndex,
     });
 
     const externalVideoMinimized = externalVideoInput.hasExternalVideo
       && !presentationInput.isOpen;
-    layoutContextDispatch({
-      type: ACTIONS.SET_EXTERNAL_VIDEO_OUTPUT,
-      value: {
-        display: externalVideoInput.hasExternalVideo && !externalVideoMinimized,
-        width: layoutMediaBounds.width,
-        height: layoutMediaBounds.height,
-        top: layoutMediaBounds.top,
-        left: layoutMediaBounds.left,
-        right: isRTL ? layoutMediaBounds.right + horizontalCameraDiff : null,
-      },
+    dispatchOutput(ACTIONS.SET_EXTERNAL_VIDEO_OUTPUT, {
+      display: externalVideoInput.hasExternalVideo && !externalVideoMinimized,
+      width: layoutMediaBounds.width,
+      height: layoutMediaBounds.height,
+      top: layoutMediaBounds.top,
+      left: layoutMediaBounds.left,
+      right: isRTL ? layoutMediaBounds.right + horizontalCameraDiff : null,
     });
 
-    layoutContextDispatch({
-      type: ACTIONS.SET_GENERIC_CONTENT_OUTPUT,
-      value: {
-        width: layoutMediaBounds.width,
-        height: layoutMediaBounds.height,
-        top: layoutMediaBounds.top,
-        left: layoutMediaBounds.left,
-        right: isRTL ? layoutMediaBounds.right + horizontalCameraDiff : null,
-      },
+    dispatchOutput(ACTIONS.SET_GENERIC_CONTENT_OUTPUT, {
+      width: layoutMediaBounds.width,
+      height: layoutMediaBounds.height,
+      top: layoutMediaBounds.top,
+      left: layoutMediaBounds.left,
+      right: isRTL ? layoutMediaBounds.right + horizontalCameraDiff : null,
     });
 
-    layoutContextDispatch({
-      type: ACTIONS.SET_SHARED_NOTES_OUTPUT,
-      value: {
-        width: layoutMediaBounds.width,
-        height: layoutMediaBounds.height,
-        top: layoutMediaBounds.top,
-        left: layoutMediaBounds.left,
-        right: isRTL ? layoutMediaBounds.right + horizontalCameraDiff : null,
-      },
+    dispatchOutput(ACTIONS.SET_SHARED_NOTES_OUTPUT, {
+      width: layoutMediaBounds.width,
+      height: layoutMediaBounds.height,
+      top: layoutMediaBounds.top,
+      left: layoutMediaBounds.left,
+      right: isRTL ? layoutMediaBounds.right + horizontalCameraDiff : null,
     });
   };
 

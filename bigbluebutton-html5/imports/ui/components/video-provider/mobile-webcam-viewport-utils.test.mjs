@@ -1,68 +1,29 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 
-const intersectRectArea = (a, b) => {
-  const left = Math.max(a.left, b.left);
-  const top = Math.max(a.top, b.top);
-  const right = Math.min(a.right, b.right);
-  const bottom = Math.min(a.bottom, b.bottom);
-  return Math.max(0, right - left) * Math.max(0, bottom - top);
+const loadProductionModule = async (relativePath) => {
+  const source = await readFile(new URL(relativePath, import.meta.url), 'utf8');
+  const moduleUrl = `data:text/javascript;charset=utf-8,${encodeURIComponent(source)}`;
+  return import(moduleUrl);
 };
 
-const isTileVisibleInClip = (targetRect, clipRect, overscan = 0, minRatio = 0.12) => {
-  if (targetRect.width <= 0 || targetRect.height <= 0) {
-    return { area: 0, visible: false };
-  }
-  const inflated = {
-    bottom: clipRect.bottom + overscan,
-    height: clipRect.height + (overscan * 2),
-    left: clipRect.left - overscan,
-    right: clipRect.right + overscan,
-    top: clipRect.top - overscan,
-    width: clipRect.width + (overscan * 2),
-  };
-  const area = intersectRectArea(targetRect, inflated);
-  const tileArea = targetRect.width * targetRect.height;
-  return {
-    area,
-    visible: area > 0 && (area / tileArea) >= minRatio,
-  };
-};
+const {
+  computeMobileScrollableWebcamGrid,
+} = await loadProductionModule('./mobile-webcam-grid-policy.js');
+const {
+  intersectRectArea,
+  isTileVisibleInClip,
+  resolveStableViewportSelection,
+  selectBootstrapRemoteIds,
+  selectHardBudgetedRemoteIds,
+  VIEWPORT_SELECTION_REASONS,
+} = await loadProductionModule('./mobile-webcam-viewport-policy.js');
 
-const selectHardBudgetedRemoteIds = ({
-  candidateAreas,
-  isMobile,
-  limit,
-  streams,
-}) => {
-  const localCount = streams.filter((item) => item.local).length;
-  const remoteBudget = Math.max(0, Math.floor(limit) - localCount);
-  if (remoteBudget <= 0) return new Set();
-
-  const candidates = streams.filter((item) => (
-    !item.local
-    && (
-      candidateAreas.has(item.stream)
-      || (!isMobile && (item.focused || item.pinned || item.floor || item.presenter))
-    )
-  ));
-
-  const score = (item) => {
-    const area = candidateAreas.get(item.stream) ?? 0;
-    const visibleScore = area > 0 ? 1000 + area : 0;
-    if (item.focused) return visibleScore + 40;
-    if (item.pinned) return visibleScore + 30;
-    if (item.floor || item.presenter) return visibleScore + 20;
-    return visibleScore + 1;
-  };
-
-  return new Set(
-    candidates
-      .slice()
-      .sort((left, right) => score(right) - score(left))
-      .slice(0, remoteBudget)
-      .map((item) => item.stream),
-  );
-};
+const toBudgetStreams = (ids, extras = {}) => ids.map((stream) => ({
+  local: stream === 'local',
+  stream,
+  ...extras[stream],
+}));
 
 const rect = (top, left, width, height) => ({
   top,
@@ -91,15 +52,7 @@ const selected = selectHardBudgetedRemoteIds({
   ]),
   isMobile: true,
   limit: 4,
-  streams: [
-    { stream: 'local', local: true },
-    { stream: 'cam-1', local: false },
-    { stream: 'cam-2', local: false },
-    { stream: 'cam-3', local: false },
-    { stream: 'cam-4', local: false },
-    { stream: 'cam-5', local: false },
-    { stream: 'cam-6', local: false },
-  ],
+  streams: toBudgetStreams(['local', 'cam-1', 'cam-2', 'cam-3', 'cam-4', 'cam-5', 'cam-6']),
 });
 assert.deepEqual([...selected].sort(), ['cam-1', 'cam-2', 'cam-3']);
 
@@ -112,14 +65,115 @@ const scrolled = selectHardBudgetedRemoteIds({
   ]),
   isMobile: true,
   limit: 4,
-  streams: [
-    { stream: 'local', local: true },
-    { stream: 'cam-1', local: false },
-    { stream: 'cam-2', local: false },
-    { stream: 'cam-3', local: false },
-    { stream: 'cam-4', local: false },
-    { stream: 'cam-5', local: false },
-    { stream: 'cam-6', local: false },
-  ],
+  streams: toBudgetStreams(['local', 'cam-1', 'cam-2', 'cam-3', 'cam-4', 'cam-5', 'cam-6']),
 });
 assert.deepEqual([...scrolled].sort(), ['cam-4', 'cam-5', 'cam-6']);
+
+const bootstrap = selectBootstrapRemoteIds({
+  limit: 4,
+  streams: toBudgetStreams(
+    ['local', 'cam-1', 'cam-2', 'cam-3', 'cam-4', 'cam-5'],
+    { 'cam-2': { presenter: true } },
+  ),
+});
+assert.equal(bootstrap.has('cam-2'), true);
+assert.equal(bootstrap.has('local'), false);
+assert.equal(bootstrap.size, 3);
+
+const bootstrapped = resolveStableViewportSelection({
+  candidateAreas: new Map(),
+  hasSnapshot: false,
+  isMobile: true,
+  limit: 4,
+  streams: toBudgetStreams(['local', 'cam-1', 'cam-2', 'cam-3', 'cam-4', 'cam-5']),
+});
+assert.equal(bootstrapped.reason, VIEWPORT_SELECTION_REASONS.bootstrap);
+assert.equal(bootstrapped.nextVisible.size, 3);
+assert.equal(bootstrapped.nextVisible.has('local'), false);
+
+const emptySnapshot = resolveStableViewportSelection({
+  candidateAreas: new Map(),
+  hasSnapshot: true,
+  isMobile: true,
+  limit: 4,
+  previousVisible: new Set(['cam-1', 'cam-2', 'cam-3']),
+  streams: toBudgetStreams(['local', 'cam-1', 'cam-2', 'cam-3', 'cam-4']),
+});
+assert.equal(emptySnapshot.reason, VIEWPORT_SELECTION_REASONS.emptySnapshot);
+assert.deepEqual([...emptySnapshot.nextVisible].sort(), ['cam-1', 'cam-2', 'cam-3']);
+
+const hiddenTab = resolveStableViewportSelection({
+  candidateAreas: new Map([['cam-5', 100]]),
+  hasSnapshot: true,
+  isHidden: true,
+  isMobile: true,
+  limit: 4,
+  previousVisible: new Set(['cam-1', 'cam-2', 'cam-3']),
+  streams: toBudgetStreams(['local', 'cam-1', 'cam-2', 'cam-3', 'cam-4', 'cam-5']),
+});
+assert.equal(hiddenTab.reason, VIEWPORT_SELECTION_REASONS.tabHidden);
+assert.deepEqual([...hiddenTab.nextVisible].sort(), ['cam-1', 'cam-2', 'cam-3']);
+
+const fiveVisible = resolveStableViewportSelection({
+  candidateAreas: new Map([
+    ['cam-1', 20000],
+    ['cam-2', 19000],
+    ['cam-3', 18000],
+    ['cam-4', 17000],
+  ]),
+  hasSnapshot: true,
+  isMobile: true,
+  limit: 4,
+  previousVisible: new Set(['cam-1', 'cam-2', 'cam-3']),
+  streams: toBudgetStreams(['local', 'cam-1', 'cam-2', 'cam-3', 'cam-4', 'cam-5']),
+});
+assert.equal(fiveVisible.reason, VIEWPORT_SELECTION_REASONS.visiblePriority);
+assert.deepEqual([...fiveVisible.nextVisible].sort(), ['cam-1', 'cam-2', 'cam-3', 'cam-4']);
+assert.equal(fiveVisible.retained.has('cam-4'), true);
+
+const handoff = resolveStableViewportSelection({
+  candidateAreas: new Map([
+    ['cam-3', 16000],
+    ['cam-4', 18000],
+    ['cam-5', 20000],
+  ]),
+  hasSnapshot: true,
+  isMobile: true,
+  limit: 4,
+  previousVisible: new Set(['cam-1', 'cam-2', 'cam-3']),
+  streams: toBudgetStreams(['local', 'cam-1', 'cam-2', 'cam-3', 'cam-4', 'cam-5']),
+});
+assert.equal(handoff.reason, VIEWPORT_SELECTION_REASONS.handoff);
+assert.deepEqual([...handoff.nextVisible].sort(), ['cam-3', 'cam-4', 'cam-5']);
+assert.equal(handoff.retained.size, 4);
+assert.equal(
+  [...handoff.retained].some((stream) => !handoff.nextVisible.has(stream)),
+  true,
+);
+
+const localOnlyBudget = selectBootstrapRemoteIds({
+  limit: 1,
+  streams: toBudgetStreams(['local', 'cam-1', 'cam-2']),
+});
+assert.equal(localOnlyBudget.size, 0);
+
+const one = computeMobileScrollableWebcamGrid(1, 390, 220, 4);
+assert.equal(one.columns, 1);
+assert.equal(one.rows, 1);
+assert.equal(one.height, 220);
+
+const pair = computeMobileScrollableWebcamGrid(2, 390, 220, 4);
+assert.equal(pair.columns, 2);
+assert.equal(pair.rows, 1);
+assert.equal(pair.height, 220);
+
+const twoByTwo = computeMobileScrollableWebcamGrid(4, 390, 220, 4);
+assert.equal(twoByTwo.columns, 2);
+assert.equal(twoByTwo.rows, 2);
+assert.ok(twoByTwo.height >= 220);
+
+const overflow = computeMobileScrollableWebcamGrid(5, 390, 220, 4);
+assert.equal(overflow.columns, 2);
+assert.equal(overflow.rows, 3);
+assert.ok(overflow.height > 220);
+assert.equal(overflow.cellHeight, twoByTwo.cellHeight);
