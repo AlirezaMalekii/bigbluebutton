@@ -1,6 +1,13 @@
 import { dispatchSkyroomLayoutResize } from './layout-resize';
-import { isSkyroomMobileViewport } from './panel-toggles';
 import {
+  isSkyroomMobileKeyboardActive,
+  resetSkyroomStableLayoutHeight,
+  seedSkyroomStableLayoutHeight,
+} from './mobile-keyboard-stable-height';
+import { isSkyroomMobileViewport } from './panel-toggles';
+import { SKYROOM_WEBCAM_LAYOUT_EVENT } from './webcam-zone-store';
+import {
+  isEditableFocusTarget,
   isSoftKeyboardOpen,
   measureKeyboardInset,
   shouldRestoreLayoutViewport,
@@ -8,12 +15,12 @@ import {
 
 const KEYBOARD_ATTR = 'data-skyroom-keyboard';
 const KEYBOARD_INSET_VAR = '--skyroom-keyboard-inset';
-const RESTORE_FOLLOWUP_MS = 180;
+const RESTORE_FOLLOWUP_MS = [180, 450];
 const RESTORE_COOLDOWN_MS = 400;
 
 let cleanup: (() => void) | null = null;
 let keyboardWasOpen = false;
-let restoreTimer: number | null = null;
+let restoreTimers: number[] = [];
 let lastRestoreAt = 0;
 
 const layoutViewportHeight = (): number => {
@@ -64,16 +71,22 @@ const restoreLayoutViewport = () => {
   resetDocumentScroll();
   applyKeyboardInset(0);
   dispatchSkyroomLayoutResize();
+  // SET_BROWSER_SIZE no-ops when width/height already match. Webcam-driven
+  // layout still has to recompute chat/action-bar against the restored height.
+  window.dispatchEvent(new CustomEvent(SKYROOM_WEBCAM_LAYOUT_EVENT));
 };
 
 const scheduleRestore = () => {
   restoreLayoutViewport();
-  if (restoreTimer !== null) window.clearTimeout(restoreTimer);
-  restoreTimer = window.setTimeout(() => {
-    restoreTimer = null;
+  restoreTimers.forEach((id) => window.clearTimeout(id));
+  restoreTimers = RESTORE_FOLLOWUP_MS.map((ms) => window.setTimeout(() => {
     restoreLayoutViewport();
-  }, RESTORE_FOLLOWUP_MS);
+  }, ms));
 };
+
+const keyboardIsLikelyOpen = (metrics: ReturnType<typeof readMetrics>) => (
+  isSkyroomMobileKeyboardActive() || isSoftKeyboardOpen(metrics)
+);
 
 const syncViewport = () => {
   if (!isSkyroomMobileViewport()) {
@@ -85,7 +98,8 @@ const syncViewport = () => {
   }
 
   const metrics = readMetrics();
-  const keyboardIsOpen = isSoftKeyboardOpen(metrics);
+  const keyboardIsOpen = keyboardIsLikelyOpen(metrics);
+  seedSkyroomStableLayoutHeight();
   applyKeyboardInset(measureKeyboardInset(metrics));
 
   if (
@@ -103,24 +117,45 @@ const syncViewport = () => {
   keyboardWasOpen = keyboardIsOpen;
 };
 
+const onFocusIn = () => {
+  seedSkyroomStableLayoutHeight();
+  syncViewport();
+};
+
+const onPointerDown = (event: Event) => {
+  if (isEditableFocusTarget(event.target as { tagName?: string } | null)) {
+    seedSkyroomStableLayoutHeight();
+  }
+};
+
+const onOrientationChange = () => {
+  resetSkyroomStableLayoutHeight();
+  syncViewport();
+};
+
 export const startSkyroomMobileKeyboardViewport = () => {
   if (cleanup || typeof window === 'undefined') return;
 
+  seedSkyroomStableLayoutHeight();
   syncViewport();
 
   const visual = window.visualViewport;
   visual?.addEventListener('resize', syncViewport);
   visual?.addEventListener('scroll', syncViewport);
-  window.addEventListener('orientationchange', syncViewport);
+  window.addEventListener('orientationchange', onOrientationChange);
+  document.addEventListener('pointerdown', onPointerDown, true);
+  document.addEventListener('focusin', onFocusIn);
   document.addEventListener('focusout', syncViewport);
 
   cleanup = () => {
     visual?.removeEventListener('resize', syncViewport);
     visual?.removeEventListener('scroll', syncViewport);
-    window.removeEventListener('orientationchange', syncViewport);
+    window.removeEventListener('orientationchange', onOrientationChange);
+    document.removeEventListener('pointerdown', onPointerDown, true);
+    document.removeEventListener('focusin', onFocusIn);
     document.removeEventListener('focusout', syncViewport);
-    if (restoreTimer !== null) window.clearTimeout(restoreTimer);
-    restoreTimer = null;
+    restoreTimers.forEach((id) => window.clearTimeout(id));
+    restoreTimers = [];
     keyboardWasOpen = false;
     applyKeyboardInset(0);
     document.documentElement.removeAttribute(KEYBOARD_ATTR);

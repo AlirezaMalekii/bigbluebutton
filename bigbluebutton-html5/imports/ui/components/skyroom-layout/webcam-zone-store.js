@@ -2,6 +2,7 @@
 
 import Storage from '/imports/ui/services/storage/session';
 import { getSkyroomWebcamLayout } from './webcam-bounds-store';
+import { isSkyroomMobileKeyboardActive } from './mobile-keyboard-stable-height';
 
 export const SKYROOM_WEBCAM_ZONES = {
   SIDEBAR: 'sidebar',
@@ -56,7 +57,11 @@ export const SKYROOM_WEBCAM_LAYOUT_EVENT = 'skyroom-webcam-layout';
 
 const requestLayoutRefresh = () => {
   if (typeof window === 'undefined') return;
-  window.dispatchEvent(new Event('resize'));
+  // A fake window.resize while the chat keyboard is open writes the shrunk
+  // clientHeight into layout context and leaves Skyroom phone chrome stranded.
+  if (!isSkyroomMobileKeyboardActive()) {
+    window.dispatchEvent(new Event('resize'));
+  }
   window.dispatchEvent(new CustomEvent(SKYROOM_WEBCAM_LAYOUT_EVENT));
 };
 
