@@ -31,10 +31,14 @@ const readMetrics = () => {
   };
 };
 
+type VisualViewportWithScroll = VisualViewport & {
+  scrollTo?: (x: number, y: number) => void;
+};
+
 const pinVisualViewport = () => {
   window.scrollTo(0, 0);
-  const visual = window.visualViewport;
-  if (visual && typeof visual.scrollTo === 'function') {
+  const visual = window.visualViewport as VisualViewportWithScroll | null;
+  if (typeof visual?.scrollTo === 'function') {
     visual.scrollTo(0, 0);
   }
   const root = document.documentElement;
