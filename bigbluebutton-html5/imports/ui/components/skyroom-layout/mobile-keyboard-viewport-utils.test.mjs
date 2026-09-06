@@ -12,8 +12,7 @@ const {
   isSoftKeyboardOpen,
   shouldRestoreLayoutViewport,
   isEditableFocusTarget,
-  shouldLockStableLayoutHeight,
-  resolveStableLayoutHeight,
+  resolveMobileLayoutHeight,
 } = await loadProductionModule('./mobile-keyboard-viewport-utils.js');
 
 assert.equal(
@@ -32,6 +31,24 @@ assert.equal(
   isSoftKeyboardOpen({ layoutHeight: 800, visualHeight: 720, visualOffsetTop: 0 }),
   false,
   'browser chrome jitter below the threshold is not a keyboard',
+);
+
+assert.equal(
+  resolveMobileLayoutHeight({ visualHeight: 430, layoutHeight: 800 }),
+  430,
+  'phone layout follows the visible viewport while the keyboard is open',
+);
+
+assert.equal(
+  resolveMobileLayoutHeight({ visualHeight: 800, layoutHeight: 800 }),
+  800,
+  'phone layout follows the visible viewport after the keyboard closes',
+);
+
+assert.equal(
+  resolveMobileLayoutHeight({ visualHeight: 0, layoutHeight: 800 }),
+  800,
+  'layout viewport is the fallback when visualViewport is missing',
 );
 
 assert.equal(
@@ -87,76 +104,7 @@ assert.equal(
 assert.equal(
   isEditableFocusTarget({ tagName: 'INPUT', type: 'checkbox' }),
   false,
-  'non-text inputs do not lock layout height',
-);
-
-assert.equal(
-  shouldLockStableLayoutHeight({
-    liveHeight: 430,
-    cachedHeight: 800,
-    liveWidth: 390,
-    cachedWidth: 390,
-    textInputFocused: false,
-    visualInset: 0,
-  }),
-  true,
-  'resizes-content keyboard shrink must lock even without a visual inset',
-);
-
-assert.equal(
-  shouldLockStableLayoutHeight({
-    liveHeight: 430,
-    cachedHeight: 800,
-    liveWidth: 844,
-    cachedWidth: 390,
-    textInputFocused: false,
-    visualInset: 0,
-  }),
-  false,
-  'orientation width changes must not freeze the portrait height',
-);
-
-assert.equal(
-  shouldLockStableLayoutHeight({
-    liveHeight: 800,
-    cachedHeight: 800,
-    liveWidth: 390,
-    cachedWidth: 390,
-    textInputFocused: true,
-    visualInset: 0,
-  }),
-  true,
-  'a focused chat field locks before the keyboard animation finishes',
-);
-
-assert.equal(
-  resolveStableLayoutHeight({
-    liveHeight: 430,
-    cachedHeight: 800,
-    lockToCached: true,
-  }),
-  800,
-  'locked layout keeps the pre-keyboard height',
-);
-
-assert.equal(
-  resolveStableLayoutHeight({
-    liveHeight: 800,
-    cachedHeight: 800,
-    lockToCached: true,
-  }),
-  800,
-  'closing the keyboard while still focused can grow back to full height',
-);
-
-assert.equal(
-  resolveStableLayoutHeight({
-    liveHeight: 430,
-    cachedHeight: 800,
-    lockToCached: false,
-  }),
-  430,
-  'unlocked layout follows the live viewport',
+  'non-text inputs do not count as keyboard targets',
 );
 
 console.log('mobile-keyboard-viewport-utils tests passed');

@@ -39,15 +39,14 @@ import {
   isSkyroomMobileViewport,
   syncSkyroomMobileWebcamDockVisibility,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
-import { getSkyroomStableLayoutHeight } from '/imports/ui/components/skyroom-layout/mobile-keyboard-stable-height';
+import { getSkyroomMobileLayoutHeight } from '/imports/ui/components/skyroom-layout/mobile-keyboard-stable-height';
 import { getSkyroomStreamPrivilegeKey } from '/imports/ui/components/skyroom-layout/camera-placement';
 
 const windowWidth = () => window.document.documentElement.clientWidth;
-// Phone + live webcam can resize while the chat keyboard is open. Keep the
-// pre-keyboard height so chat/action-bar do not stay shrunk after dismiss.
-const windowHeight = () => getSkyroomStableLayoutHeight(
+// Phone layout follows visualViewport.height so the first chat focus packs
+// above the keyboard (not only after send) and restores after dismiss.
+const windowHeight = () => getSkyroomMobileLayoutHeight(
   window.document.documentElement.clientHeight,
-  window.document.documentElement.clientWidth,
 );
 const min = (value1, value2) => (value1 <= value2 ? value1 : value2);
 const max = (value1, value2) => (value1 >= value2 ? value1 : value2);

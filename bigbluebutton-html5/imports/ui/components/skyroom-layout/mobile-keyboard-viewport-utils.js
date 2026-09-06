@@ -1,15 +1,16 @@
 /**
- * Pure helpers for mobile soft-keyboard viewport recovery.
+ * Pure helpers for Skyroom phone keyboard viewport.
  * Importable from Node tests (no DOM types).
  *
- * Android Chrome (and some WebViews) leave a leftover visualViewport offset
- * or a stale layout-viewport height after the keyboard closes. Meeting chrome
- * that is absolutely/fixed-positioned then sits in the middle of the screen.
+ * The meeting layout must follow the *visible* viewport. On Android Chrome the
+ * layout viewport (clientHeight / 100dvh) often stays full while the keyboard
+ * covers the bottom. Sizing chrome from clientHeight leaves a gap above the
+ * keyboard; after dismiss it can stay shrunk. visualViewport.height is the
+ * packed "composer + tabs + actions above the keyboard" height.
  */
 
 export const KEYBOARD_HEIGHT_THRESHOLD_PX = 120;
 export const VIEWPORT_OFFSET_EPSILON_PX = 1;
-export const LAYOUT_WIDTH_CHANGE_THRESHOLD_PX = 80;
 
 const NON_TEXT_INPUT_TYPES = new Set([
   'button',
@@ -35,35 +36,13 @@ export const isEditableFocusTarget = (target) => {
   return Boolean(target.isContentEditable);
 };
 
-export const shouldLockStableLayoutHeight = ({
-  liveHeight = 0,
-  cachedHeight = 0,
-  liveWidth = 0,
-  cachedWidth = 0,
-  textInputFocused = false,
-  visualInset = 0,
+export const resolveMobileLayoutHeight = ({
+  visualHeight = 0,
+  layoutHeight = 0,
 } = {}) => {
-  if (textInputFocused) return true;
-  if ((Number(visualInset) || 0) >= KEYBOARD_HEIGHT_THRESHOLD_PX) return true;
-  const cachedW = Number(cachedWidth) || 0;
-  const liveW = Number(liveWidth) || 0;
-  if (cachedW > 0 && Math.abs(liveW - cachedW) >= LAYOUT_WIDTH_CHANGE_THRESHOLD_PX) {
-    return false;
-  }
-  const cached = Number(cachedHeight) || 0;
-  const live = Number(liveHeight) || 0;
-  return cached > 0 && (cached - live) >= KEYBOARD_HEIGHT_THRESHOLD_PX;
-};
-
-export const resolveStableLayoutHeight = ({
-  liveHeight = 0,
-  cachedHeight = 0,
-  lockToCached = false,
-} = {}) => {
-  const live = Math.max(0, Math.round(Number(liveHeight) || 0));
-  const cached = Math.max(0, Math.round(Number(cachedHeight) || 0));
-  if (lockToCached && cached > 0) return Math.max(cached, live);
-  return live;
+  const visual = Math.max(0, Math.round(Number(visualHeight) || 0));
+  const layout = Math.max(0, Math.round(Number(layoutHeight) || 0));
+  return visual > 0 ? visual : layout;
 };
 
 export const measureKeyboardInset = ({

@@ -1,9 +1,4 @@
 import { dispatchSkyroomLayoutResize } from './layout-resize';
-import {
-  isSkyroomMobileKeyboardActive,
-  resetSkyroomStableLayoutHeight,
-  seedSkyroomStableLayoutHeight,
-} from './mobile-keyboard-stable-height';
 import { isSkyroomMobileViewport } from './panel-toggles';
 import { SKYROOM_WEBCAM_LAYOUT_EVENT } from './webcam-zone-store';
 import {
@@ -16,37 +11,32 @@ import {
 const KEYBOARD_ATTR = 'data-skyroom-keyboard';
 const KEYBOARD_INSET_VAR = '--skyroom-keyboard-inset';
 const RESTORE_FOLLOWUP_MS = [180, 450];
-const RESTORE_COOLDOWN_MS = 400;
+const RESTORE_COOLDOWN_MS = 350;
 
 let cleanup: (() => void) | null = null;
 let keyboardWasOpen = false;
 let restoreTimers: number[] = [];
-let lastRestoreAt = 0;
-
-const layoutViewportHeight = (): number => {
-  const visual = window.visualViewport;
-  const visualCover = visual
-    ? Math.round(visual.height + visual.offsetTop)
-    : 0;
-  return Math.max(
-    window.document.documentElement?.clientHeight || 0,
-    window.innerHeight || 0,
-    visualCover,
-  );
-};
+let lastPublishAt = 0;
 
 const readMetrics = () => {
   const visual = window.visualViewport;
+  const layoutHeight = window.document.documentElement?.clientHeight
+    || window.innerHeight
+    || 0;
   return {
-    layoutHeight: layoutViewportHeight(),
+    layoutHeight,
     visualHeight: visual?.height || window.innerHeight || 0,
     visualOffsetTop: visual?.offsetTop || 0,
     scrollY: window.scrollY || window.pageYOffset || 0,
   };
 };
 
-const resetDocumentScroll = () => {
+const pinVisualViewport = () => {
   window.scrollTo(0, 0);
+  const visual = window.visualViewport;
+  if (visual && typeof visual.scrollTo === 'function') {
+    visual.scrollTo(0, 0);
+  }
   const root = document.documentElement;
   const { body } = document;
   if (root) root.scrollTop = 0;
@@ -66,13 +56,15 @@ const applyKeyboardInset = (inset: number) => {
   }
 };
 
+const publishLayout = () => {
+  dispatchSkyroomLayoutResize();
+};
+
 const restoreLayoutViewport = () => {
-  lastRestoreAt = Date.now();
-  resetDocumentScroll();
+  lastPublishAt = Date.now();
+  pinVisualViewport();
   applyKeyboardInset(0);
   dispatchSkyroomLayoutResize();
-  // SET_BROWSER_SIZE no-ops when width/height already match. Webcam-driven
-  // layout still has to recompute chat/action-bar against the restored height.
   window.dispatchEvent(new CustomEvent(SKYROOM_WEBCAM_LAYOUT_EVENT));
 };
 
@@ -85,7 +77,8 @@ const scheduleRestore = () => {
 };
 
 const keyboardIsLikelyOpen = (metrics: ReturnType<typeof readMetrics>) => (
-  isSkyroomMobileKeyboardActive() || isSoftKeyboardOpen(metrics)
+  isEditableFocusTarget(document.activeElement)
+  || isSoftKeyboardOpen(metrics)
 );
 
 const syncViewport = () => {
@@ -99,59 +92,59 @@ const syncViewport = () => {
 
   const metrics = readMetrics();
   const keyboardIsOpen = keyboardIsLikelyOpen(metrics);
-  seedSkyroomStableLayoutHeight();
   applyKeyboardInset(measureKeyboardInset(metrics));
+
+  if (keyboardIsOpen) {
+    pinVisualViewport();
+    keyboardWasOpen = true;
+    publishLayout();
+    return;
+  }
 
   if (
     shouldRestoreLayoutViewport({
       keyboardWasOpen,
-      keyboardIsOpen,
+      keyboardIsOpen: false,
       scrollY: metrics.scrollY,
       visualOffsetTop: metrics.visualOffsetTop,
     })
-    && Date.now() - lastRestoreAt > RESTORE_COOLDOWN_MS
+    && Date.now() - lastPublishAt > RESTORE_COOLDOWN_MS
   ) {
     scheduleRestore();
   }
 
-  keyboardWasOpen = keyboardIsOpen;
+  keyboardWasOpen = false;
 };
 
-const onFocusIn = () => {
-  seedSkyroomStableLayoutHeight();
-  syncViewport();
-};
-
-const onPointerDown = (event: Event) => {
-  if (isEditableFocusTarget(event.target as { tagName?: string } | null)) {
-    seedSkyroomStableLayoutHeight();
+const onVisualScroll = () => {
+  if (!isSkyroomMobileViewport()) return;
+  if (keyboardWasOpen || isEditableFocusTarget(document.activeElement)) {
+    pinVisualViewport();
   }
 };
 
-const onOrientationChange = () => {
-  resetSkyroomStableLayoutHeight();
-  syncViewport();
+const onFocusIn = () => {
+  if (isEditableFocusTarget(document.activeElement)) {
+    syncViewport();
+  }
 };
 
 export const startSkyroomMobileKeyboardViewport = () => {
   if (cleanup || typeof window === 'undefined') return;
 
-  seedSkyroomStableLayoutHeight();
   syncViewport();
 
   const visual = window.visualViewport;
   visual?.addEventListener('resize', syncViewport);
-  visual?.addEventListener('scroll', syncViewport);
-  window.addEventListener('orientationchange', onOrientationChange);
-  document.addEventListener('pointerdown', onPointerDown, true);
+  visual?.addEventListener('scroll', onVisualScroll);
+  window.addEventListener('orientationchange', syncViewport);
   document.addEventListener('focusin', onFocusIn);
   document.addEventListener('focusout', syncViewport);
 
   cleanup = () => {
     visual?.removeEventListener('resize', syncViewport);
-    visual?.removeEventListener('scroll', syncViewport);
-    window.removeEventListener('orientationchange', onOrientationChange);
-    document.removeEventListener('pointerdown', onPointerDown, true);
+    visual?.removeEventListener('scroll', onVisualScroll);
+    window.removeEventListener('orientationchange', syncViewport);
     document.removeEventListener('focusin', onFocusIn);
     document.removeEventListener('focusout', syncViewport);
     restoreTimers.forEach((id) => window.clearTimeout(id));
