@@ -43,6 +43,16 @@ import { getSkyroomStreamPrivilegeKey } from '/imports/ui/components/skyroom-lay
 
 const windowWidth = () => window.document.documentElement.clientWidth;
 const windowHeight = () => window.document.documentElement.clientHeight;
+
+// Phone chat IME: skip layout work while the composer is focused. With a live
+// webcam, video/dock resize otherwise writes the keyboard-shrunk clientHeight
+// and leaves chat/action-bar stranded after dismiss. No-webcam already skips
+// those extra resizes, which is why that path looks correct.
+const isSkyroomMobileComposerFocused = () => {
+  if (typeof document === 'undefined' || !isSkyroomMobileViewport()) return false;
+  const tag = document.activeElement?.tagName;
+  return tag === 'TEXTAREA' || tag === 'INPUT';
+};
 const min = (value1, value2) => (value1 <= value2 ? value1 : value2);
 const max = (value1, value2) => (value1 >= value2 ? value1 : value2);
 
@@ -165,7 +175,8 @@ const CustomLayout = (props) => {
     50, { trailing: true, leading: true });
 
   useEffect(() => {
-    window.addEventListener('resize', () => {
+    const onResize = () => {
+      if (isSkyroomMobileComposerFocused()) return;
       layoutContextDispatch({
         type: ACTIONS.SET_BROWSER_SIZE,
         value: {
@@ -173,7 +184,10 @@ const CustomLayout = (props) => {
           height: window.document.documentElement.clientHeight,
         },
       });
-    });
+    };
+
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
   }, []);
 
   useEffect(() => {
@@ -1368,10 +1382,12 @@ const CustomLayout = (props) => {
   };
 
   const calculatesLayout = () => {
+    if (isSkyroomMobileComposerFocused()) return;
     if (calculatesLayoutPendingRef.current) return;
     calculatesLayoutPendingRef.current = true;
     queueMicrotask(() => {
       calculatesLayoutPendingRef.current = false;
+      if (isSkyroomMobileComposerFocused()) return;
       calculatesLayoutImmediate();
     });
   };
