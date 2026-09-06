@@ -44,14 +44,47 @@ import { getSkyroomStreamPrivilegeKey } from '/imports/ui/components/skyroom-lay
 const windowWidth = () => window.document.documentElement.clientWidth;
 const windowHeight = () => window.document.documentElement.clientHeight;
 
-// Phone chat IME: skip layout work while the composer is focused. With a live
-// webcam, video/dock resize otherwise writes the keyboard-shrunk clientHeight
-// and leaves chat/action-bar stranded after dismiss. No-webcam already skips
-// those extra resizes, which is why that path looks correct.
-const isSkyroomMobileComposerFocused = () => {
-  if (typeof document === 'undefined' || !isSkyroomMobileViewport()) return false;
-  const tag = document.activeElement?.tagName;
+// Phone chat IME: skip layout work while the composer is focused, and for a
+// short hold after send/blur. Tapping send moves focus off the textarea while
+// clientHeight is still keyboard-shrunk; a live webcam then publishes that
+// height and leaves chat/action-bar stranded. No-webcam already skips those
+// extra resizes — do not change windowHeight() itself.
+const SKYROOM_MOBILE_IME_HOLD_MS = 1200;
+const SKYROOM_MOBILE_IME_SHRINK_PX = 80;
+let skyroomMobileImeHoldUntil = 0;
+let skyroomMobileImeSeen = false;
+let skyroomMobileLastAppliedWidth = 0;
+let skyroomMobileLastAppliedHeight = 0;
+
+const isSkyroomMobileComposerEl = (el) => {
+  const tag = el?.tagName;
   return tag === 'TEXTAREA' || tag === 'INPUT';
+};
+
+const markSkyroomMobileImeHold = () => {
+  if (typeof document === 'undefined' || !isSkyroomMobileViewport()) return;
+  skyroomMobileImeSeen = true;
+  skyroomMobileImeHoldUntil = Date.now() + SKYROOM_MOBILE_IME_HOLD_MS;
+};
+
+const noteSkyroomMobileAppliedSize = () => {
+  if (typeof document === 'undefined' || !isSkyroomMobileViewport()) return;
+  skyroomMobileLastAppliedWidth = window.document.documentElement.clientWidth;
+  skyroomMobileLastAppliedHeight = window.document.documentElement.clientHeight;
+};
+
+const isSkyroomMobileImeLayoutLocked = () => {
+  if (typeof document === 'undefined' || !isSkyroomMobileViewport()) return false;
+  if (isSkyroomMobileComposerEl(document.activeElement)) return true;
+  if (Date.now() < skyroomMobileImeHoldUntil) return true;
+  // After send, Android often never fires a restore resize. Webcam layout
+  // would then publish the still-shrunk clientHeight — skip that shrink.
+  if (!skyroomMobileImeSeen || skyroomMobileLastAppliedHeight <= 0) return false;
+  if (window.document.documentElement.clientWidth !== skyroomMobileLastAppliedWidth) {
+    return false;
+  }
+  return (skyroomMobileLastAppliedHeight - window.document.documentElement.clientHeight)
+    >= SKYROOM_MOBILE_IME_SHRINK_PX;
 };
 const min = (value1, value2) => (value1 <= value2 ? value1 : value2);
 const max = (value1, value2) => (value1 >= value2 ? value1 : value2);
@@ -176,7 +209,8 @@ const CustomLayout = (props) => {
 
   useEffect(() => {
     const onResize = () => {
-      if (isSkyroomMobileComposerFocused()) return;
+      if (isSkyroomMobileImeLayoutLocked()) return;
+      noteSkyroomMobileAppliedSize();
       layoutContextDispatch({
         type: ACTIONS.SET_BROWSER_SIZE,
         value: {
@@ -186,8 +220,20 @@ const CustomLayout = (props) => {
       });
     };
 
+    const onComposerFocusOut = (event) => {
+      if (isSkyroomMobileComposerEl(event.target)) markSkyroomMobileImeHold();
+    };
+
+    const onMessageSent = () => markSkyroomMobileImeHold();
+
     window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+    document.addEventListener('focusout', onComposerFocusOut);
+    window.addEventListener('sentMessage', onMessageSent);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      document.removeEventListener('focusout', onComposerFocusOut);
+      window.removeEventListener('sentMessage', onMessageSent);
+    };
   }, []);
 
   useEffect(() => {
@@ -705,6 +751,7 @@ const CustomLayout = (props) => {
   };
 
   const calculatesLayoutImmediate = () => {
+    noteSkyroomMobileAppliedSize();
     const {
       calculatesNavbarBounds,
       calculatesActionbarBounds,
@@ -1382,12 +1429,12 @@ const CustomLayout = (props) => {
   };
 
   const calculatesLayout = () => {
-    if (isSkyroomMobileComposerFocused()) return;
+    if (isSkyroomMobileImeLayoutLocked()) return;
     if (calculatesLayoutPendingRef.current) return;
     calculatesLayoutPendingRef.current = true;
     queueMicrotask(() => {
       calculatesLayoutPendingRef.current = false;
-      if (isSkyroomMobileComposerFocused()) return;
+      if (isSkyroomMobileImeLayoutLocked()) return;
       calculatesLayoutImmediate();
     });
   };
