@@ -31,6 +31,7 @@ import {
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import { dispatchSkyroomLayoutResize } from '/imports/ui/components/skyroom-layout/layout-resize';
 import {
+  resolvePlaybackLiveness,
   videoHasRenderableFrame,
   VideoPlaybackState,
   VIDEO_PLAYBACK_STALL_GRACE_MS,
@@ -160,6 +161,7 @@ export const VideoListItem: React.FC<VideoListItemProps> = (props) => {
   const observeVideoTile = useVideoListSharedState((state) => state.observeVideoTile);
 
   const [playbackState, setPlaybackState] = useState<VideoPlaybackState>('waiting');
+  const [hasRenderedFrame, setHasRenderedFrame] = useState(false);
   const [isStreamHealthy, setIsStreamHealthy] = useState(false);
   const [isMirrored, setIsMirrored] = useState<boolean>(VideoService.mirrorOwnWebcam(stream.userId));
   const [isVideoSqueezed, setIsVideoSqueezed] = useState(false);
@@ -196,8 +198,10 @@ export const VideoListItem: React.FC<VideoListItemProps> = (props) => {
     };
   }, [cameraId, setUserCamerasRequestedFromPlugin, userCameraDomElementRequested]);
 
-  const videoDataLoaded = playbackState === 'playing';
-  const videoIsReady = isStreamHealthy && videoDataLoaded && !isSelfViewDisabled;
+  // Keep the picture once a frame has decoded. Requiring a healthy
+  // connectionState plus currentTime-based 'playing' covered working remote
+  // cameras with the connecting avatar (Firefox deviceId streams in Chrome).
+  const videoIsReady = hasRenderedFrame && !isSelfViewDisabled;
   const Settings = getSettingsSingletonInstance();
   const { animations, webcamBorderHighlightColor } = Settings.application;
   const { talking } = voiceUser;
@@ -293,13 +297,22 @@ export const VideoListItem: React.FC<VideoListItemProps> = (props) => {
         playbackInterruptTimeoutRef.current = null;
         if (!isVideoPlaybackPageActive() || playbackDisabledRef.current) return;
 
-        // requestVideoFrameCallback can be throttled in a background browser
-        // tab even while MediaStream playback is healthy. currentTime is the
-        // compatible secondary signal and prevents destructive reconnect
-        // churn when frames are still progressing.
-        if (videoEl && !videoEl.paused && videoHasRenderableFrame(videoEl)
-          && videoEl.currentTime > lastObservedCurrentTime) {
-          lastObservedCurrentTime = videoEl.currentTime;
+        const liveness = resolvePlaybackLiveness({
+          paused: Boolean(videoEl?.paused),
+          hasSrcObject: Boolean(videoEl?.srcObject),
+          hasRenderableFrame: videoHasRenderableFrame(videoEl),
+          currentTime: videoEl?.currentTime || 0,
+          lastObservedCurrentTime,
+        });
+
+        if (liveness.attemptPlay && videoEl) playElement(videoEl);
+
+        // currentTime often stays at 0 for remote MediaStreams while frames
+        // still render. A decoded picture is enough to keep the tile alive.
+        if (liveness.alive) {
+          if (videoEl && videoEl.currentTime > lastObservedCurrentTime) {
+            lastObservedCurrentTime = videoEl.currentTime;
+          }
           reportPlaybackState('playing');
           armPlaybackLivenessTimeout();
           return;
@@ -317,6 +330,7 @@ export const VideoListItem: React.FC<VideoListItemProps> = (props) => {
       // A decoded frame is stronger evidence than a connection-state event and
       // also covers the race where that event fired before this tile mounted.
       setIsStreamHealthy(true);
+      setHasRenderedFrame(true);
       reportPlaybackState('playing');
       armPlaybackLivenessTimeout();
 
@@ -414,6 +428,7 @@ export const VideoListItem: React.FC<VideoListItemProps> = (props) => {
       subscribeToStreamStateChange(cameraId, onStreamStateChange);
       videoEl.addEventListener('loadeddata', onPlaybackCandidate);
       videoEl.addEventListener('loadedmetadata', onLoadedMetadata);
+      videoEl.addEventListener('loadstart', onPlaybackCandidate);
       videoEl.addEventListener('canplay', onPlaybackCandidate);
       videoEl.addEventListener('playing', onPlaybackCandidate);
       videoEl.addEventListener('timeupdate', onTimeUpdate);
@@ -436,6 +451,7 @@ export const VideoListItem: React.FC<VideoListItemProps> = (props) => {
         unsubscribeFromStreamStateChange(cameraId, onStreamStateChange);
         videoEl.removeEventListener('loadeddata', onPlaybackCandidate);
         videoEl.removeEventListener('loadedmetadata', onLoadedMetadata);
+        videoEl.removeEventListener('loadstart', onPlaybackCandidate);
         videoEl.removeEventListener('canplay', onPlaybackCandidate);
         videoEl.removeEventListener('playing', onPlaybackCandidate);
         videoEl.removeEventListener('timeupdate', onTimeUpdate);
@@ -522,7 +538,7 @@ export const VideoListItem: React.FC<VideoListItemProps> = (props) => {
         user={user}
         stream={stream}
         voiceUser={voiceUser}
-        unhealthyStream={videoDataLoaded && !isStreamHealthy}
+        unhealthyStream={hasRenderedFrame && !isStreamHealthy}
         squeezed={false}
       />
     </Styled.WebcamConnecting>
@@ -538,7 +554,7 @@ export const VideoListItem: React.FC<VideoListItemProps> = (props) => {
       <UserAvatarVideo
         user={user}
         stream={stream}
-        unhealthyStream={videoDataLoaded && !isStreamHealthy}
+        unhealthyStream={hasRenderedFrame && !isStreamHealthy}
         squeezed
       />
     </Styled.WebcamConnecting>
@@ -707,7 +723,7 @@ export const VideoListItem: React.FC<VideoListItemProps> = (props) => {
         >
           <Styled.Video
             mirrored={isMirrored}
-            unhealthyStream={videoDataLoaded && !isStreamHealthy}
+            unhealthyStream={hasRenderedFrame && !isStreamHealthy}
             data-test={isMirrored ? 'mirroredVideoContainer' : 'videoContainer'}
             data-current-user-stream={stream.userId === Auth.userID ? 'true' : 'false'}
             data-local-stream={VideoService.isLocalStream(cameraId) ? 'true' : 'false'}

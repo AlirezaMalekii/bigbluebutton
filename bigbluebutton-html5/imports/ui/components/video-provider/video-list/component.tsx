@@ -1465,37 +1465,43 @@ class VideoList extends Component<VideoListProps, VideoListState> {
         4,
       )
       : null;
-    const mobilePairFill = fillMobileDock && visibleCount === 2;
-    const mobileScrollGrid = fillMobileDock && visibleCount > 2;
-    const scrollCellHeight = mobileGrid?.cellHeight || optimalGrid.cellHeight || 1;
-    const scrollListHeight = mobileGrid?.height || optimalGrid.height;
+    const mobileSquareGrid = fillMobileDock && visibleCount >= 2;
+    const mobileScrollGrid = Boolean(
+      mobileSquareGrid && mobileGrid && mobileGrid.height > dockH,
+    );
+    let mobileGridMode;
+    if (mobileScrollGrid) mobileGridMode = 'scroll';
+    else if (mobileSquareGrid) mobileGridMode = 'square';
+    const squareCell = mobileGrid?.cellHeight || optimalGrid.cellHeight || 1;
+    const squareListHeight = mobileGrid?.height || optimalGrid.height;
 
     let listWidth = `${optimalGrid.width}px`;
     let listHeight = `${optimalGrid.height}px`;
     let listGridRows = `repeat(${optimalGrid.rows}, 1fr)`;
-    if (mobileScrollGrid && mobileGrid) {
+    let listGridColumns = `repeat(${optimalGrid.columns}, 1fr)`;
+    if (mobileSquareGrid && mobileGrid) {
       listWidth = '100%';
-      listHeight = `${scrollListHeight}px`;
-      listGridRows = `repeat(${mobileGrid.rows}, ${scrollCellHeight}px)`;
-    } else if (mobilePairFill && mobileGrid) {
-      listWidth = '100%';
-      listHeight = '100%';
-      listGridRows = `${mobileGrid.cellHeight}px`;
+      listHeight = `${squareListHeight}px`;
+      listGridRows = `repeat(${mobileGrid.rows}, ${squareCell}px)`;
+      listGridColumns = `repeat(${mobileGrid.columns}, ${squareCell}px)`;
     } else if (fillMobileDock) {
       listWidth = '100%';
       listHeight = '100%';
     }
 
-    // Pair fills the dock; 3+ grows so the dock (not the canvas) scrolls.
+    // 2+ square tiles keep their pixel tracks; extra rows overflow #cameraDock.
     let canvasHeight;
     let canvasMaxHeight;
-    if (mobileScrollGrid) {
+    if (mobileSquareGrid) {
       canvasHeight = 'max-content';
       canvasMaxHeight = 'none';
     } else if (fillMobileDock) {
       canvasHeight = '100%';
       canvasMaxHeight = '100%';
     }
+    let canvasAlignItems;
+    if (mobileSquareGrid) canvasAlignItems = 'flex-start';
+    else if (fillMobileDock) canvasAlignItems = 'stretch';
 
     return (
       <Styled.VideoCanvas
@@ -1506,8 +1512,8 @@ class VideoList extends Component<VideoListProps, VideoListState> {
         }}
         style={{
           minHeight: fillMobileDock ? 0 : undefined,
-          alignItems: fillMobileDock ? 'stretch' : undefined,
-          justifyContent: fillMobileDock ? 'stretch' : undefined,
+          alignItems: canvasAlignItems,
+          justifyContent: fillMobileDock ? 'center' : undefined,
           height: canvasHeight,
           maxHeight: canvasMaxHeight,
         }}
@@ -1522,13 +1528,15 @@ class VideoList extends Component<VideoListProps, VideoListState> {
             style={{
               width: listWidth,
               height: listHeight,
-              gridTemplateColumns: mobileScrollGrid && mobileGrid
-                ? `repeat(${mobileGrid.columns}, 1fr)`
-                : `repeat(${optimalGrid.columns}, 1fr)`,
+              gridTemplateColumns: listGridColumns,
               gridTemplateRows: listGridRows,
+              justifyContent: mobileSquareGrid ? 'center' : undefined,
+              ['--skyroom-mobile-webcam-cell' as string]: mobileSquareGrid
+                ? `${squareCell}px`
+                : undefined,
             }}
             className="video-provider_list"
-            data-skyroom-mobile-webcam-grid={mobileScrollGrid ? 'scroll' : undefined}
+            data-skyroom-mobile-webcam-grid={mobileGridMode}
           >
             {this.renderVideoList()}
           </Styled.VideoList>

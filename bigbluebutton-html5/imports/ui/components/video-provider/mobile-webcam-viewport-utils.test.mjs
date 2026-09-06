@@ -165,12 +165,14 @@ assert.equal(one.height, 220);
 const pair = computeMobileScrollableWebcamGrid(2, 390, 220, 4);
 assert.equal(pair.columns, 2);
 assert.equal(pair.rows, 1);
-assert.equal(pair.height, 220);
+assert.equal(pair.cellWidth, pair.cellHeight);
+assert.ok(pair.height < 220);
 
 const twoByTwo = computeMobileScrollableWebcamGrid(4, 390, 220, 4);
 assert.equal(twoByTwo.columns, 2);
 assert.equal(twoByTwo.rows, 2);
-assert.ok(twoByTwo.height >= 220);
+assert.equal(twoByTwo.cellWidth, twoByTwo.cellHeight);
+assert.equal(twoByTwo.cellHeight, pair.cellHeight);
 
 const overflow = computeMobileScrollableWebcamGrid(5, 390, 220, 4);
 assert.equal(overflow.columns, 2);

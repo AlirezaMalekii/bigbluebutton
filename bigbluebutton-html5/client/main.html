@@ -25,6 +25,10 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
   <style>
     html {
       box-sizing: border-box;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      overscroll-behavior: none;
     }
 
     *, *:before, *:after {
@@ -33,7 +37,11 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 
     body {
       position: fixed;
+      inset: 0;
       height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      overscroll-behavior: none;
       font-family: 'Source Sans Pro', Arial, sans-serif;
       font-size: 1rem; /* 16px */
       /* Background is owned by the Skyroom theme (see public/stylesheets/skyroom/theme.css).

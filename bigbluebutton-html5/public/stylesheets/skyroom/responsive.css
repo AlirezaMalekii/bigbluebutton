@@ -302,8 +302,7 @@
     margin: 0 !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="skyroom-poll-summary"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="timeIndicator"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="skyroom-poll-summary"] {
     flex: 1 1 0;
     min-width: 0 !important;
     max-width: none;
@@ -314,6 +313,19 @@
     border-radius: 0.7rem !important;
     box-sizing: border-box !important;
     align-self: stretch !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="timeIndicator"] {
+    flex: 1 1 0;
+    min-width: 0 !important;
+    max-width: none;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    padding: 0.32rem 0.5rem !important;
+    border-radius: 0.7rem !important;
+    box-sizing: border-box !important;
+    align-self: center !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="skyroom-poll-summary"] {
@@ -355,9 +367,34 @@
     height: 100% !important;
     min-height: 0 !important;
     margin: 0 !important;
-    padding: 0.12rem 0.35rem !important;
+    padding: 0.32rem 0.5rem !important;
     visibility: visible !important;
     box-sizing: border-box !important;
+    border-radius: 0.7rem !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="timeIndicator"] [class*="TimerStatus"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="timeIndicator"] [class*="SecondaryText"] {
+    display: none !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="timeIndicator"] [class*="TimeWithStatus"] {
+    gap: 0.12rem !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="timeIndicator"] [class*="TimerTime"] {
+    font-size: 0.78rem !important;
+    line-height: 1.2 !important;
+    padding: 0 !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="timeIndicator"] [class*="TimerPill"] {
+    padding: 0.12rem 0.4rem !important;
+    font-size: 0.62rem !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] .skyroom-mobile-status-rail [data-test="timeIndicator"] [class*="TimerContent"] {
+    gap: 0.28rem !important;
   }
 
   #layout[data-skyroom-column="true"] #Navbar [data-test="toggleUserList"],
@@ -504,8 +541,18 @@
     background: rgba(6, 9, 16, 0.99) !important;
   }
 
-  /* Floating footer card — inset + rounded corners on mobile */
+  /* Floating footer card — pin to the layout bottom, not a stale JS `top`.
+     After some Android keyboards close, the layout engine can keep a shrunk
+     height; bottom-pinning keeps class controls docked. */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar {
+    position: fixed !important;
+    top: auto !important;
+    bottom: calc(var(--skyroom-mobile-footer-lift, 3px) + env(safe-area-inset-bottom, 0px)) !important;
+    left: var(--skyroom-mobile-edge, 8px) !important;
+    right: var(--skyroom-mobile-edge, 8px) !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: var(--skyroom-footer-h, 56px) !important;
     border-radius: var(--radius-md, 12px) !important;
     border: 1px solid rgba(32, 199, 187, 0.18) !important;
     border-top: 1px solid rgba(32, 199, 187, 0.18) !important;
@@ -1596,6 +1643,7 @@
     margin-top: auto !important;
     margin-bottom: 0 !important;
     padding: 2px 10px 2px !important;
+    padding-bottom: calc(2px + var(--skyroom-keyboard-inset, 0px)) !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="publicChatPanel"] [class*="TypingIndicatorWrapper"] {
@@ -3485,6 +3533,17 @@
       inset 0 1px 0 rgba(32, 199, 187, 0.08) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    /* Keep the tab dock on the layout viewport even if JS bottom is stale. */
+    position: fixed !important;
+    left: var(--skyroom-mobile-edge, 8px) !important;
+    right: var(--skyroom-mobile-edge, 8px) !important;
+    bottom: calc(
+      var(--skyroom-footer-h, 56px)
+      + var(--skyroom-mobile-tab-footer-gap, 4px)
+      + var(--skyroom-mobile-footer-lift, 3px)
+      + env(safe-area-inset-bottom, 0px)
+    ) !important;
+  }
   }
 
   .skyroom-mobile-zone-tab {
@@ -3734,32 +3793,30 @@
     height: max-content !important;
     max-height: none !important;
     width: 100% !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
-    bottom: auto !important;
     flex: 0 0 auto !important;
-    align-items: stretch !important;
+    align-items: flex-start !important;
     align-content: start !important;
-    justify-content: stretch !important;
+    justify-content: center !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [class*="VideoList"] {
     width: 100% !important;
-    /* Do NOT set height with !important — JS sets an explicit px height for 3+
-       so extra 2×2 rows overflow and #cameraDock can scroll. Percentage-based
-       max-content sizing + height:100% tiles was collapsing the grid into the
-       dock and hiding cams below the fold with no scroll. */
+    /* Do NOT set columns with !important — JS supplies square px tracks. */
     max-height: none !important;
     flex-shrink: 0 !important;
     align-self: flex-start !important;
     align-content: start !important;
-    justify-content: stretch !important;
-    justify-items: stretch !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    justify-content: center !important;
+    justify-items: center !important;
     gap: 4px !important;
     box-sizing: border-box !important;
     padding: 2px !important;
+  }
+
+  /* 2+ cams: content-sized list so extra square rows overflow the dock. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [class*="VideoList"]:has([data-test="webcamVideoItem"]:nth-child(n+2)) {
+    height: max-content !important;
+    max-height: none !important;
   }
 
   /* Single webcam: fill the dock (no scroll needed). */
@@ -3770,66 +3827,76 @@
     max-height: 100% !important;
   }
 
-  /* Exactly two webcams: split the dock into two full-height columns. */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [class*="VideoList"]:has([data-test="webcamVideoItem"]:first-child:nth-last-child(2)) {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    grid-template-rows: 1fr !important;
-    height: 100% !important;
-    max-height: 100% !important;
+  /* iOS will not scroll a row-flex container when the child is taller than
+     the dock. Block layout makes #cameraDock a real vertical scrollport. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:nth-child(n+2)) {
+    display: block !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:only-child),
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:first-child:nth-last-child(2)) {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:nth-child(n+2)) > div,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-skyroom-mobile-webcam-grid]) > div,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:nth-child(n+2)) #WebcamContainer,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:nth-child(n+2)) [data-test="webcamContainer"] {
+    display: block !important;
+    width: 100% !important;
+    height: max-content !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    align-self: auto !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:only-child) {
     align-items: stretch !important;
     overflow-y: hidden !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:only-child) .video-provider_canvas,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:first-child:nth-last-child(2)) .video-provider_canvas,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:only-child) [class*="VideoCanvas"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:first-child:nth-last-child(2)) [class*="VideoCanvas"] {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:only-child) [class*="VideoCanvas"] {
     height: 100% !important;
     max-height: 100% !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock > div,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [class*="VideoCanvas"] > div {
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:only-child) > div,
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-test="webcamVideoItem"]:only-child) [class*="VideoCanvas"] > div {
     margin: 0 !important;
     align-self: stretch !important;
     width: 100% !important;
   }
 
-  /* 3+: do not stretch the list back to the dock height — that collapses
-     extra rows and makes overflow-y:auto a no-op. */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-skyroom-mobile-webcam-grid="scroll"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-skyroom-mobile-webcam-grid="scroll"]) [class*="VideoCanvas"] > div {
+  /* 2+ square tiles: keep the list at its pixel content height so extra
+     rows overflow and #cameraDock can scroll. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-skyroom-mobile-webcam-grid],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock:has([data-skyroom-mobile-webcam-grid]) [class*="VideoCanvas"] > div {
     align-self: flex-start !important;
     flex: 0 0 auto !important;
     max-height: none !important;
   }
 
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-skyroom-mobile-webcam-grid="scroll"] [data-test="webcamVideoItem"],
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-skyroom-mobile-webcam-grid="scroll"] [class*="VideoListItem"] {
-    height: auto !important;
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-skyroom-mobile-webcam-grid] [data-test="webcamVideoItem"],
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-skyroom-mobile-webcam-grid] [class*="VideoListItem"] {
+    width: var(--skyroom-mobile-webcam-cell, auto) !important;
+    height: var(--skyroom-mobile-webcam-cell, auto) !important;
+    max-width: none !important;
     max-height: none !important;
     min-height: 0 !important;
+    aspect-ratio: 1 / 1 !important;
   }
 
-  /* Default (3+): stretch into fixed grid-row tracks from JS. Avoid height:100% —
-     circular % sizing against the dock collapses extra rows and blocks scroll. */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-test="webcamVideoItem"] {
-    width: 100% !important;
+  /* 2+ cams stay square even before JS writes the cell token. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-test="webcamVideoItem"]:not(:only-child) {
+    width: var(--skyroom-mobile-webcam-cell, 100%) !important;
     max-width: 100% !important;
     min-height: 0 !important;
-    height: auto !important;
+    height: var(--skyroom-mobile-webcam-cell, auto) !important;
     max-height: none !important;
-    align-self: stretch !important;
-    aspect-ratio: unset !important;
+    align-self: start !important;
+    aspect-ratio: 1 / 1 !important;
   }
 
-  /* 1–2 cams: fill the dock (overrides the 3+ defaults above). */
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-test="webcamVideoItem"]:only-child,
-  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [class*="VideoList"]:has([data-test="webcamVideoItem"]:first-child:nth-last-child(2)) [data-test="webcamVideoItem"] {
+  /* One cam still fills the dock. */
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #cameraDock [data-test="webcamVideoItem"]:only-child {
     width: 100% !important;
     max-width: 100% !important;
     height: 100% !important;
@@ -3890,9 +3957,10 @@
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="webcamVideoItem"] video,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="webcamItem"] video,
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="videoContainer"] video {
-    object-fit: cover !important;
+    object-fit: contain !important;
     width: 100% !important;
     height: 100% !important;
+    background: #000 !important;
   }
 
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] [data-test="videoContainer"] {

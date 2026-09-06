@@ -1,5 +1,11 @@
 export type VideoPlaybackState = 'waiting' | 'playing' | 'stalled' | 'ended';
 
+export {
+  PLAYBACK_STATES,
+  resolvePlaybackLiveness,
+  shouldShowConnectingOverlay,
+} from '/imports/ui/components/video-provider/video-playback-policy';
+
 export const VIDEO_PLAYBACK_STALL_GRACE_MS = 5000;
 
 const VIDEO_PLAYBACK_STALLED_RECOVERY_MS = 10000;

@@ -3,8 +3,6 @@ import { phoneLandscape, smallOnly } from '/imports/ui/stylesheets/styled-compon
 import { borderRadius, borderSize } from '/imports/ui/stylesheets/styled-components/general';
 import {
   colorGrayLightest,
-  colorSuccess,
-  colorDanger,
   colorWhite,
 } from '/imports/ui/stylesheets/styled-components/palette';
 import {
@@ -57,10 +55,12 @@ const TimerButton = styled.div<TimerButtonProps>`
   font-size: ${fontSizeBase};
   margin-left: ${borderRadius};
   margin-right: ${borderRadius};
-  border: 1px solid ${({ running }) => (running ? 'rgba(29, 191, 115, 0.55)' : 'rgba(223, 68, 42, 0.5)')};
+  border: 1px solid ${({ running }) => (running
+    ? 'var(--skyroom-accent-border, rgba(32, 199, 187, 0.36))'
+    : 'var(--skyroom-danger-border, rgba(223, 39, 33, 0.38))')};
   background: ${({ running }) => (running
-    ? 'linear-gradient(135deg, rgba(29, 191, 115, 0.88) 0%, rgba(6, 100, 247, 0.78) 100%)'
-    : 'linear-gradient(135deg, rgba(223, 68, 42, 0.88) 0%, rgba(137, 48, 194, 0.72) 100%)')};
+    ? 'var(--skyroom-gradient-primary, linear-gradient(135deg, #0D887E 0%, #14A99E 100%))'
+    : 'var(--skyroom-gradient-danger, linear-gradient(135deg, #DF2721 0%, #FF6A66 100%))')};
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
   min-width: 13.2rem;
   min-height: 2.22rem;
@@ -176,7 +176,9 @@ const Dot = styled.span<{ running: boolean }>`
   width: 0.42rem;
   height: 0.42rem;
   border-radius: 50%;
-  background: ${({ running }) => (running ? colorSuccess : colorDanger)};
+  background: ${({ running }) => (running
+    ? 'var(--color-success, var(--skyroom-accent, #20c7bb))'
+    : 'var(--color-danger, #DF2721)')};
   border: 1px solid ${colorGrayLightest};
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
   flex-shrink: 0;

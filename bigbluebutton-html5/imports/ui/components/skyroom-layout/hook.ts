@@ -33,6 +33,10 @@ import {
   startSkyroomPhonePortraitLock,
   stopSkyroomPhonePortraitLock,
 } from './phone-orientation';
+import {
+  startSkyroomMobileKeyboardViewport,
+  stopSkyroomMobileKeyboardViewport,
+} from './mobile-keyboard-viewport';
 import { dispatchSkyroomLayoutResize } from './layout-resize';
 import {
   startSkyroomPerformanceProfile,
@@ -105,6 +109,7 @@ export const useSkyroomColumnLayout = () => {
     applySkyroomWhiteLabelSettings();
     startSkyroomWhiteLabelDomWatch();
     startSkyroomPhonePortraitLock();
+    startSkyroomMobileKeyboardViewport();
     startSkyroomPerformanceProfile();
 
     const layoutEl = document.getElementById('layout');
@@ -175,6 +180,7 @@ export const useSkyroomColumnLayout = () => {
     return () => {
       stopSkyroomWhiteLabelDomWatch();
       stopSkyroomPhonePortraitLock();
+      stopSkyroomMobileKeyboardViewport();
       stopSkyroomPerformanceProfile();
       window.clearInterval(interval);
       if (layoutEl) {

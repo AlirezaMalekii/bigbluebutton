@@ -6,6 +6,7 @@ import useTimeSync from '/imports/ui/core/local-states/useTimeSync';
 import logger from '/imports/startup/client/logger';
 import { buildAbsoluteBbbUrl } from '/imports/ui/components/presentation/presentation-uploader/fileTypes';
 import { getBackgroundMusicAssetUrl } from './catalog';
+import { resolveBackgroundMusicStreamPath } from './background-music-policy';
 import {
   getExpectedBackgroundMusicPosition,
   publishSkyroomBackgroundMusicCommand,
@@ -26,7 +27,12 @@ const SkyroomBackgroundMusicPlayer: React.FC = () => {
     if (state.source.type === 'default') {
       return getBackgroundMusicAssetUrl(state.source.trackId);
     }
-    const absoluteUrl = buildAbsoluteBbbUrl(state.source.path);
+    const relativePath = resolveBackgroundMusicStreamPath({
+      path: state.source.path,
+      trackId: state.source.trackId,
+      meetingId: Auth.meetingID,
+    });
+    const absoluteUrl = relativePath ? buildAbsoluteBbbUrl(relativePath) : null;
     return absoluteUrl ? Auth.authenticateURL(absoluteUrl) : null;
   }, [state.source]);
 

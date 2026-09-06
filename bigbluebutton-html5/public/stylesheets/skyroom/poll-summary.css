@@ -295,3 +295,16 @@
   line-height: 1;
   opacity: 0.92;
 }
+
+/* Countdown / stopwatch — follow the installed theme gradient, not a hardcoded green/blue mix. */
+#layout[data-skyroom-column="true"] [data-test="timeIndicator"][data-timer-running="true"],
+#layout[data-skyroom-column="true"] [data-test="timeIndicator"][data-timer-running="true"] [class*="TimerButton"] {
+  border-color: var(--skyroom-accent-border, rgba(32, 199, 187, 0.36)) !important;
+  background: var(--skyroom-gradient-primary) !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="timeIndicator"][data-timer-running="false"],
+#layout[data-skyroom-column="true"] [data-test="timeIndicator"][data-timer-running="false"] [class*="TimerButton"] {
+  border-color: var(--skyroom-danger-border, rgba(223, 39, 33, 0.38)) !important;
+  background: var(--skyroom-gradient-danger) !important;
+}

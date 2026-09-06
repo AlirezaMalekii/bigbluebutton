@@ -1,5 +1,10 @@
 import createUseLocalState from '/imports/ui/core/local-states/createUseLocalState';
 import { getBackgroundMusicCatalogTrack } from './catalog';
+import {
+  isValidUploadTrackId,
+  parseJsonObject,
+  resolveBackgroundMusicStreamPath,
+} from './background-music-policy';
 
 export type BackgroundMusicStatus = 'playing' | 'paused' | 'stopped';
 
@@ -101,18 +106,14 @@ export const getExpectedBackgroundMusicPosition = (
   return Math.max(0, state.position + ((now - state.changedAt) / 1000));
 };
 
-const isValidUploadPath = (path: unknown): path is string => (
-  typeof path === 'string'
-  && /^\/bigbluebutton\/background-music\/[a-z0-9-]+\/[a-f0-9]{40}-[0-9]+$/.test(path)
-);
-
 const sanitizeSource = (source: unknown): BackgroundMusicSource | null => {
-  if (!source || typeof source !== 'object') return null;
-  const candidate = source as Partial<BackgroundMusicSource> & {
+  const candidate = parseJsonObject(source) as (Partial<BackgroundMusicSource> & {
     type?: string;
     path?: string;
     name?: string;
-  };
+    trackId?: string;
+  }) | null;
+  if (!candidate) return null;
 
   if (
     candidate.type === 'default'
@@ -124,15 +125,16 @@ const sanitizeSource = (source: unknown): BackgroundMusicSource | null => {
 
   if (
     candidate.type === 'upload'
-    && typeof candidate.trackId === 'string'
-    && /^[a-f0-9]{40}-[0-9]+$/.test(candidate.trackId)
-    && isValidUploadPath(candidate.path)
+    && isValidUploadTrackId(candidate.trackId)
     && typeof candidate.name === 'string'
   ) {
     return {
       type: 'upload',
       trackId: candidate.trackId,
-      path: candidate.path,
+      path: resolveBackgroundMusicStreamPath({
+        path: candidate.path,
+        trackId: candidate.trackId,
+      }) || '',
       name: candidate.name.trim().slice(0, 120) || 'music.mp3',
     };
   }
@@ -143,8 +145,8 @@ const sanitizeSource = (source: unknown): BackgroundMusicSource | null => {
 export const normalizeBackgroundMusicState = (
   payload: unknown,
 ): BackgroundMusicState | null => {
-  if (!payload || typeof payload !== 'object') return null;
-  const candidate = payload as Partial<BackgroundMusicState>;
+  const candidate = parseJsonObject(payload) as Partial<BackgroundMusicState> | null;
+  if (!candidate) return null;
   const source = sanitizeSource(candidate.source);
   const validStatus = candidate.status === 'playing'
     || candidate.status === 'paused'

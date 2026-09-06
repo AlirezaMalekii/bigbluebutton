@@ -208,6 +208,7 @@ const TimerIndicator: React.FC<TimerIndicatorProps> = ({
           tabIndex={0}
           onClick={isModerator ? onClick : () => {}}
           data-test="timeIndicator"
+          data-timer-running={running ? 'true' : 'false'}
           title={intl.formatMessage(tooltipMessage)}
           aria-label={fullLabel}
         >

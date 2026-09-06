@@ -1823,6 +1823,18 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       // eslint-disable-next-line no-param-reassign
       videoElement.srcObject = stream;
       videoElement.load();
+      // load() leaves some remote MediaStreams paused. Play immediately so
+      // requestVideoFrameCallback can hide the connecting avatar.
+      const playResult = videoElement.play();
+      if (playResult && typeof playResult.catch === 'function') {
+        playResult.catch((error: Error) => {
+          if (error.name === 'NotAllowedError') {
+            window.dispatchEvent(new CustomEvent('videoPlayFailed', {
+              detail: { mediaElement: videoElement },
+            }));
+          }
+        });
+      }
     }
   }
 

@@ -195,8 +195,13 @@ class BackgroundMusicController {
     String sessionToken = params.sessionToken
     if (!sessionToken) return null
     UserSession userSession = meetingService.getUserSessionWithSessionToken(sessionToken)
+    if (userSession == null) return null
     Boolean allowRequestsWithoutSession = meetingService.getAllowRequestsWithoutSession(sessionToken)
-    if (userSession == null || (!session[sessionToken] && !allowRequestsWithoutSession)) return null
+    if (!session[sessionToken] && !allowRequestsWithoutSession) {
+      // HTMLAudioElement Range requests often omit the join cookie. The
+      // sessionToken query param already identifies a live meeting user.
+      session[sessionToken] = sessionToken
+    }
     return userSession
   }
 
