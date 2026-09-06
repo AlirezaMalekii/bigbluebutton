@@ -541,22 +541,8 @@
     background: rgba(6, 9, 16, 0.99) !important;
   }
 
-  /* Floating footer card — pin to the layout bottom, not a stale JS `top`.
-     After some Android keyboards close, the layout engine can keep a shrunk
-     height; bottom-pinning keeps class controls docked. */
+  /* Floating footer card — inset + rounded corners on mobile */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar {
-    position: fixed !important;
-    top: auto !important;
-    bottom: calc(
-      var(--skyroom-mobile-footer-lift, 3px)
-      + env(safe-area-inset-bottom, 0px)
-      + var(--skyroom-keyboard-inset, 0px)
-    ) !important;
-    left: var(--skyroom-mobile-edge, 8px) !important;
-    right: var(--skyroom-mobile-edge, 8px) !important;
-    width: auto !important;
-    height: auto !important;
-    min-height: var(--skyroom-footer-h, 56px) !important;
     border-radius: var(--radius-md, 12px) !important;
     border: 1px solid rgba(32, 199, 187, 0.18) !important;
     border-top: 1px solid rgba(32, 199, 187, 0.18) !important;
@@ -3536,17 +3522,6 @@
       inset 0 1px 0 rgba(32, 199, 187, 0.08) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    /* Keep the tab dock on the layout viewport even if JS bottom is stale. */
-    position: fixed !important;
-    left: var(--skyroom-mobile-edge, 8px) !important;
-    right: var(--skyroom-mobile-edge, 8px) !important;
-    bottom: calc(
-      var(--skyroom-footer-h, 56px)
-      + var(--skyroom-mobile-tab-footer-gap, 4px)
-      + var(--skyroom-mobile-footer-lift, 3px)
-      + env(safe-area-inset-bottom, 0px)
-      + var(--skyroom-keyboard-inset, 0px)
-    ) !important;
   }
 
   .skyroom-mobile-zone-tab {
