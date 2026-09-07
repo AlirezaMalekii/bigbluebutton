@@ -11,6 +11,7 @@ const run = async () => {
   const {
     isSkyroomMobileImeOpen,
     isSkyroomMobileEditableTarget,
+    resetSkyroomMobileScrollTop,
     resolveSkyroomMobileLayoutHeight,
     shouldRestoreSkyroomMobileViewport,
   } = await import(moduleUrl);
@@ -101,6 +102,14 @@ const run = async () => {
     }),
     false,
     'a settled viewport does not trigger redundant layout work',
+  );
+
+  const appScrollContainer = { scrollTop: 269 };
+  resetSkyroomMobileScrollTop(appScrollContainer);
+  assert.equal(
+    appScrollContainer.scrollTop,
+    0,
+    'the internally scrolled app container is restored after chat submit',
   );
 
   console.log('mobile IME recovery utility tests passed');

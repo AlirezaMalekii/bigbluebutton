@@ -42,6 +42,7 @@ import {
 import {
   isSkyroomMobileEditableTarget,
   isSkyroomMobileImeOpen,
+  resetSkyroomMobileScrollTop,
   resolveSkyroomMobileLayoutHeight,
   shouldRestoreSkyroomMobileViewport,
 } from '/imports/ui/components/skyroom-layout/mobile-ime-recovery-utils';
@@ -155,6 +156,7 @@ const CustomLayout = (props) => {
   const lastMobileCameraDockRef = useRef(null);
   const mobileImeWasOpenRef = useRef(false);
   const mobileImeSettleTimersRef = useRef([]);
+  const mobileImeScrollFrameRef = useRef(null);
 
   const dispatchOutput = (type, value) => {
     const prev = lastLayoutOutputRef.current[type];
@@ -216,6 +218,20 @@ const CustomLayout = (props) => {
       mobileImeSettleTimersRef.current = [];
     };
 
+    const resetMobileAppScroll = () => {
+      resetSkyroomMobileScrollTop(document.getElementById('app'));
+    };
+
+    const resetMobileAppScrollNextFrame = () => {
+      if (mobileImeScrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(mobileImeScrollFrameRef.current);
+      }
+      mobileImeScrollFrameRef.current = window.requestAnimationFrame(() => {
+        mobileImeScrollFrameRef.current = null;
+        resetMobileAppScroll();
+      });
+    };
+
     const readMobileImeOpen = () => isSkyroomMobileImeOpen({
       fullHeight: skyroomMobileFullHeight,
       visualHeight: skyroomMobileVisualHeight(),
@@ -226,6 +242,14 @@ const CustomLayout = (props) => {
       window.scrollTo(0, 0);
       document.documentElement.scrollTop = 0;
       if (document.body) document.body.scrollTop = 0;
+      resetMobileAppScroll();
+      layoutContextDispatch({
+        type: ACTIONS.SET_BROWSER_SIZE,
+        value: {
+          width: window.document.documentElement.clientWidth,
+          height: windowHeight(),
+        },
+      });
       calculatesLayoutRef.current();
     };
 
@@ -265,16 +289,20 @@ const CustomLayout = (props) => {
         },
       });
       syncMobileImeRecovery();
+      if (isSkyroomMobileViewport()) resetMobileAppScrollNextFrame();
     };
     const onVisualViewportResize = throttle(onResize, 50, { leading: true, trailing: true });
     const scheduleMobileImeSettleChecks = () => {
       if (!isSkyroomMobileViewport()) return;
       // Some Android builds omit the final visualViewport resize. Probe after
-      // the focus/keyboard animation without assuming blur means IME closed.
+      // the focus/keyboard animation. These probes must never publish the
+      // keyboard-shrunk browser size: with a live webcam, the sentMessage event
+      // otherwise moves every mobile zone immediately after submit.
       clearMobileImeSettleTimers();
-      mobileImeSettleTimersRef.current = [0, 160, 420].map((delay) => (
-        window.setTimeout(onResize, delay)
-      ));
+      mobileImeSettleTimersRef.current = [0, 160, 420].map((delay) => window.setTimeout(() => {
+        resetMobileAppScroll();
+        syncMobileImeRecovery();
+      }, delay));
     };
     const onComposerFocusOut = (event) => {
       if (!isSkyroomMobileEditableTarget(event.target)) return;
@@ -293,6 +321,10 @@ const CustomLayout = (props) => {
       window.removeEventListener(SKYROOM_CHAT_SENT_EVENT, scheduleMobileImeSettleChecks);
       document.removeEventListener('focusout', onComposerFocusOut);
       clearMobileImeSettleTimers();
+      if (mobileImeScrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(mobileImeScrollFrameRef.current);
+        mobileImeScrollFrameRef.current = null;
+      }
     };
   }, []);
 

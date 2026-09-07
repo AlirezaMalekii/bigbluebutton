@@ -67,3 +67,7 @@ export const shouldRestoreSkyroomMobileViewport = ({
   if (keyboardIsOpen) return false;
   return keyboardWasOpen || hasSkyroomMobileViewportOffset({ scrollY, visualOffsetTop });
 };
+
+export const resetSkyroomMobileScrollTop = (element) => {
+  if (element && Number(element.scrollTop) !== 0) Reflect.set(element, 'scrollTop', 0);
+};
