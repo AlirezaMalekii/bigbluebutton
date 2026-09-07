@@ -8,11 +8,11 @@ alwaysApply: false
 
 There are three distinct workflows:
 
-1. **live51 HTML5 hot-fix** (fastest UI iteration): skill `.cursor/skills/hotfix-live51-html5/` — rsync CSS or rebuild html5 on the test host without GitHub CI. Prefer this when the user wants quick feedback on SafeMeet meeting UI.
-2. Local/staging deploy script: `./deploy.sh --only html5` syncs/builds against `.deploy.env` (broader than a surgical hot-fix).
-3. Branch CI: `.github/workflows/safemeet-ci-cd.yml` builds Debian packages and publishes the apt repository. It does not rsync source to the old BBB server.
+1. **Git / CI** (default): commit when asked; branch CI builds Debian packages. See `.cursor/rules/bbb-git-first-deploy.mdc`.
+2. Local/staging deploy script: `./deploy.sh --only html5` syncs/builds against `.deploy.env` — only when the user asks.
+3. **live51 HTML5 hot-fix**: skill `.cursor/skills/hotfix-live51-html5/` — **only** when the user explicitly asks for هات فیکس / live51 update this turn. Do not hot-fix after ordinary UI edits.
 
-**Delivery law**: see `.cursor/rules/bbb-git-first-deploy.mdc`. Lasting delivery is git → CI/packages; live51 hot-fix is an explicit test-server exception for html5 client assets only.
+**Delivery law**: lasting delivery is git → CI/packages. live51 hot-fix is an explicit, opt-in test-server exception for html5 client assets only.
 
 - Treat `SAFEMEET-BBB-INSTALL-REPO.md` and the active workflow as CI sources of truth.
 - Never commit `.deploy.env`, known-host files, SSH keys, API keys, or server secrets.

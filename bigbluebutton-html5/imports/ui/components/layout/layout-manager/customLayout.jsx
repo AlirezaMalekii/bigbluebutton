@@ -43,15 +43,19 @@ import { getSkyroomStreamPrivilegeKey } from '/imports/ui/components/skyroom-lay
 
 const windowWidth = () => window.document.documentElement.clientWidth;
 
-// Phone IME: Chrome resizes clientHeight, but BBB's body is position:fixed;
-// height:100% (overlay, not reflow). Webcam/video then republishes the shrunk
-// height and leaves chat/action-bar stranded after dismiss; skipping layout
-// to avoid that also swallowed tab-switch resizes (users tab highlighted but
-// empty). Keep clientHeight as the source — only ignore a keyboard-sized
-// shrink on the same width, which is the no-webcam path that already works.
+// Phone IME keeps BBB's clientHeight source. While the keyboard is open,
+// visualViewport shrinks and we use live clientHeight so chat sits above it
+// (the working no-webcam path). After dismiss, Android often leaves
+// clientHeight stuck if a webcam fired extra resizes — then we restore the
+// last full height. Never skip calculatesLayout: tab switches dispatch a
+// synthetic resize and must still recompute (users tab highlight-without-panel).
 const SKYROOM_MOBILE_IME_SHRINK_PX = 80;
 let skyroomMobileLayoutWidth = 0;
-let skyroomMobileLayoutHeight = 0;
+let skyroomMobileFullHeight = 0;
+
+const skyroomMobileVisualHeight = () => (
+  window.visualViewport?.height ?? window.document.documentElement.clientHeight
+);
 
 const windowHeight = () => {
   const live = window.document.documentElement.clientHeight;
@@ -59,14 +63,18 @@ const windowHeight = () => {
   const width = window.document.documentElement.clientWidth;
   if (width !== skyroomMobileLayoutWidth) {
     skyroomMobileLayoutWidth = width;
-    skyroomMobileLayoutHeight = live;
+    skyroomMobileFullHeight = live;
     return live;
   }
-  if (skyroomMobileLayoutHeight > 0
-      && skyroomMobileLayoutHeight - live >= SKYROOM_MOBILE_IME_SHRINK_PX) {
-    return skyroomMobileLayoutHeight;
+  const visual = skyroomMobileVisualHeight();
+  const imeOpen = skyroomMobileFullHeight > 0
+    && (skyroomMobileFullHeight - visual) >= SKYROOM_MOBILE_IME_SHRINK_PX;
+  if (imeOpen) return live;
+  if (skyroomMobileFullHeight > 0
+      && (skyroomMobileFullHeight - live) >= SKYROOM_MOBILE_IME_SHRINK_PX) {
+    return skyroomMobileFullHeight;
   }
-  skyroomMobileLayoutHeight = live;
+  skyroomMobileFullHeight = Math.max(skyroomMobileFullHeight, live);
   return live;
 };
 
@@ -201,9 +209,16 @@ const CustomLayout = (props) => {
         },
       });
     };
+    const onVisualViewportResize = throttle(onResize, 50, { leading: true, trailing: true });
 
     window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+    // Webcam path: keyboard close often skips window.resize. visualViewport
+    // still grows, which is how we restore full height and tab geometry.
+    window.visualViewport?.addEventListener('resize', onVisualViewportResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.visualViewport?.removeEventListener('resize', onVisualViewportResize);
+    };
   }, []);
 
   useEffect(() => {

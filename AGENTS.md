@@ -6,7 +6,7 @@ This repository is the SafeMeet fork of BigBlueButton 3.x. Keep BBB as the realt
 
 - Security disclosure policy: `CLAUDE.md`
 - Core architecture guardrails: `.cursor/rules/BigBlueButton-3-x-Development.mdc`
-- BBB server delivery: `.cursor/rules/bbb-git-first-deploy.mdc` — git first for lasting delivery; **live51 HTML5 hot-fix** is allowed for SafeMeet test iteration (see skill `hotfix-live51-html5`).
+- BBB server delivery: `.cursor/rules/bbb-git-first-deploy.mdc` — git first. live51 HTML5 hot-fix only when the user explicitly asks this turn (skill `hotfix-live51-html5`).
 - Official BBB development documentation: https://docs.bigbluebutton.org/development/
 
 ## Meeting UI
@@ -36,9 +36,9 @@ Do not apply Meeting-Panel Ant Design/Tailwind conventions to the BBB HTML5 clie
 
 ## Delivery paths
 
-- **live51 HTML5 hot-fix** (fast UI test): skill `.cursor/skills/hotfix-live51-html5/` — rsync CSS or remote webpack to the test host without CI; user later pushes a batch to git for CI/CD.
-- Local/staging full html5 deploy: see `DEPLOY-FA.md`; normally `./deploy.sh --only html5`.
-- Branch CI/release: see `SAFEMEET-BBB-INSTALL-REPO.md`; CI builds and publishes Debian packages and does not deploy source to the old BBB server.
+- **Git / CI** (default): user commits/pushes when they choose; see `SAFEMEET-BBB-INSTALL-REPO.md`.
+- Local/staging html5 deploy: see `DEPLOY-FA.md`; `./deploy.sh --only html5` only when asked.
+- **live51 HTML5 hot-fix**: skill `.cursor/skills/hotfix-live51-html5/` — only if the user explicitly asks for هات فیکس / live51 update this turn. Do not hot-fix after ordinary UI edits.
 - Never commit `.deploy.env`, keys, tokens, or server secrets.
 
 Do not create commits, pushes, deployments, or public PRs unless the user explicitly requests them.

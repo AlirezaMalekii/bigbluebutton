@@ -1,5 +1,5 @@
 ---
-description: Git-first delivery with an explicit live51 HTML5 hot-fix exception for SafeMeet test iteration
+description: Git-first delivery; live51 HTML5 hot-fix only when the user explicitly asks
 alwaysApply: true
 ---
 
@@ -18,18 +18,19 @@ Prefer git → remote repo → server update. Do **not** treat ad-hoc server fil
 - Hot-patching **non-test** / production package trees as the primary fix
 - Dropping jars beside packaged `bbb-web` / Akka / GraphQL artifacts
 - Hand-editing `/usr/share/bbb-web`, recording pipelines, or mediasoup as delivery
+- **live51 HTML5 hot-fix** (rsync / remote webpack / `deploy.sh --only html5` used as a hot-fix)
 
-## Allowed — live51 HTML5 hot-fix (SafeMeet test)
+## live51 HTML5 hot-fix — only on explicit ask
 
-**live51** (host from gitignored `.deploy.env`, typically `live51.roomeet.ir` / `78.157.39.51`) is the SafeMeet **test** BBB for UI iteration.
+**Do not** hot-fix live51 after ordinary html5/UI changes. Wait until the user says so in **this** turn (هات فیکس، hot-fix، بگذار روی سرور ۵۱، live51 را آپدیت کن، and similar).
 
-When the user wants quick feedback and full CI would be wasteful:
+When they do ask:
 
 - Use skill [hotfix-live51-html5](.cursor/skills/hotfix-live51-html5/SKILL.md)
 - Scope: `bigbluebutton-html5` client assets (JS/TS/CSS/skyroom) only
 - CSS-only → rsync stylesheets to live html5-client; JS → remote `npm run build` + sync `dist/`
 - Do **not** commit/push unless asked; user batches to git + CI/CD later
 
-Still allowed anytime: read-only SSH inspection; documented `./deploy.sh --only html5` when requested.
+Still allowed anytime: read-only SSH inspection.
 
 If an out-of-band hot-fix was applied, remind the user it is not on the remote repository until they push.

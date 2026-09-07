@@ -541,8 +541,17 @@
     background: rgba(6, 9, 16, 0.99) !important;
   }
 
-  /* Floating footer card — inset + rounded corners on mobile */
+  /* Floating footer card — inset + rounded corners on mobile.
+     Pin like .skyroom-mobile-zone-tabs (position:fixed to the visual
+     viewport) so JS top from a stuck keyboard-shrunk clientHeight cannot
+     leave the bar floating mid-screen above the tab bar. */
   #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar {
+    position: fixed !important;
+    top: auto !important;
+    bottom: var(--skyroom-mobile-footer-lift, 3px) !important;
+    left: var(--skyroom-mobile-edge, 8px) !important;
+    right: var(--skyroom-mobile-edge, 8px) !important;
+    width: auto !important;
     border-radius: var(--radius-md, 12px) !important;
     border: 1px solid rgba(32, 199, 187, 0.18) !important;
     border-top: 1px solid rgba(32, 199, 187, 0.18) !important;
