@@ -39,6 +39,12 @@ import {
   isSkyroomMobileViewport,
   syncSkyroomMobileWebcamDockVisibility,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import {
+  isSkyroomMobileEditableTarget,
+  isSkyroomMobileImeOpen,
+  resolveSkyroomMobileLayoutHeight,
+  shouldRestoreSkyroomMobileViewport,
+} from '/imports/ui/components/skyroom-layout/mobile-ime-recovery-utils';
 import { getSkyroomStreamPrivilegeKey } from '/imports/ui/components/skyroom-layout/camera-placement';
 
 const windowWidth = () => window.document.documentElement.clientWidth;
@@ -49,9 +55,9 @@ const windowWidth = () => window.document.documentElement.clientWidth;
 // clientHeight stuck if a webcam fired extra resizes — then we restore the
 // last full height. Never skip calculatesLayout: tab switches dispatch a
 // synthetic resize and must still recompute (users tab highlight-without-panel).
-const SKYROOM_MOBILE_IME_SHRINK_PX = 80;
 let skyroomMobileLayoutWidth = 0;
 let skyroomMobileFullHeight = 0;
+const SKYROOM_CHAT_SENT_EVENT = 'sentMessage';
 
 const skyroomMobileVisualHeight = () => (
   window.visualViewport?.height ?? window.document.documentElement.clientHeight
@@ -67,13 +73,16 @@ const windowHeight = () => {
     return live;
   }
   const visual = skyroomMobileVisualHeight();
-  const imeOpen = skyroomMobileFullHeight > 0
-    && (skyroomMobileFullHeight - visual) >= SKYROOM_MOBILE_IME_SHRINK_PX;
-  if (imeOpen) return live;
-  if (skyroomMobileFullHeight > 0
-      && (skyroomMobileFullHeight - live) >= SKYROOM_MOBILE_IME_SHRINK_PX) {
-    return skyroomMobileFullHeight;
-  }
+  const imeOpen = isSkyroomMobileImeOpen({
+    fullHeight: skyroomMobileFullHeight,
+    visualHeight: visual,
+  });
+  const resolvedHeight = resolveSkyroomMobileLayoutHeight({
+    liveHeight: live,
+    fullHeight: skyroomMobileFullHeight,
+    visualHeight: visual,
+  });
+  if (imeOpen || resolvedHeight !== live) return resolvedHeight;
   skyroomMobileFullHeight = Math.max(skyroomMobileFullHeight, live);
   return live;
 };
@@ -144,6 +153,8 @@ const CustomLayout = (props) => {
   const calculatesLayoutPendingRef = useRef(false);
   const lastLayoutOutputRef = useRef({});
   const lastMobileCameraDockRef = useRef(null);
+  const mobileImeWasOpenRef = useRef(false);
+  const mobileImeSettleTimersRef = useRef([]);
 
   const dispatchOutput = (type, value) => {
     const prev = lastLayoutOutputRef.current[type];
@@ -200,6 +211,51 @@ const CustomLayout = (props) => {
     50, { trailing: true, leading: true });
 
   useEffect(() => {
+    const clearMobileImeSettleTimers = () => {
+      mobileImeSettleTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
+      mobileImeSettleTimersRef.current = [];
+    };
+
+    const readMobileImeOpen = () => isSkyroomMobileImeOpen({
+      fullHeight: skyroomMobileFullHeight,
+      visualHeight: skyroomMobileVisualHeight(),
+    });
+
+    const restoreMobileViewportOrigin = () => {
+      if (!isSkyroomMobileViewport() || readMobileImeOpen()) return;
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+      calculatesLayoutRef.current();
+    };
+
+    const scheduleMobileViewportRestore = () => {
+      clearMobileImeSettleTimers();
+      restoreMobileViewportOrigin();
+      // Android Chrome can finish its keyboard/pan animation after the first
+      // visualViewport resize. Recheck twice, only for this close transition.
+      mobileImeSettleTimersRef.current = [160, 420].map((delay) => (
+        window.setTimeout(restoreMobileViewportOrigin, delay)
+      ));
+    };
+
+    const syncMobileImeRecovery = () => {
+      if (!isSkyroomMobileViewport()) {
+        mobileImeWasOpenRef.current = false;
+        clearMobileImeSettleTimers();
+        return;
+      }
+      const keyboardIsOpen = readMobileImeOpen();
+      const shouldRestore = shouldRestoreSkyroomMobileViewport({
+        keyboardWasOpen: mobileImeWasOpenRef.current,
+        keyboardIsOpen,
+        scrollY: window.scrollY || window.pageYOffset || 0,
+        visualOffsetTop: window.visualViewport?.offsetTop || 0,
+      });
+      mobileImeWasOpenRef.current = keyboardIsOpen;
+      if (shouldRestore) scheduleMobileViewportRestore();
+    };
+
     const onResize = () => {
       layoutContextDispatch({
         type: ACTIONS.SET_BROWSER_SIZE,
@@ -208,16 +264,35 @@ const CustomLayout = (props) => {
           height: windowHeight(),
         },
       });
+      syncMobileImeRecovery();
     };
     const onVisualViewportResize = throttle(onResize, 50, { leading: true, trailing: true });
+    const scheduleMobileImeSettleChecks = () => {
+      if (!isSkyroomMobileViewport()) return;
+      // Some Android builds omit the final visualViewport resize. Probe after
+      // the focus/keyboard animation without assuming blur means IME closed.
+      clearMobileImeSettleTimers();
+      mobileImeSettleTimersRef.current = [0, 160, 420].map((delay) => (
+        window.setTimeout(onResize, delay)
+      ));
+    };
+    const onComposerFocusOut = (event) => {
+      if (!isSkyroomMobileEditableTarget(event.target)) return;
+      scheduleMobileImeSettleChecks();
+    };
 
     window.addEventListener('resize', onResize);
     // Webcam path: keyboard close often skips window.resize. visualViewport
     // still grows, which is how we restore full height and tab geometry.
     window.visualViewport?.addEventListener('resize', onVisualViewportResize);
+    window.addEventListener(SKYROOM_CHAT_SENT_EVENT, scheduleMobileImeSettleChecks);
+    document.addEventListener('focusout', onComposerFocusOut);
     return () => {
       window.removeEventListener('resize', onResize);
       window.visualViewport?.removeEventListener('resize', onVisualViewportResize);
+      window.removeEventListener(SKYROOM_CHAT_SENT_EVENT, scheduleMobileImeSettleChecks);
+      document.removeEventListener('focusout', onComposerFocusOut);
+      clearMobileImeSettleTimers();
     };
   }, []);
 

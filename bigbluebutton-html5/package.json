@@ -17,6 +17,7 @@
     "test:safemeet-reaction-events": "node imports/ui/components/emoji-rain/reaction-event-buffer.test.mjs",
     "test:safemeet-webcam-viewport": "node imports/ui/components/video-provider/mobile-webcam-viewport-utils.test.mjs",
     "test:safemeet-webcam-playback": "node imports/ui/components/video-provider/video-playback-utils.test.mjs",
+    "test:safemeet-mobile-ime": "node imports/ui/components/skyroom-layout/mobile-ime-recovery-utils.test.mjs",
     "test:safemeet-background-music": "node imports/ui/components/skyroom-layout/background-music/background-music-policy.test.mjs"
   },
   "lint-staged": {
