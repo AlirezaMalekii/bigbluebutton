@@ -1667,7 +1667,7 @@
   "app.externalVideo.urlInput": "لینک ویدیو را اینجا وارد کنید.",
   "app.externalVideo.urlError": "این لینک ویدیو پشتیبانی نمی‌شود.",
   "app.externalVideo.close": "بستن",
-  "app.externalVideo.autoPlayWarning": "برای هماهنگ‌شدن پخش برای همه، ویدیو را اجرا کنید.",
+  "app.externalVideo.autoPlayWarning": "برای پخش فایل اشتراک‌گذاری‌شده روی این دستگاه، کلیک کنید.",
   "app.externalVideo.refreshLabel": "بارگذاری دوباره ویدیو",
   "app.externalVideo.fullscreenLabel": "پخش‌کننده ویدیو",
   "app.externalVideo.noteLabel": "ویدیوهای پخش‌شده از سایت‌های دیگر در فایل ضبط جلسه ذخیره نمی‌شوند. لینک مستقیم MP4 و برخی سرویس‌ها مانند YouTube و Aparat پشتیبانی می‌شوند.",

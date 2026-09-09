@@ -157,6 +157,15 @@ export const getAuthenticatedPresentationMediaDownloadUrlFromPlaybackUrl = (play
   return getAuthenticatedPresentationMediaDownloadUrl(parsed.presentationId, parsed.filename);
 };
 
+// Shared URLs belong to the presenter's browser. Resolve uploaded media against
+// this client's server and session, including after reconnects or presenter changes.
+export const getLocalPresentationMediaPlaybackUrl = (playbackUrl) => {
+  const parsed = parsePresentationMediaUrl(playbackUrl);
+  if (!parsed || parsed.meetingId !== Auth.meetingID) return playbackUrl;
+  return getAuthenticatedPresentationMediaPlaybackUrl(parsed.presentationId, parsed.filename)
+    || playbackUrl;
+};
+
 export const buildAcceptList = (fileValidMimeTypes = []) => {
   const extensions = fileValidMimeTypes.map((entry) => entry.extension);
   const mimes = fileValidMimeTypes.map((entry) => entry.mime);

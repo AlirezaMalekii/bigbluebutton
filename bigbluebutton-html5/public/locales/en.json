@@ -1632,7 +1632,7 @@
     "app.externalVideo.urlInput": "Add Video URL",
     "app.externalVideo.urlError": "This video URL isn't supported",
     "app.externalVideo.close": "Close",
-    "app.externalVideo.autoPlayWarning": "Play the video to enable media synchronization",
+    "app.externalVideo.autoPlayWarning": "Click to play shared media on this device",
     "app.externalVideo.refreshLabel": "Refresh Video Player",
     "app.externalVideo.fullscreenLabel": "Video Player",
     "app.externalVideo.noteLabel": "Note: Shared external videos will not appear in the recording. YouTube, Vimeo, Instructure Media, Twitch and media file URLs (e.g. https://example.com/xy.mp4) are supported.",

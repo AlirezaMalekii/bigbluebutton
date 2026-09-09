@@ -18,7 +18,8 @@
     "test:safemeet-webcam-viewport": "node imports/ui/components/video-provider/mobile-webcam-viewport-utils.test.mjs",
     "test:safemeet-webcam-playback": "node imports/ui/components/video-provider/video-playback-utils.test.mjs",
     "test:safemeet-mobile-ime": "node imports/ui/components/skyroom-layout/mobile-ime-recovery-utils.test.mjs",
-    "test:safemeet-background-music": "node imports/ui/components/skyroom-layout/background-music/background-music-policy.test.mjs"
+    "test:safemeet-background-music": "node imports/ui/components/skyroom-layout/background-music/background-music-policy.test.mjs",
+    "test:safemeet-presentation-media-urls": "node imports/ui/components/presentation/presentation-uploader/fileTypes.test.mjs"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

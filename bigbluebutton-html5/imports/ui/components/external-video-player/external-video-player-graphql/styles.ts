@@ -54,17 +54,25 @@ export const VideoStage = styled.div`
   overflow: hidden;
 `;
 
-export const AutoPlayWarning = styled.p`
+export const AutoPlayWarning = styled.button`
   position: absolute;
   z-index: 100;
-  font-size: x-large;
+  font: inherit;
   color: white;
   width: 100%;
   background-color: rgba(6,23,42,0.5);
   bottom: 20%;
   vertical-align: middle;
   text-align: center;
-  pointer-events: none;
+  padding: 12px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary, currentColor);
+    outline-offset: 2px;
+  }
 `;
 
 export const VideoPlayer = styled(ReactPlayer)`
