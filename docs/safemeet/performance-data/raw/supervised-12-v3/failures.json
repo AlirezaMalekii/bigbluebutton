@@ -1,0 +1,8 @@
+[
+  {
+    "error": "Experiment stopped by local supervisor"
+  },
+  {
+    "error": "One or more interaction checks failed; see actions.json"
+  }
+]

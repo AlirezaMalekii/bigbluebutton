@@ -1,0 +1,38 @@
+{
+  "startedAt": "2026-09-09T15:42:47.283Z",
+  "revision": "82fac060956d5fba92a77f420b05eede2ca96852",
+  "cpus": 12,
+  "cpuModel": "AMD Ryzen 5 9600X 6-Core Processor             ",
+  "memoryBytes": 33484263424,
+  "count": 2,
+  "warmup": 10,
+  "seconds": 20,
+  "repetitions": 1,
+  "cameraCounts": [
+    0,
+    2
+  ],
+  "width": 1440,
+  "cpuThrottle": 1,
+  "target": 1,
+  "browserVersion": "152.0.7977.83",
+  "realPhoneTested": false,
+  "settings": {
+    "performance": {
+      "mode": "auto",
+      "enabled": true,
+      "longTaskWindowMs": 30000,
+      "longTaskThresholdMs": 200,
+      "mobileDecoderBudget": 4,
+      "longTaskCountThreshold": 3,
+      "lowPowerDeviceMemoryGb": 4,
+      "lowPowerHardwareConcurrency": 4,
+      "desktopLowPowerDecoderBudget": 6
+    },
+    "selectiveSubscription": {
+      "enabled": true,
+      "muteDebounceMs": 2500,
+      "audioSubscriptionPoolSize": 0
+    }
+  }
+}

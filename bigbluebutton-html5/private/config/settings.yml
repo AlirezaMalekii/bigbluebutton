@@ -1366,13 +1366,32 @@ public:
     enabled: true
     # auto | standard | low
     mode: auto
+    # Opt-in adaptive device protection. When false, the legacy SafeMeet
+    # performance behavior remains unchanged.
+    adaptiveProtectionEnabled: true
     mobileDecoderBudget: 4
     desktopLowPowerDecoderBudget: 6
     lowPowerHardwareConcurrency: 4
     lowPowerDeviceMemoryGb: 4
+    strongLowPowerHardwareConcurrency: 2
+    strongLowPowerDeviceMemoryGb: 2
+    sampleIntervalMs: 5000
+    initialWarmupMs: 20000
+    resumeWarmupMs: 10000
+    pressureLongTaskRatio: 0.2
+    recoveryLongTaskRatio: 0.08
+    pressureEventLoopLagMs: 200
+    recoveryEventLoopLagMs: 100
+    pressureSampleCount: 3
+    recoverySampleCount: 12
+    moderateDecoderBudget: 3
+    highDecoderBudget: 2
+    handoffGraceMs: 2000
     longTaskThresholdMs: 200
     longTaskCountThreshold: 3
     longTaskWindowMs: 30000
+    # Restore the normal ceiling after a foreground period without long tasks.
+    recoveryQuietMs: 60000
   virtualBackgrounds:
     enabled: true
     enableVirtualBackgroundUpload: true

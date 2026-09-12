@@ -1,0 +1,21 @@
+{
+  "graphics": [
+    {
+      "Name": "AMD Radeon(TM) Graphics",
+      "DriverVersion": "32.0.21042.62",
+      "AdapterRAM": 536870912
+    },
+    {
+      "Name": "NVIDIA GeForce RTX 5060 Ti",
+      "DriverVersion": "32.0.16.1664",
+      "AdapterRAM": 4293918720
+    }
+  ],
+  "operatingSystem": {
+    "Caption": "Microsoft Windows 11 Pro",
+    "Version": "10.0.28000",
+    "BuildNumber": "28000",
+    "OSArchitecture": "64-bit"
+  },
+  "capturedAt": "2026-09-10T15:16:11.0545372Z"
+}

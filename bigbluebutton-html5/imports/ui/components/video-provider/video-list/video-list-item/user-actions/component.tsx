@@ -281,6 +281,7 @@ const UserActions: React.FC<UserActionProps> = (props) => {
               trigger={(
                 <Styled.DropdownTrigger
                   tabIndex={0}
+                  dir="auto"
                   data-test="dropdownWebcamButton"
                   data-webcam-participant-name="true"
                   $isRTL={isRTL}
@@ -298,6 +299,7 @@ const UserActions: React.FC<UserActionProps> = (props) => {
           : (
             <Styled.Dropdown $isFirefox={isFirefox}>
               <Styled.UserName
+                dir="auto"
                 $noMenu={numOfStreams < 3}
                 $skyroomMobile={useSkyroomMobileMenu}
                 $skyroomFullName={useSkyroomFullName}

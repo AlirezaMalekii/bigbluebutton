@@ -1,0 +1,17 @@
+[
+  {
+    "user": 1,
+    "error": "Mutation failed (ExternalVideoStop): It was not able to send the request to Graphql Actions: graphql actions request failed: externalVideoStop: Permission Denied (not presenter).",
+    "sources": [
+      "bundle.d820eae9afe4cad534cf.js:2:4648166",
+      "bundle.d820eae9afe4cad534cf.js:2:4759010",
+      "bundle.d820eae9afe4cad534cf.js:2:4768288",
+      "bundle.d820eae9afe4cad534cf.js:2:4764863",
+      "bundle.d820eae9afe4cad534cf.js:2:4765411",
+      "bundle.d820eae9afe4cad534cf.js:2:4766778"
+    ]
+  },
+  {
+    "error": "Actual test publishers do not match requested cameras"
+  }
+]

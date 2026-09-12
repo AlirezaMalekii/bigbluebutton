@@ -1,0 +1,62 @@
+{
+  "date": "2026-09-11",
+  "device": {
+    "model": "24117RN76G",
+    "platform": "Android 16",
+    "browser": "Chrome 152",
+    "deviceMemoryGbHint": 8,
+    "hardwareConcurrencyHint": 8,
+    "usbPowered": true
+  },
+  "build": "c26cd8ae1d43d5a306f0",
+  "backend": "live51",
+  "default": {
+    "adaptiveProtectionEnabled": false,
+    "rollback": "Set adaptiveProtectionEnabled to false"
+  },
+  "baselineFourWebcams": {
+    "accepted": true,
+    "durationSeconds": 84.1,
+    "advancingWebcams": 4,
+    "protectionStage": "none",
+    "chromeCpuOneCoreScaleMeanPercent": 78.79,
+    "chromeCpuOneCoreScaleP95Percent": 86.7,
+    "pssMeanMiB": 272.92,
+    "pssMaxMiB": 276.56,
+    "mainThreadPercent": 22.62,
+    "scriptPercent": 5.22
+  },
+  "automaticPolicy": {
+    "normalDeviceInitialStage": "none",
+    "controlledPressureTransitions": [
+      "none",
+      "quality",
+      "moderate"
+    ],
+    "stageAfterFirstRecoveryWindow": "quality",
+    "manualStandardResult": {
+      "stage": "none",
+      "tier": "standard"
+    }
+  },
+  "forcedLowFourWebcams": {
+    "accepted": false,
+    "reason": "The load generator retained only two real publishers; the receiver comparison was invalid.",
+    "cpuReductionClaimed": false
+  },
+  "coverage": {
+    "pureSelectionStreams": [50, 200],
+    "privilegedCameraPriority": "passed",
+    "visibleLowPowerNotice": "production build passed; physical-device visual check pending",
+    "viewportPolicy": "passed",
+    "videoPlaybackPolicy": "passed",
+    "whiteboardQueueAndPermissions": "passed",
+    "typescript": "passed",
+    "productionBuild": "passed"
+  },
+  "limitations": [
+    "The controlled main-thread stress validates policy transitions, not real low-end-device performance.",
+    "USB power makes battery-drain and long-term thermal conclusions invalid.",
+    "The 20 percent CPU/main-thread reduction target was not evaluated for the adaptive feature."
+  ]
+}

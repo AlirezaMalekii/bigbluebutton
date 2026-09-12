@@ -1,0 +1,45 @@
+[
+  {
+    "name": "chat-sync",
+    "passed": true,
+    "details": {
+      "latencyMs": 431,
+      "testMessageDeleted": true
+    }
+  },
+  {
+    "name": "whiteboard-sync-undo",
+    "passed": false,
+    "error": "expect(locator).toHaveCount(expected) failed"
+  },
+  {
+    "name": "screenshare-synthetic-webrtc",
+    "passed": false,
+    "error": "page.evaluate: Target page, context or browser has been closed"
+  },
+  {
+    "name": "performance-control-responsive",
+    "passed": false,
+    "error": "page.setViewportSize: Target page, context or browser has been closed"
+  },
+  {
+    "name": "performance-control-cancel",
+    "passed": false,
+    "error": "page.setViewportSize: Target page, context or browser has been closed"
+  },
+  {
+    "name": "reconnect-video",
+    "passed": false,
+    "error": "browserContext.setOffline: Target page, context or browser has been closed"
+  },
+  {
+    "name": "webcam-fullscreen-recovery",
+    "passed": false,
+    "error": "locator.click: Target page, context or browser has been closed"
+  },
+  {
+    "name": "panel-lifecycle",
+    "passed": false,
+    "error": "page.evaluate: Target page, context or browser has been closed"
+  }
+]

@@ -7,6 +7,9 @@
     "start": "NODE_ENV=development DETAILED_LOGS=true HOT_RELOAD=true webpack serve --open --config webpack.config.js",
     "build": "NODE_ENV=production TARGET=default webpack --config webpack.config.js --mode production",
     "build-safari": "NODE_ENV=production TARGET=safari webpack --config webpack.config.js --mode production",
+    "serve:perf": "node scripts/serve-perf.cjs",
+    "test:safemeet-performance": "node scripts/test-performance.cjs",
+    "test:safemeet-performance-policy": "node imports/ui/components/skyroom-layout/performance-profile-policy.test.mjs",
     "tscheck": "tsc",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -197,7 +200,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "./scripts/pre-commit.sh"
+      "pre-commit": "bash ./scripts/pre-commit.sh"
     }
   }
 }

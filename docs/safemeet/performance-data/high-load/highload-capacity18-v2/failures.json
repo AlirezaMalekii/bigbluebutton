@@ -1,0 +1,26 @@
+[
+  {
+    "user": 10,
+    "error": "Cannot read properties of undefined (reading 'public')",
+    "sources": [
+      "bundle.ee0cf29753dab643b6ab.js:2:543397"
+    ]
+  },
+  {
+    "user": 17,
+    "error": "Cannot read properties of undefined (reading 'public')",
+    "sources": [
+      "bundle.ee0cf29753dab643b6ab.js:2:543397"
+    ]
+  },
+  {
+    "user": 15,
+    "error": "Cannot read properties of undefined (reading 'public')",
+    "sources": [
+      "bundle.ee0cf29753dab643b6ab.js:2:543397"
+    ]
+  },
+  {
+    "error": "Participant count did not recover to requested load"
+  }
+]

@@ -1,0 +1,59 @@
+{
+  "testedAt": "2026-09-11",
+  "device": {
+    "manufacturer": "Samsung",
+    "model": "SM-X205",
+    "android": 14,
+    "apiLevel": 34,
+    "physicalPixels": "1200x1920",
+    "physicalDensityDpi": 240,
+    "chrome": "149.0.7827.200",
+    "memoryMiB": 3512,
+    "clientViewport": "1280x680@1.5"
+  },
+  "conditions": {
+    "meetingBackend": "live51",
+    "client": "local production build",
+    "finalBundle": "2302052b644dfacb9a08",
+    "usbPowered": true,
+    "batteryLevelPercent": 3,
+    "durationClass": "short smoke",
+    "thermalOrBatterySoakValid": false
+  },
+  "reproducedDefect": {
+    "publishers": 4,
+    "tabletTilesBefore": 2,
+    "visibleBefore": ["Perf-1-MODERATOR", "Perf-2-MODERATOR"],
+    "cause": "Android mobile endpoint selected BBB mobile page size 2 while SafeMeet rendered the desktop tablet layout",
+    "regressionRun": "android-webcam-visibility-smoke5"
+  },
+  "fixedResult": {
+    "publishers": 4,
+    "tabletTiles": 4,
+    "visibleAfter": [
+      "Perf-1-MODERATOR",
+      "Perf-2-MODERATOR",
+      "Perf-3-VIEWER",
+      "Perf-4-VIEWER"
+    ],
+    "videoDimensions": ["480x270", "480x270", "480x270", "480x270"],
+    "samplesWithFourDecodedVideos": 3,
+    "chromeCpuMeanPercentOfOneCore": 87.9,
+    "chromeCpuP95PercentOfOneCore": 88.1,
+    "chromePssMeanMiB": 175.72,
+    "chromePssP95MiB": 175.89,
+    "mainThreadMeanPercent": 16.65,
+    "mainThreadP95Percent": 17.84,
+    "batteryTemperatureC": 31.9,
+    "thermalStatusMax": 0,
+    "frameDropPercentAtLastSample": 1.66,
+    "failures": 0,
+    "run": "android-tablet-pagination-fix"
+  },
+  "limitations": [
+    "The tablet was connected to USB at 3% battery, so battery drain and sustained thermal behavior are not valid.",
+    "The run is a short smoke and does not prove long-duration stability.",
+    "A real phone and the SafeMeet phone layout have not been tested yet.",
+    "The Android ps CPU value is reported on a one-core 100% scale and is not total device utilization."
+  ]
+}

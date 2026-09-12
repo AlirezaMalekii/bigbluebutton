@@ -847,6 +847,22 @@ export interface SafeMeetDiagnostics {
 }
 
 export interface SafeMeetPerformance {
+  adaptiveProtectionEnabled?: boolean
+  handoffGraceMs?: number
+  highDecoderBudget?: number
+  initialWarmupMs?: number
+  moderateDecoderBudget?: number
+  pressureEventLoopLagMs?: number
+  pressureLongTaskRatio?: number
+  pressureSampleCount?: number
+  recoveryQuietMs?: number
+  recoveryEventLoopLagMs?: number
+  recoveryLongTaskRatio?: number
+  recoverySampleCount?: number
+  resumeWarmupMs?: number
+  sampleIntervalMs?: number
+  strongLowPowerDeviceMemoryGb?: number
+  strongLowPowerHardwareConcurrency?: number
   enabled: boolean
   mode: 'auto' | 'standard' | 'low'
   mobileDecoderBudget: number

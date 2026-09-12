@@ -3,6 +3,7 @@ import React, {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 import { createContext, useContextSelector } from 'use-context-selector';
 import { useMutation } from '@apollo/client';
@@ -21,6 +22,10 @@ import { RAISED_HAND_USERS } from '/imports/ui/core/graphql/queries/users';
 import getFromUserSettings from '/imports/ui/services/users-settings';
 import { filterByMeetingId } from '/imports/ui/core/utils/subscriptionFilters';
 import { SET_CAMERA_PINNED } from '/imports/ui/core/graphql/mutations/userMutations';
+import {
+  SKYROOM_SUSPENDED_CAMERAS_EVENT,
+  type SuspendedCamerasEvent,
+} from '/imports/ui/components/video-provider/webcam-protection-events';
 
 export type VideoListCurrentUser = {
   userId?: string;
@@ -53,6 +58,7 @@ type VideoListSharedState = {
   hideNotifications: boolean;
   userCameraDropdownItems: UserCameraDropdownInterface[];
   setCameraPinned: (userId: string, pinned: boolean) => void;
+  suspendedCameras: Set<string>;
   observeVideoTile: (element: Element, callback: (width: number) => void) => () => void;
 };
 
@@ -80,6 +86,7 @@ const VideoListSharedStateContext = createContext<VideoListSharedState>({
   hideNotifications: false,
   userCameraDropdownItems: [],
   setCameraPinned: noop,
+  suspendedCameras: new Set(),
   observeVideoTile: noopObserveVideoTile,
 });
 
@@ -131,6 +138,7 @@ const VideoListSharedStateProvider: React.FC<VideoListSharedStateProviderProps> 
   const [setCameraPinnedMutation] = useMutation(SET_CAMERA_PINNED);
   const tileResizeObserverRef = useRef<ResizeObserver | null>(null);
   const tileResizeCallbacksRef = useRef<Map<Element, TileResizeCallback>>(new Map());
+  const [suspendedCameras, setSuspendedCameras] = useState<Set<string>>(new Set());
   const { hideNotificationToasts } = layoutSelectInput((i: Input) => i.notificationsBar);
   const setCameraPinned = useCallback((userId: string, pinned: boolean) => {
     setCameraPinnedMutation({
@@ -172,6 +180,15 @@ const VideoListSharedStateProvider: React.FC<VideoListSharedStateProviderProps> 
     tileResizeCallbacksRef.current.clear();
   }, []);
 
+  useEffect(() => {
+    const handleSuspendedCameras = (event: Event) => {
+      const cameraIds = (event as SuspendedCamerasEvent).detail?.cameraIds;
+      setSuspendedCameras(new Set(Array.isArray(cameraIds) ? cameraIds : []));
+    };
+    window.addEventListener(SKYROOM_SUSPENDED_CAMERAS_EVENT, handleSuspendedCameras);
+    return () => window.removeEventListener(SKYROOM_SUSPENDED_CAMERAS_EVENT, handleSuspendedCameras);
+  }, []);
+
   const hideUserList = Boolean(
     currentUser?.locked && currentMeeting?.lockSettings?.hideUserList,
   );
@@ -206,6 +223,7 @@ const VideoListSharedStateProvider: React.FC<VideoListSharedStateProviderProps> 
     hideNotifications,
     userCameraDropdownItems,
     setCameraPinned,
+    suspendedCameras,
     observeVideoTile,
   }), [
     fullscreenElement,
@@ -220,6 +238,7 @@ const VideoListSharedStateProvider: React.FC<VideoListSharedStateProviderProps> 
     hideNotifications,
     userCameraDropdownItems,
     setCameraPinned,
+    suspendedCameras,
     observeVideoTile,
   ]);
 

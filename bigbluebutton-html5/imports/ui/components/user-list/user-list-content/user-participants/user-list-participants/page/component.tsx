@@ -25,6 +25,7 @@ import {
   getPinnedPrivateChatSenderIds,
   reorderUsersForPrivateMessages,
 } from '../private-chat-user-order';
+import { updateVisibleUserPage, removeVisibleUserPage } from '../visible-users';
 
 interface UserListParticipantsContainerProps {
   index: number;
@@ -136,14 +137,14 @@ const UserListParticipantsPageContainer: React.FC<UserListParticipantsContainerP
     loading: usersLoading,
   } = useLoadedUserList({ offset, limit: limit.current }, (u) => u) as GraphqlDataHookSubscriptionResponse<Array<User>>;
 
-  const users = meeting?.meetingId
+  const users = useMemo(() => (meeting?.meetingId
     ? filterByMeetingId(
       (usersData ?? []) as User[],
       meeting.meetingId,
       USER_LIST_SUBSCRIPTION,
       (u) => ({ mismatchedUserId: u.userId, mismatchedName: u.name }),
     )
-    : [];
+    : []), [usersData, meeting?.meetingId]);
 
   const missingPinnedIds = useMemo(() => {
     if (offset !== 0) return [];
@@ -207,20 +208,13 @@ const UserListParticipantsPageContainer: React.FC<UserListParticipantsContainerP
   ]);
 
   useEffect(() => {
-    setVisibleUsers((prev) => {
-      const newList = { ...prev };
-      newList[index] = displayUsers;
-      return newList;
-    });
+    // Equivalent filtered arrays must not feed a parent/child render loop.
+    setVisibleUsers((prev) => updateVisibleUserPage(prev, index, displayUsers));
   }, [displayUsers, index, setVisibleUsers]);
 
   useEffect(() => {
     return () => {
-      setVisibleUsers((prev) => {
-        // eslint-disable-next-line
-        prev[index] = [];
-        return prev;
-      });
+      setVisibleUsers((prev) => removeVisibleUserPage(prev, index));
     };
   }, [index, setVisibleUsers]);
 

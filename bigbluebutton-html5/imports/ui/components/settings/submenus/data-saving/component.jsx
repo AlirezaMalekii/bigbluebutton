@@ -3,6 +3,7 @@ import Toggle from '/imports/ui/components/common/switch/component';
 import { defineMessages, injectIntl } from 'react-intl';
 import BaseMenu from '../base/component';
 import Styled from './styles';
+import PerformanceControl from '/imports/ui/components/skyroom-layout/performance-control';
 
 const intlMessages = defineMessages({
   dataSavingLabel: {
@@ -40,6 +41,7 @@ class DataSaving extends BaseMenu {
       displaySettingsStatus,
       isScreenSharingEnabled,
       isVideoEnabled,
+      performanceMode,
     } = this.props;
 
     const { viewParticipantsWebcams, viewScreenshare } = this.state.settings;
@@ -51,6 +53,10 @@ class DataSaving extends BaseMenu {
           <Styled.SubTitle>{intl.formatMessage(intlMessages.dataSavingDesc)}</Styled.SubTitle>
         </div>
         <Styled.Form>
+          <PerformanceControl
+            mode={performanceMode}
+            onChange={(mode) => this.handleUpdateSettings('safemeetPerformance', { mode })}
+          />
           {isVideoEnabled
             ? (
               <Styled.Row>

@@ -68,7 +68,9 @@ import {
 import {
   isSkyroomColumnLayout,
   isSkyroomMobileViewport,
+  isSkyroomTheme,
 } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import { shouldUseMobileCameraPagination } from '/imports/ui/components/video-provider/mobile-webcam-viewport-utils';
 
 const SKYROOM_MOBILE_SORTING = 'LOCAL_MODERATOR_ALPHABETICAL';
 
@@ -270,6 +272,12 @@ export const usePageSizeDictionary = () => {
     mobilePageSizes: MOBILE_PAGE_SIZES,
   } = window.meetingClientSettings.public.kurento.pagination;
   const userCount = getCountData();
+  const useMobilePageSizes = shouldUseMobileCameraPagination({
+    isMobileEndpoint: videoService.isMobile,
+    isSkyroom: isSkyroomTheme(),
+    skyroomColumnLayout: isSkyroomColumnLayout(),
+    skyroomMobileViewport: isSkyroomMobileViewport(),
+  });
 
   const PAGINATION_THRESHOLDS_CONF = window.meetingClientSettings.public.kurento.paginationThresholds;
   const PAGINATION_THRESHOLDS_ENABLED = PAGINATION_THRESHOLDS_CONF.enabled;
@@ -279,7 +287,7 @@ export const usePageSizeDictionary = () => {
 
   // Dynamic page sizes are disabled. Fetch the stock page sizes.
   if (!PAGINATION_THRESHOLDS_ENABLED || PAGINATION_THRESHOLDS.length <= 0) {
-    return !videoService.isMobile ? DESKTOP_PAGE_SIZES : MOBILE_PAGE_SIZES;
+    return useMobilePageSizes ? MOBILE_PAGE_SIZES : DESKTOP_PAGE_SIZES;
   }
 
   // Dynamic page sizes are enabled. Get the user count, isolate the
@@ -298,7 +306,7 @@ export const usePageSizeDictionary = () => {
     // That saves us some space because don't necessarily need to scale mobile
     // endpoints.
     // If eg mobile isn't set, then return the default value.
-    if (!videoService.isMobile) {
+    if (!useMobilePageSizes) {
       return threshold.desktopPageSizes || DESKTOP_PAGE_SIZES;
     }
     return threshold.mobilePageSizes || MOBILE_PAGE_SIZES;

@@ -91,6 +91,17 @@
     width: auto !important;
   }
 
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar [data-debug="live-watcher"] [data-skyroom-mute-warning="true"] {
+    display: inline-flex !important;
+    max-width: calc(100vw - 24px);
+    padding: 4px 9px !important;
+    font-size: 0.75rem !important;
+  }
+
+  #layout[data-skyroom-column="true"][data-skyroom-mobile="true"] #ActionsBar [data-debug="live-watcher"] [data-skyroom-mute-warning="true"] > span {
+    white-space: normal !important;
+  }
+
   /* ===================================================================
      2) Navbar (top) — single strip that fits ~360px
      Flow the centered title into the flex row (instead of absolute

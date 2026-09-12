@@ -224,6 +224,34 @@ const VideoDisabled = styled.div<{ $compact?: boolean }>`
   }
 `;
 
+const ProtectionSuspended = styled.button`
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-height: 44px;
+  max-width: calc(100% - 24px);
+  padding: 7px 10px;
+  border: 1px solid rgba(32, 199, 187, 0.42);
+  border-radius: 8px;
+  background: rgba(8, 12, 22, 0.9);
+  color: ${colorWhite};
+  font-size: 0.72rem;
+  line-height: 1.4;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid ${colorPrimary};
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.72;
+  }
+`;
+
 const TopBar = styled.div`
   position: absolute;
   display: flex;
@@ -320,6 +348,7 @@ export default {
   BottomBar,
   SqueezedName,
   VideoDisabled,
+  ProtectionSuspended,
   RaiseHand,
   RaiseHandNumber,
   RaiseHandEmoji,

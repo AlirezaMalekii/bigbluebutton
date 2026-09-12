@@ -1,0 +1,26 @@
+[
+  {
+    "user": 8,
+    "error": "Cannot read properties of undefined (reading 'public')",
+    "sources": [
+      "bundle.ee0cf29753dab643b6ab.js:2:543397"
+    ]
+  },
+  {
+    "user": 6,
+    "error": "Cannot read properties of undefined (reading 'public')",
+    "sources": [
+      "bundle.ee0cf29753dab643b6ab.js:2:543397"
+    ]
+  },
+  {
+    "user": 7,
+    "error": "Cannot read properties of undefined (reading 'public')",
+    "sources": [
+      "bundle.ee0cf29753dab643b6ab.js:2:543397"
+    ]
+  },
+  {
+    "error": "Actual test publishers do not match requested cameras"
+  }
+]

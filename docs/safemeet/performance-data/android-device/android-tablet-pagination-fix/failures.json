@@ -1,0 +1,12 @@
+[
+  {
+    "user": 1,
+    "error": "Cannot read properties of undefined (reading 'public')",
+    "sources": [
+      "bundle.2302052b644dfacb9a08.js:2:566126",
+      "bundle.2302052b644dfacb9a08.js:2:558477",
+      "bundle.2302052b644dfacb9a08.js:2:555592",
+      "bundle.2302052b644dfacb9a08.js:2:543532"
+    ]
+  }
+]
