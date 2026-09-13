@@ -315,9 +315,21 @@ class VideoPreview extends Component {
     const {
       webcamDeviceId,
       forceOpen,
+      isOpen,
     } = this.props;
 
     this._isMounted = true;
+
+    // The screen-share Fullscreen API hides sibling portal roots on Android.
+    // Leave that fullscreen view before mounting the webcam settings portal.
+    if (isOpen && deviceInfo.isPhone && document.fullscreenElement?.id === 'screenshareContainer') {
+      document.exitFullscreen().catch((error) => {
+        logger.error({
+          logCode: 'video_preview_exit_screenshare_fullscreen_failure',
+          extraInfo: { errorName: error.name, errorMessage: error.message },
+        }, 'Could not leave screen-share fullscreen for webcam settings');
+      });
+    }
 
  const populatePreview = ({
       digestedWebcams = [],

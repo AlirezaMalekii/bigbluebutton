@@ -1,6 +1,7 @@
 import { devices } from '@playwright/test';
 
 import { test } from '../core/setup/fixtures';
+import { constants as c } from '../parameters/constants';
 import { GuestPolicy } from './guestPolicy';
 import { LockViewers } from './lockViewers';
 import { MobileDevices } from './mobileDevices';
@@ -78,6 +79,17 @@ test.describe.parallel('User', { tag: '@ci' }, () => {
       const multiusers = new MultiUsers(browser, context);
       await multiusers.initPages(page, testInfo);
       await multiusers.makePresenter();
+    });
+
+    test('Keep moderator recording control after making a viewer presenter', async ({
+      browser,
+      context,
+      page,
+    }, testInfo) => {
+      const multiusers = new MultiUsers(browser, context);
+      await multiusers.initModPage(page, { createParameter: c.recordMeeting, testInfo });
+      await multiusers.initUserPage(context, { testInfo });
+      await multiusers.makePresenterKeepsModeratorRecordingControl();
     });
 
     // https://docs.bigbluebutton.org/3.0/testing/release-testing/#taking-presenter-status-back-automated

@@ -489,7 +489,7 @@ class ScreenshareComponent extends React.Component {
     if (!ALLOW_FULLSCREEN) return null;
 
     return (
-      <Styled.FullscreenButtonWrapperForScreenshare>
+      <Styled.FullscreenButtonWrapperForScreenshare data-test="screenshareFullscreenButton">
         <FullscreenButtonContainer
           key={uniqueId('fullscreenButton-')}
           elementName={intl.formatMessage(this.locales.label)}
@@ -570,6 +570,7 @@ class ScreenshareComponent extends React.Component {
         <Styled.ScreenshareButtonsContainterWrapper
           positionYAxis="top"
           positionXAxis="right"
+          data-test="screenshareTopRightControls"
         >
           {isPresenter
             // Presenter button:

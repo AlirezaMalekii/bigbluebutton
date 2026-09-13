@@ -410,6 +410,8 @@ const UserNameContainer = styled.div`
   margin: 0 0 0 ${smPaddingX};
   justify-content: center;
   font-size: 90%;
+  line-height: 1.35;
+  padding-block: 2px;
   max-width: 70%;
 
   [dir="rtl"]  & {
@@ -427,6 +429,8 @@ const UserName = styled.span`
   color: ${colorGrayDark};
   display: flex;
   flex-direction: row;
+  line-height: 1.35;
+  min-height: 1.35em;
 
   > span {
     text-overflow: ellipsis;
@@ -446,6 +450,7 @@ const UserNameSub = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1.25;
 
   i {
     line-height: 0;

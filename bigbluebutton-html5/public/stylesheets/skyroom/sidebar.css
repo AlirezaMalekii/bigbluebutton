@@ -597,10 +597,11 @@
   flex: 1 1 auto !important;
   max-width: none !important;
   margin: 0 !important;
-  line-height: 1 !important;
-  height: 100% !important;
-  max-height: 100% !important;
-  overflow: hidden !important;
+  line-height: 1.3 !important;
+  min-height: 18px !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="userNameContainer"] [class*="UserName"],
@@ -616,7 +617,8 @@
   align-items: center !important;
   justify-content: flex-start !important;
   gap: 6px !important;
-  line-height: 1 !important;
+  line-height: 1.3 !important;
+  min-height: 16px !important;
   margin: 0 !important;
 }
 
@@ -627,7 +629,7 @@
   text-overflow: ellipsis !important;
   word-break: normal !important;
   min-width: 0 !important;
-  line-height: 1 !important;
+  line-height: 1.3 !important;
 }
 
 #layout[data-skyroom-column="true"] [data-test="userListContent"] [class*="UserName"] > .skyroom-user-mobile-icon,
@@ -1050,7 +1052,7 @@
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  gap: 2px !important;
+  gap: 5px !important;
   margin: 0 0 3px !important;
   padding: 0 !important;
   min-height: 0 !important;
@@ -1912,4 +1914,80 @@
   line-height: 1 !important;
   margin: 0 !important;
   padding: 0 !important;
+}
+
+/* Keep Persian ascenders inside the participant row. */
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="userListItem"],
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="userListItemCurrent"] {
+  height: auto !important;
+  min-height: 28px !important;
+  max-height: none !important;
+  overflow: visible !important;
+  align-items: center !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="userNameContainer"] {
+  height: auto !important;
+  min-height: 20px !important;
+  max-height: none !important;
+  overflow: visible !important;
+  line-height: 1.35 !important;
+  padding-block: 2px !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="userNameContainer"] [class*="UserName"],
+#layout[data-skyroom-column="true"] [data-test="userListContent"] [data-test="userNameContainer"] [class*="UserName"] > span {
+  line-height: 1.35 !important;
+  min-height: 17px !important;
+}
+
+/* The floating-chat reopen notice is rendered in the presenter sidebar after
+   screen share closes. Keep its text and action on one compact row. */
+#layout[data-skyroom-column="true"] [data-test="screenShareChatOverlayReopen"] {
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 4px 6px !important;
+  margin-bottom: 3px !important;
+  line-height: 1.2 !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="screenShareChatOverlayReopen"] > span {
+  min-width: 0 !important;
+  line-height: 1.2 !important;
+  text-align: start !important;
+}
+
+#layout[data-skyroom-column="true"] [data-test="screenShareChatOverlayReopen"] > button {
+  flex: 0 0 auto !important;
+  padding: 4px 7px !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+}
+
+/* The presenter chat overlay is portaled outside #layout on desktop. */
+html[data-skyroom="true"] [data-test="screenShareChatOverlayReopen"] {
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 4px 6px !important;
+  margin-bottom: 3px !important;
+  line-height: 1.2 !important;
+}
+html[data-skyroom="true"] [data-test="screenShareChatOverlayReopen"] > span {
+  min-width: 0 !important;
+  line-height: 1.2 !important;
+  text-align: start !important;
+}
+html[data-skyroom="true"] [data-test="screenShareChatOverlayReopen"] > button {
+  flex: 0 0 auto !important;
+  padding: 4px 7px !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
 }

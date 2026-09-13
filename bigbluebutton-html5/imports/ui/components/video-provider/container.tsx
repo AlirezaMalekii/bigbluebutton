@@ -134,7 +134,7 @@ const VideoProviderContainer: React.FC<VideoProviderContainerProps> = (props) =>
   }));
 
   const { data: currentUser } = useCurrentUser((user) => ({
-    locked: user.locked,
+    isModerator: user.isModerator,
     userId: user.userId,
   }));
 
@@ -164,7 +164,7 @@ const VideoProviderContainer: React.FC<VideoProviderContainerProps> = (props) =>
 
   if (
     currentMeeting?.usersPolicies?.webcamsOnlyForModerator
-    && currentUser?.locked
+    && currentUser?.isModerator === false
   ) {
     usersVideo = usersVideo.filter(
       (uv) => (

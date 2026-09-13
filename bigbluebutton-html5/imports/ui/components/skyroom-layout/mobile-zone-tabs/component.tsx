@@ -136,7 +136,8 @@ const SkyroomMobileZoneTabs: React.FC = () => {
   }, []);
 
   const handleTab = useCallback((box: TabKey, active: boolean) => {
-    openSkyroomMobileBox(layoutContextDispatch, active ? null : box);
+    if (active) return;
+    openSkyroomMobileBox(layoutContextDispatch, box);
   }, [layoutContextDispatch]);
 
   if (!isMobile || !isSkyroomColumnLayout()) return null;

@@ -51,13 +51,16 @@ trait GetUserApiMsgHdlr extends HandlerHelpers {
       userInfos += ("hideViewersCursor" -> false)
       userInfos += ("hideViewersAnnotation" -> false)
       userInfos += ("hideUserList" -> false)
-      userInfos += ("webcamsOnlyForModerator" -> false)
     } else {
       userInfos += ("hideViewersCursor" -> permissions.hideViewersCursor)
       userInfos += ("hideViewersAnnotation" -> permissions.hideViewersAnnotation)
       userInfos += ("hideUserList" -> permissions.hideUserList)
-      userInfos += ("webcamsOnlyForModerator" -> MeetingStatus2x.webcamsOnlyForModeratorEnabled(liveMeeting.status))
     }
+
+    // Webcam visibility is a meeting-wide viewer policy, independent of the
+    // per-user lock bit used by camera/microphone and chat restrictions.
+    userInfos += ("webcamsOnlyForModerator" ->
+      (!isModerator && MeetingStatus2x.webcamsOnlyForModeratorEnabled(liveMeeting.status)))
 
     userInfos
   }
