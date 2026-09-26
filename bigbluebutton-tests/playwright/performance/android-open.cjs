@@ -3,12 +3,16 @@
 const { execFileSync } = require('node:child_process');
 const { createHash, randomUUID } = require('node:crypto');
 const path = require('node:path');
+const { chromium } = require('playwright');
+const probe = require('./probe.cjs');
 
 const adb = process.env.ADB || path.join(process.env.LOCALAPPDATA || '', 'Android/platform-tools/adb.exe');
 const server = process.env.BBB_SERVER || 'https://live51.roomeet.ir';
 const cdpEndpoint = process.env.ANDROID_CDP || 'http://127.0.0.1:9222';
 const meetingID = process.env.PERF_MEETING_ID;
 const role = process.env.ANDROID_ROLE || 'VIEWER';
+const client = new URL(process.env.PERF_CLIENT || 'http://localhost:3000/html5client/');
+if (!['localhost', '127.0.0.1'].includes(client.hostname)) throw new Error('Local test client required');
 if (!meetingID) throw new Error('PERF_MEETING_ID is required');
 
 const sleepSync = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
@@ -88,6 +92,8 @@ async function api(name, parameters) {
   });
   const token = response.match(/<session_token>([^<]+)<\/session_token>/)?.[1];
   if (!token) throw new Error('Join token missing');
+  client.searchParams.set('sessionToken', token);
+  client.hash = 'safemeetAndroidTest=1';
   execFileSync(
     adb,
     [
@@ -99,11 +105,18 @@ async function api(name, parameters) {
       '-a',
       'android.intent.action.VIEW',
       '-d',
-      `http://localhost:3000/html5client/?sessionToken=${token}#safemeetAndroidTest=1`,
+      client.toString(),
     ],
     { stdio: 'ignore' },
   );
-  console.log('Android Chrome meeting tab opened');
+  const browser = await chromium.connectOverCDP(cdpEndpoint);
+  const pages = browser.contexts().flatMap((context) => context.pages());
+  const page = pages.find((candidate) => candidate.url().includes('safemeetAndroidTest=1'));
+  if (!page) throw new Error('Marked Android test tab not found');
+  await page.addInitScript(probe);
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: 90000 });
+  await page.bringToFront();
+  console.log('Android Chrome meeting tab opened with sanitized WebRTC probe');
   process.exit(0);
 })().catch((error) => {
   console.error(error.message);

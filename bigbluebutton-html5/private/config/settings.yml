@@ -1369,6 +1369,14 @@ public:
     # Opt-in adaptive device protection. When false, the legacy SafeMeet
     # performance behavior remains unchanged.
     adaptiveProtectionEnabled: true
+    # Experimental phone publisher adaptation; validate before enabling.
+    mobilePublishProtectionEnabled: false
+    mobilePublishQualityMaxEdge: 480
+    mobilePublishQualityMaxFrameRate: 15
+    mobilePublishModerateMaxEdge: 480
+    mobilePublishModerateMaxFrameRate: 10
+    mobilePublishHighMaxEdge: 320
+    mobilePublishHighMaxFrameRate: 10
     mobileDecoderBudget: 4
     desktopLowPowerDecoderBudget: 6
     lowPowerHardwareConcurrency: 4
@@ -1376,13 +1384,15 @@ public:
     strongLowPowerHardwareConcurrency: 2
     strongLowPowerDeviceMemoryGb: 2
     sampleIntervalMs: 5000
-    initialWarmupMs: 20000
-    resumeWarmupMs: 10000
-    pressureLongTaskRatio: 0.2
+    initialWarmupMs: 60000
+    resumeWarmupMs: 20000
+    pressureLongTaskRatio: 0.3
+    pressureMediaWorkRatio: 0.7
     recoveryLongTaskRatio: 0.08
-    pressureEventLoopLagMs: 200
+    recoveryMediaWorkRatio: 0.45
+    pressureEventLoopLagMs: 300
     recoveryEventLoopLagMs: 100
-    pressureSampleCount: 3
+    pressureSampleCount: 6
     recoverySampleCount: 12
     moderateDecoderBudget: 3
     highDecoderBudget: 2

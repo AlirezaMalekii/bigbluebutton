@@ -1,3 +1,6 @@
+import { createMobileCameraController } from '../skyroom-layout/mobile-publish-policy';
+import { getSkyroomMobilePublishCap } from '../skyroom-layout/performance-profile';
+import { isSkyroomTheme } from '../skyroom-layout/panel-toggles';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import Auth from '/imports/ui/services/auth';
 import { notify } from '/imports/ui/services/notification';
@@ -32,6 +35,8 @@ const FILTER_VIDEO_STATS = [
 ];
 
 class VideoService {
+  private static mobileCameraController = createMobileCameraController();
+
   private static originalCameraConstraints = new WeakMap<MediaStreamTrack, Constraints2>();
 
   private static originalCameraEncodingFrameRates = new WeakMap<RTCRtpSender, number | null>();
@@ -429,6 +434,28 @@ class VideoService {
     const {
       applyConstraints: CAMERA_QUALITY_THR_CONSTRAINTS = false,
     } = window.meetingClientSettings.public.kurento.cameraQualityThresholds;
+
+    const cap = isSkyroomTheme() ? getSkyroomMobilePublishCap(deviceInfo.isPhone) : null;
+    const mobileEnabled = isSkyroomTheme() && deviceInfo.isPhone
+      && window.meetingClientSettings.public.safemeetPerformance?.mobilePublishProtectionEnabled;
+    if (peer && (mobileEnabled || VideoService.mobileCameraController.has(peer))) {
+      if (!profile || !peer.peerConnection) return;
+      // @ts-expect-error Untyped WebRtcPeer profile metadata.
+      const originalId = peer.originalProfileId;
+      const effective = VideoService.isProfileBetter(profileId, originalId)
+        ? CAMERA_PROFILES.find((candidate) => candidate.id === originalId) : profile;
+      if (!effective) return;
+      VideoService.mobileCameraController.apply(peer, {
+        profileId: effective.id,
+        constraints: CAMERA_QUALITY_THR_CONSTRAINTS ? effective.constraints ?? {} : {},
+        bitrate: effective.bitrate,
+        cap,
+        restore: effective.id === originalId,
+      }).catch(() => {
+        logger.warn({ logCode: 'mobile_camera_profile_failed' }, 'Mobile camera adaptation failed');
+      });
+      return;
+    }
 
     if (!profile
       || peer == null

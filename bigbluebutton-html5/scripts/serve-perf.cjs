@@ -28,14 +28,20 @@ const origin = `http://localhost:${port}`;
 const root = path.resolve(process.env.PERF_DIST || path.join(__dirname, '../dist'));
 if (!fs.existsSync(path.join(root, 'index.html'))) throw new Error('Build production assets first');
 const performanceMode = process.env.PERF_PERFORMANCE_MODE;
+// Explicit comparison override: apply only this namespace, never backend/media settings.
+const localPerformanceSettings = process.env.PERF_LOCAL_PERFORMANCE_SETTINGS === '1'
+  ? YAML.parse(fs.readFileSync(path.join(root, 'private/config/settings.yml'), 'utf8'))
+    .public.safemeetPerformance : undefined;
 if (performanceMode && !['auto', 'low', 'standard'].includes(performanceMode)) {
   throw new Error('Invalid PERF_PERFORMANCE_MODE');
 }
 const applyPerformanceTestOverride = (performanceSettings) => {
   if (!performanceSettings
-    || (process.env.PERF_ADAPTIVE_PROTECTION !== '1' && !performanceMode)) return performanceSettings;
+    || (process.env.PERF_ADAPTIVE_PROTECTION !== '1' && !performanceMode && !localPerformanceSettings)) return performanceSettings;
   return {
     ...performanceSettings,
+    ...localPerformanceSettings,
+    ...(process.env.PERF_MOBILE_PUBLISH === "1" ? { mobilePublishProtectionEnabled: true } : {}),
     adaptiveProtectionEnabled: true,
     ...(performanceMode ? { mode: performanceMode } : {}),
   };
@@ -46,7 +52,7 @@ app.get('/html5client/locales', (_req, res) => res.json(
 ));
 app.get('/html5client/private/config/settings.yml', (_req, res) => {
   const settingsPath = path.join(root, 'private/config/settings.yml');
-  if (process.env.PERF_ADAPTIVE_PROTECTION !== '1' && !process.env.PERF_PERFORMANCE_MODE) {
+  if (process.env.PERF_ADAPTIVE_PROTECTION !== '1' && !process.env.PERF_PERFORMANCE_MODE && !localPerformanceSettings) {
     res.sendFile(settingsPath);
     return;
   }
@@ -84,7 +90,7 @@ const proxy = createProxyMiddleware(
     logProvider: () => quietLogger,
     onProxyRes: responseInterceptor(async (buffer, proxyRes) => {
       if (!String(proxyRes.headers['content-type']).includes('json')) return buffer;
-      if (process.env.PERF_ADAPTIVE_PROTECTION !== '1' && !performanceMode) return buffer;
+      if (process.env.PERF_ADAPTIVE_PROTECTION !== '1' && !performanceMode && !localPerformanceSettings) return buffer;
       try {
         const body = JSON.parse(buffer.toString('utf8'));
         const clientSettings = (body?.data?.meeting?.[0] || body?.meeting?.[0])

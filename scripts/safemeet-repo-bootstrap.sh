@@ -7,7 +7,7 @@
 # through nginx. It does not install BigBlueButton on the repository server.
 set -euo pipefail
 
-REPO_HOST="${REPO_HOST:-78.157.39.4}"
+REPO_HOST="${REPO_HOST:-2.188.243.70}"
 REPO_PORT="${REPO_PORT:-3698}"
 REPO_USER="${REPO_USER:-root}"
 REPO_DOMAIN="${REPO_DOMAIN:-new-bbb-install.roomeet.ir}"

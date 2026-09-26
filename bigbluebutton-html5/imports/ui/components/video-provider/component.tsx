@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { Component } from 'react';
+import deviceInfo from '/imports/utils/deviceInfo';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 import { IntlShape, defineMessages, injectIntl } from 'react-intl';
 import { debounce } from '/imports/utils/debounce';
@@ -32,7 +33,10 @@ import {
 import { recordSafeMeetDiagnostic } from '/imports/ui/services/safemeet-diagnostics';
 import {
   getSkyroomActiveVideoLimit,
+  getSkyroomMobilePublishCap,
   getSkyroomPerformanceTier,
+  reportSkyroomMediaWorkRatio,
+  SKYROOM_PERFORMANCE_SAMPLE_EVENT,
   SKYROOM_PERFORMANCE_TIER_EVENT,
 } from '/imports/ui/components/skyroom-layout/performance-profile';
 import { resolveStableViewportSelection } from '/imports/ui/components/video-provider/mobile-webcam-viewport-utils';
@@ -228,6 +232,10 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
   private requestedCameraProfiles: WeakMap<WebRtcPeer, string>;
 
+  private mediaWorkSamples: WeakMap<RTCPeerConnection, { at: number; total: number }>;
+
+  private mediaWorkSampleInFlight: boolean;
+
   constructor(props: VideoProviderProps) {
     super(props);
     const { info } = this.props;
@@ -261,6 +269,8 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     this.lastViewportDiagKey = '';
     this.lastViewportSelectionReason = '';
     this.requestedCameraProfiles = new WeakMap();
+    this.mediaWorkSamples = new WeakMap();
+    this.mediaWorkSampleInFlight = false;
 
     this.createVideoTag = this.createVideoTag.bind(this);
     this.destroyVideoTag = this.destroyVideoTag.bind(this);
@@ -279,6 +289,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     this.handleVideoVisibilityChange = this.handleVideoVisibilityChange.bind(this);
     this.applyViewportCandidates = this.applyViewportCandidates.bind(this);
     this.handlePerformanceTierChange = this.handlePerformanceTierChange.bind(this);
+    this.handlePerformanceSample = this.handlePerformanceSample.bind(this);
     this.onBeforeUnload = this.onBeforeUnload.bind(this);
   }
 
@@ -288,6 +299,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     this.ws = this.openWs();
     window.addEventListener('beforeunload', this.onBeforeUnload);
     window.addEventListener(SKYROOM_PERFORMANCE_TIER_EVENT, this.handlePerformanceTierChange);
+    window.addEventListener(SKYROOM_PERFORMANCE_SAMPLE_EVENT, this.handlePerformanceSample);
     const diagnostics = window.meetingClientSettings.public.safemeetDiagnostics;
     if (diagnostics?.enabled) {
       this.diagnosticsStatsTimer = setInterval(
@@ -346,6 +358,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
 
     window.removeEventListener('beforeunload', this.onBeforeUnload);
     window.removeEventListener(SKYROOM_PERFORMANCE_TIER_EVENT, this.handlePerformanceTierChange);
+    window.removeEventListener(SKYROOM_PERFORMANCE_SAMPLE_EVENT, this.handlePerformanceSample);
     if (this.viewportReleaseTimeout) clearTimeout(this.viewportReleaseTimeout);
     this.viewportReleaseTimeout = null;
     if (this.mobileViewportApplyTimeout) clearTimeout(this.mobileViewportApplyTimeout);
@@ -779,11 +792,51 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
   }
 
   handlePerformanceTierChange() {
-    if (!this.hasViewportVisibilitySnapshot) return;
-    this.applyViewportCandidates(false, false);
+    if (this.hasViewportVisibilitySnapshot) this.applyViewportCandidates(false, false);
     const { socketOpen } = this.state;
     const { streams } = this.props;
     if (this.mounted && socketOpen) this.updateStreams(streams);
+  }
+
+  async handlePerformanceSample() {
+    if (this.mediaWorkSampleInFlight || document.visibilityState === 'hidden') return;
+    const connections = Object.values(this.webRtcPeers)
+      .map((peer) => peer?.peerConnection)
+      .filter(Boolean);
+    if (!connections.length) {
+      reportSkyroomMediaWorkRatio(null);
+      return;
+    }
+    this.mediaWorkSampleInFlight = true;
+    try {
+      const ratios = await Promise.all(connections.map(async (connection) => {
+        const reports = await connection.getStats();
+        let total = 0;
+        let activeVideoReports = 0;
+        reports.forEach((report) => {
+          if (report.kind !== 'video'
+            || !['inbound-rtp', 'outbound-rtp'].includes(report.type)) return;
+          const work = Number(report.totalDecodeTime) || Number(report.totalEncodeTime) || 0;
+          if (work > 0) {
+            total += work;
+            activeVideoReports += 1;
+          }
+        });
+        const now = performance.now();
+        const previous = this.mediaWorkSamples.get(connection);
+        this.mediaWorkSamples.set(connection, { at: now, total });
+        if (!previous || activeVideoReports === 0 || total < previous.total) return null;
+        return (total - previous.total) / Math.max(0.001, (now - previous.at) / 1000);
+      }));
+      const valid = ratios.filter((ratio) => Number.isFinite(ratio));
+      reportSkyroomMediaWorkRatio(valid.length
+        ? valid.reduce((sum, ratio) => sum + ratio, 0)
+        : null);
+    } catch {
+      reportSkyroomMediaWorkRatio(null);
+    } finally {
+      this.mediaWorkSampleInFlight = false;
+    }
   }
 
   async collectDiagnosticsStats() {
@@ -856,7 +909,7 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
     const { applyCameraProfile } = this.props;
     const { threshold, profile } = VideoService.getThreshold(numberOfPublishers);
 
-    if (profile) {
+    if (profile || window.meetingClientSettings.public.safemeetPerformance?.mobilePublishProtectionEnabled) {
       const privilegedStreams = this.findAllPrivilegedStreams();
       Object.values(this.webRtcPeers)
         .filter((peer) => peer.isPublisher)
@@ -864,11 +917,14 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
           // Conditions which make camera revert their original profile
           // 1) Threshold 0 means original profile/inactive constraint
           // 2) Privileged streams
-          const exempt = threshold === 0
+          const exempt = !window.meetingClientSettings.public.kurento.cameraQualityThresholds.enabled
+            || threshold === 0
             || (CAMERA_QUALITY_THR_PRIVILEGED && privilegedStreams.some((vs) => vs.stream === peer.stream));
-          const profileToApply = exempt ? peer.originalProfileId : profile;
-          if (this.requestedCameraProfiles.get(peer) === profileToApply) return;
-          this.requestedCameraProfiles.set(peer, profileToApply);
+          const profileToApply = exempt || !profile ? peer.originalProfileId : profile;
+          const cap = isSkyroomTheme() ? getSkyroomMobilePublishCap(deviceInfo.isPhone) : null;
+          const requestKey = JSON.stringify([profileToApply, cap]);
+          if (this.requestedCameraProfiles.get(peer) === requestKey) return;
+          this.requestedCameraProfiles.set(peer, requestKey);
           applyCameraProfile(peer, profileToApply);
         });
     }
@@ -919,7 +975,8 @@ class VideoProvider extends Component<VideoProviderProps, VideoProviderState> {
       enabled: CAMERA_QUALITY_THRESHOLDS_ENABLED = true,
     } = window.meetingClientSettings.public.kurento.cameraQualityThresholds;
 
-    if (CAMERA_QUALITY_THRESHOLDS_ENABLED) {
+    if (CAMERA_QUALITY_THRESHOLDS_ENABLED
+      || window.meetingClientSettings.public.safemeetPerformance?.mobilePublishProtectionEnabled) {
       const { totalNumberOfStreams } = this.props;
       this.updateQualityThresholds(totalNumberOfStreams);
     }

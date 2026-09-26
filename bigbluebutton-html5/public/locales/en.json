@@ -1,4 +1,5 @@
 {
+    "app.skyroom.performance.notice.publisher": "Your camera quality is also adjusted to reduce device load. Choose Normal quality to opt out.",
     "app.skyroom.performance.label": "Webcam performance",
     "app.skyroom.performance.auto": "Automatic",
     "app.skyroom.performance.low": "Low-power mode",

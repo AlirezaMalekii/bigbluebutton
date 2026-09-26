@@ -35,6 +35,17 @@ https://new-bbb-install.roomeet.ir/jammy-300
 
 That host is an apt repository server, not a BBB meeting server.
 
+As of 2026-09-26, its address is `2.188.243.70`; `live51.roomeet.ir`
+uses `2.188.243.82`. SSH continues to use port `3698`.
+Both publish workflows use the repository Actions variable
+`SAFEMEET_BBB_REPO_HOST`, defaulting to `2.188.243.70`. The old host secret
+with the same name is no longer read, so a stale secret cannot redirect
+publication to the former address. Set the variable only to override the
+default; SSH credentials and port/user secrets retain their existing behavior.
+Local scripts use the same default, with `REPO_HOST` as an environment override.
+Update gitignored `.deploy.env` and local SSH aliases after an address change.
+Verify SSH host keys against the previously trusted server keys when migrating.
+
 Publication imports `.deb` files with replacement enabled, updates the signed aptly publication, and synchronizes its web root.
 
 ## Local development deployment

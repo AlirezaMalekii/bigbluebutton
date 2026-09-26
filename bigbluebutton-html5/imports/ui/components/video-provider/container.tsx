@@ -22,7 +22,6 @@ import LiveKitCameraBridge from '/imports/ui/components/video-provider/livekit-c
 import VideoService from './service';
 import { Output } from '/imports/ui/components/layout/layoutTypes';
 import { VideoItem } from './types';
-import { debounce } from '/imports/utils/debounce';
 import useSettings from '/imports/ui/services/settings/hooks/useSettings';
 import { SETTINGS } from '/imports/ui/services/settings/enums';
 import { useStorageKey } from '/imports/ui/services/storage/hooks';
@@ -108,25 +107,26 @@ const VideoProviderContainer: React.FC<VideoProviderContainerProps> = (props) =>
     debounceTime: CAMERA_QUALITY_THR_DEBOUNCE = 2500,
   } = meetingSettings.public.kurento.cameraQualityThresholds;
 
-  const applyCameraProfile = useMemo(() => {
-    const debouncedProfiles = new WeakMap<
-      WebRtcPeer,
-      typeof VideoService.applyCameraProfile
-    >();
-
-    return ((peer: WebRtcPeer, profileId: string) => {
-      let applyProfile = debouncedProfiles.get(peer);
-      if (!applyProfile) {
-        applyProfile = debounce(
-          VideoService.applyCameraProfile,
-          CAMERA_QUALITY_THR_DEBOUNCE,
-          { leading: false, trailing: true },
-        ) as typeof VideoService.applyCameraProfile;
-        debouncedProfiles.set(peer, applyProfile);
-      }
-      applyProfile(peer, profileId);
-    }) as typeof VideoService.applyCameraProfile;
+  const cameraProfileQueue = useMemo(() => {
+    const pending = new Map<WebRtcPeer, ReturnType<typeof setTimeout>>();
+    return {
+      apply(peer: WebRtcPeer, profileId: string) {
+        const previous = pending.get(peer);
+        if (previous) clearTimeout(previous);
+        pending.set(peer, setTimeout(() => {
+          pending.delete(peer);
+          if (!peer.peerConnection || peer.peerConnection.signalingState === 'closed') return;
+          VideoService.applyCameraProfile(peer, profileId);
+        }, CAMERA_QUALITY_THR_DEBOUNCE));
+      },
+      cancel() {
+        pending.forEach((timer) => clearTimeout(timer));
+        pending.clear();
+      },
+    };
   }, [CAMERA_QUALITY_THR_DEBOUNCE]);
+  useEffect(() => () => cameraProfileQueue.cancel(), [cameraProfileQueue]);
+  const applyCameraProfile = cameraProfileQueue.apply;
 
   const { data: currentMeeting } = useMeeting((m) => ({
     usersPolicies: m.usersPolicies,

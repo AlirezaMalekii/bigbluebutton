@@ -1,0 +1,120 @@
+{
+  "comparison": "Exploratory single-run comparison; quality experiment discarded, not final-code improvement evidence",
+  "thermalValidation": false,
+  "notes": [
+    "USB powered",
+    "Chrome ps %CPU omitted: not an interval-based process CPU measurement",
+    "No 40-minute or low-end-device validation",
+    "Main thread uses deltas; buffered long-task totals omitted"
+  ],
+  "results": [
+    {
+      "label": "before",
+      "samples": 16,
+      "measuredSeconds": 89.32900000000001,
+      "medianMainThreadPercent": 32.80857283626215,
+      "meanPssMB": 281.54315185546875,
+      "stages": [
+        "none"
+      ],
+      "frameProgress": [
+        {
+          "width": 360,
+          "height": 640,
+          "frames": 1338,
+          "dropped": 18
+        },
+        {
+          "width": 640,
+          "height": 360,
+          "frames": 1337,
+          "dropped": 24
+        },
+        {
+          "width": 640,
+          "height": 360,
+          "frames": 1335,
+          "dropped": 48
+        },
+        {
+          "width": 640,
+          "height": 360,
+          "frames": 1335,
+          "dropped": 214
+        }
+      ]
+    },
+    {
+      "label": "discarded-quality-experiment",
+      "samples": 15,
+      "measuredSeconds": 85.449,
+      "medianMainThreadPercent": 28.847303442970464,
+      "meanPssMB": 234.3259765625,
+      "stages": [
+        "none"
+      ],
+      "frameProgress": [
+        {
+          "width": 360,
+          "height": 640,
+          "frames": 1280,
+          "dropped": 54
+        },
+        {
+          "width": 640,
+          "height": 360,
+          "frames": 1173,
+          "dropped": 66
+        },
+        {
+          "width": 640,
+          "height": 360,
+          "frames": 1199,
+          "dropped": 98
+        },
+        {
+          "width": 640,
+          "height": 360,
+          "frames": 1178,
+          "dropped": 98
+        }
+      ]
+    },
+    {
+      "label": "final-retry",
+      "samples": 16,
+      "measuredSeconds": 84.54400000000001,
+      "medianMainThreadPercent": 25.82214120576204,
+      "meanPssMB": 267.05157470703125,
+      "stages": [
+        "none"
+      ],
+      "frameProgress": [
+        {
+          "width": 360,
+          "height": 640,
+          "frames": 1268,
+          "dropped": 0
+        },
+        {
+          "width": 640,
+          "height": 360,
+          "frames": 1222,
+          "dropped": 22
+        },
+        {
+          "width": 640,
+          "height": 360,
+          "frames": 1232,
+          "dropped": 35
+        },
+        {
+          "width": 640,
+          "height": 360,
+          "frames": 1224,
+          "dropped": 18
+        }
+      ]
+    }
+  ]
+}

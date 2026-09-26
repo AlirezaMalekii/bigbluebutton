@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from 'react';
+import deviceInfo from '/imports/utils/deviceInfo';
 import { useIntl } from 'react-intl';
 import { notify } from '/imports/ui/services/notification';
 import {
   getSkyroomProtectionStage,
+  getSkyroomMobilePublishCap,
   SKYROOM_PERFORMANCE_TIER_EVENT,
 } from './performance-profile';
 import { isSkyroomTheme } from './panel-toggles';
@@ -41,10 +43,16 @@ const SkyroomPerformanceNotice: React.FC = () => {
         lastNotifiedStage.current = stage;
         return;
       }
-      if (stage === lastNotifiedStage.current) return;
-      lastNotifiedStage.current = stage;
+      const publishCap = getSkyroomMobilePublishCap(deviceInfo.isPhone);
+      const key = `${stage}:${Boolean(publishCap)}`;
+      if (key === lastNotifiedStage.current) return;
+      lastNotifiedStage.current = key;
       notify(
-        intl.formatMessage({ id: `app.skyroom.performance.notice.${stage}` }),
+        [intl.formatMessage({ id: `app.skyroom.performance.notice.${stage}` }),
+          publishCap ? intl.formatMessage({
+            id: 'app.skyroom.performance.notice.publisher',
+            defaultMessage: 'Your camera quality is also adjusted to reduce device load. Choose Normal quality to opt out.',
+          }) : ''].filter(Boolean).join(' '),
         'info',
         'video',
         {

@@ -20,7 +20,7 @@ scripts/safemeet-repo-bootstrap.sh
 Useful environment overrides:
 
 ```bash
-REPO_HOST=78.157.39.4 REPO_PORT=3698 REPO_DOMAIN=new-bbb-install.roomeet.ir \
+REPO_HOST=2.188.243.70 REPO_PORT=3698 REPO_DOMAIN=new-bbb-install.roomeet.ir \
   scripts/safemeet-repo-bootstrap.sh
 ```
 

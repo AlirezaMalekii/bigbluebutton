@@ -97,7 +97,8 @@ module.exports = () => {
     });
     discover.observe(document.documentElement, { childList: true, subtree: true });
   });
-  const fields = ['kind', 'type', 'bytesReceived', 'bytesSent', 'framesDecoded', 'framesDropped',
+  const fields = ['decoderImplementation', 'encoderImplementation', 'powerEfficientDecoder',
+    'powerEfficientEncoder', 'qualityLimitationReason', 'totalProcessingDelay', 'kind', 'type', 'bytesReceived', 'bytesSent', 'framesDecoded', 'framesDropped',
     'framesEncoded', 'framesPerSecond', 'frameWidth', 'frameHeight', 'totalDecodeTime',
     'totalEncodeTime', 'freezeCount', 'totalFreezesDuration', 'packetsLost', 'packetsReceived',
     'jitter', 'currentRoundTripTime', 'availableOutgoingBitrate', 'jitterBufferDelay',

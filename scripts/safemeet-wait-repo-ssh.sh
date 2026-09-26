@@ -3,7 +3,7 @@
 # ~/.ssh/known_hosts. Used by GitHub Actions before package publish.
 set -euo pipefail
 
-REPO_HOST="${REPO_HOST:-78.157.39.4}"
+REPO_HOST="${REPO_HOST:-2.188.243.70}"
 REPO_PORT="${REPO_PORT:-3698}"
 MAX_ATTEMPTS="${MAX_ATTEMPTS:-6}"
 SCAN_TIMEOUT="${SCAN_TIMEOUT:-15}"
@@ -55,6 +55,6 @@ done
 cat >&2 <<EOF
 ssh-keyscan failed after retries for ${REPO_HOST}:${REPO_PORT}
 The SafeMeet apt repo VM (new-bbb-install.roomeet.ir / ${REPO_HOST}) is unreachable.
-Power it on (Hyper-V guest; ARP fails even from 78.157.39.51) and re-run CI.
+Check the configured host, SSH port, firewall and VM/network availability, then re-run CI.
 EOF
 exit 1

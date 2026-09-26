@@ -24,20 +24,51 @@ const shell = (...args) => {
     return '';
   }
 };
-const number = (text, pattern) => Number(text.match(pattern)?.[1] || 0);
+const number = (text, pattern) => (text.match(pattern) ? Number(text.match(pattern)[1]) : null);
+const scaled = (text, pattern, divisor) => {
+  const value = number(text, pattern);
+  return value === null ? null : value / divisor;
+};
 const sleep = (ms) =>
   new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
 
+let previousCpu = null;
 function deviceSample() {
   // Pass the pipeline as one Android-shell argument. Splitting it after `-c` makes
   // some adb versions treat only `ps` as the command and silently loses the rows.
-  const processes = shell('ps -A -o PID,NAME,%CPU | grep chrome');
-  const cpu = processes.split(/\r?\n/).reduce((total, line) => {
-    const fields = line.trim().split(/\s+/);
-    return total + (Number(fields.at(-1)) || 0);
-  }, 0);
+  const processes = shell('ps -A -o PID,NAME | grep chrome');
+  const pids = processes
+    .split(/\r?\n/)
+    .map((line) => line.trim().split(/\s+/)[0])
+    .filter((pid) => /^\d+$/.test(pid));
+  const processCounters = pids.map((pid) => {
+    const stat = shell(`cat /proc/${pid}/stat`);
+    const suffix = stat
+      .slice(stat.lastIndexOf(')') + 2)
+      .trim()
+      .split(/\s+/);
+    if (!stat.includes(')') || suffix.length < 20) return null;
+    return { pid: Number(pid), ticks: Number(suffix[11]) + Number(suffix[12]), startTicks: Number(suffix[19]) };
+  });
+  const now = Date.now();
+  const ticksPerSecond = Number(shell('getconf CLK_TCK').trim()) || null;
+  let intervalCpuPercent = null;
+  if (previousCpu && ticksPerSecond && processCounters.length && processCounters.every(Boolean)) {
+    const matching = processCounters.filter((item) =>
+      previousCpu.counters.some((old) => old.pid === item.pid && old.startTicks === item.startTicks),
+    );
+    if (matching.length === processCounters.length && matching.length === previousCpu.counters.length) {
+      const delta = matching.reduce(
+        (total, item) => total + item.ticks - previousCpu.counters.find((old) => old.pid === item.pid).ticks,
+        0,
+      );
+      intervalCpuPercent = (100 * delta) / ticksPerSecond / ((now - previousCpu.at) / 1000);
+    }
+  }
+  previousCpu =
+    processCounters.length && processCounters.every(Boolean) ? { at: now, counters: processCounters } : null;
   const mem = shell('dumpsys', 'meminfo', 'com.android.chrome');
   const battery = shell('dumpsys', 'battery');
   const thermal = shell('dumpsys', 'thermalservice');
@@ -54,12 +85,13 @@ function deviceSample() {
   }));
   const gfx = shell('dumpsys', 'gfxinfo', 'com.android.chrome');
   return {
-    chromeCpuPercentAllCores: Number(cpu.toFixed(2)),
+    chromeCpuPercentAllCores: intervalCpuPercent,
+    chromeCpuSource: intervalCpuPercent === null ? 'unavailable' : 'proc-stat-delta-one-core-100-percent',
     chromeProcessCount: processes.split(/\r?\n/).filter(Boolean).length,
-    totalPssMB: number(mem, /TOTAL PSS:\s+(\d+)/) / 1024,
-    totalRssMB: number(mem, /TOTAL RSS:\s+(\d+)/) / 1024,
+    totalPssMB: scaled(mem, /TOTAL PSS:\s+(\d+)/, 1024),
+    totalRssMB: scaled(mem, /TOTAL RSS:\s+(\d+)/, 1024),
     batteryLevel: number(battery, /level:\s+(\d+)/),
-    batteryTemperatureC: number(battery, /temperature:\s+(\d+)/) / 10,
+    batteryTemperatureC: scaled(battery, /temperature:\s+(\d+)/, 10),
     usbPowered: /USB powered:\s+true/.test(battery),
     thermalStatus: number(thermal, /Thermal Status:\s+(\d+)/),
     maxCachedThermalC: temperatures.length ? Math.max(...temperatures.map((item) => item.valueC)) : null,
@@ -91,6 +123,7 @@ function deviceSample() {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Performance.enable');
   await page.evaluate(() => {
+    window.__safeMeetAndroidLongTaskObserver?.disconnect();
     window.__safeMeetAndroidLongTasks = { count: 0, duration: 0 };
     try {
       const observer = new PerformanceObserver((list) => {
@@ -99,7 +132,7 @@ function deviceSample() {
           window.__safeMeetAndroidLongTasks.duration += entry.duration;
         });
       });
-      observer.observe({ type: 'longtask', buffered: true });
+      observer.observe({ type: 'longtask', buffered: false });
       window.__safeMeetAndroidLongTaskObserver = observer;
     } catch {
       /* Long Task API is optional. */
@@ -116,7 +149,7 @@ function deviceSample() {
         await webcamTab.click().catch(() => {});
       }
     }
-    const [web, metrics] = await Promise.all([
+    const [web, metrics, rtc] = await Promise.all([
       page.evaluate(() => ({
         visibility: document.visibilityState,
         viewport: {
@@ -130,13 +163,11 @@ function deviceSample() {
           tier: document.documentElement.getAttribute('data-skyroom-performance-tier'),
           protectionStage: document.documentElement.getAttribute('data-skyroom-protection-stage'),
           suspendedCameras: document.querySelectorAll('[data-test="safemeetSuspendedCamera"]').length,
-          notice: document.querySelector('.Toastify__toast')?.textContent || null,
+          noticeVisible: Boolean(document.querySelector('.Toastify__toast')),
         },
         tiles: [...document.querySelectorAll('[data-test="webcamVideoItem"]')].map((tile) => {
           const rect = tile.getBoundingClientRect();
           return {
-            stream: tile.getAttribute('data-skyroom-viewport-stream'),
-            text: (tile.textContent || '').trim().slice(0, 80),
             visible:
               rect.width > 0 &&
               rect.height > 0 &&
@@ -161,6 +192,17 @@ function deviceSample() {
         }),
       })),
       cdp.send('Performance.getMetrics'),
+      page.evaluate(async () => {
+        const result = await window.__safemeetPerfSample?.();
+        if (!result) return null;
+        return {
+          media: result.media,
+          peerStates: result.peerStates,
+          activeCaptureTracks: result.activeCaptureTracks,
+          activeSenderTracks: result.activeSenderTracks,
+          activeReceiverTracks: result.activeReceiverTracks,
+        };
+      }),
     ]);
     const browserMetrics = Object.fromEntries(metrics.metrics.map((item) => [item.name, item.value]));
     const record = {
@@ -168,6 +210,7 @@ function deviceSample() {
       elapsedSeconds: (Date.now() - started) / 1000,
       device: deviceSample(),
       web,
+      rtc,
       browser: {
         taskDurationSeconds: browserMetrics.TaskDuration,
         scriptDurationSeconds: browserMetrics.ScriptDuration,
@@ -177,8 +220,10 @@ function deviceSample() {
       },
     };
     fs.appendFileSync(output, `${JSON.stringify(record)}\n`);
+    if (record.device.thermalStatus >= 3) throw new Error('Thermal status severe; experiment stopped');
     await sleep(intervalSeconds * 1000);
   }
+  await page.evaluate(() => window.__safeMeetAndroidLongTaskObserver?.disconnect());
   await cdp.detach();
   console.log(`Android samples written: ${output}`);
   // A CDP connection keeps Node's transport alive after sampling. Exiting here
