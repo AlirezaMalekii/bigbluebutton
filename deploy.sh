@@ -12,7 +12,7 @@
 #   ./deploy.sh --force            # deploy even if git detects no changes
 #
 # Override connection (copy deploy.env.example → .deploy.env):
-#   DEPLOY_HOST=78.157.39.51 DEPLOY_PORT=3698 ./deploy.sh
+#   DEPLOY_HOST=2.188.243.82 DEPLOY_PORT=3698 ./deploy.sh
 #
 set -euo pipefail
 
@@ -25,7 +25,7 @@ if [[ -f "$SCRIPT_DIR/.deploy.env" ]]; then
 fi
 
 DEPLOY_USER="${DEPLOY_USER:-root}"
-DEPLOY_HOST="${DEPLOY_HOST:-78.157.39.51}"
+DEPLOY_HOST="${DEPLOY_HOST:-2.188.243.82}"
 DEPLOY_PORT="${DEPLOY_PORT:-3698}"
 REMOTE_DIR="${REMOTE_DIR:-/root/dev/bigbluebutton}"
 SSH_IDENTITY="${SSH_IDENTITY:-${DEPLOY_SSH_PRIVATE_KEY_PATH:-}}"

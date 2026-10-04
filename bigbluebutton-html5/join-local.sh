@@ -17,7 +17,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-BBB_SERVER="${BBB_SERVER:-https://live51.roomeet.ir}"
+BBB_SERVER="${BBB_SERVER:-https://live.safemeet.ir}"
 LOCAL_PORT="${PORT:-3000}"
 LOCAL_CLIENT="http://localhost:${LOCAL_PORT}/html5client"
 MEETING_ID=""
@@ -30,7 +30,7 @@ usage() {
   sed -n '2,16p' "$0"
   echo ""
   echo "Environment:"
-  echo "  BBB_SERVER   Remote BBB URL (default: https://live51.roomeet.ir)"
+  echo "  BBB_SERVER   Remote BBB URL (default: https://live.safemeet.ir)"
   echo "  BBB_SECRET   Required. Run 'bbb-conf --salt' on the server to get it."
   echo "  PORT         Local webpack port (default: 3000)"
   echo ""

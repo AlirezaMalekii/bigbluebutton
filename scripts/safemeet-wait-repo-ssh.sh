@@ -55,6 +55,6 @@ done
 cat >&2 <<EOF
 ssh-keyscan failed after retries for ${REPO_HOST}:${REPO_PORT}
 The SafeMeet apt repo VM (new-bbb-install.roomeet.ir / ${REPO_HOST}) is unreachable.
-Power it on (Hyper-V guest; ARP fails even from 78.157.39.51) and re-run CI.
+Power it on (Hyper-V guest; ARP fails even from 2.188.243.82) and re-run CI.
 EOF
 exit 1

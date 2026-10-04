@@ -38,7 +38,7 @@ put on server 51 / live51.
 ```bash
 cd /Users/alirezamaleki/Developer/laravel/SafeMeet/bigbluebutton
 source .deploy.env   # gitignored — DEPLOY_HOST/PORT/USER/REMOTE_DIR
-# Typical: root@78.157.39.51 -p 3698, REMOTE_DIR=/root/dev/bigbluebutton
+# Typical: root@2.188.243.82 -p 3698, REMOTE_DIR=/root/dev/bigbluebutton
 ```
 
 Never print secrets. SSH identity from env/`SSH_IDENTITY` if set.

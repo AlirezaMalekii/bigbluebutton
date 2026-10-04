@@ -3,11 +3,11 @@
 # Fix playback_host in recording.yml and rewrite 127.0.0.1 links in published metadata.
 #
 # Usage:
-#   PLAYBACK_HOST=live51.roomeet.ir ./fix-playback-urls.sh
+#   PLAYBACK_HOST=live.safemeet.ir ./fix-playback-urls.sh
 #
 set -euo pipefail
 
-PLAYBACK_HOST="${PLAYBACK_HOST:-live51.roomeet.ir}"
+PLAYBACK_HOST="${PLAYBACK_HOST:-live.safemeet.ir}"
 PLAYBACK_PROTOCOL="${PLAYBACK_PROTOCOL:-https}"
 REC_YML="/etc/bigbluebutton/recording/recording.yml"
 

@@ -24,7 +24,7 @@ RooMeet theme by id (hosted on the SafeMeet install repo after publish):
 
 ```bash
 wget -qO- https://new-bbb-install.roomeet.ir/bbb-install-safemeet-3.0.sh | bash -s -- \
-  -w -v jammy-300 -s live51.roomeet.ir -e cert@roomeet.ir \
+  -w -v jammy-300 -s live.safemeet.ir -e cert@roomeet.ir \
   --theme-id roomeet
 ```
 
@@ -32,7 +32,7 @@ Custom theme JSON from any public HTTPS URL:
 
 ```bash
 wget -qO- https://new-bbb-install.roomeet.ir/bbb-install-safemeet-3.0.sh | bash -s -- \
-  -s live51.roomeet.ir --config-only \
+  -s live.safemeet.ir --config-only \
   --theme-config-url "https://cdn.example.com/safemeet/themes/my-brand.json"
 ```
 
@@ -40,7 +40,7 @@ Restore packaged default:
 
 ```bash
 wget -qO- https://new-bbb-install.roomeet.ir/bbb-install-safemeet-3.0.sh | bash -s -- \
-  -s live51.roomeet.ir --config-only --theme-reset
+  -s live.safemeet.ir --config-only --theme-reset
 ```
 
 Open a new meeting tab or hard-refresh an existing tab after changing/resetting

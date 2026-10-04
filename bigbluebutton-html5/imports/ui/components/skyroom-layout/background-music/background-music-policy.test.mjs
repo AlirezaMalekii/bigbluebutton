@@ -30,7 +30,7 @@ assert.equal(
 
 assert.equal(
   resolveBackgroundMusicStreamPath({
-    path: `https://live51.roomeet.ir${relativePath}?sessionToken=uploader-token`,
+    path: `https://live.safemeet.ir${relativePath}?sessionToken=uploader-token`,
     trackId,
     meetingId: 'other-meeting',
   }),

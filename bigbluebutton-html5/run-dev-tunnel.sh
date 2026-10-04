@@ -12,7 +12,7 @@
 #     npm start
 #
 #   Terminal 2 (Mac) — keep open:
-#     ./run-dev-tunnel.sh user@live51.roomeet.ir
+#     ./run-dev-tunnel.sh user@live.safemeet.ir
 #
 #   Terminal 3 (server, once per dev session):
 #     sudo ln -sf /usr/share/bigbluebutton/nginx/bbb-html5.nginx.dev \
@@ -20,7 +20,7 @@
 #     sudo systemctl restart nginx
 #
 #   Join from Greenlight normally:
-#     https://live51.roomeet.ir/html5client/?sessionToken=...
+#     https://live.safemeet.ir/html5client/?sessionToken=...
 #
 #   When finished on the server:
 #     sudo ln -sf /usr/share/bigbluebutton/nginx/bbb-html5.nginx.static \

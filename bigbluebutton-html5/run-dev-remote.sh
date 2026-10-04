@@ -15,7 +15,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-BBB_SERVER="${BBB_SERVER:-https://live51.roomeet.ir}"
+BBB_SERVER="${BBB_SERVER:-https://live.safemeet.ir}"
 RESET=false
 
 for var in "$@"; do
