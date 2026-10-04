@@ -756,6 +756,18 @@ apply_safemeet_config() {
   backup_file "$SAFE_APT_LIST" "$stamp"
   backup_file "$APT_PIN" "$stamp"
 
+  # Serve /safemeet/* as static assets. Without this, try_files falls through to
+  # Greenlight which returns HTTP 406 for unknown paths like /safemeet/default.pdf.
+  cat >/etc/bigbluebutton/nginx/safemeet-assets.nginx <<'NGINX'
+location ^~ /safemeet/ {
+  root /var/www/bigbluebutton-default/assets;
+  access_log off;
+  expires 1h;
+  add_header Cache-Control "public";
+  try_files $uri =404;
+}
+NGINX
+
   ensure_skyroom_plugin_manifest "$host"
   if [[ "$PLUGIN_MANIFEST_CHANGED" == "1" ]]; then
     changed=1
@@ -826,12 +838,33 @@ apply_safemeet_config() {
   fi
 }
 
+host_dns_points_here() {
+  local host="$1"
+  local resolved local_ips
+  resolved="$(getent ahostsv4 "$host" 2>/dev/null | awk '{print $1}' | sort -u | tr '\n' ' ')"
+  [[ -n "$resolved" ]] || return 1
+  local_ips="$(hostname -I 2>/dev/null | tr ' ' '\n' | sort -u | tr '\n' ' ')"
+  local ip
+  for ip in $resolved; do
+    if grep -Fqw "$ip" <<<"$local_ips"; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 health_check() {
   local host="$1"
   [[ "$SKIP_HEALTH_CHECK" == "1" ]] && return 0
   [[ "$DRY_RUN" == "1" ]] && return 0
 
   log "Running health checks"
+  if ! host_dns_points_here "$host"; then
+    local resolved local_ips
+    resolved="$(getent ahostsv4 "$host" 2>/dev/null | awk '{print $1}' | sort -u | paste -sd, - || true)"
+    local_ips="$(hostname -I 2>/dev/null | xargs | tr ' ' ',' || true)"
+    die "DNS for ${host} does not point at this server (resolved=${resolved:-none} local=${local_ips:-none}). Fix the A/AAAA record before using -s ${host}."
+  fi
   if command -v bbb-conf >/dev/null 2>&1; then
     local status_output
     status_output="$(bbb-conf --status)" || die "bbb-conf --status failed"

@@ -48,15 +48,25 @@ the 36G repo VM.
 
 ## Install Fresh BBB Server
 
-Run this on the target BBB server, not on the repo server:
+Run this on the target BBB server, not on the repo server.
+
+**DNS first:** the public A/AAAA record for `-s <host>` must resolve to **this**
+server before you run the installer. Example for the current SafeMeet BBB host:
+
+| Host | Must resolve to |
+|------|-----------------|
+| `live.safemeet.ir` | `2.188.243.82` |
+
+If DNS points elsewhere, the installer advertises GraphQL/WebSocket URLs on the
+wrong machine and clients cannot join after `create`/`join` succeed.
 
 ```bash
 wget -qO- https://new-bbb-install.roomeet.ir/bbb-install-safemeet-3.0.sh | bash -s -- \
-  -w -v jammy-300 -s live71.roomeet.ir -e cert@roomeet.ir \
+  -w -v jammy-300 -s live.safemeet.ir -e cert@safemeet.ir \
   --default-pdf-url "https://example.com/default.pdf" \
   --logo-url "https://example.com/logo.svg" \
-  --logo-link-url "https://roomeet.ir" \
-  --theme-id roomeet
+  --logo-link-url "https://safemeet.ir" \
+  --theme-id safemeet
 ```
 
 Fresh install first uses the existing Roomeet/BBB install flow as the baseline,
