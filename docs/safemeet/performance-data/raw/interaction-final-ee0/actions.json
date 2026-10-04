@@ -1,0 +1,95 @@
+[
+  {
+    "name": "chat-sync",
+    "passed": true,
+    "details": {
+      "latencyMs": 408,
+      "testMessageDeleted": true
+    }
+  },
+  {
+    "name": "whiteboard-sync-undo",
+    "passed": true,
+    "details": {
+      "latenciesMs": [
+        115,
+        383,
+        370,
+        386,
+        118
+      ],
+      "missingShapes": 0
+    }
+  },
+  {
+    "name": "screenshare-synthetic-webrtc",
+    "passed": true,
+    "details": {
+      "first": {
+        "time": 3.983,
+        "width": 1280,
+        "height": 720
+      },
+      "second": {
+        "time": 8.843,
+        "width": 1280,
+        "height": 720
+      }
+    }
+  },
+  {
+    "name": "performance-control-responsive",
+    "passed": true,
+    "details": [
+      {
+        "width": 390,
+        "scrollWidth": 390,
+        "direction": "rtl"
+      },
+      {
+        "width": 768,
+        "scrollWidth": 768,
+        "direction": "rtl"
+      },
+      {
+        "width": 1440,
+        "scrollWidth": 1440,
+        "direction": "rtl"
+      }
+    ]
+  },
+  {
+    "name": "performance-control-cancel",
+    "passed": true,
+    "details": {
+      "keyboardSelection": true,
+      "unsavedChangeDiscarded": true
+    }
+  },
+  {
+    "name": "reconnect-video",
+    "passed": true,
+    "details": {
+      "before": 451,
+      "after": 475
+    }
+  },
+  {
+    "name": "webcam-fullscreen-recovery",
+    "passed": true,
+    "details": {
+      "entered": true,
+      "exited": true
+    }
+  },
+  {
+    "name": "panel-lifecycle",
+    "passed": true,
+    "details": {
+      "peersBefore": 6,
+      "peersAfter": 6,
+      "domBefore": 721,
+      "domAfter": 689
+    }
+  }
+]

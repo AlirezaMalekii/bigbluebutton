@@ -1,0 +1,12 @@
+[
+  {
+    "user": 3,
+    "error": "Cannot read properties of undefined (reading 'public')",
+    "sources": [
+      "bundle.ee0cf29753dab643b6ab.js:2:543397"
+    ]
+  },
+  {
+    "error": "Camera user 1: locator.click: Timeout 20000ms exceeded."
+  }
+]

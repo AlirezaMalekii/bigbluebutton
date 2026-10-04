@@ -81,10 +81,10 @@ trait UpdateWebcamsOnlyForModeratorCmdMsgHdlr {
 
             broadcastEvent(meetingId, msg.body.setBy, value)
 
-            //Refresh graphql session for all locked viewers
+            // Refresh GraphQL authorization for every viewer; this policy does
+            // not require the individual user lock bit.
             for {
               user <- Users2x.findAll(liveMeeting.users2x)
-              if user.locked
               if user.role == Roles.VIEWER_ROLE
               regUser <- RegisteredUsers.findWithUserId(user.intId, liveMeeting.registeredUsers)
             } yield {

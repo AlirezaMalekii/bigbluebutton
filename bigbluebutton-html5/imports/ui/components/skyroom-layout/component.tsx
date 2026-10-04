@@ -11,6 +11,7 @@ import useSkyroomWebcamZoneSync from './webcam-zone-sync/useSkyroomWebcamZoneSyn
 import useSkyroomNotesPanelSync from './notes-panel-sync/useSkyroomNotesPanelSync';
 import useSkyroomMobileLayoutLoading from './loading/useSkyroomMobileLayoutLoading';
 import SkyroomBackgroundMusicController from './background-music/SkyroomBackgroundMusicController';
+import SkyroomPerformanceNotice from './performance-notice';
 
 /**
  * Mounts Skyroom column layout behaviour, the shared-notes column, and the
@@ -31,6 +32,7 @@ const SkyroomColumnController: React.FC = () => {
       <SkyroomMobileTalkingRail />
       <SkyroomMobileStatusRail />
       <SkyroomBackgroundMusicController />
+      <SkyroomPerformanceNotice />
     </>
   );
 };

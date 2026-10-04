@@ -113,7 +113,7 @@ object LockSettingsUtil {
       if (MeetingStatus2x.webcamsOnlyForModeratorEnabled(liveMeeting.status)
         && publisher.role != Roles.MODERATOR_ROLE
         && user.role == Roles.VIEWER_ROLE
-        && user.locked) {
+        && publisher.intId != user.intId) {
         locked = true
       }
     }
@@ -164,7 +164,7 @@ object LockSettingsUtil {
   }
 
   def enforceCamLockSettingsForAllUsers(liveMeeting: LiveMeeting, outGW: OutMsgRouter): Unit = {
-    Users2x.findLockedViewers(liveMeeting.users2x).foreach { user =>
+    Users2x.findViewers(liveMeeting.users2x).foreach { user =>
       enforceCamLockSettingsForUser(user, liveMeeting, outGW)
     }
   }

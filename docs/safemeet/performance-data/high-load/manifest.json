@@ -1,0 +1,187 @@
+[
+  {
+    "file": "highload-ramp25-v1/metadata.json",
+    "bytes": 2729,
+    "sha256": "c11d35a9be6d59eb64dd7e91cbde5209d3a82f2c7dceb12c81e033c942347ba8"
+  },
+  {
+    "file": "highload-ramp25-v1/samples.jsonl",
+    "bytes": 106067,
+    "sha256": "a4dcfc449a4cd2df86b7ac654e96d52dcff447667dd409b578a58a2a58c1b279"
+  },
+  {
+    "file": "highload-ramp25-v1/live51-samples.jsonl",
+    "bytes": 262468,
+    "sha256": "2936a2ad0aaaf3ee08739dc12378bed73052630effed0df5d6932549b51be502"
+  },
+  {
+    "file": "highload-ramp25-v1/failures.json",
+    "bytes": 246,
+    "sha256": "47fc4b10b5d60ca4550c329ec6fae0a41d340cb65994f1d87796faba4349e6a1"
+  },
+  {
+    "file": "highload-ramp25-v2/metadata.json",
+    "bytes": 2748,
+    "sha256": "f5103c5e9805966fc07e088dc32b257882025c88d65db724c893e205e11042ea"
+  },
+  {
+    "file": "highload-ramp25-v2/samples.jsonl",
+    "bytes": 119991,
+    "sha256": "436312bd2d78595956ccf82e734656748995e59eecfe0afeff420a202316dfa0"
+  },
+  {
+    "file": "highload-ramp25-v2/live51-samples.jsonl",
+    "bytes": 44782,
+    "sha256": "b4bae87edf645bf244bda734c0cc2bd23737b7d37d31f56c016a82a145d66128"
+  },
+  {
+    "file": "highload-ramp25-v2/failures.json",
+    "bytes": 912,
+    "sha256": "46c2f790c8690da4f9e641b922d3584375354d58f560cd907b448edbd5457693"
+  },
+  {
+    "file": "highload-capacity18-v2/metadata.json",
+    "bytes": 2397,
+    "sha256": "4624ed7f79de3669ea288a12a96b9b8b143add9d5e4de18de074c3d434a6bb77"
+  },
+  {
+    "file": "highload-capacity18-v2/samples.jsonl",
+    "bytes": 54695,
+    "sha256": "0b61eab297b50d97e28acdbf81c2216f558c7b1117da8a66157e192aec69ce85"
+  },
+  {
+    "file": "highload-capacity18-v2/live51-samples.jsonl",
+    "bytes": 20047,
+    "sha256": "20f659de4054989251da39fa8d9f5dbcd804502cb59ea645602d6bd41983142a"
+  },
+  {
+    "file": "highload-capacity18-v2/failures.json",
+    "bytes": 580,
+    "sha256": "4ca57022338f5513058df3af406ad2a3835c5a79dd343f36dbbb6abd80e85edd"
+  },
+  {
+    "file": "highload-valid12-desktop-v2/metadata.json",
+    "bytes": 2086,
+    "sha256": "3cc212981798ad66f37fe5260c82af4b5a13637cc7b19ac82f53e10464d07706"
+  },
+  {
+    "file": "highload-valid12-desktop-v2/samples.jsonl",
+    "bytes": 362344,
+    "sha256": "a3294fc689144233b678a17dbcedc7148c75281182ddd4c3885ee7e306b1b041"
+  },
+  {
+    "file": "highload-valid12-desktop-v2/live51-samples.jsonl",
+    "bytes": 25495,
+    "sha256": "9a987d81213f4053accb4303a7612f7ba28bac8e3f648a41b70ba4e5a620cdaa"
+  },
+  {
+    "file": "highload-valid12-desktop-v2/failures.json",
+    "bytes": 1075,
+    "sha256": "df296b85cd99a787b347e173f4bb2fa43c70ef573229328ac20943df9af960b9"
+  },
+  {
+    "file": "highload-valid8-desktop-v1/metadata.json",
+    "bytes": 1874,
+    "sha256": "8a9a9432646c6d9b55f9d837aaf92e51909567fee495973ae382bfbb2f0a7c02"
+  },
+  {
+    "file": "highload-valid8-desktop-v1/samples.jsonl",
+    "bytes": 157304,
+    "sha256": "7b296b4938c0cb103341d800b1b1f5f5fb3df79b7c1de9a8bf2692fff5a32c3a"
+  },
+  {
+    "file": "highload-valid8-desktop-v1/live51-samples.jsonl",
+    "bytes": 8341,
+    "sha256": "20cf7f800db1bac5422a0740cbb39856a629aa5c804eec3afa0e92a65e6cf998"
+  },
+  {
+    "file": "highload-valid8-desktop-v1/failures.json",
+    "bytes": 81,
+    "sha256": "a421a64d0237381c7d8571e64daceb8d41eacb08db25dc1e7dedb4d341a3fe0b"
+  },
+  {
+    "file": "highload-valid8-sequential-v1/metadata.json",
+    "bytes": 1867,
+    "sha256": "c1919f2b5ccfd56fb4de6b46379920755e871dde4a0c01d0424286df946b4779"
+  },
+  {
+    "file": "highload-valid8-sequential-v1/samples.jsonl",
+    "bytes": 27681,
+    "sha256": "e59081731bc0165dd78bd347d3002fecdede3851b29576a4a4c16412f036759e"
+  },
+  {
+    "file": "highload-valid8-sequential-v1/live51-samples.jsonl",
+    "bytes": 3393,
+    "sha256": "1824bb09adeeef59f17f3f5d1923ef534fd3d6f11d4260f26d1f925c25c63f0b"
+  },
+  {
+    "file": "highload-valid8-sequential-v1/failures.json",
+    "bytes": 83,
+    "sha256": "eae7c395552e120ef27e80594cd73af535686591824bbae964bc8aee611e0120"
+  },
+  {
+    "file": "highload-valid6-desktop-v1/metadata.json",
+    "bytes": 1763,
+    "sha256": "9dbdc604ca66cd93083e9e97ff83b20fbdb507b13ce5bc9920029bc1be640e4a"
+  },
+  {
+    "file": "highload-valid6-desktop-v1/samples.jsonl",
+    "bytes": 13836,
+    "sha256": "9cdfe6c59e96e9266cb6dfeeeea226f14ad04272e1073f1766ccb363ad81b4f0"
+  },
+  {
+    "file": "highload-valid6-desktop-v1/live51-samples.jsonl",
+    "bytes": 4745,
+    "sha256": "d52d8beb5ab5e70673890c29d0f2e3f60768c97e21b73ee4b0098bfd288415d9"
+  },
+  {
+    "file": "highload-valid6-desktop-v1/failures.json",
+    "bytes": 249,
+    "sha256": "58588eeb03c271dd4ccd1901b7e831ac7d4d334e5c36d09294a7cd2af6dfe169"
+  },
+  {
+    "file": "strict-budget-smoke3-v1/metadata.json",
+    "bytes": 1607,
+    "sha256": "2cc8a87b104d963f1c7dc41558953239966a6d467101a465c50f6cc991decdf5"
+  },
+  {
+    "file": "strict-budget-smoke3-v1/samples.jsonl",
+    "bytes": 130929,
+    "sha256": "b3a654e91ab7d85cc59789c2605aeb10187fb2adb28bef07ff800d0f654fbba4"
+  },
+  {
+    "file": "strict-budget-smoke3-v1/live51-samples.jsonl",
+    "bytes": 4732,
+    "sha256": "2e14e782d274d18c55c122a54d050da61211f1468ea5d4fa5c6a97a1a5017574"
+  },
+  {
+    "file": "strict-budget-smoke3-v1/failures.json",
+    "bytes": 3,
+    "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  {
+    "file": "production-ready-smoke3-v1/metadata.json",
+    "bytes": 1607,
+    "sha256": "46d68a906a813f6d2a8cb87fc52a486bfc603e75c784094818a79d7fddbdae95"
+  },
+  {
+    "file": "production-ready-smoke3-v1/samples.jsonl",
+    "bytes": 152025,
+    "sha256": "2a79719e75e99b3a4f628b20c1bf140506fc5f58113bd570655c137afb90de8a"
+  },
+  {
+    "file": "production-ready-smoke3-v1/live51-samples.jsonl",
+    "bytes": 6591,
+    "sha256": "81aac76e137bc35fd1e7d5abdd4af20a03ca4d153b71b3b15eac6a29aa5536d0"
+  },
+  {
+    "file": "production-ready-smoke3-v1/failures.json",
+    "bytes": 83,
+    "sha256": "188c50815e915a55a20772a00ab08cb3dc08bcdfb94d7f4921444ff3d3975c47"
+  },
+  {
+    "file": "production-ready-smoke3-v1/actions.json",
+    "bytes": 1588,
+    "sha256": "8a5be90c614d02aa1634bd67de7f90be4291de57676f1e8a2197fe1146f19ac4"
+  }
+]

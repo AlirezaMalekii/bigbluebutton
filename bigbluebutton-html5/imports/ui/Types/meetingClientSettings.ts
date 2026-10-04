@@ -847,6 +847,31 @@ export interface SafeMeetDiagnostics {
 }
 
 export interface SafeMeetPerformance {
+  adaptiveProtectionEnabled?: boolean
+  mobilePublishProtectionEnabled?: boolean
+  mobilePublishQualityMaxEdge?: number
+  mobilePublishQualityMaxFrameRate?: number
+  mobilePublishModerateMaxEdge?: number
+  mobilePublishModerateMaxFrameRate?: number
+  mobilePublishHighMaxEdge?: number
+  mobilePublishHighMaxFrameRate?: number
+  handoffGraceMs?: number
+  highDecoderBudget?: number
+  initialWarmupMs?: number
+  moderateDecoderBudget?: number
+  pressureEventLoopLagMs?: number
+  pressureLongTaskRatio?: number
+  pressureMediaWorkRatio?: number
+  pressureSampleCount?: number
+  recoveryQuietMs?: number
+  recoveryEventLoopLagMs?: number
+  recoveryLongTaskRatio?: number
+  recoveryMediaWorkRatio?: number
+  recoverySampleCount?: number
+  resumeWarmupMs?: number
+  sampleIntervalMs?: number
+  strongLowPowerDeviceMemoryGb?: number
+  strongLowPowerHardwareConcurrency?: number
   enabled: boolean
   mode: 'auto' | 'standard' | 'low'
   mobileDecoderBudget: number

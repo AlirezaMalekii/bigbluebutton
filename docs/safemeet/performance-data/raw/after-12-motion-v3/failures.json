@@ -1,0 +1,9 @@
+[
+  {
+    "user": 3,
+    "error": "Cannot read properties of undefined (reading 'public')"
+  },
+  {
+    "error": "Camera user 5: locator.click: Timeout 20000ms exceeded."
+  }
+]

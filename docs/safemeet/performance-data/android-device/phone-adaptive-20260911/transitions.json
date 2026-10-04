@@ -1,0 +1,17 @@
+{
+  "mode": "auto",
+  "sampleIntervalMs": 5000,
+  "controlledPressure": {
+    "longTaskMsPerPulse": 1150,
+    "pulseIntervalMs": 5000,
+    "pulseCount": 7
+  },
+  "observedStages": [
+    { "elapsedMs": 39403, "stage": "none", "tier": "standard" },
+    { "elapsedMs": 47536, "stage": "none", "tier": "standard" },
+    { "elapsedMs": 55558, "stage": "quality", "tier": "low" },
+    { "elapsedMs": 63577, "stage": "quality", "tier": "low" },
+    { "elapsedMs": 71601, "stage": "moderate", "tier": "low" }
+  ],
+  "afterFirstRecoveryWindow": { "stage": "quality", "tier": "low" }
+}

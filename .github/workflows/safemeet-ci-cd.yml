@@ -204,7 +204,7 @@ jobs:
 
       - name: Add repository server to known_hosts
         env:
-          REPO_HOST: ${{ secrets.SAFEMEET_BBB_REPO_HOST || '78.157.39.4' }}
+          REPO_HOST: ${{ vars.SAFEMEET_BBB_REPO_HOST || '2.188.243.70' }}
           REPO_PORT: ${{ secrets.SAFEMEET_BBB_REPO_PORT || '3698' }}
         run: bash scripts/safemeet-wait-repo-ssh.sh
 
@@ -334,7 +334,7 @@ jobs:
 
       - name: Publish installer and packages to repo server
         env:
-          REPO_HOST: ${{ secrets.SAFEMEET_BBB_REPO_HOST || '78.157.39.4' }}
+          REPO_HOST: ${{ vars.SAFEMEET_BBB_REPO_HOST || '2.188.243.70' }}
           REPO_PORT: ${{ secrets.SAFEMEET_BBB_REPO_PORT || '3698' }}
           REPO_USER: ${{ secrets.SAFEMEET_BBB_REPO_USER || 'root' }}
           REPO_DOMAIN: new-bbb-install.roomeet.ir

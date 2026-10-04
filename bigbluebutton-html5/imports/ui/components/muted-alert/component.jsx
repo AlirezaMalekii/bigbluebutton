@@ -148,6 +148,7 @@ class MutedAlert extends Component {
         position="top"
       >
         <Styled.MuteWarning
+          data-skyroom-mute-warning="true"
           onClick={() => this.closeAlert()}
           $mobile={isMobile}
         >

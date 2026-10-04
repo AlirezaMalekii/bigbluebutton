@@ -2,6 +2,7 @@ export type ViewportBudgetStream = {
   focused?: boolean;
   floor?: boolean;
   local: boolean;
+  moderator?: boolean;
   pinned?: boolean;
   presenter?: boolean;
   stream: string;
@@ -17,6 +18,13 @@ export type ViewportRect = {
 };
 
 export const WEBCAM_VIEWPORT_MIN_VISIBLE_RATIO: number;
+
+export function shouldUseMobileCameraPagination(args: {
+  isMobileEndpoint: boolean;
+  isSkyroom: boolean;
+  skyroomColumnLayout: boolean;
+  skyroomMobileViewport: boolean;
+}): boolean;
 
 export const VIEWPORT_SELECTION_REASONS: {
   bootstrap: 'bootstrap';

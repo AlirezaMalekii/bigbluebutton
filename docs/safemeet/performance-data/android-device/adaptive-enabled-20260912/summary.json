@@ -1,0 +1,63 @@
+{
+  "date": "2026-09-12",
+  "build": "06cabe646125ae420838",
+  "backend": "live51",
+  "effectiveConfiguration": {
+    "adaptiveProtectionEnabled": true,
+    "mode": "auto"
+  },
+  "desktop": {
+    "hardwareHints": {
+      "deviceMemoryGb": 32,
+      "hardwareConcurrency": 12
+    },
+    "participants": 2,
+    "webcams": 0,
+    "sampleSeconds": 30,
+    "samples": 6,
+    "observedStages": ["none"],
+    "observedTiers": ["standard"],
+    "noticeVisible": false,
+    "failures": 0
+  },
+  "androidPhone": {
+    "model": "24117RN76G",
+    "hardwareHints": {
+      "deviceMemoryGb": 8,
+      "hardwareConcurrency": 8
+    },
+    "normal": {
+      "sampleSeconds": 35,
+      "observedStages": ["none"],
+      "observedTiers": ["standard"],
+      "thermalStatusLast": 0,
+      "batteryTemperatureCLast": 33
+    },
+    "controlledPressure": {
+      "observedStages": ["none", "quality", "moderate", "high"],
+      "recoveryAfterQuietWindow": ["high", "moderate"],
+      "highStageNoticeVisible": true,
+      "highStageNotice": "حفاظت بیشتر به‌دلیل فشار روی دستگاه فعال است؛ حداکثر ۲ وبکم را هم‌زمان مشاهده می‌کنید."
+    },
+    "threePublisherPriority": {
+      "publisherCountVerifiedByApi": 3,
+      "moderatorPublishers": 2,
+      "activeVideosAtHighStage": 2,
+      "activeVideoOwners": ["moderator", "moderator"],
+      "failures": 0
+    },
+    "notificationUx": {
+      "usesMeetingToast": true,
+      "autoCloseMs": 5000,
+      "manualDismiss": "passed",
+      "closeControlSizePx": [32, 32],
+      "closeControlAriaLabelFa": "بستن اعلان حالت کم‌مصرف",
+      "repeatedWithoutStageChangeAfter12Seconds": false
+    }
+  },
+  "limitations": [
+    "Controlled long tasks validate the detector and transitions, not low-end hardware performance.",
+    "USB power invalidates battery-drain and long-duration thermal conclusions.",
+    "The desktop smoke scenario did not include webcams."
+  ]
+}

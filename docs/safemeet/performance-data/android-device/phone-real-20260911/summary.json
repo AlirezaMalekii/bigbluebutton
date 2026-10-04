@@ -1,0 +1,67 @@
+{
+  "testedAt": "2026-09-11",
+  "device": {
+    "manufacturer": "Xiaomi",
+    "model": "24117RN76G",
+    "android": 16,
+    "physicalPixels": "1080x2400",
+    "physicalDensityDpi": 450,
+    "chrome": "152.0.7977.64",
+    "clientViewport": "384x742@2.8125"
+  },
+  "conditions": {
+    "meetingBackend": "live51",
+    "client": "local production build",
+    "measuredBundle": "cdd8bea2e1976c9dd5bf",
+    "finalValidationBundle": "75cee1cc6438e17a8453",
+    "usbPowered": true,
+    "initialBatteryLevelPercent": 72,
+    "durationClass": "short real-device smoke",
+    "thermalOrBatterySoakValid": false
+  },
+  "threeWebcams": {
+    "validMediaSeconds": 84.3,
+    "decodedVideos": 3,
+    "videoDimensions": ["640x360", "480x270", "640x360"],
+    "allStreamsAdvanced": true,
+    "chromeCpuMeanPercentOfOneCore": 75.91,
+    "chromeCpuP95PercentOfOneCore": 76.7,
+    "chromePssMeanMiB": 251.58,
+    "chromePssMaxMiB": 252.46,
+    "mainThreadPercent": 23.24,
+    "scriptPercent": 3.17,
+    "layoutPercent": 0.01,
+    "heapFirstMiB": 35.73,
+    "heapLastMiB": 33.57,
+    "heapMaxMiB": 36.11,
+    "longTaskCount": 42,
+    "longTaskDurationMs": 6942,
+    "droppedFramePercent": 1.94,
+    "batteryTemperatureMinC": 35.8,
+    "batteryTemperatureMaxC": 36.5,
+    "thermalStatusMax": 0
+  },
+  "combinedPartial": {
+    "validMediaSeconds": 33.7,
+    "decodedVideoElements": 4,
+    "screenDimensions": "1280x720",
+    "screenAdvanced": true,
+    "advancingWebcams": 1,
+    "stalledWebcams": 2,
+    "alsoObservedOnDesktopReceiver": true,
+    "acceptedAsMobileRegressionResult": false,
+    "reason": "Two synthetic publishers stopped advancing on both desktop and phone receivers."
+  },
+  "verifiedPolicies": {
+    "chatTabDecodedVideos": 0,
+    "webcamsTabDecodedVideos": 3,
+    "offTabDecodeSavingActive": true,
+    "adaptiveReceiveDimensionsActive": true
+  },
+  "limitations": [
+    "USB power makes battery drain and sustained thermal conclusions invalid.",
+    "This is a short smoke test and does not prove long-duration thermal stability.",
+    "The combined synthetic-publisher run is retained as partial evidence only.",
+    "Android ps CPU is reported on a one-core 100% scale and is not total device utilization."
+  ]
+}

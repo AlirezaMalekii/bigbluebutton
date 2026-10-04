@@ -29,3 +29,5 @@ bigbluebutton-html5/public/locales/index.json
 node_modules
 .deploy.env
 .deploy-known_hosts
+/.cache/
+/test-results/

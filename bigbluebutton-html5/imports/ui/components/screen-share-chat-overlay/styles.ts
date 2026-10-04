@@ -388,24 +388,24 @@ export const CollapsedHint = styled.span`
 
 export const ReopenBanner = styled.div<RTLProps>`
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  margin: 0 0 8px;
-  padding: 10px 12px;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 4px;
+  padding: 6px 8px;
   border-radius: 10px;
   background: #111c2e;
   border: 1px solid rgba(148, 163, 184, 0.14);
   color: #dbe6f3;
-  font-size: 0.78rem;
-  line-height: 1.45;
-  text-align: center;
+  font-size: 0.7rem;
+  line-height: 1.25;
+  text-align: start;
   direction: ${({ $isRTL }) => ($isRTL ? 'rtl' : 'ltr')};
 `;
 
 export const ReopenBannerText = styled.span`
   display: block;
-  max-width: 100%;
+  min-width: 0;
   word-break: normal;
   overflow-wrap: break-word;
 `;
@@ -415,19 +415,19 @@ export const ReopenButton = styled.button`
   align-items: center;
   justify-content: center;
   gap: 6px;
-  align-self: center;
+  flex: 0 0 auto;
   border: none;
   border-radius: 8px;
-  padding: 7px 12px;
+  padding: 5px 8px;
   background: #27415f;
   color: ${colorWhite};
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   font-weight: 600;
   cursor: pointer;
   max-width: 100%;
-  white-space: normal;
+  white-space: nowrap;
   text-align: center;
-  line-height: 1.35;
+  line-height: 1.2;
 
   &:hover {
     filter: brightness(1.05);
@@ -450,9 +450,12 @@ export const OverlayMessageList = styled.div<CompactProps>`
 
 export const OverlayMessageItem = styled.div<CompactProps>`
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'author time' 'content content';
+  align-items: start;
+  column-gap: 8px;
+  row-gap: 3px;
+  min-width: 0;
   padding: ${({ $compact }) => ($compact ? '7px 10px' : '8px 10px')};
   border-radius: 10px;
   background: #111c2e;
@@ -466,24 +469,27 @@ export const OverlayMessageItem = styled.div<CompactProps>`
   }
 
   ${({ $compact }) => $compact && css`
-    font-size: 0.82rem;
-
     [data-test="overlayMessageContent"] {
-      display: -webkit-box;
-      -webkit-line-clamp: 1;
-      -webkit-box-orient: vertical;
+      max-height: 1.35em;
       overflow: hidden;
     }
   `}
 
   [data-test="overlayMessageContent"] {
+    grid-area: content;
+    min-width: 0;
+    max-width: 100%;
     color: #e5edf7;
-    font-size: ${({ $compact }) => ($compact ? '0.78rem' : '0.82rem')};
+    font-size: 0.75rem;
     line-height: 1.35;
     word-break: normal;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
+    white-space: normal;
+
+    p, pre, code {
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
   }
 `;
 
@@ -492,16 +498,19 @@ export const OverlayMessageMeta = styled.div`
 `;
 
 export const OverlayMessageAuthor = styled.span`
-  font-size: 0.78rem;
+  grid-area: author;
+  min-width: 0;
+  font-size: 0.72rem;
   font-weight: 700;
   color: #ffffff;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 105px;
+  max-width: 100%;
 `;
 
 export const OverlayMessageTime = styled.span`
+  grid-area: time;
   font-size: 0.68rem;
   color: #94a3b8;
   flex-shrink: 0;

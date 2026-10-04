@@ -124,4 +124,6 @@
   --skyroom-mobile-edge: 8px;
   /* Gap between tab bar and footer (sync column-layout.js SKYROOM_MOBILE_TAB_FOOTER_GAP) */
   --skyroom-mobile-tab-footer-gap: 4px;
+  /* Sync column-layout.js SKYROOM_MOBILE_TAB_H. */
+  --skyroom-mobile-tab-h: 36px;
 }

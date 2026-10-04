@@ -142,6 +142,33 @@ export class MultiUsers {
     await this.modPage.wasRemoved(e.wbDrawnLine, 'moderator should receive the erased presenter line');
   }
 
+  async makePresenterKeepsModeratorRecordingControl() {
+    const moderatorRecordingControl = this.modPage.page.locator(`${e.recordingIndicator} button`);
+
+    await expect(
+      moderatorRecordingControl,
+      'moderator should have the recording control before assigning a presenter',
+    ).toBeVisible();
+    await expect(moderatorRecordingControl).toBeEnabled();
+
+    await this.modPage.page.locator('button[data-test="userActionsMenuTrigger"]').click();
+    await this.modPage.waitAndClick(e.makePresenter);
+    await this.userPage.hasElement(
+      e.startScreenSharing,
+      'attendee should become presenter after the GraphQL permission refresh',
+    );
+
+    await expect(
+      moderatorRecordingControl,
+      'moderator should keep the recording control after assigning a presenter',
+    ).toBeVisible();
+    await expect(moderatorRecordingControl).toBeEnabled();
+    await expect(
+      this.userPage.page.locator(`${e.recordingIndicator} button`),
+      'viewer presenter should not gain moderator recording permission',
+    ).toHaveCount(0);
+  }
+
   async takePresenter() {
     await this.modPage2.waitAndClick(e.currentUser);
     await this.modPage2.waitAndClick(e.takePresenter);

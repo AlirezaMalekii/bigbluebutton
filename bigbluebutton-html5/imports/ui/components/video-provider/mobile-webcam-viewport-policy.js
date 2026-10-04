@@ -1,5 +1,18 @@
 export const WEBCAM_VIEWPORT_MIN_VISIBLE_RATIO = 0.12;
 
+// Android tablets report a mobile user agent even when SafeMeet renders its
+// desktop layout. BBB's mobile page size must only apply to the actual SafeMeet
+// phone grid; otherwise a tablet can be stuck on a two-camera page with no
+// applicable mobile navigation UI.
+export const shouldUseMobileCameraPagination = ({
+  isMobileEndpoint,
+  isSkyroom,
+  skyroomColumnLayout,
+  skyroomMobileViewport,
+}) => Boolean(isMobileEndpoint && (
+  !isSkyroom || (skyroomColumnLayout && skyroomMobileViewport)
+));
+
 export const intersectRectArea = (a, b) => {
   const left = Math.max(a.left, b.left);
   const top = Math.max(a.top, b.top);
@@ -44,11 +57,19 @@ export const VIEWPORT_SELECTION_REASONS = {
 };
 
 const privilegeScore = (item) => {
-  if (item.focused) return 40;
-  if (item.pinned) return 30;
-  if (item.floor || item.presenter) return 20;
+  // The local camera is accounted for outside the remote budget and therefore
+  // always wins. An explicit user selection may temporarily replace a remote
+  // slot; otherwise instructors/moderators receive the first remote slots.
+  if (item.focused) return 60;
+  if (item.moderator || item.presenter) return 50;
+  if (item.pinned) return 40;
+  if (item.floor) return 30;
   return 1;
 };
+
+// A selected/pinned camera must survive a viewport budget. The area then
+// decides between cameras in the same priority class.
+const selectionScore = (item, area) => (privilegeScore(item) * 1000000000) + area;
 
 const remoteBudgetFromLimit = (streams, limit) => {
   const localCount = streams.filter((item) => item.local).length;
@@ -94,14 +115,17 @@ export const selectHardBudgetedRemoteIds = ({
     !item.local
     && (
       candidateAreas.has(item.stream)
-      || (!isMobile && (item.focused || item.pinned || item.floor || item.presenter))
+      || item.focused
+      || item.moderator
+      || item.pinned
+      || item.presenter
+      || (!isMobile && item.floor)
     )
   ));
 
   const score = (item) => {
     const area = candidateAreas.get(item.stream) ?? 0;
-    const visibleScore = area > 0 ? 1000 + area : 0;
-    return visibleScore + privilegeScore(item);
+    return selectionScore(item, area);
   };
 
   return new Set(
@@ -128,8 +152,9 @@ const pickHandoffRetain = (previousVisible, nextVisible) => {
 
 /**
  * Stable viewport subscription: bootstrap before the first IO snapshot,
- * keep the last healthy set on an empty/hidden snapshot, give on-screen
- * tiles priority over the decoder cap, and retain one outgoing stream
+ * keep the last healthy set on an empty observer snapshot, release remote
+ * cameras while hidden, keep the selected camera inside a strict decoder cap,
+ * and retain one outgoing stream
  * while a replacement connects.
  */
 export const resolveStableViewportSelection = ({
@@ -138,15 +163,14 @@ export const resolveStableViewportSelection = ({
   isHidden = false,
   isMobile,
   limit,
-  previousRetained = new Set(),
   previousVisible = new Set(),
   streams,
 }) => {
-  if (isHidden && previousVisible.size > 0) {
+  if (isHidden) {
     return {
-      nextVisible: new Set(previousVisible),
+      nextVisible: new Set(),
       reason: VIEWPORT_SELECTION_REASONS.tabHidden,
-      retained: new Set(previousRetained.size > 0 ? previousRetained : previousVisible),
+      retained: new Set(),
     };
   }
 
@@ -161,10 +185,19 @@ export const resolveStableViewportSelection = ({
 
   if (candidateAreas.size === 0) {
     if (previousVisible.size > 0) {
+      const remoteBudget = remoteBudgetFromLimit(streams, limit);
+      const boundedPrevious = new Set(
+        streams
+          .filter((item) => !item.local && previousVisible.has(item.stream))
+          .slice()
+          .sort((left, right) => privilegeScore(right) - privilegeScore(left))
+          .slice(0, remoteBudget)
+          .map((item) => item.stream),
+      );
       return {
-        nextVisible: new Set(previousVisible),
+        nextVisible: boundedPrevious,
         reason: VIEWPORT_SELECTION_REASONS.emptySnapshot,
-        retained: new Set(previousRetained.size > 0 ? previousRetained : previousVisible),
+        retained: new Set(boundedPrevious),
       };
     }
     const bootstrap = selectBootstrapRemoteIds({ limit, streams });
@@ -183,21 +216,15 @@ export const resolveStableViewportSelection = ({
     ));
   const remoteBudget = remoteBudgetFromLimit(streams, limit);
 
-  let nextVisible;
-  let reason;
-  if (visibleRemotes.length > remoteBudget) {
-    nextVisible = new Set(visibleRemotes.map((item) => item.stream));
-    reason = VIEWPORT_SELECTION_REASONS.visiblePriority;
-  } else {
-    nextVisible = selectHardBudgetedRemoteIds({
-      candidateAreas,
-      isMobile,
-      limit,
-      streams,
-    });
-    visibleRemotes.forEach((item) => nextVisible.add(item.stream));
-    reason = VIEWPORT_SELECTION_REASONS.budgeted;
-  }
+  const nextVisible = selectHardBudgetedRemoteIds({
+    candidateAreas,
+    isMobile,
+    limit,
+    streams,
+  });
+  let reason = visibleRemotes.length > remoteBudget
+    ? VIEWPORT_SELECTION_REASONS.visiblePriority
+    : VIEWPORT_SELECTION_REASONS.budgeted;
 
   const retained = new Set(nextVisible);
   const overlap = pickHandoffRetain(previousVisible, nextVisible);

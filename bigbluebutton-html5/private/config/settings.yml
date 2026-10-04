@@ -36,7 +36,7 @@ public:
     copyright: ''
     # SafeMeet product version (canonical: repo-root SAFEMEET_VERSION).
     # Auto-bumped on each push to safemeet; milestones via scripts/safemeet-bump-version.sh --set X.Y
-    html5ClientBuild: 0.8.41
+    html5ClientBuild: 0.8.46
     helpLink: ''
     delayForUnmountOfSharedNote: 120000
     bbbTabletApp:
@@ -1366,13 +1366,42 @@ public:
     enabled: true
     # auto | standard | low
     mode: auto
+    # Opt-in adaptive device protection. When false, the legacy SafeMeet
+    # performance behavior remains unchanged.
+    adaptiveProtectionEnabled: true
+    # Experimental phone publisher adaptation; validate before enabling.
+    mobilePublishProtectionEnabled: false
+    mobilePublishQualityMaxEdge: 480
+    mobilePublishQualityMaxFrameRate: 15
+    mobilePublishModerateMaxEdge: 480
+    mobilePublishModerateMaxFrameRate: 10
+    mobilePublishHighMaxEdge: 320
+    mobilePublishHighMaxFrameRate: 10
     mobileDecoderBudget: 4
     desktopLowPowerDecoderBudget: 6
     lowPowerHardwareConcurrency: 4
     lowPowerDeviceMemoryGb: 4
+    strongLowPowerHardwareConcurrency: 2
+    strongLowPowerDeviceMemoryGb: 2
+    sampleIntervalMs: 5000
+    initialWarmupMs: 60000
+    resumeWarmupMs: 20000
+    pressureLongTaskRatio: 0.3
+    pressureMediaWorkRatio: 0.7
+    recoveryLongTaskRatio: 0.08
+    recoveryMediaWorkRatio: 0.45
+    pressureEventLoopLagMs: 300
+    recoveryEventLoopLagMs: 100
+    pressureSampleCount: 6
+    recoverySampleCount: 12
+    moderateDecoderBudget: 3
+    highDecoderBudget: 2
+    handoffGraceMs: 2000
     longTaskThresholdMs: 200
     longTaskCountThreshold: 3
     longTaskWindowMs: 30000
+    # Restore the normal ceiling after a foreground period without long tasks.
+    recoveryQuietMs: 60000
   virtualBackgrounds:
     enabled: true
     enableVirtualBackgroundUpload: true

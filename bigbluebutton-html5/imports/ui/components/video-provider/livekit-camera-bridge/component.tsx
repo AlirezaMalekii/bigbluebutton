@@ -14,6 +14,7 @@ import {
   ConnectionState,
   RoomEvent,
   Track,
+  VideoQuality,
 } from 'livekit-client';
 import { useConnectionState, useTracks } from '@livekit/components-react';
 import { debounce } from '/imports/utils/debounce';
@@ -24,7 +25,8 @@ import logger from '/imports/startup/client/logger';
 import { notifyStreamStateChange } from '/imports/ui/services/bbb-webrtc-sfu/stream-state-service';
 import BBBVideoStream from '/imports/ui/services/webrtc-base/bbb-video-stream';
 import { VideoItem, Stream } from '/imports/ui/components/video-provider/types';
-import { Output } from '/imports/ui/components/layout/layoutTypes';
+import { Layout, Output } from '/imports/ui/components/layout/layoutTypes';
+import { layoutSelect } from '/imports/ui/components/layout/context';
 import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
 import { VideoPlaybackState } from '/imports/ui/components/video-provider/video-playback-utils';
 import {
@@ -34,12 +36,18 @@ import {
 import useMeetingSettings from '/imports/ui/core/local-states/useMeetingSettings';
 import {
   getSkyroomActiveVideoLimit,
+  getSkyroomCameraHandoffGraceMs,
   getSkyroomPerformanceTier,
+  getSkyroomProtectionStage,
+  markSkyroomPerformanceTransition,
+  shouldConstrainSkyroomCameraQuality,
+  SKYROOM_PERFORMANCE_TIER_EVENT,
 } from '/imports/ui/components/skyroom-layout/performance-profile';
-import { isSkyroomMobileViewport } from '/imports/ui/components/skyroom-layout/panel-toggles';
+import { isSkyroomMobileViewport, isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
 import { isSkyroomMobileWebcamDockHidden } from '/imports/ui/components/skyroom-layout/mobile-webcam-visibility';
 import { resolveStableViewportSelection } from '/imports/ui/components/video-provider/mobile-webcam-viewport-utils';
 import { recordSafeMeetDiagnostic } from '/imports/ui/services/safemeet-diagnostics';
+import { SKYROOM_SUSPENDED_CAMERAS_EVENT } from '/imports/ui/components/video-provider/webcam-protection-events';
 
 const SKYROOM_MOBILE_VIEWPORT_SETTLE_MS = 120;
 
@@ -133,6 +141,9 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
     ],
   });
   const [meetingSettings] = useMeetingSettings();
+  const fullscreenElement = layoutSelect((layout: Layout) => layout.fullscreen.element);
+  const fullscreenElementRef = useRef(fullscreenElement);
+  fullscreenElementRef.current = fullscreenElement;
   const bridgeRefs = useRef<LiveKitCameraBridgeRefs>({
     remoteTracks: {},
     localTracks: {},
@@ -153,6 +164,7 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
   const hasViewportSnapshotRef = useRef(false);
   const lastViewportDiagKeyRef = useRef('');
   const lastViewportSelectionReasonRef = useRef('');
+  const lastSuspendedCamerasKeyRef = useRef('');
   const webcamsVisibleRef = useRef(webcamsVisible);
   webcamsVisibleRef.current = webcamsVisible;
   const viewportApplyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -160,6 +172,30 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
   const updateStreamsRef = useRef<(streamsList: VideoItem[], shouldDebounce?: boolean) => void>(() => {});
 
   const withSelectiveSubscription = meetingSettings.public.media?.livekit?.selectiveSubscription?.enabled ?? true;
+
+  const applyCameraReceiveQuality = (publication: RemoteTrackPublication) => {
+    if (!isSkyroomTheme() || !lkIsCameraSource(publication)) return;
+    // LiveKit combines this ceiling with its existing element-size adaptation.
+    // Focused cameras keep their usual ceiling. Audio/screenshare are untouched.
+    const constrained = shouldConstrainSkyroomCameraQuality()
+      && publication.trackName !== focusedIdRef.current
+      && publication.trackName !== fullscreenElementRef.current;
+    publication.setVideoQuality(constrained ? VideoQuality.MEDIUM : VideoQuality.HIGH);
+  };
+
+  useEffect(() => {
+    const sync = () => {
+      bridgeRefs.current.publications.forEach((publication) => {
+        if ('setVideoQuality' in publication && publication.isSubscribed) {
+          applyCameraReceiveQuality(publication);
+        }
+      });
+      updateStreamsRef.current(streamsRef.current);
+    };
+    sync();
+    window.addEventListener(SKYROOM_PERFORMANCE_TIER_EVENT, sync);
+    return () => window.removeEventListener(SKYROOM_PERFORMANCE_TIER_EVENT, sync);
+  }, [focusedId, fullscreenElement]);
 
   const handleStreamFailure = useCallback((error: Error, stream: string, isLocal: boolean) => {
     const { name: errorName, message: errorMessage } = error;
@@ -405,6 +441,8 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
 
     if (!lkIsCameraSource(track)) return;
 
+    applyCameraReceiveQuality(publication);
+
     bridgeRefs.current.subscriptions.set(trackSid, { track, publication });
 
     if (track?.kind === 'video' && publication) {
@@ -510,6 +548,7 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
       const isReconnection = bridgeRefs.current.publications.size > 0
         || bridgeRefs.current.subscriptions.size > 0;
       syncLiveKitRefs(isReconnection);
+      if (isReconnection) markSkyroomPerformanceTransition();
     }
   }, [connectionState, syncLiveKitRefs]);
 
@@ -551,6 +590,9 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
       });
       bridgeRefs.current.publications.clear();
       bridgeRefs.current.subscriptions.clear();
+      window.dispatchEvent(new CustomEvent(SKYROOM_SUSPENDED_CAMERAS_EVENT, {
+        detail: { cameraIds: [] },
+      }));
     };
   }, []);
 
@@ -579,15 +621,42 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
     [],
   );
 
+  const releaseViewportHandoff = useCallback(() => {
+    if (viewportReleaseTimeoutRef.current) clearTimeout(viewportReleaseTimeoutRef.current);
+    viewportReleaseTimeoutRef.current = null;
+    viewportRetainedStreamsRef.current = new Set(visibleRemoteStreamsRef.current);
+    updateStreamsRef.current(streamsRef.current);
+  }, []);
+
+  const publishSuspendedCameras = useCallback((cameraIds: string[]) => {
+    const orderedCameraIds = cameraIds.slice().sort();
+    const key = orderedCameraIds.join(':');
+    if (lastSuspendedCamerasKeyRef.current === key) return;
+    lastSuspendedCamerasKeyRef.current = key;
+    window.dispatchEvent(new CustomEvent(SKYROOM_SUSPENDED_CAMERAS_EVENT, {
+      detail: { cameraIds: orderedCameraIds },
+    }));
+  }, []);
+
   const updateStreams = useCallback((streamsList: VideoItem[], shouldDebounce = false) => {
     const activeVideoLimit = getSkyroomActiveVideoLimit();
+    const hidden = document.visibilityState === 'hidden'
+      || !webcamsVisibleRef.current
+      || isSkyroomMobileWebcamDockHidden();
     let streamsForMedia = streamsList;
-    if (Number.isFinite(activeVideoLimit)) {
-      const hidden = !webcamsVisibleRef.current || isSkyroomMobileWebcamDockHidden();
+    let suspendedCameras: string[] = [];
+    if (isSkyroomTheme() && hidden) {
+      visibleRemoteStreamsRef.current = new Set();
+      viewportRetainedStreamsRef.current = new Set();
+      streamsForMedia = streamsList.filter((item) => (
+        item.type === VIDEO_TYPES.GRID
+        || item.type === VIDEO_TYPES.AUDIO_ONLY
+        || VideoService.isLocalStream(item.stream)
+      ));
+    } else if (Number.isFinite(activeVideoLimit)) {
       const selection = resolveStableViewportSelection({
         candidateAreas: viewportCandidateAreasRef.current,
         hasSnapshot: hasViewportSnapshotRef.current,
-        isHidden: hidden,
         isMobile: isSkyroomMobileViewport(),
         limit: activeVideoLimit,
         previousRetained: viewportRetainedStreamsRef.current,
@@ -595,9 +664,11 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
         streams: streamsList
           .filter((item): item is Stream => item.type === VIDEO_TYPES.STREAM)
           .map((item) => ({
-            focused: item.stream === focusedIdRef.current,
+            focused: item.stream === focusedIdRef.current
+              || item.stream === fullscreenElementRef.current,
             floor: Boolean(item.floor),
             local: VideoService.isLocalStream(item.stream),
+            moderator: Boolean(item.user?.isModerator),
             pinned: Boolean(item.user?.pinned),
             presenter: Boolean(item.user?.presenter),
             stream: item.stream,
@@ -633,17 +704,28 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
         || selection.nextVisible.has(item.stream)
         || selection.retained.has(item.stream)
       ));
+      const protectionStage = getSkyroomProtectionStage();
+      if (protectionStage === 'moderate' || protectionStage === 'high') {
+        suspendedCameras = streamsList
+          .filter((item): item is Stream => item.type === VIDEO_TYPES.STREAM)
+          .filter((item) => (
+            !VideoService.isLocalStream(item.stream)
+            && !selection.nextVisible.has(item.stream)
+            && !selection.retained.has(item.stream)
+          ))
+          .map((item) => item.stream);
+      }
       if (
         selection.retained.size > selection.nextVisible.size
         && !viewportReleaseTimeoutRef.current
       ) {
         viewportReleaseTimeoutRef.current = setTimeout(() => {
-          viewportReleaseTimeoutRef.current = null;
-          viewportRetainedStreamsRef.current = new Set(visibleRemoteStreamsRef.current);
-          updateStreamsRef.current(streamsRef.current);
-        }, SKYROOM_MOBILE_VIEWPORT_SETTLE_MS);
+          releaseViewportHandoff();
+        }, getSkyroomCameraHandoffGraceMs());
       }
     }
+
+    publishSuspendedCameras(suspendedCameras);
 
     const connectedStreamIds = [
       ...Object.keys(bridgeRefs.current.localTracks),
@@ -661,8 +743,14 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
     }
 
     destroyStreams(streamsToDisconnect);
-  }, [connectStreams, debouncedConnectStreams]);
+  }, [connectStreams, debouncedConnectStreams, publishSuspendedCameras, releaseViewportHandoff]);
   updateStreamsRef.current = updateStreams;
+
+  useEffect(() => {
+    const handleDocumentVisibility = () => updateStreamsRef.current(streamsRef.current);
+    document.addEventListener('visibilitychange', handleDocumentVisibility);
+    return () => document.removeEventListener('visibilitychange', handleDocumentVisibility);
+  }, []);
 
   const handleVideoVisibilityChange = useCallback((
     changes: { area?: number; stream: string; visible: boolean }[],
@@ -736,6 +824,13 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
   }, []);
 
   const handleVideoPlaybackStateChange = useCallback((stream: string, state: VideoPlaybackState) => {
+    if (
+      state === 'playing'
+      && visibleRemoteStreamsRef.current.has(stream)
+      && viewportRetainedStreamsRef.current.size > visibleRemoteStreamsRef.current.size
+    ) {
+      releaseViewportHandoff();
+    }
     // Mount/page-resume already calls createVideoTag, which attaches the current
     // track. Reattaching again for the normal `waiting` state doubles work for
     // every camera. Reserve this recovery for an actual visible stall/end.
@@ -759,7 +854,7 @@ const LiveKitCameraBridge: React.FC<LiveKitCameraBridgeProps> = ({
       bridgeRefs.current.remoteTracks[stream]?.detach(videoElement);
     }
     attachLiveKitStream(stream);
-  }, [webcamsVisible]);
+  }, [releaseViewportHandoff, webcamsVisible]);
 
   const startVirtualBackgroundByDrop = useCallback(async (
     stream: string,

@@ -191,7 +191,7 @@ const config = {
     extensions: ['.mjs', '.js', '.jsx', '.tsx', '.ts', '...'],
     alias: {
       '/client': path.resolve(__dirname, 'client/'),
-      '/imports': path.resolve(__dirname, '/imports/'),
+      '/imports': path.resolve(__dirname, 'imports/'),
       '@tiptap/core/jsx-runtime': path.resolve(__dirname, 'node_modules/@tiptap/core/dist/jsx-runtime/jsx-runtime.js'),
       yjs: path.resolve(__dirname, 'node_modules/yjs'),
     },

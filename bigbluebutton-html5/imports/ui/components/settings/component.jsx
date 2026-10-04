@@ -12,6 +12,11 @@ import { formatLocaleCode } from '/imports/utils/string-utils';
 import { setUseCurrentLocale } from '../../core/local-states/useCurrentLocale';
 import Transcription from '/imports/ui/components/settings/submenus/transcription/component';
 import SkyroomSharedNotesFeatureSetting from '/imports/ui/components/skyroom-layout/shared-notes-feature-setting/component';
+import {
+  getSkyroomPerformanceMode,
+  setSkyroomPerformanceMode,
+} from '/imports/ui/components/skyroom-layout/performance-profile';
+import { isSkyroomTheme } from '/imports/ui/components/skyroom-layout/panel-toggles';
 
 const intlMessages = defineMessages({
   appTabLabel: {
@@ -100,7 +105,7 @@ const propTypes = {
     microphoneConstraints: PropTypes.objectOf(Object),
   }).isRequired,
   updateSettings: PropTypes.func.isRequired,
-  availableLocales: PropTypes.objectOf(PropTypes.array).isRequired,
+  availableLocales: PropTypes.shape({ then: PropTypes.func.isRequired }).isRequired,
   showToggleLabel: PropTypes.bool.isRequired,
   isReactionsEnabled: PropTypes.bool.isRequired,
   transcription: PropTypes.shape({
@@ -131,6 +136,7 @@ class Settings extends Component {
         dataSaving: clone(dataSaving),
         application: clone(application),
         transcription: clone(transcription),
+        safemeetPerformance: { mode: getSkyroomPerformanceMode() },
       },
       saved: {
         dataSaving: clone(dataSaving),
@@ -303,6 +309,7 @@ class Settings extends Component {
             <Styled.SettingsTabPanel selectedClassName="is-selected">
               <DataSaving
                 settings={current.dataSaving}
+                performanceMode={current.safemeetPerformance.mode}
                 handleUpdateSettings={this.handleUpdateSettings}
                 showToggleLabel={showToggleLabel}
                 displaySettingsStatus={this.displaySettingsStatus}
@@ -344,7 +351,11 @@ class Settings extends Component {
         title={intl.formatMessage(intlMessages.SettingsLabel)}
         confirm={{
           callback: () => {
-            this.updateSettings(current, intlMessages.savedAlertLabel, setLocalSettings);
+            const { safemeetPerformance, ...settings } = current;
+            this.updateSettings(settings, intlMessages.savedAlertLabel, setLocalSettings);
+            if (isSkyroomTheme() && safemeetPerformance.mode !== getSkyroomPerformanceMode()) {
+              setSkyroomPerformanceMode(safemeetPerformance.mode);
+            }
 
             if (saved.application.locale !== current.application.locale) {
               const { language } = formatLocaleCode(saved.application.locale);

@@ -1,0 +1,62 @@
+{
+  "startedAt": "2026-09-10T21:27:27.788Z",
+  "revision": "82fac060956d5fba92a77f420b05eede2ca96852",
+  "cpus": 12,
+  "cpuModel": "AMD Ryzen 5 9600X 6-Core Processor             ",
+  "memoryBytes": 33484263424,
+  "count": 3,
+  "warmup": 10,
+  "seconds": 30,
+  "repetitions": 1,
+  "cameraCounts": [
+    3
+  ],
+  "screenCameraCounts": [
+    3
+  ],
+  "soakSeconds": 0,
+  "width": 1440,
+  "cpuThrottle": 1,
+  "target": 2,
+  "separateLoadClient": false,
+  "browserVersion": "152.0.7977.83",
+  "realPhoneTested": false,
+  "nativeMetrics": false,
+  "localServerPid": 31280,
+  "bundles": [
+    [
+      "bundle.ee0cf29753dab643b6ab.js"
+    ],
+    [
+      "bundle.ee0cf29753dab643b6ab.js"
+    ],
+    [
+      "bundle.ee0cf29753dab643b6ab.js"
+    ]
+  ],
+  "videoFixture": "repository-160x120-fixture",
+  "settings": {
+    "performance": {
+      "mode": "auto",
+      "enabled": true,
+      "longTaskWindowMs": 30000,
+      "longTaskThresholdMs": 200,
+      "mobileDecoderBudget": 4,
+      "longTaskCountThreshold": 3,
+      "lowPowerDeviceMemoryGb": 4,
+      "lowPowerHardwareConcurrency": 4,
+      "desktopLowPowerDecoderBudget": 6
+    },
+    "selectiveSubscription": {
+      "enabled": true,
+      "muteDebounceMs": 2500,
+      "audioSubscriptionPoolSize": 0
+    },
+    "roomOptions": {
+      "dynacast": true,
+      "adaptiveStream": true,
+      "singlePeerConnection": false,
+      "stopLocalTrackOnUnpublish": false
+    }
+  }
+}

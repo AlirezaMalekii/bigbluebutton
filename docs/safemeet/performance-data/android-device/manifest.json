@@ -1,0 +1,142 @@
+[
+  {
+    "file": "android-device-smoke1/samples.jsonl",
+    "bytes": 47570,
+    "sha256": "9fa6a92fc2d9ea221f802acbc0ab61072bb5f656af45b6be62acb433acda47ad"
+  },
+  {
+    "file": "android-load-smoke1/metadata.json",
+    "bytes": 1665,
+    "sha256": "9c6f2522a74d7785251cddbdc85ce37df12d16bf71175830345f5a658ac7ebcc"
+  },
+  {
+    "file": "android-load-smoke1/samples.jsonl",
+    "bytes": 144864,
+    "sha256": "8a91aa5184ee3e42963b34095a9f253534ba005ef38bb4d7ff7e662644b3ed95"
+  },
+  {
+    "file": "android-load-smoke1/failures.json",
+    "bytes": 3,
+    "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  {
+    "file": "android-device-smoke2/samples.jsonl",
+    "bytes": 54695,
+    "sha256": "12528b98f31a319d39569861b24eb83e07bd24f27b6fad0094095c15944e3277"
+  },
+  {
+    "file": "android-load-smoke2/metadata.json",
+    "bytes": 1657,
+    "sha256": "cb64496b07045ff0e930b2c732cdb806707194de89248bea809a06dcb77d6803"
+  },
+  {
+    "file": "android-load-smoke2/samples.jsonl",
+    "bytes": 57337,
+    "sha256": "0009df5f9d7c7d4d8d6323fc0e6bff26f46b2722620d035a4be328f98d3609cd"
+  },
+  {
+    "file": "android-load-smoke2/failures.json",
+    "bytes": 622,
+    "sha256": "5399182b8e8dc331c7b341a1bde4d7623bfb0d484cdbff9fd7a68c4bbdc72609"
+  },
+  {
+    "file": "android-device-smoke3/samples.jsonl",
+    "bytes": 37616,
+    "sha256": "1d8fb06fbf8925b3f6f42a920cefcda0e7357d0250447b30725f445c2c18ba49"
+  },
+  {
+    "file": "android-load-smoke3/metadata.json",
+    "bytes": 1606,
+    "sha256": "6564935750dde28c3246aff0fa0c57315e475c4fbae1291b86bd1a56529929ff"
+  },
+  {
+    "file": "android-load-smoke3/samples.jsonl",
+    "bytes": 53770,
+    "sha256": "a2bfb2e57e71cf1857e614d60771f783305f6c62208853d9ba02764722697f10"
+  },
+  {
+    "file": "android-load-smoke3/failures.json",
+    "bytes": 81,
+    "sha256": "a421a64d0237381c7d8571e64daceb8d41eacb08db25dc1e7dedb4d341a3fe0b"
+  },
+  {
+    "file": "android-device-smoke5/samples.jsonl",
+    "bytes": 76615,
+    "sha256": "220f845d03b6c4c1af21197ba8fc7c2fc651cffd58028931ec22d3fea6765a55"
+  },
+  {
+    "file": "android-webcam-visibility-smoke5/metadata.json",
+    "bytes": 1649,
+    "sha256": "097bd9e5e42049310cca5071bcf5dc68011b7f2f927068acd512291af65c85d7"
+  },
+  {
+    "file": "android-webcam-visibility-smoke5/samples.jsonl",
+    "bytes": 86723,
+    "sha256": "31a0828ba4256db3b1f96b34a8e82c5b8451bd4acc9415f3bbe3d6181086203d"
+  },
+  {
+    "file": "android-webcam-visibility-smoke5/failures.json",
+    "bytes": 3,
+    "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  {
+    "file": "android-device-tablet-fix/samples.jsonl",
+    "bytes": 65456,
+    "sha256": "8137b5458297eae60387f03d828514adf7e1ea12bdf6bfd123246eb3af6ee78e"
+  },
+  {
+    "file": "android-tablet-pagination-fix/metadata.json",
+    "bytes": 1649,
+    "sha256": "2f66c36326ab559f77c825dbdf101a7da569909eb458d2b01a9492b0faa00ba0"
+  },
+  {
+    "file": "android-tablet-pagination-fix/samples.jsonl",
+    "bytes": 63730,
+    "sha256": "8c1317eacb79044fff2d4b4b07e70037e622364089dc4b1d36438d5d44349cd2"
+  },
+  {
+    "file": "android-tablet-pagination-fix/failures.json",
+    "bytes": 316,
+    "sha256": "641eb05e4798e1af9b299a0775b805e5b6b6b2ca2b34ee54f48d0da99dbe7946"
+  },
+  {
+    "file": "summary.json",
+    "bytes": 1970,
+    "sha256": "a40745a94c16fd29de421f6c8b98766639915162389673188b02dd8b652fdd10"
+  },
+  {
+    "file": "phone-real-20260911/webcams-samples.jsonl",
+    "bytes": 54448,
+    "sha256": "e3c9c904d2c24c54cf4a7ad5e2459574c442a33bd5d11ddf8d0b2d1cf5310d64"
+  },
+  {
+    "file": "phone-real-20260911/combined-partial-samples.jsonl",
+    "bytes": 50011,
+    "sha256": "f8d8ef663e6a6e13324e01b8c5bd16a3ecf20ef84802d1e1997f1f458e7ce108"
+  },
+  {
+    "file": "phone-real-20260911/three-webcams.png",
+    "bytes": 551074,
+    "sha256": "3e199a5e286b23eb0c60563f18985c4230f45685bbdd58677f8d68e77abfb237"
+  },
+  {
+    "file": "phone-real-20260911/summary.json",
+    "bytes": 2211,
+    "sha256": "25cc1dff9e464d2e83c2e81468f95a925a86d82bac3068eaffe8ef7457f5478d"
+  },
+  {
+    "file": "phone-adaptive-20260911/summary.json",
+    "bytes": 1908,
+    "sha256": "88dd2e55d183a48c044d3b30d39f28674af33f0bd6098dd39799ff75da959ce9"
+  },
+  {
+    "file": "phone-adaptive-20260911/transitions.json",
+    "bytes": 576,
+    "sha256": "5894236a6a4bac1d2517d855bc49fd02e13db60049aceddfc5ff9dc37ae7a22d"
+  },
+  {
+    "file": "adaptive-enabled-20260912/summary.json",
+    "bytes": 1979,
+    "sha256": "196abfb48005354a754ce4bad2a536cf231ab9ff4c5f23a67cba6a51cf40151e"
+  }
+]

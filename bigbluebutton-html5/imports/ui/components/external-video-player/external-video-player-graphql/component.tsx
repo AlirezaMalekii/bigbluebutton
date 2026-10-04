@@ -23,6 +23,7 @@ import logger from '/imports/startup/client/logger';
 import {
   getPresentationMediaKindFromUrl,
   getPresentationMediaDisplayName,
+  getLocalPresentationMediaPlaybackUrl,
   getAuthenticatedPresentationMediaDownloadUrlFromPlaybackUrl,
   isPresentationMediaUrl,
 } from '../../presentation/presentation-uploader/fileTypes';
@@ -416,7 +417,7 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   }, []);
 
   useEffect(() => {
-    const unsynchedPlayer = !isAparatSource && reactPlayerPlaying !== playing;
+    const unsynchedPlayer = !isAparatSource && playing && !reactPlayerPlaying;
     if (unsynchedPlayer && !!videoUrl) {
       timeoutRef.current = setTimeout(() => {
         setShowUnsynchedMsg(true);
@@ -425,7 +426,8 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
       setShowUnsynchedMsg(false);
       clearTimeout(timeoutRef.current);
     }
-  }, [reactPlayerPlaying, playing]);
+    return () => clearTimeout(timeoutRef.current);
+  }, [reactPlayerPlaying, playing, videoUrl, playerKey, isAparatSource]);
 
   useEffect(() => {
     const handleExternalVideoVolumeSet = ((
@@ -509,6 +511,8 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
     setDuration(0);
     setPlayed(0);
     setLoaded(0);
+    setReactPlayerPlaying(false);
+    setShowUnsynchedMsg(false);
   }, [videoUrl, playerKey]);
 
   const shouldPublishSync = (event: string) => {
@@ -631,6 +635,12 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
   };
 
   const handleOnError = (error: unknown) => {
+    // Browser autoplay rejection is recoverable through a local user gesture.
+    // It must not end the presenter's share or disable subsequent sync events.
+    if (error instanceof Error && error.name === 'NotAllowedError') {
+      setShowUnsynchedMsg(true);
+      return;
+    }
     mediaLoadFailedRef.current = true;
     logger.warn({
       logCode: 'external_video_player_error',
@@ -920,9 +930,19 @@ const ExternalVideoPlayer: React.FC<ExternalVideoPlayerProps> = ({
       >
         <Styled.VideoStage>
           {
-            showUnsynchedMsg && shouldShowViewerTools
+            showUnsynchedMsg && playing && !isAparatSource
               ? (
-                <Styled.AutoPlayWarning>
+                <Styled.AutoPlayWarning
+                  type="button"
+                  data-test="externalVideoResumePlayback"
+                  onClick={() => {
+                    // Start synchronously within the user gesture; viewers never publish.
+                    if (!canControlExternalVideo) {
+                      playerRef.current?.seekTo(truncateTime(getServerCurrentTime()), 'seconds');
+                    }
+                    playVideo(playerRef.current);
+                  }}
+                >
                   {intl.formatMessage(intlMessages.autoPlayWarning)}
                 </Styled.AutoPlayWarning>
               )
@@ -1264,7 +1284,7 @@ const ExternalVideoPlayerContainer: React.FC = () => {
       isEchoTest={isEchoTest}
       isPresenter={isPresenter ?? false}
       isModerator={isModerator}
-      videoUrl={videoUrl}
+      videoUrl={getLocalPresentationMediaPlaybackUrl(videoUrl)}
       playing={playing}
       playerPlaybackRate={playerPlaybackRate}
       isResizing={isResizing}

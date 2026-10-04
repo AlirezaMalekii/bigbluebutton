@@ -22,6 +22,7 @@ export {
   resolveStableViewportSelection,
   selectBootstrapRemoteIds,
   selectHardBudgetedRemoteIds,
+  shouldUseMobileCameraPagination,
   VIEWPORT_SELECTION_REASONS,
   WEBCAM_VIEWPORT_MIN_VISIBLE_RATIO,
 } from '/imports/ui/components/video-provider/mobile-webcam-viewport-policy';

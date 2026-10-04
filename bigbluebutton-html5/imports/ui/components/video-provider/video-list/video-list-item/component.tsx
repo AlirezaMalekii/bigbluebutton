@@ -159,6 +159,7 @@ export const VideoListItem: React.FC<VideoListItemProps> = (props) => {
 
   const intl = useIntl();
   const observeVideoTile = useVideoListSharedState((state) => state.observeVideoTile);
+  const cameraSuspended = useVideoListSharedState((state) => state.suspendedCameras.has(cameraId));
 
   const [playbackState, setPlaybackState] = useState<VideoPlaybackState>('waiting');
   const [hasRenderedFrame, setHasRenderedFrame] = useState(false);
@@ -201,7 +202,7 @@ export const VideoListItem: React.FC<VideoListItemProps> = (props) => {
   // Keep the picture once a frame has decoded. Requiring a healthy
   // connectionState plus currentTime-based 'playing' covered working remote
   // cameras with the connecting avatar (Firefox deviceId streams in Chrome).
-  const videoIsReady = hasRenderedFrame && !isSelfViewDisabled;
+  const videoIsReady = hasRenderedFrame && !isSelfViewDisabled && !cameraSuspended;
   const Settings = getSettingsSingletonInstance();
   const { animations, webcamBorderHighlightColor } = Settings.application;
   const { talking } = voiceUser;
@@ -756,6 +757,18 @@ export const VideoListItem: React.FC<VideoListItemProps> = (props) => {
       )}
       {!videoIsReady && (!isSelfViewDisabled || !isStream) && stream.type !== VIDEO_TYPES.AUDIO_ONLY && (
         isVideoSqueezed ? renderWebcamConnectingSqueezed() : renderWebcamConnecting()
+      )}
+      {cameraSuspended && isStream && (
+        <Styled.ProtectionSuspended
+          type="button"
+          data-test="safemeetSuspendedCamera"
+          onClick={() => onHandleVideoFocus?.(cameraId)}
+          disabled={!onHandleVideoFocus}
+          aria-label={intl.formatMessage({ id: 'app.skyroom.performance.cameraSuspended' })}
+          title={intl.formatMessage({ id: 'app.skyroom.performance.cameraSuspended' })}
+        >
+          {intl.formatMessage({ id: 'app.skyroom.performance.cameraSuspended' })}
+        </Styled.ProtectionSuspended>
       )}
       {((isSelfViewDisabled && stream.userId === Auth.userID) || disabledCams.includes(cameraId))
       && renderWebcamConnecting()}

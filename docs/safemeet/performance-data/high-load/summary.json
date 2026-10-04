@@ -1,0 +1,3129 @@
+[
+  {
+    "name": "highload-ramp25-v1",
+    "metadata": {
+      "startedAt": "2026-09-11T08:06:57.699Z",
+      "revision": "82fac060956d5fba92a77f420b05eede2ca96852",
+      "cpus": 12,
+      "cpuModel": "AMD Ryzen 5 9600X 6-Core Processor             ",
+      "memoryBytes": 33484263424,
+      "count": 25,
+      "joinConcurrency": 3,
+      "mediaConcurrency": 5,
+      "warmup": 30,
+      "seconds": 60,
+      "repetitions": 1,
+      "cameraCounts": [
+        0,
+        10,
+        25
+      ],
+      "screenCameraCounts": [
+        25
+      ],
+      "soakSeconds": 0,
+      "safety": {
+        "abortHostCpu": 97,
+        "abortFreeMemoryMB": 1024,
+        "consecutiveSamples": 3
+      },
+      "width": 1440,
+      "cpuThrottle": 1,
+      "target": 2,
+      "separateLoadClient": false,
+      "browserVersion": "152.0.7977.83",
+      "realPhoneTested": false,
+      "nativeMetrics": true,
+      "localServerPid": 28528,
+      "bundles": [
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ]
+      ],
+      "videoFixture": "custom-motion-fixture",
+      "settings": {
+        "performance": {
+          "mode": "auto",
+          "enabled": true,
+          "longTaskWindowMs": 30000,
+          "longTaskThresholdMs": 200,
+          "mobileDecoderBudget": 4,
+          "longTaskCountThreshold": 3,
+          "lowPowerDeviceMemoryGb": 4,
+          "lowPowerHardwareConcurrency": 4,
+          "desktopLowPowerDecoderBudget": 6
+        },
+        "selectiveSubscription": {
+          "enabled": true,
+          "muteDebounceMs": 2500,
+          "audioSubscriptionPoolSize": 0
+        },
+        "roomOptions": {
+          "dynacast": true,
+          "adaptiveStream": true,
+          "singlePeerConnection": false,
+          "stopLocalTrackOnUnpublish": false
+        }
+      }
+    },
+    "failures": [
+      {
+        "user": 10,
+        "error": "Cannot read properties of undefined (reading 'public')",
+        "sources": [
+          "bundle.ee0cf29753dab643b6ab.js:2:543397"
+        ]
+      },
+      {
+        "error": "Participant count did not recover to requested load"
+      }
+    ],
+    "actions": null,
+    "presence": [
+      {
+        "phase": "presence",
+        "repetition": 1,
+        "cameras": 0,
+        "screenShare": false,
+        "participants": 21,
+        "testParticipants": 21,
+        "moderators": 2,
+        "publishers": 0
+      }
+    ],
+    "server": {
+      "samples": 822,
+      "availableSamples": 578,
+      "availabilityRatio": 0.7031630170316302,
+      "hostCPUPercent": {
+        "n": 567,
+        "mean": 2.4707339325677933,
+        "min": 0.1993907504846293,
+        "max": 21.163872848573195,
+        "p95": 5.336823354055332,
+        "sd": 2.110785707892688
+      },
+      "memoryAvailableMB": {
+        "n": 578,
+        "mean": 10731.144794820502,
+        "min": 10450.625,
+        "max": 10991.83203125,
+        "p95": 10863.9453125,
+        "sd": 83.15261561367191
+      },
+      "load1": {
+        "n": 578,
+        "mean": 0.3962802768166085,
+        "min": 0,
+        "max": 2.01,
+        "p95": 0.98,
+        "sd": 0.3188547374436122
+      },
+      "graphqlCPUPercentOfOneCore": {
+        "n": 567,
+        "mean": 1.3388426558001967,
+        "min": 0.0012927605409705648,
+        "max": 8.366846253616682,
+        "p95": 4.981865133502241,
+        "sd": 1.764542880477204
+      },
+      "graphqlMemoryMB": {
+        "n": 578,
+        "mean": 14.361443014705882,
+        "min": 9.9140625,
+        "max": 21.7265625,
+        "p95": 19.06640625,
+        "sd": 2.707593801005621
+      },
+      "graphqlTasks": {
+        "n": 578,
+        "mean": 20.896193771626297,
+        "min": 20,
+        "max": 21,
+        "p95": 21,
+        "sd": 0.30500900859569396
+      },
+      "sfuCPUPercentOfOneCore": {
+        "n": 567,
+        "mean": 2.015929281205876,
+        "min": 0.07587575667361317,
+        "max": 14.76216748768473,
+        "p95": 6.553888032871084,
+        "sd": 2.3040161346581276
+      },
+      "sfuMemoryMB": {
+        "n": 578,
+        "mean": 443.7534399329585,
+        "min": 432.32421875,
+        "max": 452.64453125,
+        "p95": 451.921875,
+        "sd": 5.511108639208668
+      },
+      "sfuTasks": {
+        "n": 578,
+        "mean": 180,
+        "min": 180,
+        "max": 180,
+        "p95": 180,
+        "sd": 0
+      }
+    },
+    "scenes": []
+  },
+  {
+    "name": "highload-ramp25-v2",
+    "metadata": {
+      "startedAt": "2026-09-11T08:25:44.760Z",
+      "revision": "82fac060956d5fba92a77f420b05eede2ca96852",
+      "cpus": 12,
+      "cpuModel": "AMD Ryzen 5 9600X 6-Core Processor             ",
+      "memoryBytes": 33484263424,
+      "count": 25,
+      "joinConcurrency": 3,
+      "mediaConcurrency": 5,
+      "audioUsers": 2,
+      "warmup": 30,
+      "seconds": 60,
+      "repetitions": 1,
+      "cameraCounts": [
+        0,
+        10,
+        25
+      ],
+      "screenCameraCounts": [
+        25
+      ],
+      "soakSeconds": 0,
+      "safety": {
+        "abortHostCpu": 97,
+        "abortFreeMemoryMB": 1024,
+        "consecutiveSamples": 3
+      },
+      "width": 1440,
+      "cpuThrottle": 1,
+      "target": 2,
+      "separateLoadClient": false,
+      "browserVersion": "152.0.7977.83",
+      "realPhoneTested": false,
+      "nativeMetrics": true,
+      "localServerPid": 46340,
+      "bundles": [
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ]
+      ],
+      "videoFixture": "custom-motion-fixture",
+      "settings": {
+        "performance": {
+          "mode": "auto",
+          "enabled": true,
+          "longTaskWindowMs": 30000,
+          "longTaskThresholdMs": 200,
+          "mobileDecoderBudget": 4,
+          "longTaskCountThreshold": 3,
+          "lowPowerDeviceMemoryGb": 4,
+          "lowPowerHardwareConcurrency": 4,
+          "desktopLowPowerDecoderBudget": 6
+        },
+        "selectiveSubscription": {
+          "enabled": true,
+          "muteDebounceMs": 2500,
+          "audioSubscriptionPoolSize": 0
+        },
+        "roomOptions": {
+          "dynacast": true,
+          "adaptiveStream": true,
+          "singlePeerConnection": false,
+          "stopLocalTrackOnUnpublish": false
+        }
+      }
+    },
+    "failures": [
+      {
+        "user": 0,
+        "error": "Cannot read properties of undefined (reading 'public')",
+        "sources": [
+          "bundle.ee0cf29753dab643b6ab.js:2:543397"
+        ]
+      },
+      {
+        "user": 1,
+        "error": "Cannot read properties of undefined (reading 'public')",
+        "sources": [
+          "bundle.ee0cf29753dab643b6ab.js:2:543397"
+        ]
+      },
+      {
+        "user": 13,
+        "error": "Cannot read properties of undefined (reading 'public')",
+        "sources": [
+          "bundle.ee0cf29753dab643b6ab.js:2:543397"
+        ]
+      },
+      {
+        "user": 17,
+        "error": "Cannot read properties of undefined (reading 'public')",
+        "sources": [
+          "bundle.ee0cf29753dab643b6ab.js:2:543397"
+        ]
+      },
+      {
+        "user": 22,
+        "error": "Cannot read properties of undefined (reading 'public')",
+        "sources": [
+          "bundle.ee0cf29753dab643b6ab.js:2:543397"
+        ]
+      },
+      {
+        "error": "Participant count did not recover to requested load"
+      }
+    ],
+    "actions": null,
+    "presence": [
+      {
+        "phase": "presence",
+        "repetition": 1,
+        "cameras": 0,
+        "screenShare": false,
+        "participants": 21,
+        "testParticipants": 21,
+        "moderators": 2,
+        "publishers": 0
+      }
+    ],
+    "server": {
+      "samples": 136,
+      "availableSamples": 100,
+      "availabilityRatio": 0.7352941176470589,
+      "hostCPUPercent": {
+        "n": 96,
+        "mean": 3.276182497249792,
+        "min": 0.3047766818131459,
+        "max": 5.8761278823660446,
+        "p95": 4.917484388938442,
+        "sd": 1.0846057138402876
+      },
+      "memoryAvailableMB": {
+        "n": 100,
+        "mean": 10736.585234375,
+        "min": 10607.69140625,
+        "max": 10918.59375,
+        "p95": 10826.12109375,
+        "sd": 50.729268880245705
+      },
+      "load1": {
+        "n": 100,
+        "mean": 0.494,
+        "min": 0.02,
+        "max": 1.24,
+        "p95": 1.03,
+        "sd": 0.2964051281607658
+      },
+      "graphqlCPUPercentOfOneCore": {
+        "n": 96,
+        "mean": 2.613186987579127,
+        "min": 0.003433519108280255,
+        "max": 7.3878526023043305,
+        "p95": 6.106242413733311,
+        "sd": 1.981557265323195
+      },
+      "graphqlMemoryMB": {
+        "n": 100,
+        "mean": 16.503203125,
+        "min": 11.7890625,
+        "max": 20.79296875,
+        "p95": 19.64453125,
+        "sd": 2.557565297834162
+      },
+      "graphqlTasks": {
+        "n": 100,
+        "mean": 21,
+        "min": 21,
+        "max": 21,
+        "p95": 21,
+        "sd": 0
+      },
+      "sfuCPUPercentOfOneCore": {
+        "n": 96,
+        "mean": 2.1671445041848383,
+        "min": 0.10107387889032514,
+        "max": 10.633969010727055,
+        "p95": 6.214717761796868,
+        "sd": 1.9476522329467114
+      },
+      "sfuMemoryMB": {
+        "n": 100,
+        "mean": 439.0113671875,
+        "min": 437,
+        "max": 440.31640625,
+        "p95": 440.06640625,
+        "sd": 1.035044819326746
+      },
+      "sfuTasks": {
+        "n": 100,
+        "mean": 180,
+        "min": 180,
+        "max": 180,
+        "p95": 180,
+        "sd": 0
+      }
+    },
+    "scenes": []
+  },
+  {
+    "name": "highload-capacity18-v2",
+    "metadata": {
+      "startedAt": "2026-09-11T09:15:12.976Z",
+      "revision": "82fac060956d5fba92a77f420b05eede2ca96852",
+      "cpus": 12,
+      "cpuModel": "AMD Ryzen 5 9600X 6-Core Processor             ",
+      "memoryBytes": 33484263424,
+      "count": 18,
+      "joinConcurrency": 5,
+      "mediaConcurrency": 5,
+      "audioUsers": 2,
+      "apiAttempts": 10,
+      "warmup": 30,
+      "seconds": 60,
+      "repetitions": 1,
+      "cameraCounts": [
+        0,
+        18
+      ],
+      "screenCameraCounts": [
+        18
+      ],
+      "soakSeconds": 0,
+      "safety": {
+        "abortHostCpu": 97,
+        "abortFreeMemoryMB": 1024,
+        "consecutiveSamples": 3
+      },
+      "width": 1440,
+      "cpuThrottle": 1,
+      "target": 2,
+      "separateLoadClient": false,
+      "browserVersion": "152.0.7977.83",
+      "realPhoneTested": false,
+      "nativeMetrics": true,
+      "localServerPid": 45852,
+      "bundles": [
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ]
+      ],
+      "videoFixture": "custom-motion-fixture",
+      "settings": {
+        "performance": {
+          "mode": "auto",
+          "enabled": true,
+          "longTaskWindowMs": 30000,
+          "longTaskThresholdMs": 200,
+          "mobileDecoderBudget": 4,
+          "longTaskCountThreshold": 3,
+          "lowPowerDeviceMemoryGb": 4,
+          "lowPowerHardwareConcurrency": 4,
+          "desktopLowPowerDecoderBudget": 6
+        },
+        "selectiveSubscription": {
+          "enabled": true,
+          "muteDebounceMs": 2500,
+          "audioSubscriptionPoolSize": 0
+        },
+        "roomOptions": {
+          "dynacast": true,
+          "adaptiveStream": true,
+          "singlePeerConnection": false,
+          "stopLocalTrackOnUnpublish": false
+        }
+      }
+    },
+    "failures": [
+      {
+        "user": 10,
+        "error": "Cannot read properties of undefined (reading 'public')",
+        "sources": [
+          "bundle.ee0cf29753dab643b6ab.js:2:543397"
+        ]
+      },
+      {
+        "user": 17,
+        "error": "Cannot read properties of undefined (reading 'public')",
+        "sources": [
+          "bundle.ee0cf29753dab643b6ab.js:2:543397"
+        ]
+      },
+      {
+        "user": 15,
+        "error": "Cannot read properties of undefined (reading 'public')",
+        "sources": [
+          "bundle.ee0cf29753dab643b6ab.js:2:543397"
+        ]
+      },
+      {
+        "error": "Participant count did not recover to requested load"
+      }
+    ],
+    "actions": null,
+    "presence": [
+      {
+        "phase": "presence",
+        "repetition": 1,
+        "cameras": 0,
+        "screenShare": false,
+        "participants": 11,
+        "testParticipants": 11,
+        "moderators": 2,
+        "publishers": 0
+      }
+    ],
+    "server": {
+      "samples": 60,
+      "availableSamples": 45,
+      "availabilityRatio": 0.75,
+      "hostCPUPercent": {
+        "n": 42,
+        "mean": 3.7981387585157655,
+        "min": 2.646976873780993,
+        "max": 6.148975170804871,
+        "p95": 5.214672547596444,
+        "sd": 0.7088514323260519
+      },
+      "memoryAvailableMB": {
+        "n": 45,
+        "mean": 10686.47013888889,
+        "min": 10614.62890625,
+        "max": 10929.1640625,
+        "p95": 10778.6015625,
+        "sd": 62.221874867877524
+      },
+      "load1": {
+        "n": 45,
+        "mean": 0.8057777777777779,
+        "min": 0.05,
+        "max": 2.01,
+        "p95": 1.51,
+        "sd": 0.3762474888148839
+      },
+      "graphqlCPUPercentOfOneCore": {
+        "n": 42,
+        "mean": 2.6353715590907956,
+        "min": 0.31632876167759894,
+        "max": 6.512033814022874,
+        "p95": 5.780742436305732,
+        "sd": 1.44396926397097
+      },
+      "graphqlMemoryMB": {
+        "n": 45,
+        "mean": 16.135850694444443,
+        "min": 10.65625,
+        "max": 17.86328125,
+        "p95": 17.70703125,
+        "sd": 1.1934932736212658
+      },
+      "graphqlTasks": {
+        "n": 45,
+        "mean": 21,
+        "min": 21,
+        "max": 21,
+        "p95": 21,
+        "sd": 0
+      },
+      "sfuCPUPercentOfOneCore": {
+        "n": 42,
+        "mean": 2.4153325453732033,
+        "min": 0.7040886549944337,
+        "max": 9.272600492206728,
+        "p95": 5.834647771616348,
+        "sd": 1.7720545160821766
+      },
+      "sfuMemoryMB": {
+        "n": 45,
+        "mean": 442.0688368055556,
+        "min": 439.33984375,
+        "max": 442.7421875,
+        "p95": 442.5859375,
+        "sd": 0.805549316382088
+      },
+      "sfuTasks": {
+        "n": 45,
+        "mean": 180,
+        "min": 180,
+        "max": 180,
+        "p95": 180,
+        "sd": 0
+      }
+    },
+    "scenes": []
+  },
+  {
+    "name": "highload-valid12-desktop-v2",
+    "metadata": {
+      "startedAt": "2026-09-11T09:27:50.666Z",
+      "revision": "82fac060956d5fba92a77f420b05eede2ca96852",
+      "cpus": 12,
+      "cpuModel": "AMD Ryzen 5 9600X 6-Core Processor             ",
+      "memoryBytes": 33484263424,
+      "count": 12,
+      "joinConcurrency": 3,
+      "mediaConcurrency": 5,
+      "audioUsers": 2,
+      "apiAttempts": 10,
+      "warmup": 30,
+      "seconds": 120,
+      "repetitions": 1,
+      "cameraCounts": [
+        0,
+        12
+      ],
+      "screenCameraCounts": [
+        12
+      ],
+      "soakSeconds": 0,
+      "safety": {
+        "abortHostCpu": 97,
+        "abortFreeMemoryMB": 1024,
+        "consecutiveSamples": 3
+      },
+      "width": 1440,
+      "cpuThrottle": 1,
+      "target": 2,
+      "separateLoadClient": false,
+      "browserVersion": "152.0.7977.83",
+      "realPhoneTested": false,
+      "nativeMetrics": true,
+      "localServerPid": 40664,
+      "bundles": [
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ]
+      ],
+      "videoFixture": "custom-motion-fixture",
+      "settings": {
+        "performance": {
+          "mode": "auto",
+          "enabled": true,
+          "longTaskWindowMs": 30000,
+          "longTaskThresholdMs": 200,
+          "mobileDecoderBudget": 4,
+          "longTaskCountThreshold": 3,
+          "lowPowerDeviceMemoryGb": 4,
+          "lowPowerHardwareConcurrency": 4,
+          "desktopLowPowerDecoderBudget": 6
+        },
+        "selectiveSubscription": {
+          "enabled": true,
+          "muteDebounceMs": 2500,
+          "audioSubscriptionPoolSize": 0
+        },
+        "roomOptions": {
+          "dynacast": true,
+          "adaptiveStream": true,
+          "singlePeerConnection": false,
+          "stopLocalTrackOnUnpublish": false
+        }
+      }
+    },
+    "failures": [
+      {
+        "user": 0,
+        "error": "Cannot read properties of undefined (reading 'public')",
+        "sources": [
+          "bundle.ee0cf29753dab643b6ab.js:2:543397"
+        ]
+      },
+      {
+        "user": 1,
+        "error": "Cannot read properties of undefined (reading 'public')",
+        "sources": [
+          "bundle.ee0cf29753dab643b6ab.js:2:543397"
+        ]
+      },
+      {
+        "user": 3,
+        "error": "Cannot read properties of undefined (reading 'public')",
+        "sources": [
+          "bundle.ee0cf29753dab643b6ab.js:2:543397"
+        ]
+      },
+      {
+        "user": 6,
+        "error": "Cannot read properties of undefined (reading 'public')",
+        "sources": [
+          "bundle.ee0cf29753dab643b6ab.js:2:543397"
+        ]
+      },
+      {
+        "user": 7,
+        "error": "Cannot read properties of undefined (reading 'public')",
+        "sources": [
+          "bundle.ee0cf29753dab643b6ab.js:2:543397"
+        ]
+      },
+      {
+        "user": 8,
+        "error": "Cannot read properties of undefined (reading 'public')",
+        "sources": [
+          "bundle.ee0cf29753dab643b6ab.js:2:543397"
+        ]
+      },
+      {
+        "error": "Participant count did not recover to requested load"
+      }
+    ],
+    "actions": null,
+    "presence": [
+      {
+        "phase": "presence",
+        "repetition": 1,
+        "cameras": 0,
+        "screenShare": false,
+        "participants": 12,
+        "testParticipants": 12,
+        "moderators": 2,
+        "publishers": 0
+      },
+      {
+        "phase": "presence",
+        "repetition": 1,
+        "cameras": 12,
+        "screenShare": false,
+        "participants": 9,
+        "testParticipants": 9,
+        "moderators": 2,
+        "publishers": 0
+      }
+    ],
+    "server": {
+      "samples": 74,
+      "availableSamples": 58,
+      "availabilityRatio": 0.7837837837837838,
+      "hostCPUPercent": {
+        "n": 57,
+        "mean": 4.180980101936729,
+        "min": 1.051226430835972,
+        "max": 24.124448416466514,
+        "p95": 7.422703426721733,
+        "sd": 3.8092370204967287
+      },
+      "memoryAvailableMB": {
+        "n": 58,
+        "mean": 10671.374730603447,
+        "min": 10508.703125,
+        "max": 10779.73046875,
+        "p95": 10776.36328125,
+        "sd": 82.86916706880508
+      },
+      "load1": {
+        "n": 58,
+        "mean": 0.5036206896551725,
+        "min": 0.03,
+        "max": 1.19,
+        "p95": 1.04,
+        "sd": 0.28149660545428073
+      },
+      "graphqlCPUPercentOfOneCore": {
+        "n": 57,
+        "mean": 1.4915725099943218,
+        "min": 0.019785458879618592,
+        "max": 7.029737233515122,
+        "p95": 5.2150521609538005,
+        "sd": 1.6252272246740316
+      },
+      "graphqlMemoryMB": {
+        "n": 58,
+        "mean": 14.120689655172415,
+        "min": 11.4765625,
+        "max": 18.57421875,
+        "p95": 17.15625,
+        "sd": 1.8904383459609346
+      },
+      "graphqlTasks": {
+        "n": 58,
+        "mean": 21,
+        "min": 21,
+        "max": 21,
+        "p95": 21,
+        "sd": 0
+      },
+      "sfuCPUPercentOfOneCore": {
+        "n": 57,
+        "mean": 3.7940785839600317,
+        "min": 0.9994835121176003,
+        "max": 17.903222607833413,
+        "p95": 13.56761527020327,
+        "sd": 3.539122553542848
+      },
+      "sfuMemoryMB": {
+        "n": 58,
+        "mean": 442.7518184267241,
+        "min": 441.71484375,
+        "max": 447.91015625,
+        "p95": 447.43359375,
+        "sd": 1.7625199203529374
+      },
+      "sfuTasks": {
+        "n": 58,
+        "mean": 180,
+        "min": 180,
+        "max": 180,
+        "p95": 180,
+        "sd": 0
+      }
+    },
+    "scenes": [
+      {
+        "repetition": 1,
+        "camerasRequested": 0,
+        "screenShare": false,
+        "samples": 24,
+        "measuredSpanSeconds": 115.19730000000075,
+        "mainThreadPercent": {
+          "n": 23,
+          "mean": 15.251932709143805,
+          "min": 2.011458147605867,
+          "max": 26.30796741935023,
+          "p95": 26.195023290461993,
+          "sd": 8.528480599940053
+        },
+        "scriptPercent": {
+          "n": 23,
+          "mean": 3.2281456716964607,
+          "min": 0.2474833837713299,
+          "max": 13.921594971866444,
+          "p95": 13.22275209177897,
+          "sd": 3.9800006930147536
+        },
+        "layoutPercent": {
+          "n": 23,
+          "mean": 0.012588868817999588,
+          "min": 0,
+          "max": 0.06836275597054801,
+          "p95": 0.05980064851013932,
+          "sd": 0.019367318030375506
+        },
+        "targetProcessCPUPercentOfOneCore": {
+          "n": 23,
+          "mean": 33.229364642407496,
+          "min": 4.692261904761967,
+          "max": 54.232700379772346,
+          "p95": 52.734632382483,
+          "sd": 17.948298677894865
+        },
+        "otherBrowsersCPUPercentOfOneCore": {
+          "n": 23,
+          "mean": 358.23538851653853,
+          "min": 73.62338017174064,
+          "max": 509.37806347930893,
+          "p95": 497.2351189286428,
+          "sd": 152.04821399993443
+        },
+        "localServerCPUPercentOfOneCore": {
+          "n": 5,
+          "mean": 0.43971670927830714,
+          "min": 0,
+          "max": 0.6525370641052413,
+          "p95": 0.6525370641052413,
+          "sd": 0.2577511027291245
+        },
+        "busiestGPUEnginePercent": {
+          "n": 7,
+          "mean": 7.553072494786063,
+          "min": 3.5656051502527286,
+          "max": 17.33492588454947,
+          "p95": 17.33492588454947,
+          "sd": 4.744263377838243
+        },
+        "targetPrivateMBLast": null,
+        "targetWorkingSetMBSumLast": null,
+        "hostCPUPercent": {
+          "n": 23,
+          "mean": 56.72116748562326,
+          "min": 30.731235535905498,
+          "max": 73.36610947230416,
+          "p95": 70.91174398711885,
+          "sd": 14.381508662379181
+        },
+        "longTaskPercent": {
+          "n": 23,
+          "mean": 1.4779854314314698,
+          "min": 0,
+          "max": 11.076415671888057,
+          "p95": 5.094147842957959,
+          "sd": 2.5133367150949613
+        },
+        "hostSaturationObserved": false,
+        "gpuSaturationAssessed": false,
+        "heapFirstMB": 33.5025749206543,
+        "heapLastMB": 37.826290130615234,
+        "listenersFirst": 1765,
+        "listenersLast": 2768,
+        "inboundVideoStreamsLast": 0,
+        "receivedVideoLast": [],
+        "targetPageVisibleThroughout": true,
+        "targetNativeForegroundThroughout": null,
+        "sessions": [
+          {
+            "user": 0,
+            "role": "MODERATOR",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 23,
+              "mean": 31.626112929434726,
+              "min": 5.119476971116325,
+              "max": 54.16419457735242,
+              "p95": 53.8490239043826,
+              "sd": 19.188290859615908
+            },
+            "privateMBLast": null,
+            "workingSetMBSumLast": null
+          },
+          {
+            "user": 1,
+            "role": "MODERATOR",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 23,
+              "mean": 29.698750594211532,
+              "min": 4.50035342261909,
+              "max": 51.544271685761004,
+              "p95": 45.242369157011616,
+              "sd": 15.777059996819583
+            },
+            "privateMBLast": null,
+            "workingSetMBSumLast": null
+          },
+          {
+            "user": 2,
+            "role": "VIEWER",
+            "target": true,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 23,
+              "mean": 33.229364642407496,
+              "min": 4.692261904761967,
+              "max": 54.232700379772346,
+              "p95": 52.734632382483,
+              "sd": 17.948298677894865
+            },
+            "privateMBLast": null,
+            "workingSetMBSumLast": null
+          },
+          {
+            "user": 3,
+            "role": "VIEWER",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 23,
+              "mean": 27.83324750713341,
+              "min": 5.923232886904754,
+              "max": 76.831356101458,
+              "p95": 52.764147627416605,
+              "sd": 19.933544331278128
+            },
+            "privateMBLast": null,
+            "workingSetMBSumLast": null
+          },
+          {
+            "user": 4,
+            "role": "VIEWER",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 23,
+              "mean": 32.78375484002856,
+              "min": 4.485460577673636,
+              "max": 51.522860586581004,
+              "p95": 50.303717769338355,
+              "sd": 15.990032583694692
+            },
+            "privateMBLast": null,
+            "workingSetMBSumLast": null
+          },
+          {
+            "user": 5,
+            "role": "VIEWER",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 23,
+              "mean": 35.23947073168159,
+              "min": 6.045413739266143,
+              "max": 70.11565807868982,
+              "p95": 63.25940435738565,
+              "sd": 18.885180981879348
+            },
+            "privateMBLast": null,
+            "workingSetMBSumLast": null
+          },
+          {
+            "user": 6,
+            "role": "VIEWER",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 23,
+              "mean": 36.30763798416728,
+              "min": 6.3813817330211275,
+              "max": 79.77299509001632,
+              "p95": 57.30191884869094,
+              "sd": 18.905043692215834
+            },
+            "privateMBLast": null,
+            "workingSetMBSumLast": null
+          },
+          {
+            "user": 7,
+            "role": "VIEWER",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 23,
+              "mean": 40.66684678482095,
+              "min": 7.203361870954303,
+              "max": 89.94145418326697,
+              "p95": 69.23025579536369,
+              "sd": 19.95898004632269
+            },
+            "privateMBLast": null,
+            "workingSetMBSumLast": null
+          },
+          {
+            "user": 8,
+            "role": "VIEWER",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 23,
+              "mean": 25.017805386970576,
+              "min": 4.966666666666665,
+              "max": 61.83979612232656,
+              "p95": 54.44294258373199,
+              "sd": 18.350453284963326
+            },
+            "privateMBLast": null,
+            "workingSetMBSumLast": null
+          },
+          {
+            "user": 9,
+            "role": "VIEWER",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 23,
+              "mean": 34.670838713841846,
+              "min": 6.252803997778891,
+              "max": 67.41050739113062,
+              "p95": 60.15203040608121,
+              "sd": 17.637605470340674
+            },
+            "privateMBLast": null,
+            "workingSetMBSumLast": null
+          },
+          {
+            "user": 10,
+            "role": "VIEWER",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 23,
+              "mean": 34.82577596812568,
+              "min": 6.374590163934401,
+              "max": 62.42526967638831,
+              "p95": 62.421656050955406,
+              "sd": 17.68075028132058
+            },
+            "privateMBLast": null,
+            "workingSetMBSumLast": null
+          },
+          {
+            "user": 11,
+            "role": "VIEWER",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 23,
+              "mean": 29.565147076122408,
+              "min": 6.30880171740829,
+              "max": 62.10935509554143,
+              "p95": 57.086738566007604,
+              "sd": 18.976570109715606
+            },
+            "privateMBLast": null,
+            "workingSetMBSumLast": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "highload-valid8-desktop-v1",
+    "metadata": {
+      "startedAt": "2026-09-11T09:49:03.496Z",
+      "revision": "82fac060956d5fba92a77f420b05eede2ca96852",
+      "cpus": 12,
+      "cpuModel": "AMD Ryzen 5 9600X 6-Core Processor             ",
+      "memoryBytes": 33484263424,
+      "count": 8,
+      "joinConcurrency": 4,
+      "mediaConcurrency": 5,
+      "audioUsers": 2,
+      "apiAttempts": 10,
+      "warmup": 15,
+      "seconds": 45,
+      "repetitions": 1,
+      "cameraCounts": [
+        0,
+        8
+      ],
+      "screenCameraCounts": [
+        8
+      ],
+      "soakSeconds": 0,
+      "safety": {
+        "abortHostCpu": 97,
+        "abortFreeMemoryMB": 1024,
+        "consecutiveSamples": 3
+      },
+      "width": 1440,
+      "cpuThrottle": 1,
+      "target": 2,
+      "separateLoadClient": false,
+      "browserVersion": "152.0.7977.83",
+      "realPhoneTested": false,
+      "nativeMetrics": true,
+      "localServerPid": 40844,
+      "bundles": [
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ]
+      ],
+      "videoFixture": "custom-motion-fixture",
+      "settings": {
+        "performance": {
+          "mode": "auto",
+          "enabled": true,
+          "longTaskWindowMs": 30000,
+          "longTaskThresholdMs": 200,
+          "mobileDecoderBudget": 4,
+          "longTaskCountThreshold": 3,
+          "lowPowerDeviceMemoryGb": 4,
+          "lowPowerHardwareConcurrency": 4,
+          "desktopLowPowerDecoderBudget": 6
+        },
+        "selectiveSubscription": {
+          "enabled": true,
+          "muteDebounceMs": 2500,
+          "audioSubscriptionPoolSize": 0
+        },
+        "roomOptions": {
+          "dynacast": true,
+          "adaptiveStream": true,
+          "singlePeerConnection": false,
+          "stopLocalTrackOnUnpublish": false
+        }
+      }
+    },
+    "failures": [
+      {
+        "error": "Actual test publishers do not match requested cameras"
+      }
+    ],
+    "actions": null,
+    "presence": [
+      {
+        "phase": "presence",
+        "repetition": 1,
+        "cameras": 0,
+        "screenShare": false,
+        "participants": 8,
+        "testParticipants": 8,
+        "moderators": 2,
+        "publishers": 0
+      },
+      {
+        "phase": "presence",
+        "repetition": 1,
+        "cameras": 8,
+        "screenShare": false,
+        "participants": 8,
+        "testParticipants": 8,
+        "moderators": 2,
+        "publishers": 1
+      }
+    ],
+    "server": {
+      "samples": 24,
+      "availableSamples": 19,
+      "availabilityRatio": 0.7916666666666666,
+      "hostCPUPercent": {
+        "n": 18,
+        "mean": 4.114671783500572,
+        "min": 2.7320880959018634,
+        "max": 7.451573172097192,
+        "p95": 7.451573172097192,
+        "sd": 1.2573591076216697
+      },
+      "memoryAvailableMB": {
+        "n": 19,
+        "mean": 10619.993832236842,
+        "min": 10516.01171875,
+        "max": 10674.93359375,
+        "p95": 10674.93359375,
+        "sd": 35.31382739311938
+      },
+      "load1": {
+        "n": 19,
+        "mean": 0.5573684210526316,
+        "min": 0.34,
+        "max": 0.72,
+        "p95": 0.72,
+        "sd": 0.12078001338942229
+      },
+      "graphqlCPUPercentOfOneCore": {
+        "n": 18,
+        "mean": 1.391598231007016,
+        "min": 0.051246044303797464,
+        "max": 3.9671868707209015,
+        "p95": 3.9671868707209015,
+        "sd": 1.195100501852537
+      },
+      "graphqlMemoryMB": {
+        "n": 19,
+        "mean": 14.032894736842104,
+        "min": 12.84375,
+        "max": 14.82421875,
+        "p95": 14.82421875,
+        "sd": 0.642719262902309
+      },
+      "graphqlTasks": {
+        "n": 19,
+        "mean": 21,
+        "min": 21,
+        "max": 21,
+        "p95": 21,
+        "sd": 0
+      },
+      "sfuCPUPercentOfOneCore": {
+        "n": 18,
+        "mean": 4.633006012958138,
+        "min": 1.9639240506329114,
+        "max": 9.217955047421073,
+        "p95": 9.217955047421073,
+        "sd": 1.931282868261094
+      },
+      "sfuMemoryMB": {
+        "n": 19,
+        "mean": 448.90439967105266,
+        "min": 447.65234375,
+        "max": 449.96875,
+        "p95": 449.96875,
+        "sd": 0.6986854640175469
+      },
+      "sfuTasks": {
+        "n": 19,
+        "mean": 180,
+        "min": 180,
+        "max": 180,
+        "p95": 180,
+        "sd": 0
+      }
+    },
+    "scenes": [
+      {
+        "repetition": 1,
+        "camerasRequested": 0,
+        "screenShare": false,
+        "samples": 9,
+        "measuredSpanSeconds": 40.05440000000037,
+        "mainThreadPercent": {
+          "n": 8,
+          "mean": 12.900131355556846,
+          "min": 6.699620436069248,
+          "max": 19.147393405856594,
+          "p95": 19.147393405856594,
+          "sd": 4.624441857847209
+        },
+        "scriptPercent": {
+          "n": 8,
+          "mean": 0.9470436368791341,
+          "min": 0.3363597379892527,
+          "max": 4.357103084954006,
+          "p95": 4.357103084954006,
+          "sd": 1.2937856200976043
+        },
+        "layoutPercent": {
+          "n": 8,
+          "mean": 0.45411587868773373,
+          "min": 0,
+          "max": 1.5659648197136293,
+          "p95": 1.5659648197136293,
+          "sd": 0.5822643831000931
+        },
+        "targetProcessCPUPercentOfOneCore": {
+          "n": 8,
+          "mean": 39.15524286426189,
+          "min": 17.149638511726348,
+          "max": 70.26557341907831,
+          "p95": 70.26557341907831,
+          "sd": 20.96532460062389
+        },
+        "otherBrowsersCPUPercentOfOneCore": {
+          "n": 8,
+          "mean": 296.2686411346789,
+          "min": 119.25200141068586,
+          "max": 449.15538834951434,
+          "p95": 449.15538834951434,
+          "sd": 103.50008252476658
+        },
+        "localServerCPUPercentOfOneCore": {
+          "n": 7,
+          "mean": 0.8239467519998949,
+          "min": 0,
+          "max": 2.9615238817285823,
+          "p95": 2.9615238817285823,
+          "sd": 0.9104919534510476
+        },
+        "busiestGPUEnginePercent": {
+          "n": 8,
+          "mean": 15.614658165254598,
+          "min": 4.328377014269962,
+          "max": 35.043728939476786,
+          "p95": 35.043728939476786,
+          "sd": 8.907567433692849
+        },
+        "targetPrivateMBLast": 701.7265625,
+        "targetWorkingSetMBSumLast": 897.25,
+        "hostCPUPercent": {
+          "n": 8,
+          "mean": 44.3841012704997,
+          "min": 33.62297851798214,
+          "max": 56.78666479899146,
+          "p95": 56.78666479899146,
+          "sd": 6.848917863005705
+        },
+        "longTaskPercent": {
+          "n": 8,
+          "mean": 0.7319830274496237,
+          "min": 0,
+          "max": 4.786337877163094,
+          "p95": 4.786337877163094,
+          "sd": 1.5718827744035024
+        },
+        "hostSaturationObserved": false,
+        "gpuSaturationAssessed": false,
+        "heapFirstMB": 48.74965286254883,
+        "heapLastMB": 35.07118225097656,
+        "listenersFirst": 5311,
+        "listenersLast": 1610,
+        "inboundVideoStreamsLast": 0,
+        "receivedVideoLast": [],
+        "targetPageVisibleThroughout": true,
+        "targetNativeForegroundThroughout": null,
+        "sessions": [
+          {
+            "user": 0,
+            "role": "MODERATOR",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 8,
+              "mean": 46.32549872223248,
+              "min": 21.11020983953443,
+              "max": 65.04763078089464,
+              "p95": 65.04763078089464,
+              "sd": 14.670988713153031
+            },
+            "privateMBLast": 719.0078125,
+            "workingSetMBSumLast": 924.07421875
+          },
+          {
+            "user": 1,
+            "role": "MODERATOR",
+            "target": false,
+            "processCount": 10,
+            "cpuPercentOfOneCore": {
+              "n": 8,
+              "mean": 47.61622172030981,
+              "min": 21.936995238934934,
+              "max": 57.53504548900683,
+              "p95": 57.53504548900683,
+              "sd": 11.31231356571466
+            },
+            "privateMBLast": 703.07421875,
+            "workingSetMBSumLast": 923.6015625
+          },
+          {
+            "user": 2,
+            "role": "VIEWER",
+            "target": true,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 8,
+              "mean": 39.15524286426189,
+              "min": 17.149638511726348,
+              "max": 70.26557341907831,
+              "p95": 70.26557341907831,
+              "sd": 20.96532460062389
+            },
+            "privateMBLast": 701.7265625,
+            "workingSetMBSumLast": 897.25
+          },
+          {
+            "user": 3,
+            "role": "VIEWER",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 8,
+              "mean": 43.32629510760135,
+              "min": 17.332357608887296,
+              "max": 59.59442759666421,
+              "p95": 59.59442759666421,
+              "sd": 13.085354108971265
+            },
+            "privateMBLast": 692.23046875,
+            "workingSetMBSumLast": 890.13671875
+          },
+          {
+            "user": 4,
+            "role": "VIEWER",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 8,
+              "mean": 38.86619065342889,
+              "min": 6.853094692294157,
+              "max": 73.99472836095765,
+              "p95": 73.99472836095765,
+              "sd": 23.560005236125168
+            },
+            "privateMBLast": 651.75,
+            "workingSetMBSumLast": 848.1328125
+          },
+          {
+            "user": 5,
+            "role": "VIEWER",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 8,
+              "mean": 38.63035402947156,
+              "min": 6.900952213013577,
+              "max": 71.2048112338858,
+              "p95": 71.2048112338858,
+              "sd": 23.18824747444263
+            },
+            "privateMBLast": 646.28515625,
+            "workingSetMBSumLast": 843.125
+          },
+          {
+            "user": 6,
+            "role": "VIEWER",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 8,
+              "mean": 38.82265897650085,
+              "min": 6.859301710456697,
+              "max": 70.0340776699029,
+              "p95": 70.0340776699029,
+              "sd": 21.471906935589328
+            },
+            "privateMBLast": 658.41015625,
+            "workingSetMBSumLast": 865.4921875
+          },
+          {
+            "user": 7,
+            "role": "VIEWER",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 8,
+              "mean": 42.68142192513403,
+              "min": 27.215164233576655,
+              "max": 71.3484223300971,
+              "p95": 71.3484223300971,
+              "sd": 12.993422739660787
+            },
+            "privateMBLast": 666.53125,
+            "workingSetMBSumLast": 893.69921875
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "highload-valid8-sequential-v1",
+    "metadata": {
+      "startedAt": "2026-09-11T09:59:58.016Z",
+      "revision": "82fac060956d5fba92a77f420b05eede2ca96852",
+      "cpus": 12,
+      "cpuModel": "AMD Ryzen 5 9600X 6-Core Processor             ",
+      "memoryBytes": 33484263424,
+      "count": 8,
+      "joinConcurrency": 4,
+      "mediaConcurrency": 1,
+      "audioUsers": 2,
+      "apiAttempts": 10,
+      "warmup": 15,
+      "seconds": 45,
+      "repetitions": 1,
+      "cameraCounts": [
+        8
+      ],
+      "screenCameraCounts": [
+        8
+      ],
+      "soakSeconds": 0,
+      "safety": {
+        "abortHostCpu": 97,
+        "abortFreeMemoryMB": 1024,
+        "consecutiveSamples": 3
+      },
+      "width": 1440,
+      "cpuThrottle": 1,
+      "target": 2,
+      "separateLoadClient": false,
+      "browserVersion": "152.0.7977.83",
+      "realPhoneTested": false,
+      "nativeMetrics": true,
+      "localServerPid": 29644,
+      "bundles": [
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ]
+      ],
+      "videoFixture": "custom-motion-fixture",
+      "settings": {
+        "performance": {
+          "mode": "auto",
+          "enabled": true,
+          "longTaskWindowMs": 30000,
+          "longTaskThresholdMs": 200,
+          "mobileDecoderBudget": 4,
+          "longTaskCountThreshold": 3,
+          "lowPowerDeviceMemoryGb": 4,
+          "lowPowerHardwareConcurrency": 4,
+          "desktopLowPowerDecoderBudget": 6
+        },
+        "selectiveSubscription": {
+          "enabled": true,
+          "muteDebounceMs": 2500,
+          "audioSubscriptionPoolSize": 0
+        },
+        "roomOptions": {
+          "dynacast": true,
+          "adaptiveStream": true,
+          "singlePeerConnection": false,
+          "stopLocalTrackOnUnpublish": false
+        }
+      }
+    },
+    "failures": [
+      {
+        "error": "Camera user 7: locator.click: Timeout 20000ms exceeded."
+      }
+    ],
+    "actions": null,
+    "presence": [],
+    "server": {
+      "samples": 9,
+      "availableSamples": 8,
+      "availabilityRatio": 0.8888888888888888,
+      "hostCPUPercent": {
+        "n": 7,
+        "mean": 5.23035379529246,
+        "min": 4.026956857979336,
+        "max": 6.641762346865898,
+        "p95": 6.641762346865898,
+        "sd": 0.8071198000113073
+      },
+      "memoryAvailableMB": {
+        "n": 8,
+        "mean": 10744.2216796875,
+        "min": 10710.45703125,
+        "max": 10859.375,
+        "p95": 10859.375,
+        "sd": 46.38854029112677
+      },
+      "load1": {
+        "n": 8,
+        "mean": 0.41875,
+        "min": 0,
+        "max": 0.76,
+        "p95": 0.76,
+        "sd": 0.23850773048268264
+      },
+      "graphqlCPUPercentOfOneCore": {
+        "n": 7,
+        "mean": 1.7128219440848844,
+        "min": 0.23961593172119486,
+        "max": 3.371428571428572,
+        "p95": 3.371428571428572,
+        "sd": 0.984320827546507
+      },
+      "graphqlMemoryMB": {
+        "n": 8,
+        "mean": 13.732421875,
+        "min": 10.36328125,
+        "max": 14.94921875,
+        "p95": 14.94921875,
+        "sd": 1.442792355217284
+      },
+      "graphqlTasks": {
+        "n": 8,
+        "mean": 21,
+        "min": 21,
+        "max": 21,
+        "p95": 21,
+        "sd": 0
+      },
+      "sfuCPUPercentOfOneCore": {
+        "n": 7,
+        "mean": 6.183036531282646,
+        "min": 0.6488272709202942,
+        "max": 14.406679313099042,
+        "p95": 14.406679313099042,
+        "sd": 3.9878030408148364
+      },
+      "sfuMemoryMB": {
+        "n": 8,
+        "mean": 450.01171875,
+        "min": 449.4609375,
+        "max": 450.7890625,
+        "p95": 450.7890625,
+        "sd": 0.5296931173651253
+      },
+      "sfuTasks": {
+        "n": 8,
+        "mean": 180,
+        "min": 180,
+        "max": 180,
+        "p95": 180,
+        "sd": 0
+      }
+    },
+    "scenes": []
+  },
+  {
+    "name": "highload-valid6-desktop-v1",
+    "metadata": {
+      "startedAt": "2026-09-11T10:09:29.208Z",
+      "revision": "82fac060956d5fba92a77f420b05eede2ca96852",
+      "cpus": 12,
+      "cpuModel": "AMD Ryzen 5 9600X 6-Core Processor             ",
+      "memoryBytes": 33484263424,
+      "count": 6,
+      "joinConcurrency": 3,
+      "mediaConcurrency": 1,
+      "audioUsers": 2,
+      "apiAttempts": 10,
+      "warmup": 20,
+      "seconds": 90,
+      "repetitions": 1,
+      "cameraCounts": [
+        6
+      ],
+      "screenCameraCounts": [
+        6
+      ],
+      "soakSeconds": 0,
+      "safety": {
+        "abortHostCpu": 97,
+        "abortFreeMemoryMB": 1024,
+        "consecutiveSamples": 3
+      },
+      "width": 1440,
+      "cpuThrottle": 1,
+      "target": 2,
+      "separateLoadClient": false,
+      "browserVersion": "152.0.7977.83",
+      "realPhoneTested": false,
+      "nativeMetrics": true,
+      "localServerPid": 41980,
+      "bundles": [
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ],
+        [
+          "bundle.ee0cf29753dab643b6ab.js"
+        ]
+      ],
+      "videoFixture": "custom-motion-fixture",
+      "settings": {
+        "performance": {
+          "mode": "auto",
+          "enabled": true,
+          "longTaskWindowMs": 30000,
+          "longTaskThresholdMs": 200,
+          "mobileDecoderBudget": 4,
+          "longTaskCountThreshold": 3,
+          "lowPowerDeviceMemoryGb": 4,
+          "lowPowerHardwareConcurrency": 4,
+          "desktopLowPowerDecoderBudget": 6
+        },
+        "selectiveSubscription": {
+          "enabled": true,
+          "muteDebounceMs": 2500,
+          "audioSubscriptionPoolSize": 0
+        },
+        "roomOptions": {
+          "dynacast": true,
+          "adaptiveStream": true,
+          "singlePeerConnection": false,
+          "stopLocalTrackOnUnpublish": false
+        }
+      }
+    },
+    "failures": [
+      {
+        "user": 3,
+        "error": "Cannot read properties of undefined (reading 'public')",
+        "sources": [
+          "bundle.ee0cf29753dab643b6ab.js:2:543397"
+        ]
+      },
+      {
+        "error": "Camera user 1: locator.click: Timeout 20000ms exceeded."
+      }
+    ],
+    "actions": null,
+    "presence": [],
+    "server": {
+      "samples": 13,
+      "availableSamples": 11,
+      "availabilityRatio": 0.8461538461538461,
+      "hostCPUPercent": {
+        "n": 10,
+        "mean": 3.2628079691305523,
+        "min": 0.31030088103285447,
+        "max": 5.440213167536356,
+        "p95": 5.440213167536356,
+        "sd": 1.263357205924441
+      },
+      "memoryAvailableMB": {
+        "n": 11,
+        "mean": 10689.848011363636,
+        "min": 10596.80078125,
+        "max": 10851.35546875,
+        "p95": 10851.35546875,
+        "sd": 88.88335073188503
+      },
+      "load1": {
+        "n": 11,
+        "mean": 0.15727272727272726,
+        "min": 0.09,
+        "max": 0.25,
+        "p95": 0.25,
+        "sd": 0.05361324617376994
+      },
+      "graphqlCPUPercentOfOneCore": {
+        "n": 10,
+        "mean": 0.9759040508144359,
+        "min": 0.009358821186778176,
+        "max": 2.3068839144215527,
+        "p95": 2.3068839144215527,
+        "sd": 0.8521342799362209
+      },
+      "graphqlMemoryMB": {
+        "n": 11,
+        "mean": 12.969105113636363,
+        "min": 11.5546875,
+        "max": 13.8828125,
+        "p95": 13.8828125,
+        "sd": 0.7668080177544172
+      },
+      "graphqlTasks": {
+        "n": 11,
+        "mean": 21,
+        "min": 21,
+        "max": 21,
+        "p95": 21,
+        "sd": 0
+      },
+      "sfuCPUPercentOfOneCore": {
+        "n": 10,
+        "mean": 3.020333257156241,
+        "min": 0.10420151334129828,
+        "max": 6.388586740770146,
+        "p95": 6.388586740770146,
+        "sd": 1.706544909822594
+      },
+      "sfuMemoryMB": {
+        "n": 11,
+        "mean": 452.0120738636364,
+        "min": 450.63671875,
+        "max": 452.90625,
+        "p95": 452.90625,
+        "sd": 0.6823201499151573
+      },
+      "sfuTasks": {
+        "n": 11,
+        "mean": 180,
+        "min": 180,
+        "max": 180,
+        "p95": 180,
+        "sd": 0
+      }
+    },
+    "scenes": []
+  },
+  {
+    "name": "strict-budget-smoke3-v1",
+    "metadata": {
+      "startedAt": "2026-09-11T10:28:50.348Z",
+      "revision": "82fac060956d5fba92a77f420b05eede2ca96852",
+      "cpus": 12,
+      "cpuModel": "AMD Ryzen 5 9600X 6-Core Processor             ",
+      "memoryBytes": 33484263424,
+      "count": 3,
+      "joinConcurrency": 3,
+      "mediaConcurrency": 1,
+      "audioUsers": 2,
+      "apiAttempts": 10,
+      "warmup": 10,
+      "seconds": 30,
+      "repetitions": 1,
+      "cameraCounts": [
+        3
+      ],
+      "screenCameraCounts": [
+        3
+      ],
+      "soakSeconds": 0,
+      "safety": {
+        "abortHostCpu": 97,
+        "abortFreeMemoryMB": 1024,
+        "consecutiveSamples": 3
+      },
+      "width": 1440,
+      "cpuThrottle": 1,
+      "target": 2,
+      "separateLoadClient": false,
+      "browserVersion": "152.0.7977.83",
+      "realPhoneTested": false,
+      "nativeMetrics": true,
+      "localServerPid": 14476,
+      "bundles": [
+        [
+          "bundle.425851414bf363373562.js"
+        ],
+        [
+          "bundle.425851414bf363373562.js"
+        ],
+        [
+          "bundle.425851414bf363373562.js"
+        ]
+      ],
+      "videoFixture": "custom-motion-fixture",
+      "settings": {
+        "performance": {
+          "mode": "auto",
+          "enabled": true,
+          "longTaskWindowMs": 30000,
+          "longTaskThresholdMs": 200,
+          "mobileDecoderBudget": 4,
+          "longTaskCountThreshold": 3,
+          "lowPowerDeviceMemoryGb": 4,
+          "lowPowerHardwareConcurrency": 4,
+          "desktopLowPowerDecoderBudget": 6
+        },
+        "selectiveSubscription": {
+          "enabled": true,
+          "muteDebounceMs": 2500,
+          "audioSubscriptionPoolSize": 0
+        },
+        "roomOptions": {
+          "dynacast": true,
+          "adaptiveStream": true,
+          "singlePeerConnection": false,
+          "stopLocalTrackOnUnpublish": false
+        }
+      }
+    },
+    "failures": [],
+    "actions": null,
+    "presence": [
+      {
+        "phase": "presence",
+        "repetition": 1,
+        "cameras": 3,
+        "screenShare": false,
+        "participants": 3,
+        "testParticipants": 3,
+        "moderators": 2,
+        "publishers": 3
+      },
+      {
+        "phase": "presence",
+        "repetition": 1,
+        "cameras": 3,
+        "screenShare": true,
+        "participants": 3,
+        "testParticipants": 3,
+        "moderators": 2,
+        "publishers": 3
+      }
+    ],
+    "server": {
+      "samples": 13,
+      "availableSamples": 11,
+      "availabilityRatio": 0.8461538461538461,
+      "hostCPUPercent": {
+        "n": 10,
+        "mean": 4.3410769090347765,
+        "min": 3.2382847038019413,
+        "max": 6.738335365177884,
+        "p95": 6.738335365177884,
+        "sd": 0.9233337590494746
+      },
+      "memoryAvailableMB": {
+        "n": 11,
+        "mean": 10700.454900568182,
+        "min": 10665.84765625,
+        "max": 10863.63671875,
+        "p95": 10863.63671875,
+        "sd": 53.99624508640134
+      },
+      "load1": {
+        "n": 11,
+        "mean": 0.5336363636363637,
+        "min": 0.03,
+        "max": 0.73,
+        "p95": 0.73,
+        "sd": 0.17463066102089586
+      },
+      "graphqlCPUPercentOfOneCore": {
+        "n": 10,
+        "mean": 0.38060301880444297,
+        "min": 0.03204124120154654,
+        "max": 1.5327341344721421,
+        "p95": 1.5327341344721421,
+        "sd": 0.4426325313327399
+      },
+      "graphqlMemoryMB": {
+        "n": 11,
+        "mean": 12.461647727272727,
+        "min": 10.51953125,
+        "max": 12.828125,
+        "p95": 12.828125,
+        "sd": 0.6403278876000175
+      },
+      "graphqlTasks": {
+        "n": 11,
+        "mean": 21,
+        "min": 21,
+        "max": 21,
+        "p95": 21,
+        "sd": 0
+      },
+      "sfuCPUPercentOfOneCore": {
+        "n": 10,
+        "mean": 4.3051774626126775,
+        "min": 2.075711311589174,
+        "max": 6.2225439612509215,
+        "p95": 6.2225439612509215,
+        "sd": 1.2037432378370898
+      },
+      "sfuMemoryMB": {
+        "n": 11,
+        "mean": 450.80397727272725,
+        "min": 450.59375,
+        "max": 451.05078125,
+        "p95": 451.05078125,
+        "sd": 0.14249485019284885
+      },
+      "sfuTasks": {
+        "n": 11,
+        "mean": 180,
+        "min": 180,
+        "max": 180,
+        "p95": 180,
+        "sd": 0
+      }
+    },
+    "scenes": [
+      {
+        "repetition": 1,
+        "camerasRequested": 3,
+        "screenShare": false,
+        "samples": 6,
+        "measuredSpanSeconds": 25.040199999999256,
+        "mainThreadPercent": {
+          "n": 5,
+          "mean": 1.8817848916302744,
+          "min": 1.3546170733825587,
+          "max": 2.6836667696080774,
+          "p95": 2.6836667696080774,
+          "sd": 0.49710604526229324
+        },
+        "scriptPercent": {
+          "n": 5,
+          "mean": 0.26803395106969335,
+          "min": 0.17287949005346748,
+          "max": 0.5329175160178687,
+          "p95": 0.5329175160178687,
+          "sd": 0.13337468369646255
+        },
+        "layoutPercent": {
+          "n": 5,
+          "mean": 0.003892044199341463,
+          "min": 0,
+          "max": 0.01215310189936105,
+          "p95": 0.01215310189936105,
+          "sd": 0.004449114145723477
+        },
+        "targetProcessCPUPercentOfOneCore": {
+          "n": 5,
+          "mean": 20.992487506800266,
+          "min": 17.67544283413849,
+          "max": 27.402964509394554,
+          "p95": 27.402964509394554,
+          "sd": 3.73215889416773
+        },
+        "otherBrowsersCPUPercentOfOneCore": {
+          "n": 5,
+          "mean": 42.000775177164876,
+          "min": 36.0659869332805,
+          "max": 54.32870563674323,
+          "p95": 54.32870563674323,
+          "sd": 6.575552586541277
+        },
+        "localServerCPUPercentOfOneCore": {
+          "n": 5,
+          "mean": 0.0652400835073069,
+          "min": 0,
+          "max": 0.32620041753653445,
+          "p95": 0.32620041753653445,
+          "sd": 0.1304801670146138
+        },
+        "busiestGPUEnginePercent": {
+          "n": 6,
+          "mean": 3.3372668183742333,
+          "min": 2.288308707195191,
+          "max": 4.321292156322126,
+          "p95": 4.321292156322126,
+          "sd": 0.6712465593461624
+        },
+        "targetPrivateMBLast": 718.6171875,
+        "targetWorkingSetMBSumLast": 926.671875,
+        "hostCPUPercent": {
+          "n": 5,
+          "mean": 20.64418702293083,
+          "min": 19.47415037396667,
+          "max": 22.019630677091996,
+          "p95": 22.019630677091996,
+          "sd": 1.102945917673627
+        },
+        "longTaskPercent": {
+          "n": 5,
+          "mean": 0,
+          "min": 0,
+          "max": 0,
+          "p95": 0,
+          "sd": 0
+        },
+        "hostSaturationObserved": false,
+        "gpuSaturationAssessed": true,
+        "heapFirstMB": 50.55806350708008,
+        "heapLastMB": 36.48564910888672,
+        "listenersFirst": 2883,
+        "listenersLast": 1889,
+        "inboundVideoStreamsLast": 2,
+        "receivedVideoLast": [
+          {
+            "framesDecoded": 389,
+            "framesDropped": 0,
+            "framesPerSecond": 15,
+            "frameWidth": 640,
+            "frameHeight": 360,
+            "freezeCount": 3
+          },
+          {
+            "framesDecoded": 388,
+            "framesDropped": 0,
+            "framesPerSecond": 15,
+            "frameWidth": 480,
+            "frameHeight": 270,
+            "freezeCount": 4
+          }
+        ],
+        "targetPageVisibleThroughout": true,
+        "targetNativeForegroundThroughout": true,
+        "sessions": [
+          {
+            "user": 0,
+            "role": "MODERATOR",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 5,
+              "mean": 23.171894850112388,
+              "min": 19.658839833696273,
+              "max": 29.918726513569943,
+              "p95": 29.918726513569943,
+              "sd": 3.5989446182752096
+            },
+            "privateMBLast": 733.65234375,
+            "workingSetMBSumLast": 948.890625
+          },
+          {
+            "user": 1,
+            "role": "MODERATOR",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 5,
+              "mean": 18.828880327052484,
+              "min": 16.407147099584222,
+              "max": 24.409979123173272,
+              "p95": 24.409979123173272,
+              "sd": 2.98779832750344
+            },
+            "privateMBLast": 676.953125,
+            "workingSetMBSumLast": 887.40234375
+          },
+          {
+            "user": 2,
+            "role": "VIEWER",
+            "target": true,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 5,
+              "mean": 20.992487506800266,
+              "min": 17.67544283413849,
+              "max": 27.402964509394554,
+              "p95": 27.402964509394554,
+              "sd": 3.73215889416773
+            },
+            "privateMBLast": 718.6171875,
+            "workingSetMBSumLast": 926.671875
+          }
+        ]
+      },
+      {
+        "repetition": 1,
+        "camerasRequested": 3,
+        "screenShare": true,
+        "samples": 6,
+        "measuredSpanSeconds": 25.028900000000373,
+        "mainThreadPercent": {
+          "n": 5,
+          "mean": 6.094935995953111,
+          "min": 5.718621700408521,
+          "max": 6.451849499547182,
+          "p95": 6.451849499547182,
+          "sd": 0.26929052803308157
+        },
+        "scriptPercent": {
+          "n": 5,
+          "mean": 0.07449748956352792,
+          "min": 0.05720470962822741,
+          "max": 0.09451129733425696,
+          "p95": 0.09451129733425696,
+          "sd": 0.013966859110827652
+        },
+        "layoutPercent": {
+          "n": 5,
+          "mean": 0,
+          "min": 0,
+          "max": 0,
+          "p95": 0,
+          "sd": 0
+        },
+        "targetProcessCPUPercentOfOneCore": {
+          "n": 5,
+          "mean": 34.71727577302772,
+          "min": 34.00880402010048,
+          "max": 36.082336467293445,
+          "p95": 36.082336467293445,
+          "sd": 0.7251279239675917
+        },
+        "otherBrowsersCPUPercentOfOneCore": {
+          "n": 5,
+          "mean": 81.1632510528172,
+          "min": 78.65115023004594,
+          "max": 82.95433526011563,
+          "p95": 82.95433526011563,
+          "sd": 1.47163214706027
+        },
+        "localServerCPUPercentOfOneCore": {
+          "n": 5,
+          "mean": 0.062288220051823794,
+          "min": 0,
+          "max": 0.311441100259119,
+          "p95": 0.311441100259119,
+          "sd": 0.12457644010364759
+        },
+        "busiestGPUEnginePercent": {
+          "n": 6,
+          "mean": 7.372410740636596,
+          "min": 5.799720598004847,
+          "max": 9.84728859749595,
+          "p95": 9.84728859749595,
+          "sd": 1.40722340857942
+        },
+        "targetPrivateMBLast": 719.3671875,
+        "targetWorkingSetMBSumLast": 951.31640625,
+        "hostCPUPercent": {
+          "n": 5,
+          "mean": 24.10888868932608,
+          "min": 22.20861738036931,
+          "max": 26.44758721743855,
+          "p95": 26.44758721743855,
+          "sd": 1.480170161132464
+        },
+        "longTaskPercent": {
+          "n": 5,
+          "mean": 0,
+          "min": 0,
+          "max": 0,
+          "p95": 0,
+          "sd": 0
+        },
+        "hostSaturationObserved": false,
+        "gpuSaturationAssessed": true,
+        "heapFirstMB": 36.05180740356445,
+        "heapLastMB": 36.09428024291992,
+        "listenersFirst": 1771,
+        "listenersLast": 1760,
+        "inboundVideoStreamsLast": 3,
+        "receivedVideoLast": [
+          {
+            "framesDecoded": 1018,
+            "framesDropped": 0,
+            "framesPerSecond": 15,
+            "frameWidth": 640,
+            "frameHeight": 360,
+            "freezeCount": 4
+          },
+          {
+            "framesDecoded": 608,
+            "framesDropped": 0,
+            "framesPerSecond": 14,
+            "frameWidth": 640,
+            "frameHeight": 360,
+            "freezeCount": 0
+          },
+          {
+            "framesDecoded": 170,
+            "framesDropped": 0,
+            "framesPerSecond": 5,
+            "frameWidth": 1280,
+            "frameHeight": 720,
+            "freezeCount": 0
+          }
+        ],
+        "targetPageVisibleThroughout": true,
+        "targetNativeForegroundThroughout": true,
+        "sessions": [
+          {
+            "user": 0,
+            "role": "MODERATOR",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 5,
+              "mean": 44.855124506997555,
+              "min": 43.20741708542717,
+              "max": 47.380627122029146,
+              "p95": 47.380627122029146,
+              "sd": 1.7955175488419746
+            },
+            "privateMBLast": 821.296875,
+            "workingSetMBSumLast": 1039.41796875
+          },
+          {
+            "user": 1,
+            "role": "MODERATOR",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 5,
+              "mean": 36.30812654581963,
+              "min": 34.89191132414626,
+              "max": 37.71710552763816,
+              "p95": 37.71710552763816,
+              "sd": 1.1811693160557406
+            },
+            "privateMBLast": 688.0625,
+            "workingSetMBSumLast": 919.31640625
+          },
+          {
+            "user": 2,
+            "role": "VIEWER",
+            "target": true,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 5,
+              "mean": 34.71727577302772,
+              "min": 34.00880402010048,
+              "max": 36.082336467293445,
+              "p95": 36.082336467293445,
+              "sd": 0.7251279239675917
+            },
+            "privateMBLast": 719.3671875,
+            "workingSetMBSumLast": 951.31640625
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "production-ready-smoke3-v1",
+    "metadata": {
+      "startedAt": "2026-09-11T11:15:16.652Z",
+      "revision": "82fac060956d5fba92a77f420b05eede2ca96852",
+      "cpus": 12,
+      "cpuModel": "AMD Ryzen 5 9600X 6-Core Processor             ",
+      "memoryBytes": 33484263424,
+      "count": 3,
+      "joinConcurrency": 3,
+      "mediaConcurrency": 1,
+      "audioUsers": 2,
+      "apiAttempts": 10,
+      "warmup": 10,
+      "seconds": 30,
+      "repetitions": 1,
+      "cameraCounts": [
+        3
+      ],
+      "screenCameraCounts": [
+        3
+      ],
+      "soakSeconds": 0,
+      "safety": {
+        "abortHostCpu": 97,
+        "abortFreeMemoryMB": 1024,
+        "consecutiveSamples": 3
+      },
+      "width": 1440,
+      "cpuThrottle": 1,
+      "target": 2,
+      "separateLoadClient": false,
+      "browserVersion": "152.0.7977.83",
+      "realPhoneTested": false,
+      "nativeMetrics": true,
+      "localServerPid": 41052,
+      "bundles": [
+        [
+          "bundle.e87aa643dc387e97a745.js"
+        ],
+        [
+          "bundle.e87aa643dc387e97a745.js"
+        ],
+        [
+          "bundle.e87aa643dc387e97a745.js"
+        ]
+      ],
+      "videoFixture": "custom-motion-fixture",
+      "settings": {
+        "performance": {
+          "mode": "auto",
+          "enabled": true,
+          "longTaskWindowMs": 30000,
+          "longTaskThresholdMs": 200,
+          "mobileDecoderBudget": 4,
+          "longTaskCountThreshold": 3,
+          "lowPowerDeviceMemoryGb": 4,
+          "lowPowerHardwareConcurrency": 4,
+          "desktopLowPowerDecoderBudget": 6
+        },
+        "selectiveSubscription": {
+          "enabled": true,
+          "muteDebounceMs": 2500,
+          "audioSubscriptionPoolSize": 0
+        },
+        "roomOptions": {
+          "dynacast": true,
+          "adaptiveStream": true,
+          "singlePeerConnection": false,
+          "stopLocalTrackOnUnpublish": false
+        }
+      }
+    },
+    "failures": [
+      {
+        "error": "One or more interaction checks failed; see actions.json"
+      }
+    ],
+    "actions": [
+      {
+        "name": "chat-sync",
+        "passed": false,
+        "error": "expect(locator).toBeVisible() failed"
+      },
+      {
+        "name": "whiteboard-sync-undo",
+        "passed": true,
+        "details": {
+          "latenciesMs": [
+            11011,
+            120,
+            388,
+            379,
+            131
+          ],
+          "missingShapes": 0
+        }
+      },
+      {
+        "name": "screenshare-synthetic-webrtc",
+        "passed": true,
+        "details": {
+          "first": {
+            "time": 3.797,
+            "width": 1280,
+            "height": 720
+          },
+          "second": {
+            "time": 8.754,
+            "width": 1280,
+            "height": 720
+          }
+        }
+      },
+      {
+        "name": "performance-control-responsive",
+        "passed": true,
+        "details": [
+          {
+            "width": 390,
+            "scrollWidth": 390,
+            "direction": "rtl"
+          },
+          {
+            "width": 768,
+            "scrollWidth": 768,
+            "direction": "rtl"
+          },
+          {
+            "width": 1440,
+            "scrollWidth": 1440,
+            "direction": "rtl"
+          }
+        ]
+      },
+      {
+        "name": "performance-control-cancel",
+        "passed": true,
+        "details": {
+          "keyboardSelection": true,
+          "unsavedChangeDiscarded": true
+        }
+      },
+      {
+        "name": "reconnect-video",
+        "passed": true,
+        "details": {
+          "before": 894,
+          "after": 1045
+        }
+      },
+      {
+        "name": "webcam-fullscreen-recovery",
+        "passed": true,
+        "details": {
+          "entered": true,
+          "exited": true
+        }
+      },
+      {
+        "name": "panel-lifecycle",
+        "passed": true,
+        "details": {
+          "peersBefore": 6,
+          "peersAfter": 6,
+          "domBefore": 730,
+          "domAfter": 682
+        }
+      }
+    ],
+    "presence": [
+      {
+        "phase": "presence",
+        "repetition": 1,
+        "cameras": 3,
+        "screenShare": false,
+        "participants": 3,
+        "testParticipants": 3,
+        "moderators": 2,
+        "publishers": 3
+      },
+      {
+        "phase": "presence",
+        "repetition": 1,
+        "cameras": 3,
+        "screenShare": true,
+        "participants": 3,
+        "testParticipants": 3,
+        "moderators": 2,
+        "publishers": 3
+      }
+    ],
+    "server": {
+      "samples": 19,
+      "availableSamples": 15,
+      "availabilityRatio": 0.7894736842105263,
+      "hostCPUPercent": {
+        "n": 14,
+        "mean": 2.610389537477622,
+        "min": 1.7224080267558506,
+        "max": 3.7151005703992768,
+        "p95": 3.7151005703992768,
+        "sd": 0.48350530027111077
+      },
+      "memoryAvailableMB": {
+        "n": 15,
+        "mean": 10682.599739583333,
+        "min": 10573.5390625,
+        "max": 10738.2421875,
+        "p95": 10738.2421875,
+        "sd": 55.04934415119566
+      },
+      "load1": {
+        "n": 15,
+        "mean": 0.1486666666666667,
+        "min": 0.05,
+        "max": 0.28,
+        "p95": 0.28,
+        "sd": 0.06965310872858121
+      },
+      "graphqlCPUPercentOfOneCore": {
+        "n": 14,
+        "mean": 0.5358282429642137,
+        "min": 0.03382833382833383,
+        "max": 1.6155074343877855,
+        "p95": 1.6155074343877855,
+        "sd": 0.504035612927004
+      },
+      "graphqlMemoryMB": {
+        "n": 15,
+        "mean": 12.7828125,
+        "min": 12.4609375,
+        "max": 13.12109375,
+        "p95": 13.12109375,
+        "sd": 0.23773117860568901
+      },
+      "graphqlTasks": {
+        "n": 15,
+        "mean": 21,
+        "min": 21,
+        "max": 21,
+        "p95": 21,
+        "sd": 0
+      },
+      "sfuCPUPercentOfOneCore": {
+        "n": 14,
+        "mean": 5.189699740913945,
+        "min": 3.797237897237897,
+        "max": 8.640356259277585,
+        "p95": 8.640356259277585,
+        "sd": 1.3893503596991292
+      },
+      "sfuMemoryMB": {
+        "n": 15,
+        "mean": 453.42369791666664,
+        "min": 451.9375,
+        "max": 454.09375,
+        "p95": 454.09375,
+        "sd": 0.5103320242318694
+      },
+      "sfuTasks": {
+        "n": 15,
+        "mean": 180,
+        "min": 180,
+        "max": 180,
+        "p95": 180,
+        "sd": 0
+      }
+    },
+    "scenes": [
+      {
+        "repetition": 1,
+        "camerasRequested": 3,
+        "screenShare": false,
+        "samples": 6,
+        "measuredSpanSeconds": 25.01810000000149,
+        "mainThreadPercent": {
+          "n": 5,
+          "mean": 10.244100077635213,
+          "min": 1.6904015400606915,
+          "max": 20.26851192219925,
+          "p95": 20.26851192219925,
+          "sd": 6.238037540903509
+        },
+        "scriptPercent": {
+          "n": 5,
+          "mean": 0.882650321396293,
+          "min": 0.2558773962776451,
+          "max": 2.3625510110536236,
+          "p95": 2.3625510110536236,
+          "sd": 0.8243015867387795
+        },
+        "layoutPercent": {
+          "n": 5,
+          "mean": 0.2273965179589946,
+          "min": 0,
+          "max": 0.826442484655888,
+          "p95": 0.826442484655888,
+          "sd": 0.32145717253548
+        },
+        "targetProcessCPUPercentOfOneCore": {
+          "n": 5,
+          "mean": 41.906028699588674,
+          "min": 15.046848484848478,
+          "max": 68.063564929694,
+          "p95": 68.063564929694,
+          "sd": 17.469178437304716
+        },
+        "otherBrowsersCPUPercentOfOneCore": {
+          "n": 5,
+          "mean": 86.99825152319879,
+          "min": 32.216707070706995,
+          "max": 136.44358974358974,
+          "p95": 136.44358974358974,
+          "sd": 34.32940473364691
+        },
+        "localServerCPUPercentOfOneCore": {
+          "n": 5,
+          "mean": 0.19385856079404465,
+          "min": 0,
+          "max": 0.9692928039702232,
+          "p95": 0.9692928039702232,
+          "sd": 0.3877171215880893
+        },
+        "busiestGPUEnginePercent": {
+          "n": 6,
+          "mean": 4.868367292266887,
+          "min": 2.153222191827619,
+          "max": 7.686360200822083,
+          "p95": 7.686360200822083,
+          "sd": 2.0598960086484577
+        },
+        "targetPrivateMBLast": 752.109375,
+        "targetWorkingSetMBSumLast": 944.3671875,
+        "hostCPUPercent": {
+          "n": 5,
+          "mean": 29.45581166190438,
+          "min": 14.624591947769316,
+          "max": 37.25216147695508,
+          "p95": 37.25216147695508,
+          "sd": 8.058561135678438
+        },
+        "longTaskPercent": {
+          "n": 5,
+          "mean": 0.25963635332350277,
+          "min": 0,
+          "max": 1.298181766617514,
+          "p95": 1.298181766617514,
+          "sd": 0.5192727066470054
+        },
+        "hostSaturationObserved": false,
+        "gpuSaturationAssessed": true,
+        "heapFirstMB": 40.90509033203125,
+        "heapLastMB": 36.57966232299805,
+        "listenersFirst": 3076,
+        "listenersLast": 1893,
+        "inboundVideoStreamsLast": 0,
+        "receivedVideoLast": [],
+        "targetPageVisibleThroughout": true,
+        "targetNativeForegroundThroughout": false,
+        "sessions": [
+          {
+            "user": 0,
+            "role": "MODERATOR",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 5,
+              "mean": 45.60084154577528,
+              "min": 17.276868686868617,
+              "max": 69.40411497105046,
+              "p95": 69.40411497105046,
+              "sd": 17.377529547222057
+            },
+            "privateMBLast": 773.5234375,
+            "workingSetMBSumLast": 986.71484375
+          },
+          {
+            "user": 1,
+            "role": "MODERATOR",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 5,
+              "mean": 41.39740997742351,
+              "min": 14.939838383838376,
+              "max": 67.03947477253928,
+              "p95": 67.03947477253928,
+              "sd": 17.003180023424704
+            },
+            "privateMBLast": 738.78125,
+            "workingSetMBSumLast": 939.99609375
+          },
+          {
+            "user": 2,
+            "role": "VIEWER",
+            "target": true,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 5,
+              "mean": 41.906028699588674,
+              "min": 15.046848484848478,
+              "max": 68.063564929694,
+              "p95": 68.063564929694,
+              "sd": 17.469178437304716
+            },
+            "privateMBLast": 752.109375,
+            "workingSetMBSumLast": 944.3671875
+          }
+        ]
+      },
+      {
+        "repetition": 1,
+        "camerasRequested": 3,
+        "screenShare": true,
+        "samples": 6,
+        "measuredSpanSeconds": 25.041299999998884,
+        "mainThreadPercent": {
+          "n": 5,
+          "mean": 6.826151536484917,
+          "min": 4.568007694006968,
+          "max": 11.559964204882764,
+          "p95": 11.559964204882764,
+          "sd": 2.463957282026071
+        },
+        "scriptPercent": {
+          "n": 5,
+          "mean": 1.039699978175775,
+          "min": 0.08071050774228516,
+          "max": 4.047298070966021,
+          "p95": 4.047298070966021,
+          "sd": 1.5268851406216521
+        },
+        "layoutPercent": {
+          "n": 5,
+          "mean": 0.008930570283918282,
+          "min": 0,
+          "max": 0.03474983113816795,
+          "p95": 0.03474983113816795,
+          "sd": 0.013467331932089963
+        },
+        "targetProcessCPUPercentOfOneCore": {
+          "n": 5,
+          "mean": 33.703264040979505,
+          "min": 24.935443548387067,
+          "max": 41.02900363049621,
+          "p95": 41.02900363049621,
+          "sd": 5.635344433073766
+        },
+        "otherBrowsersCPUPercentOfOneCore": {
+          "n": 5,
+          "mean": 75.31992484374335,
+          "min": 57.860362903225756,
+          "max": 91.30510286405816,
+          "p95": 91.30510286405816,
+          "sd": 10.88718727026024
+        },
+        "localServerCPUPercentOfOneCore": {
+          "n": 5,
+          "mean": 0.3145432810096188,
+          "min": 0,
+          "max": 0.9450604838709677,
+          "p95": 0.9450604838709677,
+          "sd": 0.34508959622419727
+        },
+        "busiestGPUEnginePercent": {
+          "n": 6,
+          "mean": 5.782090386582539,
+          "min": 4.184795210107774,
+          "max": 7.147465207986409,
+          "p95": 7.147465207986409,
+          "sd": 0.86414405249942
+        },
+        "targetPrivateMBLast": 777.10546875,
+        "targetWorkingSetMBSumLast": 973.40625,
+        "hostCPUPercent": {
+          "n": 5,
+          "mean": 20.504040175796682,
+          "min": 15.760824051586974,
+          "max": 23.238767928834392,
+          "p95": 23.238767928834392,
+          "sd": 2.619912182213503
+        },
+        "longTaskPercent": {
+          "n": 5,
+          "mean": 0.37901652791342305,
+          "min": 0,
+          "max": 1.8950826395671152,
+          "p95": 1.8950826395671152,
+          "sd": 0.7580330558268461
+        },
+        "hostSaturationObserved": false,
+        "gpuSaturationAssessed": true,
+        "heapFirstMB": 37.652557373046875,
+        "heapLastMB": 36.05854797363281,
+        "listenersFirst": 1883,
+        "listenersLast": 1708,
+        "inboundVideoStreamsLast": 2,
+        "receivedVideoLast": [
+          {
+            "framesDecoded": 182,
+            "framesDropped": 0,
+            "framesPerSecond": 5,
+            "frameWidth": 1280,
+            "frameHeight": 720,
+            "freezeCount": 1
+          },
+          {
+            "framesDecoded": 145,
+            "framesDropped": 0,
+            "framesPerSecond": 30,
+            "frameWidth": 320,
+            "frameHeight": 240,
+            "freezeCount": 0
+          }
+        ],
+        "targetPageVisibleThroughout": true,
+        "targetNativeForegroundThroughout": false,
+        "sessions": [
+          {
+            "user": 0,
+            "role": "MODERATOR",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 5,
+              "mean": 40.6157130600706,
+              "min": 31.656270161290305,
+              "max": 47.309096409842674,
+              "p95": 47.309096409842674,
+              "sd": 5.16104236267008
+            },
+            "privateMBLast": 860.4375,
+            "workingSetMBSumLast": 1039.97265625
+          },
+          {
+            "user": 1,
+            "role": "MODERATOR",
+            "target": false,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 5,
+              "mean": 34.70421178367276,
+              "min": 26.204092741935455,
+              "max": 43.996006454215475,
+              "p95": 43.996006454215475,
+              "sd": 5.8070257268116565
+            },
+            "privateMBLast": 754.69921875,
+            "workingSetMBSumLast": 945.69140625
+          },
+          {
+            "user": 2,
+            "role": "VIEWER",
+            "target": true,
+            "processCount": 9,
+            "cpuPercentOfOneCore": {
+              "n": 5,
+              "mean": 33.703264040979505,
+              "min": 24.935443548387067,
+              "max": 41.02900363049621,
+              "p95": 41.02900363049621,
+              "sd": 5.635344433073766
+            },
+            "privateMBLast": 777.10546875,
+            "workingSetMBSumLast": 973.40625
+          }
+        ]
+      }
+    ]
+  }
+]

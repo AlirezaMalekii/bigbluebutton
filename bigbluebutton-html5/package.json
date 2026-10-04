@@ -7,6 +7,9 @@
     "start": "NODE_ENV=development DETAILED_LOGS=true HOT_RELOAD=true webpack serve --open --config webpack.config.js",
     "build": "NODE_ENV=production TARGET=default webpack --config webpack.config.js --mode production",
     "build-safari": "NODE_ENV=production TARGET=safari webpack --config webpack.config.js --mode production",
+    "serve:perf": "node scripts/serve-perf.cjs",
+    "test:safemeet-performance": "node scripts/test-performance.cjs",
+    "test:safemeet-performance-policy": "node imports/ui/components/skyroom-layout/performance-profile-policy.test.mjs",
     "tscheck": "tsc",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -18,7 +21,8 @@
     "test:safemeet-webcam-viewport": "node imports/ui/components/video-provider/mobile-webcam-viewport-utils.test.mjs",
     "test:safemeet-webcam-playback": "node imports/ui/components/video-provider/video-playback-utils.test.mjs",
     "test:safemeet-mobile-ime": "node imports/ui/components/skyroom-layout/mobile-ime-recovery-utils.test.mjs",
-    "test:safemeet-background-music": "node imports/ui/components/skyroom-layout/background-music/background-music-policy.test.mjs"
+    "test:safemeet-background-music": "node imports/ui/components/skyroom-layout/background-music/background-music-policy.test.mjs",
+    "test:safemeet-presentation-media-urls": "node imports/ui/components/presentation/presentation-uploader/fileTypes.test.mjs"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -196,7 +200,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "./scripts/pre-commit.sh"
+      "pre-commit": "bash ./scripts/pre-commit.sh"
     }
   }
 }
